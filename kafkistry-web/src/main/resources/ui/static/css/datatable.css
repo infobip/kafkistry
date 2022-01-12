@@ -1,0 +1,13 @@
+span.highlight {
+    background-color: #feff01;
+    color: #945500;
+}
+
+.dataTables_wrapper .row:first-child, .dataTables_wrapper .row:last-child {
+    padding: 0 20px;
+}
+
+.dataTables_filter input {
+    width: 350px !important;
+}
+

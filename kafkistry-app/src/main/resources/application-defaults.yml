@@ -1,0 +1,152 @@
+app:
+  http:
+    root-path: ${HTTP_ROOT_PATH:/kafkistry}  # must not end with '/' can be empty
+  security:
+    enabled: ${SECURITY_ENABLED:true}
+    csrf-enabled: true
+    static:
+      users-yaml-file: ${USERS_PASSWORDS_YAML_FILE:}
+      users-yaml: ${USERS_PASSWORDS_YAML:}
+      users-raw: ${USERS_PASSWORDS:}
+      owner-groups-yaml-file: ${OWNERS_GROUPS_YAML_FILE:}
+      owner-groups-yaml: ${OWNER_GROUPS_YAML:}
+      owner-groups-raw: ${OWNER_GROUPS:}
+    git:
+      protected-write-branch:
+        name: ${PROTECTED_BRANCH:${GIT_MAIN_BRANCH:master}}
+        permitted-authority-name: ${PROTECTED_BRANCH_PERMITTED_AUTHORITY:MANAGE_GIT}
+    consumer-groups:
+      allow-no-owners-access: ${ALLOW_ACCESS_TO_CONSUMER_GROUPS_NO_OWNERS:false}
+  http-logging:
+    enabled: ${HTTP_REQUESTS_LOGGING_ENABLED:false}
+  slack:
+    enabled: ${SLACK_ENABLED:false}
+    channel-id: ${SLACK_CHANNEL_ID:}
+    secret-token: ${SLACK_SECRET_TOKEN:}
+    proxy-host: ${SLACK_PROXY_HOST:}
+    proxy-port: ${SLACK_PROXY_PORT:0}
+    base-host: ${SLACK_LINK_BASE_HOST:}
+    environment-name: ${SLACK_ENVIRONMENT_NAME:n/a}
+  topic-wizard:
+    default-partition-count: ${WIZARD_DEFAULT_PARTITIONS:1}
+    partition-thresholds: ${WIZARD_PARTITION_THRESHOLDS:{"default":{"100":10,"2000":30,"5000":60}}}
+  ui:
+    caching: true
+    custom-js-scripts-csv: ${CUSTOM_JS_SCRIPTS_CSV:}
+  consume:
+    enabled: ${CONSUME_ENABLED:true}
+    max-records: ${CONSUME_MAX_RECORDS:5000}
+    max-wait-ms: ${CONSUME_MAX_WAIT_MS:120000}
+    pool-batch-size: ${CONSUME_POOL_BATCH_SIZE:2000}
+    pool-interval: ${CONSUME_POOL_INTERVAL:1000}
+  scheduling.enabled: true
+  pooling:
+    interval-ms: ${CLUSTER_POOL_INTERVAL:10000}
+    record-sampling-interval-ms:  ${CLUSTER_POOL_RECORD_SAMPLING_INTERVAL:120000}
+    cluster-concurrency: ${CLUSTER_POOL_CONCURRENCY:6}
+    ignored-consumer-pattern: ${CLUSTER_POOL_IGNORED_CONSUMER:}
+  oldest-record-age:
+    enabled: ${OLDEST_RECORD_AGE_ENABLED:true}
+  lag:
+    threshold:
+      partition-no-lag-amount: ${PARTITION_NO_LAG_AMOUNT_THRESHOLD:100}
+      partition-minor-lag-amount: ${PARTITION_MINOR_LAG_AMOUNT_THRESHOLD:20000}
+      partition-no-lag-time-sec: ${PARTITION_NO_LAG_TIME_THRESHOLD:60}         #  1 min of messages producing rate
+      partition-minor-lag-time-sec: ${PARTITION_MINOR_LAG_TIME_THRESHOLD:900}  #  15 min of messages producing rate
+  hazelcast:
+    enabled: true
+    port: ${HAZELCAST_PORT:5701}
+    group: "kafkistry"
+    advertise-address: ${HAZELCAST_ADVERTISED_IP:127.0.0.1}
+    discovery:
+      type: ${HAZELCAST_DISCOVERY_TYPE:MULTICAST}
+      member-ips: ${HAZELCAST_MEMBER_IPS:}
+    publisher:
+      ack-wait-time: ${HAZELCAST_PUBLISH_ACK_TIMEOUT:6000}
+  sql:
+    enabled: ${SQL_ENABLED:true}
+    auto-create-dir:  ${SQL_AUTO_CREATE_DIR:true}
+    db-dir: ${SQLITE_DB_DIR:kafkistry/sqlite}
+    click-house:
+      open-security: ${SQL_CLICKHOUSE_OPEN_SECURITY:false}
+  metrics:
+    enabled: true
+    default-metrics: true
+    api-calls: ${METRICS_API_ENABLED:true}
+    http-calls: ${METRICS_HTTP_ENABLED:true}
+    http-path: ${PROMETHEUS_PATH:/prometheus/metrics}
+    topic-retention:
+      enabled: true
+    consumer-lag:
+      enabled: true
+    topic-offsets:
+      enabled: true
+  record-analyzer:
+    enabled: ${RECORD_ANALYZER_ENABLED:true}
+    storage-dir: ${RECORD_ANALYZER_STORAGE_DIR:kafkistry/record-analyzer-data}
+    time-window: ${RECORD_ANALYZER_TRIM_TIME_WINDOW:259200000}  #3days default
+    executor:
+      concurrency: ${RECORD_ANALYZER_CONCURRENCY:1}
+      max-queue-size: ${RECORD_ANALYZER_MAX_QUEUE_SIZE:20000}
+      trim-and-dump-rate: ${RECORD_ANALYZER_TRIM_AND_DUMP_RATE:120000}  #2min default
+    value-sampling:
+      enabled: ${RECORD_ANALYZER_VALUE_SAMPLING_ENABLED:true}
+      max-cardinality: ${RECORD_ANALYZER_VALUES_MAX_CARDINALITY:25}
+  jira:
+    base-url: ${JIRA_BASE_URL:}
+
+app.repository:
+  git:
+    enabled: true
+    local-dir: ${LOCAL_GIT_DIR:kafkistry/git-repository}
+    main-branch: ${GIT_MAIN_BRANCH:master}
+    remote-ssh-uri: ${GIT_REMOTE_SSH_URI:}
+    ssh-private-key: ${SSH_PRIVATE_KEY:}
+    ssh-key-path: ${SSH_PRIVATE_KEY_PATH:}
+    ssh-key-passphrase: ${SSH_PRIVATE_KEY_PASS:}
+    password: ${GIT_SSH_PASSWORD:}
+    remote-timeout-seconds: ${GIT_TIMEOUT_SEC:30}
+    refresh-interval-seconds: ${GIT_REFRESH_INTERVAL_SEC:30}
+    browse:
+      branch-base-url: ${GIT_BROWSE_BRANCH_BASE_URL:}
+      commit-base-url: ${GIT_BROWSE_COMMIT_BASE_URL:}
+    write-branch-select:
+      write-to-master: ${GIT_COMMIT_TO_MASTER_BY_DEFAULT:false}
+      new-branch-each-write: false
+      branch-per-user: false
+      branch-per-entity: true
+
+app.kafka:
+  enabled:
+    clusters:
+      included: ${ENABLED_CLUSTERS:}
+      excluded: ${DISABLED_CLUSTERS:}
+  read-request-timeout-ms: ${KAFKA_READ_TIMEOUT_MS:15000}       # 15 sec default
+  write-request-timeout-ms: ${KAFKA_WRITE_TIMEOUT_MS:120000}    # 2 min default
+  properties:
+    client.id: "kafkistry"
+  cluster-concurrency: ${CLUSTER_POOL_CONCURRENCY_PER_CLUSTER:30}
+
+logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+logging.level.org.apache.kafka.common.utils.AppInfoParser: ERROR
+logging.level.org.apache.kafka.clients.admin.AdminClientConfig: WARN
+logging.level.org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+logging.level.org.apache.kafka.clients.Metadata: WARN
+
+spring.autoconfigure.exclude:
+  - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+  - org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration
+  - org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration
+
+server:
+  servlet.session.cookie.name: KRSESSIONID
+  compression:
+    enabled: true
+    # opt in to content types
+    mime-types: "application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css"
+    # not worth the CPU cycles at some point, probably
+    min-response-size: 10240
+  port: ${HTTP_PORT:8080}
+  error.path: ${app.http.root-path}/error

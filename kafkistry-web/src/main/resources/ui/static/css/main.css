@@ -1,0 +1,126 @@
+tr:hover:not(.no-hover) {
+    background-color: #eeeeee;
+}
+
+.width-full {
+    width: 100%;
+}
+
+.top-bordered {
+    border-top: 1px solid rgba(200, 200, 200, 0.3);
+}
+
+#config-yaml {
+    padding: 15px;
+}
+
+table.fixed-layout {
+    table-layout: fixed;
+}
+
+.status-filter-btn:hover {
+    cursor: pointer;
+}
+
+td.agg-count-status-type {
+    padding: 2px !important;
+}
+.agg-count-status-type .alert {
+    padding: 6px;
+}
+
+.status-flag {
+    padding: 6px !important;
+}
+
+.pre-message {
+    white-space: pre-wrap;
+    margin-bottom: 0;
+}
+
+.table-inline {
+    display: inline !important;
+}
+
+.alert-inline {
+    display: inline-block;
+}
+
+.cluster-status-badge {
+    padding: 6px !important;
+}
+
+.status-filter-btn .alert{
+    padding: 4px !important;
+    margin-bottom: 0 !important;
+}
+
+.alert-cell {
+    margin: 0 !important;
+}
+
+.alert-sm {
+    padding: 6px !important;
+}
+
+[data-toggle=collapse] {
+    cursor: pointer;
+}
+
+[data-toggle=collapse]:hover {
+    background-color: #d8dbdb;
+}
+
+[data-toggle="collapse"].collapsed .if-not-collapsed {
+    display: none;
+}
+[data-toggle="collapse"]:not(.collapsed) .if-collapsed {
+    display: none;
+}
+
+.value-mismatch {
+    background-color: #ff8c8c;
+}
+
+.todo {
+    z-index: 10;
+    position: relative;
+}
+
+.todo:before {
+    content: "TODO";
+    color: gray;
+    background-color: rgba(255, 255, 255, 0.6);
+    width: 100%;
+    position: absolute;
+    left: 0;
+    z-index: 11;
+}
+
+.mouse-pointer:hover {
+    cursor: pointer;
+}
+
+.btn-xsmall {
+    padding: 0 !important;
+    padding-left: 2px !important;
+    padding-right: 1px !important;
+    margin: 0;
+}
+
+.popover-body {
+    max-height: 250px;
+    overflow-y: auto;
+}
+.popover{
+    max-width:none !important;
+}
+
+#kafkistry-navbar .nav-item .nav-link {
+    padding-bottom: 1em;
+}
+
+#kafkistry-navbar .nav-item .nav-link.active {
+    font-weight: bold;
+}
+

@@ -1,0 +1,17 @@
+.collapseable:not(.show) {
+    display: none;
+}
+[data-toggle=collapsing] {
+    cursor: pointer;
+}
+
+[data-toggle=collapsing]:hover:not(.alert) {
+    background-color: #d8dbdb;
+}
+
+[data-toggle=collapsing].collapsed .when-not-collapsed {
+    display: none;
+}
+[data-toggle=collapsing]:not(.collapsed) .when-collapsed {
+    display: none;
+}

@@ -1,0 +1,23 @@
+
+div.crossed {
+    position: relative;
+}
+
+div.crossed:after, div.crossed:before {
+    position: absolute;
+    left: 0;
+    height: 3px;
+    background: rgba(255, 0, 0, 0.6);
+    content: "";
+    width: 100%;
+    display: block;
+    top: 50%;
+}
+
+div.crossed:after {
+    transform: rotate(13deg) scale(0.7, 0.7);
+}
+div.crossed:before {
+    transform: rotate(-13deg) scale(0.7, 0.7);
+}
+

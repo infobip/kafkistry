@@ -1,0 +1,7 @@
+.resource-requirements-input.disabled .resource-input-row {
+    display: none;
+}
+
+.resource-input-row input {
+    width: 330px;
+}

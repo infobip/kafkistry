@@ -1,0 +1,104 @@
+
+.record-value {
+    text-shadow: none;
+    background: #e0e0e0;
+    padding: 0.6em;
+    word-wrap: break-word;
+}
+
+.type-tag {
+    border-radius: 5px;
+    background-color: gray;
+    color: white;
+    padding: 4px;
+    font-size: 12px;
+    margin: 3px;
+}
+
+.spacing {
+    height: 5px;
+}
+
+pre.renderjson {
+    white-space: pre-wrap;
+    margin: 0;
+}
+
+.renderjson a {
+    text-decoration: none;
+}
+
+.renderjson .disclosure {
+    color: #b85c57;
+    margin-right: 2px;
+}
+
+.renderjson .syntax {
+    color: grey;
+}
+
+.renderjson .string {
+    color: #3c8418;
+}
+
+.renderjson .number {
+    color: #326dff;
+}
+
+.renderjson .boolean {
+    color: #9b6add;
+}
+
+.renderjson .key {
+    color: #b5602d;
+}
+
+.renderjson .keyword {
+    color: #767661;
+}
+
+.renderjson .object.syntax {
+    color: #122512;
+}
+
+.renderjson .array.syntax {
+    color: #122512;
+}
+
+.value-base64 .renderjson, .renderjson .value-base64{
+    color: #1e1aaf;
+}
+
+.value-string .renderjson{
+    color: #4b7904;
+}
+
+.record-value.value-null{
+    color: #ee31dd;
+}
+
+.record-value.value-empty{
+    color: #6c6c6c;
+}
+
+.record-value.value-failed{
+    color: #c70101;
+}
+
+.record-metadata-value {
+    color: #2a75c0 !important;
+    font-weight: bold;
+}
+
+.record-value:before {
+    display: block;
+    content: attr(data-type);
+    position: absolute;
+    font-size: 0.7em;
+    font-weight: 700;
+    top: 0.1rem;
+    right: 0.4rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: #999;
+}

@@ -1,0 +1,38 @@
+.info-icon {
+    border: 1px solid;
+    border-radius: 50%;
+    width: auto;
+    height: auto;
+    padding: 0.1em 0.5em;
+    font-size: 0.7em;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.tooltip ul {
+    padding-left: 1em;
+}
+
+.tooltip li {
+    margin: 0;
+}
+
+.tooltip ul {
+    text-align: left;
+}
+
+.tooltip-inner {
+    max-width: 250px !important;
+}
+
+.tooltip-inner table {
+    font-size: 13px;
+    color: white;
+}
+
+.tooltip {
+    pointer-events: none;   /* prevent flickering */
+}
+
+
+

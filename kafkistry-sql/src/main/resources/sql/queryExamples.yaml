@@ -1,0 +1,270 @@
+---
+- title: "Topics with highest message rate"
+  sql: |
+    SELECT
+    	t.cluster, t.topic,
+        COALESCE(t.producerRateLast15Min, t.producerRateLast5Min, t.producerRateLastMin, t.producerRateLast15Sec) AS "msg/sec"
+    FROM Topics AS t
+    ORDER BY "msg/sec" DESC
+    LIMIT 30
+- title: "Replication factor histogram"
+  sql: |
+    SELECT t.actualReplicationFactor AS "replicationFactor", count(*) AS "numTopics"
+    FROM Topics AS t
+    WHERE t.exist = true
+    GROUP BY t.actualReplicationFactor
+    ORDER BY count(*) DESC
+- title: "High replication factor topics"
+  sql: |
+    SELECT t.cluster, t.topic, t.actualReplicationFactor
+    FROM Topics AS t
+    WHERE t.actualReplicationFactor >= 4
+    ORDER BY t.actualReplicationFactor DESC
+    LIMIT 20
+- title: "Partition count histogram"
+  sql: |
+    SELECT t.actualPartitionCount AS "partitionCount", count(*) AS "numTopics"
+    FROM Topics AS t
+    WHERE t.exist = true
+    GROUP BY t.actualPartitionCount
+    ORDER BY count(*) DESC
+- title: "Highest total size retention topics"
+  sql: |
+    SELECT
+    	t.cluster,
+        t.topic,
+        t.actualPartitionCount AS "partitions",
+        t.actualReplicationFactor AS "replication",
+       	tc.value AS "retentionBytes",
+        (t.actualPartitionCount*t.actualReplicationFactor*tc.value)/(1024*1024*1024.0) AS "totalRetentionGB"
+    FROM Topics AS t
+    JOIN Topics_ActualConfigs AS tc
+    ON t.topic == tc.Topic_topic AND t.cluster == tc.Topic_cluster
+    WHERE tc.key = "retention.bytes"
+    ORDER BY "totalRetentionGB" DESC
+    LIMIT 20
+- title: "Topics with most consumer groups"
+  sql: |
+    SELECT g.cluster, g.topic, count(DISTINCT g.Group_groupId) AS "numConsumers"
+    FROM Groups_Assignments AS g
+    GROUP BY g.cluster, g.topic
+    ORDER BY "numConsumers" DESC
+    LIMIT 20
+- title: "Active topics with no consumer groups"
+  sql: |
+    SELECT
+    	t.cluster, t.topic,
+        t.numMessages AS "Available Messages",
+        COALESCE(t.producerRateLast15Min, t.producerRateLast5Min, t.producerRateLastMin, t.producerRateLast15Sec) AS "msg/sec rate"
+    FROM Topics AS t
+    LEFT JOIN Groups_Assignments AS g
+    ON t.topic = g.topic AND t.cluster = g.cluster
+    WHERE
+    	g.topic IS NULL 							/* no consumer group */
+        AND t.exist = true
+        AND t.numMessages > 0 						/* topic is active/has messages */
+        AND (t.topic NOT LIKE "$_$_%" ESCAPE "$")	/* exclude internal topics */
+    ORDER BY t.numMessages DESC
+    LIMIT 20
+
+- title: "Greatest lag consumer groups"
+  sql: |
+    SELECT *
+    FROM Groups AS g
+    ORDER BY g.totalLag DESC
+    LIMIT 50
+- title: "Consumer groups with most topics"
+  sql: |
+    SELECT g.Group_cluster as "cluster", g.Group_groupId as "groupId", count(*) as "numTopics"
+    FROM (
+      SELECT *
+    	FROM Groups_Assignments AS t
+    	GROUP BY t.Group_cluster, t.Group_groupId, t.topic
+    ) AS g
+    GROUP BY g.Group_cluster, g.Group_groupId
+    ORDER BY count(*) desc
+    LIMIT 20
+- title: "Highest number of consumer members per host IP"
+  sql: |
+    SELECT ga.cluster, ga.memberHost, count(*) as "Num Consumer Members From Host"
+    FROM Groups_Assignments as ga
+    GROUP BY ga.memberHost
+    ORDER BY count(*) DESC
+    LIMIT 30
+- title: "Number of topics per cluster"
+  sql: |
+    SELECT
+    	t.cluster,
+        case when t.exist IS NULL then null else sum(case when t.exist then 1 else 0 end) end AS "existing",
+        case when t.exist IS NULL then null else sum(case when not t.exist and t.shouldExist then 1 else 0 end) end AS "missing",
+        case when t.exist IS NULL then null else sum(case when t.exist and not t.shouldExist then 1 else 0 end) end AS "unknown"
+    FROM Topics AS t
+    GROUP BY t.cluster
+    ORDER BY "existing" DESC
+- title: "Number of partitions per each cluster's broker"
+  sql: |
+    SELECT
+    	ta.Topic_cluster as cluster,
+        ta.brokerId,
+        count(*) as numPartitions,
+        count(case ta.leader when true then 1 else null end) AS numLeaders,
+        count(case ta.leader when false then 1 else null end) AS numFollowers
+    FROM Topics_Replicas AS ta
+    GROUP BY cluster, brokerId
+    ORDER BY cluster, brokerId
+    LIMIT 50
+- title: "Topics with non-OK status"
+  sql: |
+    SELECT
+    	ts.Topic_topic AS "topic",
+        ts.Topic_cluster AS "cluster",
+        GROUP_CONCAT(ts.type, ", ") AS "statuses",
+        GROUP_CONCAT(ts.message, "; ") AS "statusMessages"
+    FROM Topics_Statuses AS ts
+    WHERE ts.issueCategory != "NONE"
+    GROUP BY ts.Topic_cluster, ts.Topic_topic
+    ORDER BY "topic", "cluster"
+    LIMIT 1000
+- title: "Topics expected vs. actual message rate compare"
+  sql: |
+    SELECT
+    	t.cluster,
+        t.topic,
+        COALESCE(t.producerRateLast15Min, t.producerRateLast5Min, t.producerRateLastMin, t.producerRateLast15Sec) AS "actualMessagesPerSec",
+        t.expectedMessagesPerSec,
+        ABS(t.expectedMessagesPerSec - COALESCE(t.producerRateLast15Min, t.producerRateLast5Min, t.producerRateLastMin, t.producerRateLast15Sec)) AS "|expected-actual|",
+        case
+        	t.expectedMessagesPerSec > COALESCE(t.producerRateLast15Min, t.producerRateLast5Min, t.producerRateLastMin, t.producerRateLast15Sec)
+            when true then "OVER-ESTIMATED"
+            else "UNDER-ESTIMATED"
+        end AS "prediction"
+    FROM Topics AS t
+    WHERE
+        t.expectedBytesPerSec NOT NULL  /* only topics which have resource requirements */
+        AND t.exist NOT NULL            /* only topics that are from 'VISIBLE' cluster */
+    ORDER BY ABS("|expected-actual|") DESC
+    LIMIT 50
+- title: "List all topic partitions showing usage portion by disk size and usage portion by timed retention"
+  sql: |
+    SELECT
+    	t.Topic_cluster as cluster,
+        t.Topic_topic as topic,
+        t.partition as partition,
+        t.end - t.begin as numMessages,
+        (crt.value/1000.0/3600) as "time retention (hrs)",
+        (t.oldestRecordAgeMs/1000.0/3600) as "Oldest Record Age (hrs)",
+        1.0 * t.oldestRecordAgeMs / crt.value as "Portion Of Time Retention",
+        (crs.value/1024.0/1024.0) as "Size Retention MB",
+        r.sizeBytes/1024.0/1024.0 as "Size MB",
+        1.0 * r.sizeBytes / crs.value as "Portion Of Size retention"
+    FROM Topics_Partitions AS t
+    JOIN Topics_ActualConfigs as crt ON t.Topic_cluster == crt.Topic_cluster AND t.Topic_topic == crt.Topic_topic AND crt.key == "retention.ms"
+    JOIN Topics_ActualConfigs as crs ON t.Topic_cluster == crs.Topic_cluster AND t.Topic_topic == crs.Topic_topic AND crs.key == "retention.bytes"
+    JOIN Topics_Replicas as r ON t.Topic_cluster == r.Topic_cluster AND t.Topic_topic == r.Topic_topic AND t.partition == r.partition AND r.leader
+- title: "Topic partition usage by time retention vs usage by size retention counts"
+  sql: |
+    SELECT recordPresence, timeUsage, sizeUsage, count(*) as "Number Of Such Partitions"
+    FROM
+    (
+    	SELECT
+    		t.Topic_cluster as cluster,
+        	t.Topic_topic as topic,
+       		t.partition as partition,
+        	t.end - t.begin as numMessages,
+        	1.0 * crt.value as retentionMs,
+        	1.0 * t.oldestRecordAgeMs as oldestRecordAgeMs,
+        	1.0 * t.oldestRecordAgeMs / crt.value as timeRetentionUsage,
+        	1.0 * crs.value as retrntionBytes,
+        	r.sizeBytes as sizeBytes,
+        	1.0 * r.sizeBytes / crs.value as sizeRetentionUsage,
+      		case t.end == t.begin when true then "NO_RECORDS" else "HAS_RECORDS" end AS recordPresence,
+            case 1.0 * t.oldestRecordAgeMs / crt.value >= 1 when true then "FULL" else "FREE" end AS timeUsage,
+      		case 1.0 * r.sizeBytes / crs.value >= 1 when true then "FULL" else "FREE" end AS sizeUsage
+    	FROM Topics_Partitions AS t
+    	JOIN Topics_ActualConfigs as crt ON t.Topic_cluster == crt.Topic_cluster AND t.Topic_topic == crt.Topic_topic AND crt.key == "retention.ms"
+    	JOIN Topics_ActualConfigs as crs ON t.Topic_cluster == crs.Topic_cluster AND t.Topic_topic == crs.Topic_topic AND crs.key == "retention.bytes"
+    	JOIN Topics_Replicas as r ON t.Topic_cluster == r.Topic_cluster AND t.Topic_topic == r.Topic_topic AND t.partition == r.partition AND r.leader
+    )
+    GROUP BY recordPresence, timeUsage, sizeUsage
+- title: "Clusters brokers disk usage disbalance"
+  sql: |
+    SELECT
+    	t.cluster,
+        avg(t.diskLoadBytes) as avgBrokerBytes,
+        max(t.diskLoadBytes) as maxBrokerBytes,
+        min(t.diskLoadBytes) as minBrokerBytes,
+        max(t.diskLoadBytes) - min(t.diskLoadBytes) as brokersDisbalanceBytes
+    FROM
+    (
+    	SELECT r.Topic_cluster as cluster, r.brokerId, sum(r.sizeBytes) as diskLoadBytes
+    	FROM Topics_Replicas AS r
+    	GROUP BY r.Topic_cluster, r.brokerId
+    ) as t
+    GROUP BY t.cluster
+- title: "Clusters disk usage relative disbalance"
+  sql: |
+    SELECT
+    	t.cluster,
+        100.0 * (max(t.diskLoadBytes) - min(t.diskLoadBytes)) / avg(t.diskLoadBytes) as "disbalance %"
+    FROM
+    (
+    	SELECT r.Topic_cluster as cluster, r.brokerId, sum(r.sizeBytes) as diskLoadBytes
+    	FROM Topics_Replicas AS r
+    	GROUP BY r.Topic_cluster, r.brokerId
+    ) as t
+    GROUP BY t.cluster
+    HAVING avg(t.diskLoadBytes) > 0
+- title: "Clusters brokers produce rate disbalance"
+  sql: |
+    SELECT
+    	c.cluster,
+        avg(c.produceRate) as avgProduceRate,
+        max(c.produceRate) as maxProduceRate,
+        min(c.produceRate) as minProduceRate,
+        max(c.produceRate) - min(c.produceRate) as disbalanceProduceRate
+    FROM
+    (
+        SELECT t.Topic_cluster as cluster, r.brokerId, sum(t.producerRate) as produceRate
+        FROM Topics_Partitions AS t
+        JOIN Topics_Replicas AS r
+        ON t.Topic_cluster = r.Topic_cluster AND t.Topic_topic = r.Topic_topic AND t.partition = r.partition
+        GROUP BY cluster, r.brokerId
+    ) as c
+    GROUP BY c.cluster
+- title: "Clusters produce rate relative disbalance"
+  sql: |
+    SELECT
+    	c.cluster,
+        100.0 * (max(c.produceRate) - min(c.produceRate)) / avg(c.produceRate) as "disbalance %"
+    FROM
+    (
+        SELECT t.Topic_cluster as cluster, r.brokerId, sum(t.producerRate) as produceRate
+        FROM Topics_Partitions AS t
+        JOIN Topics_Replicas AS r
+        ON t.Topic_cluster = r.Topic_cluster AND t.Topic_topic = r.Topic_topic AND t.partition = r.partition
+        GROUP BY cluster, r.brokerId
+    ) as c
+    GROUP BY c.cluster
+    HAVING avg(c.produceRate) > 0
+- title: "Most partition-disbalance topics"
+  sql: |
+    SELECT
+    	t.cluster,
+    	t.topic,
+        max(t.sizeBytes) - min(t.sizeBytes) as "DiskBytes Partition(max-min)",
+        100.0 * (max(t.sizeBytes) - min(t.sizeBytes)) / avg(t.sizeBytes) as "Relative Disk Disbalance %",
+        max(t.producerRate) - min(t.producerRate) as "producerRate partition(max-min)",
+        100.0 * (max(t.producerRate) - min(t.producerRate)) / avg(t.producerRate) as "Relative Rate Disbalance %"
+    FROM (
+    	SELECT r.Topic_cluster as cluster, r.Topic_topic as topic, r.partition, r.sizeBytes, p.producerRate
+    	FROM Topics_Replicas AS r
+        JOIN Topics_Partitions as p
+      	ON cluster = p.Topic_cluster AND topic = p.Topic_topic AND r.partition = p.partition
+        WHERE r.leader
+    ) as t
+    GROUP BY t.topic, t.cluster
+    HAVING avg(t.sizeBytes) > 0
+    ORDER BY "diskBytes partition(max-min)" DESC
+    LIMIT 30
+
+

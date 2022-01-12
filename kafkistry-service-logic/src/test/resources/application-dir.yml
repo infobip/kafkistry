@@ -1,0 +1,6 @@
+app:
+  repository:
+    git:
+      enabled: false
+    dir:
+      enabled: true

@@ -1,0 +1,17 @@
+.diff-equal {
+
+}
+.diff-added {
+    background-color: #d2ffc0;
+}
+.diff-added-detail {
+    background-color: #82d373;
+    border-radius: 3px;
+}
+.diff-removed {
+    background-color: #ffcbc1;
+}
+.diff-removed-detail {
+    background-color: #ff9092;
+    border-radius: 3px;
+}

@@ -1,0 +1,14 @@
+app:
+  security:
+    enabled: false
+    csrf-enabled: false
+  scheduling.enabled: false
+  hazelcast:
+    group: "kafkistry-it-test"
+    discovery:
+      type: NONE
+  http:
+    root-path: "/kafkistry"
+
+HTTP_REQUESTS_LOGGING_ENABLED: true
+

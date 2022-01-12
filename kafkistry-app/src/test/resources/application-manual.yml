@@ -1,0 +1,13 @@
+SQLITE_DB_DIR: "tmp/sql/db-local/"
+
+app.ui.caching: false
+app.scheduling.enabled: true
+app.security.enabled: true
+
+kafka.profiles:
+  profile-1.properties:
+    client.id: "kr-1"
+  profile-2.properties:
+    client.id: "kr-2"
+  profile-3.properties:
+    client.id: "kr-3"

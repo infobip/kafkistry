@@ -1,0 +1,142 @@
+<#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
+<#-- @ftlvariable name="query" type="java.lang.String" -->
+<#-- @ftlvariable name="tables" type="java.util.List<com.infobip.kafkistry.sql.TableInfo>" -->
+<#-- @ftlvariable name="queryExamples" type="java.util.List<com.infobip.kafkistry.sql.QueryExample>" -->
+
+<html lang="en">
+
+<head>
+    <#include "../commonResources.ftl"/>
+    <script src="static/sql-js/sql.js?ver=${lastCommit}"></script>
+    <script src="static/sql-js/chart.js?ver=${lastCommit}"></script>
+    <link rel="stylesheet" href="static/css/sql.css?ver=${lastCommit}"/>
+    <#include "../codeMirrorResources.ftl">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
+    <title>Kafkistry: SQL</title>
+    <meta name="current-nav" content="nav-sql"/>
+</head>
+
+<body>
+
+<#include "../commonMenu.ftl">
+
+<div id="table-columns" style="display: none;">
+    <#list tables as table>
+        <div class="sql-table" data-table="${table.name}">
+            <#list table.columns as column>
+                <div class="sql-column" data-column="${column.name}"></div>
+            </#list>
+        </div>
+    </#list>
+</div>
+
+<div class="container">
+    <div style="border: 1px solid #999999;">
+        <textarea id="sql-edit" class="width-full" name="sql"
+                  placeholder="enter your 'SELECT' SQL query... (CTRL+SPACE to autocomplete tables/columns)"
+        >${query!''}</textarea>
+    </div>
+    <div class="pt-2">
+        <button id="execute-sql-btn" class="btn btn-primary">Execute SQL</button>
+        <label class="small">
+            <i>Auto add <code>LIMIT</code> clause if not present</i>
+            <input type="checkbox" name="auto-limit" checked>
+        </label>
+        <div class="float-right">
+            <button id="schema-help-btn" type="button" class="btn btn-outline-info">
+                Schema help
+            </button>
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false">
+                Query examples...
+            </button>
+            <div class="dropdown-menu open">
+                <#list queryExamples as query>
+                    <span class="dropdown-item query-example" data-sql="${query.sql}">${query.title}</span>
+                </#list>
+            </div>
+        </div>
+    </div>
+    <div id="schema-info" style="display: none;">
+        <table class="table table-sm mt-2">
+            <thead class="thead-light h5">
+            <tr>
+                <th><span>Table name</span></th>
+                <th><span>Column names</span></th>
+            </tr>
+            </thead>
+            <#list tables as table>
+                <tr class="no-hover">
+                    <#if !table.joinTable>
+                        <#assign tableTdClass = "">
+                        <#assign tableNameClass = "alert-primary">
+                    <#else>
+                        <#assign tableTdClass = "pl-4">
+                        <#assign tableNameClass = "alert-info">
+                    </#if>
+                    <td class="${tableTdClass}">
+                        <span class="sql-table sql-insert-text alert alert-inline alert-sm ${tableNameClass} p-1 mb-0">${table.name}</span>
+                    </td>
+                    <td>
+                        <#list table.columns as column>
+                            <#if column.joinKey>
+                                <#assign colClass = "badge-info font-weight-bold">
+                            <#elseif column.primaryKey>
+                                <#assign colClass = "badge-primary font-weight-bold">
+                            <#elseif column.referenceKey>
+                                <#assign colClass = "badge-secondary font-weight-bold">
+                            <#else>
+                                <#assign colClass = "badge-light">
+                            </#if>
+                            <#assign tooltip>
+                                <#if column.joinKey>
+                                    <span class='badge ${colClass}'>FOREIGN KEY</span>
+                                <#elseif column.primaryKey>
+                                    <span class='badge ${colClass}'>PRIMARY KEY</span>
+                                <#elseif column.referenceKey>
+                                    <span class='badge ${colClass}'>JOIN KEY</span>
+                                <#else>
+                                    <span class='badge ${colClass}'>VALUE</span>
+                                </#if>
+                                <br/>
+                                <span class='mt-1 badge badge-light'>${column.type}</span>
+                            </#assign>
+                            <span class="sql-column sql-insert-text info-label badge ${colClass}" title="${tooltip}" data-toggle="tooltip"
+                                  data-html="true">
+                                ${column.name}
+                            </span>
+                        </#list>
+                    </td>
+                </tr>
+            </#list>
+
+        </table>
+    </div>
+    <hr/>
+
+    <#include "../common/serverOpStatus.ftl">
+
+    <div id="chart-components-wrapper" class="width-full" style="display: none;">
+        <div class="text-right">
+            <button class="btn btn-sm btn-outline-secondary" data-target="#chart-components" data-toggle="collapse">
+                <span class="if-collapsed">▼ Show chart</span>
+                <span class="if-not-collapsed">△ Hide chart</span>
+            </button>
+        </div>
+        <div id="chart-components" class="showing collapse show">
+            <div id="chart-container" class="m-4" style="display: none;">
+                <canvas id="chart" width="1000" height="350" style="margin: auto;"></canvas>
+            </div>
+            <#assign statusId = "chart">
+            <#include "../common/serverOpStatus.ftl">
+        </div>
+    </div>
+
+    <div id="sql-result"></div>
+</div>
+
+<#include "../common/pageBottom.ftl">
+</body>
+</html>

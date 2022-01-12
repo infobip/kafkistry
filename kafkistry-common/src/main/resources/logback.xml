@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <if condition='property("spring.profiles.active").contains("production") || property("SPRING_PROFILES_ACTIVE").contains("production")'>
+        <then>
+            <appender name="fileout"
+                      class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
+                <file>${SERVICE_LOG_ROOT}/output.log</file>
+                <encoder>
+                    <pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p %t %c - %m%n</pattern>
+                </encoder>
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>DEBUG</level>
+                </filter>
+                <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                    <maxIndex>10</maxIndex>
+                    <FileNamePattern>${SERVICE_LOG_ROOT}/output.log.%i</FileNamePattern>
+                </rollingPolicy>
+                <triggeringPolicy
+                        class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                    <MaxFileSize>6000KB</MaxFileSize>
+                </triggeringPolicy>
+            </appender>
+
+            <appender name="fileerr"
+                      class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
+                <file>${SERVICE_LOG_ROOT}/error.log</file>
+                <encoder>
+                    <pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p %t %c - %m%n</pattern>
+                </encoder>
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>ERROR</level>
+                </filter>
+                <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                    <maxIndex>10</maxIndex>
+                    <FileNamePattern>${SERVICE_LOG_ROOT}/error.log.%i</FileNamePattern>
+                </rollingPolicy>
+                <triggeringPolicy
+                        class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                    <MaxFileSize>6000KB</MaxFileSize>
+                </triggeringPolicy>
+            </appender>
+
+            <root level="INFO">
+                <appender-ref ref="fileout"/>
+                <appender-ref ref="fileerr"/>
+            </root>
+        </then>
+
+        <else> <!-- DEFAULT section when running locally and/or on debugger -->
+
+            <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <withJansi>true</withJansi>
+                <encoder>
+                    <pattern>[%d{yyyy-MM-dd_HH:mm:ss.SSS}] [%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>
+                </encoder>
+            </appender>
+
+            <logger name="com.infobip.kafkistry" level="DEBUG"/>
+
+            <root level="INFO">
+                <appender-ref ref="CONSOLE"/>
+            </root>
+        </else>
+    </if>
+
+    <turboFilter class="ch.qos.logback.classic.turbo.DynamicThresholdFilter">
+        <Key>X-Log-Level</Key>
+        <DefaultThreshold>${LOG_LEVEL:-TRACE}</DefaultThreshold>
+        <MDCValueLevelPair>
+            <value>ERROR</value>
+            <level>ERROR</level>
+        </MDCValueLevelPair>
+        <MDCValueLevelPair>
+            <value>WARN</value>
+            <level>WARN</level>
+        </MDCValueLevelPair>
+        <MDCValueLevelPair>
+            <value>DEBUG</value>
+            <level>DEBUG</level>
+        </MDCValueLevelPair>
+    </turboFilter>
+
+</configuration>
