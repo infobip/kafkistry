@@ -4,7 +4,7 @@
     <groupId>com.infobip.kafkistry</groupId>
     <artifactId>kafkistry-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.0</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -410,7 +410,7 @@
         <url>git@github.com:infobip/kafkistry.git</url>
         <connection>scm:git:git@github.com:infobip/kafkistry.git</connection>
         <developerConnection>scm:git:git@github.com:infobip/kafkistry.git</developerConnection>
-        <tag>kafkistry-parent-0.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
