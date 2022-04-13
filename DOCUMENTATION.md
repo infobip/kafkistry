@@ -1233,13 +1233,13 @@ Then write your main class as follows:
 ```kotlin
 package org.mycompany.kafkistry
 
-import com.infobip.kafkistry.KafkistryApplication
+import com.infobip.kafkistry.Kafkistry
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Import
 
 @SpringBootApplication
-@Import(KafkistryApplication::class)
+@Import(Kafkistry::class)
 class MyCompanyKafkistry
 
 fun main(args: Array<String>) {
