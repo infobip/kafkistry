@@ -157,7 +157,7 @@ Properties:
 | `GIT_REFRESH_INTERVAL_SEC` | Git periodic fetch polling interval. Default `30` sec |
 | `app.repository.git.strict-ssh-host-key-checking` | Default `false` (ssh would fail if current host never connected to remote and having no saved fingerprint of remote host) |
 | `GIT_BROWSE_BRANCH_BASE_URL` | Optional. Used for UI generating links for external git repository browsing for showing branch. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/compare/commits?sourceBranch=` |
-| `GIT_BROWSE_BRANCH_BASE_URL` | Optional. Used for UI generating links for external gir repository browsing for showing commit. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/commits/` |
+| `GIT_BROWSE_COMMIT_BASE_URL` | Optional. Used for UI generating links for external gir repository browsing for showing commit. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/commits/` |
 | `GIT_COMMIT_TO_MASTER_BY_DEFAULT` | Should Kafkistry commit directly to main/master branch. Default `false` |
 
 
