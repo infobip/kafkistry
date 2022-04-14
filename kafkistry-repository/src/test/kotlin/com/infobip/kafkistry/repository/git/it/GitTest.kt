@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.repository.git.it
 
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import org.assertj.core.api.AbstractListAssert
 import org.assertj.core.api.Assertions.*
 import org.assertj.core.api.ListAssert
@@ -487,7 +488,8 @@ class GitTest {
             gitRemoteUri = gitRemoteUri,
             auth = auth,
             writeBranchSelector = writeBranchSelector,
-            strictSshHostKeyChecking = strictSshHostKeyChecking
+            strictSshHostKeyChecking = strictSshHostKeyChecking,
+            promProperties = PrometheusMetricsProperties(),
         )
     }
 

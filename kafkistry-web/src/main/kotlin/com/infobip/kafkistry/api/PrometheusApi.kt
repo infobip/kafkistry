@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.api
 
+import com.infobip.kafkistry.metric.config.APP_METRICS_ENABLED_PROPERTY
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Controller
@@ -9,7 +10,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Controller
 @RequestMapping("\${app.http.root-path}")
-@ConditionalOnProperty("app.metrics.enabled", matchIfMissing = true)
+@ConditionalOnProperty(APP_METRICS_ENABLED_PROPERTY, matchIfMissing = true)
 class PrometheusApi(
     private val registry: PrometheusMeterRegistry
 ) {

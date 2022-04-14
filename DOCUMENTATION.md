@@ -402,7 +402,8 @@ Registration of default JVM metrics is done using `io.prometheus.client.hotspot.
 There are numerous metrics showing how is Kafkistry operating. 
 (UI requests latencies, API request latencies, time since last kafka metadata scrape, etc.)
 
-All Kafkistry-specific metrics have naming starting with `kafkistry_`*.
+All Kafkistry-specific metrics have default naming starting with `kafkistry_`*.
+This prefix can be configured via `APP_METRICS_PREFIX` property.
 
 ### Consumer lag
 

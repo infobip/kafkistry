@@ -4,6 +4,7 @@ import io.prometheus.client.Collector
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.PartitionOffsets
 import com.infobip.kafkistry.kafkastate.ClusterTopicOffsets
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
@@ -25,15 +26,17 @@ class TopicOffsetsMetricsProperties {
 @Component
 @ConditionalOnProperty("app.metrics.topic-offsets.enabled", matchIfMissing = true)
 class TopicOffsetsCollector(
+    promProperties: PrometheusMetricsProperties,
     properties: TopicOffsetsMetricsProperties,
     private val topicOffsetsService: TopicOffsetsService,
     clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>
 ) : Collector() {
 
-    companion object {
-        const val BEGIN_OFFSET_METRIC_NAME = "kafkistry_topic_begin_offset"
-        const val END_OFFSET_METRIC_NAME = "kafkistry_topic_end_offset"
-    }
+    //default: kafkistry_topic_begin_offset
+    private val beginOffsetMetricName = promProperties.prefix + "topic_begin_offset"
+
+    //default: kafkistry_topic_end_offset
+    private val endOffsetMetricName = promProperties.prefix + "topic_end_offset"
 
     private val filter = ClusterTopicFilter(properties.enabledOn)
 
@@ -50,30 +53,26 @@ class TopicOffsetsCollector(
         val beginOffsetSamples =
             allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
                 MetricFamilySamples.Sample(
-                    BEGIN_OFFSET_METRIC_NAME,
-                    labelNames,
+                    beginOffsetMetricName, labelNames,
                     listOf(labelProvider.labelValue(cluster), topic, partition.toString()),
                     partitionOffsets.begin.toDouble()
                 )
             }
         val endOffsetSamples = allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
             MetricFamilySamples.Sample(
-                END_OFFSET_METRIC_NAME,
-                labelNames,
+                endOffsetMetricName, labelNames,
                 listOf(labelProvider.labelValue(cluster), topic, partition.toString()),
                 partitionOffsets.end.toDouble()
             )
         }
         return mutableListOf(
             MetricFamilySamples(
-                BEGIN_OFFSET_METRIC_NAME,
-                Type.GAUGE,
+                beginOffsetMetricName, Type.GAUGE,
                 "Value of earliest (begin) offset per topic partition",
                 beginOffsetSamples
             ),
             MetricFamilySamples(
-                END_OFFSET_METRIC_NAME,
-                Type.GAUGE,
+                endOffsetMetricName, Type.GAUGE,
                 "Value of latest (end) offset per topic partition",
                 endOffsetSamples
             )

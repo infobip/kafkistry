@@ -3,6 +3,7 @@ package com.infobip.kafkistry.metric
 import io.prometheus.client.Collector
 import org.apache.kafka.common.config.TopicConfig
 import com.infobip.kafkistry.kafka.Partition
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
@@ -28,6 +29,7 @@ class RetentionMetricsProperties {
 @Component
 @ConditionalOnProperty("app.metrics.topic-retention.enabled", matchIfMissing = true)
 class RetentionMetricsCollector(
+    promProperties: PrometheusMetricsProperties,
     properties: RetentionMetricsProperties,
     private val inspectionService: TopicsInspectionService,
     private val oldestRecordAgeService: Optional<OldestRecordAgeService>,
@@ -37,10 +39,16 @@ class RetentionMetricsCollector(
 
     companion object {
         const val INF_RETENTION = -1L
-        const val EFFECTIVE_RETENTION_METRIC_NAME = "kafkistry_topic_effective_retention_ms"
-        const val TIME_RETENTION_USAGE_NAME = "kafkistry_topic_time_retention_usage"
-        const val SIZE_RETENTION_METRIC_NAME = "kafkistry_topic_size_retention_usage"
     }
+
+    //default: kafkistry_topic_effective_retention_ms
+    private val effectiveRetentionMetricName = promProperties.prefix + "topic_effective_retention_ms"
+
+    //default: kafkistry_topic_time_retention_usage
+    private val timeRetentionUsageMetricName = promProperties.prefix + "topic_time_retention_usage"
+
+    //default: kafkistry_topic_size_retention_usage
+    private val sizeRetentionUsageMetricName = promProperties.prefix + "topic_topic_size_retention_usage"
 
     private val labelProvider = clusterLabelProvider.getIfAvailable {
         DefaultClusterMetricLabelProvider()
@@ -54,38 +62,38 @@ class RetentionMetricsCollector(
         val allTopicPartitionStats = getAllTopicPartitionStats()
         val timeRetentionUsageSamples = allTopicPartitionStats.mapNotNull {
             MetricFamilySamples.Sample(
-                TIME_RETENTION_USAGE_NAME, labelNames,
+                timeRetentionUsageMetricName, labelNames,
                 listOf(labelProvider.labelValue(it.clusterIdentifier), it.topic, it.partition.toString()),
                 it.timeUsage ?: return@mapNotNull null
             )
         }
         val sizeRetentionUsageSamples = allTopicPartitionStats.mapNotNull {
             MetricFamilySamples.Sample(
-                SIZE_RETENTION_METRIC_NAME, labelNames,
+                sizeRetentionUsageMetricName, labelNames,
                 listOf(labelProvider.labelValue(it.clusterIdentifier), it.topic, it.partition.toString()),
                 it.sizeUsage ?: return@mapNotNull null
             )
         }
         val effectiveRetentionSamples = allTopicPartitionStats.mapNotNull {
             MetricFamilySamples.Sample(
-                EFFECTIVE_RETENTION_METRIC_NAME, labelNames,
+                effectiveRetentionMetricName, labelNames,
                 listOf(labelProvider.labelValue(it.clusterIdentifier), it.topic, it.partition.toString()),
                 it.oldestRecordAgeMs?.toDouble() ?: return@mapNotNull null
             )
         }
         return mutableListOf(
             MetricFamilySamples(
-                TIME_RETENTION_USAGE_NAME, Type.GAUGE,
+                timeRetentionUsageMetricName, Type.GAUGE,
                 "Ratio of oldest record age against retention.ms",
                 timeRetentionUsageSamples
             ),
             MetricFamilySamples(
-                SIZE_RETENTION_METRIC_NAME, Type.GAUGE,
+                sizeRetentionUsageMetricName, Type.GAUGE,
                 "Ratio of partition size against retention.bytes",
                 sizeRetentionUsageSamples
             ),
             MetricFamilySamples(
-                EFFECTIVE_RETENTION_METRIC_NAME, Type.GAUGE,
+                effectiveRetentionMetricName, Type.GAUGE,
                 "How old in millis is last message in partition",
                 effectiveRetentionSamples
             ),

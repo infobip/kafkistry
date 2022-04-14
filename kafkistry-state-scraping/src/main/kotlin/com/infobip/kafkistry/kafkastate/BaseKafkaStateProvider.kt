@@ -3,16 +3,21 @@ package com.infobip.kafkistry.kafkastate
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 import com.infobip.kafkistry.kafkastate.config.PoolingProperties
+import com.infobip.kafkistry.metric.MetricHolder
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.repository.KafkaClustersRepository
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory
 import java.util.concurrent.*
 
-private val clusterPoolingSummary = Summary.build()
-        .name("kafkistry_cluster_pooling")
+private val clusterPoolingSummaryHolder = MetricHolder { prefix ->
+    //default name: kafkistry_cluster_pooling
+    Summary.build()
+        .name(prefix + "cluster_pooling")
         .help("Summary of latencies of each refresh attempt for cluster")
         .labelNames("cluster_identifier", "pooling_type", "cluster_status")
         .ageBuckets(5)
@@ -21,20 +26,28 @@ private val clusterPoolingSummary = Summary.build()
         .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
         .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
         .register()
+}
 
-private val clusterPoolingTypeOkGauge = Gauge.build()
-        .name("kafkistry_cluster_pooling_status")
+private val clusterPoolingTypeOkGaugeHolder = MetricHolder { prefix ->
+    //default name: kafkistry_cluster_pooling_status
+    Gauge.build()
+        .name(prefix + "cluster_pooling_status")
         .help("Gauge telling if cluster pooling status is ok (1.0) or not ok (0.0)")
         .labelNames("cluster_identifier", "pooling_type")
         .register()
+}
 
 abstract class BaseKafkaStateProvider(
-        private val clustersRepository: KafkaClustersRepository,
-        private val clusterFilter: ClusterEnabledFilter,
-        poolingProperties: PoolingProperties
+    private val clustersRepository: KafkaClustersRepository,
+    private val clusterFilter: ClusterEnabledFilter,
+    poolingProperties: PoolingProperties,
+    promProperties: PrometheusMetricsProperties,
 ) : AutoCloseable {
 
-    protected val log = LoggerFactory.getLogger(this.javaClass)!!
+    protected val log: Logger = LoggerFactory.getLogger(this.javaClass)
+
+    private val clusterPoolingSummary = clusterPoolingSummaryHolder.metric(promProperties)
+    private val clusterPoolingTypeOkGauge = clusterPoolingTypeOkGaugeHolder.metric(promProperties)
 
     private val executor = Executors.newFixedThreadPool(
             poolingProperties.clusterConcurrency,

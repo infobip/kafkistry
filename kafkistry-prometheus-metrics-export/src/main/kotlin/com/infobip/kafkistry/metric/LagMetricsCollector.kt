@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.metric
 
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import io.prometheus.client.Collector
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.consumers.*
@@ -23,16 +24,16 @@ class LagMetricsProperties {
 @Component
 @ConditionalOnProperty("app.metrics.consumer-lag.enabled", matchIfMissing = true)
 class LagMetricsCollector(
-    properties: LagMetricsProperties,
+    promProperties: PrometheusMetricsProperties,
+    lagProperties: LagMetricsProperties,
     private val consumersService: ConsumersService,
     clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>
 ) : Collector() {
 
-    companion object {
-        const val LAG_METRIC_NAME = "kafkistry_consumer_lag"
-    }
+    //default: kafkistry_consumer_lag
+    private val lagMetricName = promProperties.prefix + "consumer_lag"
 
-    private val filter = ClusterTopicConsumerGroupFilter(properties.enabledOn)
+    private val filter = ClusterTopicConsumerGroupFilter(lagProperties.enabledOn)
 
     private val labelProvider = clusterLabelProvider.getIfAvailable {
         DefaultClusterMetricLabelProvider()
@@ -48,7 +49,7 @@ class LagMetricsCollector(
             .partitionLagSamples()
         return mutableListOf(
             MetricFamilySamples(
-                LAG_METRIC_NAME,
+                lagMetricName,
                 Type.GAUGE,
                 "How many messages is consumer lagging behind newest message in topic partition",
                 samples
@@ -86,7 +87,7 @@ class LagMetricsCollector(
         partitionMember: ConsumerTopicPartitionMember,
         lagAmount: Long
     ) = MetricFamilySamples.Sample(
-        LAG_METRIC_NAME,
+        lagMetricName,
         labelNames,
         listOf(
             labelProvider.labelValue(clusterIdentifier),

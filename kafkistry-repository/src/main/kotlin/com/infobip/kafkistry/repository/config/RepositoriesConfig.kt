@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.repository.config
 
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.repository.*
 import com.infobip.kafkistry.repository.storage.CachingKeyValueRepository
@@ -90,7 +91,10 @@ class GitRepositoriesConfig(
     fun gitWriteBranchSelector() = GitWriteBranchSelector(branchSelectProperties)
 
     @Bean
-    fun gitRepository(writeBranchSelector: GitWriteBranchSelector): GitRepository {
+    fun gitRepository(
+        writeBranchSelector: GitWriteBranchSelector,
+        promProperties: PrometheusMetricsProperties,
+    ): GitRepository {
         return GitRepository(
             dirPath = properties.localDir,
             gitRemoteUri = properties.remoteSshUri.takeIf { it.isNotBlank() },
@@ -105,6 +109,7 @@ class GitRepositoriesConfig(
             gitTimeoutSeconds = properties.remoteTimeoutSeconds,
             strictSshHostKeyChecking = properties.strictSshHostKeyChecking,
             dropLocalBranchesMissingOnRemote = properties.dropLocalBranchesMissingOnRemote,
+            promProperties = promProperties,
         ).also {
             backgroundJobIssuesRegistry.registerSupplier("git", "Git repository") {
                 it.lastRefreshErrorMsg()

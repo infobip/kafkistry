@@ -1,5 +1,7 @@
 package com.infobip.kafkistry.metric.webapp
 
+import com.infobip.kafkistry.metric.MetricHolder
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import io.prometheus.client.Summary
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -9,8 +11,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
-private val apiServiceRequestLatencies = Summary.build()
-        .name("kafkistry_service_api_latencies")
+private val apiServiceRequestLatenciesHolder = MetricHolder { prefix ->
+    //default name: kafkistry_service_api_latencies
+    Summary.build()
+        .name(prefix + "service_api_latencies")
         .help("Summary of latencies of each api service broken down per separate api service method")
         .labelNames("service_method")
         .ageBuckets(5)
@@ -19,13 +23,17 @@ private val apiServiceRequestLatencies = Summary.build()
         .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
         .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
         .register()
+}
 
 @Component
 @Aspect
 @ConditionalOnProperty("app.metrics.api-calls", matchIfMissing = true)
-class ApiMetricsAspect {
+class ApiMetricsAspect(
+    promProperties: PrometheusMetricsProperties,
+) {
 
     private val log = LoggerFactory.getLogger(ApiMetricsAspect::class.java)
+    private val apiServiceRequestLatencies = apiServiceRequestLatenciesHolder.metric(promProperties)
 
     @Around("execution(* com.infobip.kafkistry.api.*.*(..))")
     fun exec(joinPoint: ProceedingJoinPoint): Any? {

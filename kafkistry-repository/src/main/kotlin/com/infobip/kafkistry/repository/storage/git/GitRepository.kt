@@ -1,5 +1,7 @@
 package com.infobip.kafkistry.repository.storage.git
 
+import com.infobip.kafkistry.metric.MetricHolder
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.KeyPair
 import com.jcraft.jsch.Session
@@ -38,33 +40,39 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicReference
 
-private val gitExclusiveLockLatencies = Summary.build()
-    .name("kafkistry_git_lock_latencies")
-    .help("Latencies on git repo exclusive lock")
-    .labelNames("refreshing", "phase")
-    .quantile(0.5, 0.05)   // Add 50th percentile (= median) with 5% tolerated error
-    .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
-    .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
-    .register()
-private val waitLatencies = gitExclusiveLockLatencies.labels("false", "wait")
-private val execLatencies = gitExclusiveLockLatencies.labels("false", "exec")
-private val totalLatencies = gitExclusiveLockLatencies.labels("false", "total")
-private val waitLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "wait")
-private val execLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "exec")
-private val totalLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "total")
+private val gitExclusiveLockLatenciesHolder = MetricHolder { prefix ->
+    //default name: kafkistry_git_lock_latencies
+    Summary.build()
+        .name(prefix + "git_lock_latencies")
+        .help("Latencies on git repo exclusive lock")
+        .labelNames("refreshing", "phase")
+        .quantile(0.5, 0.05)   // Add 50th percentile (= median) with 5% tolerated error
+        .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
+        .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
+        .register()
+}
 
 class GitRepository(
-        dirPath: String,
-        private val gitRemoteUri: String? = null,
-        private val writeBranchSelector: GitWriteBranchSelector,
-        private val auth: Auth = Auth.NONE,
-        private val mainBranch: String = "master",
-        private val gitTimeoutSeconds: Int = 30,
-        private val strictSshHostKeyChecking: Boolean = false,
-        private val dropLocalBranchesMissingOnRemote: Boolean = false,
+    dirPath: String,
+    private val gitRemoteUri: String? = null,
+    private val writeBranchSelector: GitWriteBranchSelector,
+    private val auth: Auth = Auth.NONE,
+    private val mainBranch: String = "master",
+    private val gitTimeoutSeconds: Int = 30,
+    private val strictSshHostKeyChecking: Boolean = false,
+    private val dropLocalBranchesMissingOnRemote: Boolean = false,
+    promProperties: PrometheusMetricsProperties,
 ) {
 
     private val log = LoggerFactory.getLogger(GitRepository::class.java)
+
+    private val gitExclusiveLockLatencies = gitExclusiveLockLatenciesHolder.metric(promProperties)
+    private val waitLatencies = gitExclusiveLockLatencies.labels("false", "wait")
+    private val execLatencies = gitExclusiveLockLatencies.labels("false", "exec")
+    private val totalLatencies = gitExclusiveLockLatencies.labels("false", "total")
+    private val waitLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "wait")
+    private val execLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "exec")
+    private val totalLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "total")
 
     private val lock = Object()
     private val noRemote = gitRemoteUri == null

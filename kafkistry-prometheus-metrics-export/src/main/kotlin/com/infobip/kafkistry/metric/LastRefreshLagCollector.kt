@@ -2,16 +2,17 @@ package com.infobip.kafkistry.metric
 
 import io.prometheus.client.Collector
 import com.infobip.kafkistry.kafkastate.*
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import org.springframework.stereotype.Component
 
 @Component
 class LastRefreshLagCollector(
-        private val providers: List<AbstractKafkaStateProvider<*>>
+    promProperties: PrometheusMetricsProperties,
+    private val providers: List<AbstractKafkaStateProvider<*>>
 ) : Collector() {
 
-    companion object {
-        const val METRIC_NAME = "kafkistry_pool_refresh_lag"
-    }
+    //default: kafkistry_pool_refresh_lag
+    private val metricName = promProperties.prefix + "pool_refresh_lag"
 
     val labelNames = listOf("cluster", "type")
 
@@ -21,19 +22,17 @@ class LastRefreshLagCollector(
             val latestStates = provider.getAllLatestStates()
             latestStates.map { (clusterIdentifier, state) ->
                 MetricFamilySamples.Sample(
-                        METRIC_NAME,
-                        labelNames,
-                        listOf(clusterIdentifier, provider.stateTypeName),
-                        (now - state.lastRefreshTime).toDouble()
+                    metricName, labelNames,
+                    listOf(clusterIdentifier, provider.stateTypeName),
+                    (now - state.lastRefreshTime).toDouble()
                 )
             }
         }
         return mutableListOf(
                 MetricFamilySamples(
-                        METRIC_NAME,
-                        Type.GAUGE,
-                        "How much time (ms) has passed since last pool from cluster",
-                        allSamples.toMutableList()
+                    metricName, Type.GAUGE,
+                    "How much time (ms) has passed since last pool from cluster",
+                    allSamples.toMutableList()
                 )
         )
     }

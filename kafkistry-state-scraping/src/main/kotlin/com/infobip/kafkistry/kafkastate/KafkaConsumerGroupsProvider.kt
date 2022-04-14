@@ -2,6 +2,7 @@ package com.infobip.kafkistry.kafkastate
 
 import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafkastate.config.PoolingProperties
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.repository.KafkaClustersRepository
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
@@ -13,9 +14,12 @@ class KafkaConsumerGroupsProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
     issuesRegistry: BackgroundJobIssuesRegistry,
-    private val poolingProperties: PoolingProperties,
+    poolingProperties: PoolingProperties,
+    promProperties: PrometheusMetricsProperties,
     private val clientProvider: KafkaClientProvider,
-) : AbstractKafkaStateProvider<ClusterConsumerGroups>(clustersRepository, clusterFilter, poolingProperties, issuesRegistry) {
+) : AbstractKafkaStateProvider<ClusterConsumerGroups>(
+    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+) {
 
     override val stateTypeName = "consumer_groups"
 

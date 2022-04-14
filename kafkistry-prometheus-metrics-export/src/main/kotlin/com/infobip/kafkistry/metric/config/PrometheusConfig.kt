@@ -7,24 +7,13 @@ import io.prometheus.client.Collector
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.hotspot.DefaultExports
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Configuration
-@ConfigurationProperties("app.metrics")
-class PrometheusMetricsProperties {
-    var enabled = true
-    var defaultMetrics = true
-    var apiCalls = true
-    var httpCalls = true
-    var httpPath: String? = null    //defined to generate properties metadata
-}
-
-@Configuration
-@ConditionalOnProperty("app.metrics.enabled", matchIfMissing = true)
+@ConditionalOnProperty(APP_METRICS_ENABLED_PROPERTY, matchIfMissing = true)
 class PrometheusConfigs(
     collectorBeans: Optional<List<Collector>>,
     prometheusProperties: PrometheusMetricsProperties,

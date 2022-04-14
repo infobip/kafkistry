@@ -3,6 +3,7 @@ package com.infobip.kafkistry.kafkastate
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.config.PoolingProperties
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
@@ -17,11 +18,14 @@ class KafkaRecordSamplerProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
     poolingProperties: PoolingProperties,
+    promProperties: PrometheusMetricsProperties,
     issuesRegistry: BackgroundJobIssuesRegistry,
     private val topicOffsetsProvider: KafkaTopicOffsetsProvider,
     private val clientProvider: KafkaClientProvider,
     private val recordSamplerListeners: Optional<List<RecordSamplingListener>>,
-) : AbstractKafkaStateProvider<Unit>(clustersRepository, clusterFilter, poolingProperties, issuesRegistry) {
+) : AbstractKafkaStateProvider<Unit>(
+    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+) {
 
     override val stateTypeName = "records_sampling"
 

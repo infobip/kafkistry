@@ -1,5 +1,7 @@
 package com.infobip.kafkistry.metric.webapp
 
+import com.infobip.kafkistry.metric.MetricHolder
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import io.prometheus.client.Summary
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -12,8 +14,10 @@ import javax.servlet.ServletRequest
 import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 
-private val httpRequestLatencies = Summary.build()
-        .name("kafkistry_http_latencies")
+private val httpRequestLatenciesHolder = MetricHolder { prefix ->
+    //default name: kafkistry_http_latencies
+    Summary.build()
+        .name(prefix + "http_latencies")
         .help("Summary of latencies of each http request broken down per separate html method and uri path")
         .labelNames("http_method", "http_uri")
         .ageBuckets(5)
@@ -22,12 +26,17 @@ private val httpRequestLatencies = Summary.build()
         .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
         .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
         .register()
+}
 
 @Component
 @ConditionalOnProperty("app.metrics.http-calls", matchIfMissing = true)
-class RequestMetricsFilter : GenericFilterBean() {
+class RequestMetricsFilter(
+    promProperties: PrometheusMetricsProperties,
+) : GenericFilterBean() {
 
     private val log = LoggerFactory.getLogger(RequestMetricsFilter::class.java)
+
+    private val httpRequestLatencies = httpRequestLatenciesHolder.metric(promProperties)
 
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
         val start = System.currentTimeMillis()

@@ -7,6 +7,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.kafka.SamplingPosition
 import com.infobip.kafkistry.kafka.RecordSampler
 import com.infobip.kafkistry.kafka.RecordSamplingListener
+import com.infobip.kafkistry.metric.MetricHolder
+import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
@@ -21,57 +23,70 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-private val sampledMessagesCount = Counter.build()
-    .name("kafkistry_record_analyzer_sampled_count")
-    .help("Number of sampled messages for structure analysis")
-    .labelNames("cluster", "topic")
-    .register()
-
-private val failedMessagesCount = Counter.build()
-    .name("kafkistry_record_analyzer_failed_count")
-    .help("Number of failed sampling messages for structure analysis")
-    .labelNames("cluster", "topic")
-    .register()
-
-private val droppedMessagesCount = Counter.build()
-    .name("kafkistry_record_analyzer_dropped_count")
-    .help("Number of dropped messages for structure analysis due to full queue")
-    .register()
-
-private val queueSize = Gauge.build()
-    .name("kafkistry_record_analyzer_queue_size")
-    .help("Number of records queued for processing")
-    .register()
-
-private val recordsStructuresCount = Counter.build()
-    .name("kafkistry_record_analyzer_records_structures_count")
-    .help("Number of records structures processed by the procedure")
-    .labelNames("records_structures_procedure")
-    .register()
-
-private fun incrementTrimRecordsStructuresCount(counter: Int) {
-    recordsStructuresCount.labels("trim").inc(counter.toDouble())
+private val sampledMessagesCountHolder = MetricHolder { prefix ->
+    //default name: kafkistry_record_analyzer_sampled_count
+    Counter.build()
+        .name(prefix + "record_analyzer_sampled_count")
+        .help("Number of sampled messages for structure analysis")
+        .labelNames("cluster", "topic")
+        .register()
 }
 
-private fun incrementDumpRecordsStructuresCount(counter: Int) {
-    recordsStructuresCount.labels("dump").inc(counter.toDouble())
+private val failedMessagesCountHolder = MetricHolder { prefix ->
+    //default name: kafkistry_record_analyzer_failed_count
+    Counter.build()
+        .name(prefix + "record_analyzer_failed_count")
+        .help("Number of failed sampling messages for structure analysis")
+        .labelNames("cluster", "topic")
+        .register()
 }
 
-private val jobExecutionsCount = Counter.build()
-    .name("kafkistry_record_analyzer_records_execution_count")
-    .help("Number of executed job by job state")
-    .labelNames("job_execution_state")
-    .register()
+private val droppedMessagesCountHolder = MetricHolder { prefix ->
+    //default name: kafkistry_record_analyzer_dropped_count
+    Counter.build()
+        .name(prefix + "record_analyzer_dropped_count")
+        .help("Number of dropped messages for structure analysis due to full queue")
+        .register()
+}
 
-private val analyzeLatency = Summary.build()
-    .name("kafkistry_record_analyzer_latencies")
-    .help("Summary of latencies of analysis of sampled records")
-    .ageBuckets(5)
-    .maxAgeSeconds(TimeUnit.MINUTES.toSeconds(5))
-    .quantile(0.5, 0.05)   // Add 50th percentile (= median) with 5% tolerated error
-    .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
-    .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
-    .register()
+private val queueSizeHolder = MetricHolder { prefix ->
+    //default name: kafkistry_record_analyzer_queue_size
+    Gauge.build()
+        .name(prefix + "record_analyzer_queue_size")
+        .help("Number of records queued for processing")
+        .register()
+}
+
+private val recordsStructuresCountHolder = MetricHolder { prefix ->
+    //default name: kafkistry_record_analyzer_records_structures_count
+    Counter.build()
+        .name(prefix + "record_analyzer_records_structures_count")
+        .help("Number of records structures processed by the procedure")
+        .labelNames("records_structures_procedure")
+        .register()
+}
+
+private val jobExecutionsCountHolder = MetricHolder { prefix ->
+    //default name: kafkistry_record_analyzer_records_execution_count
+    Counter.build()
+        .name(prefix + "record_analyzer_records_execution_count")
+        .help("Number of executed job by job state")
+        .labelNames("job_execution_state")
+        .register()
+}
+
+private val analyzeLatencyHolder = MetricHolder { prefix ->
+    //default name: kafkistry_record_analyzer_latencies
+    Summary.build()
+        .name(prefix + "record_analyzer_latencies")
+        .help("Summary of latencies of analysis of sampled records")
+        .ageBuckets(5)
+        .maxAgeSeconds(TimeUnit.MINUTES.toSeconds(5))
+        .quantile(0.5, 0.05)   // Add 50th percentile (= median) with 5% tolerated error
+        .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
+        .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
+        .register()
+}
 
 @Component
 @ConditionalOnProperty("app.record-analyzer.enabled", matchIfMissing = true)
@@ -80,6 +95,7 @@ class RecordStructureAnalyzerExecutor(
     private val issuesRegistry: BackgroundJobIssuesRegistry,
     private val properties: RecordAnalyzerProperties,
     private val analyzeFilter: AnalyzeFilter,
+    promProperties: PrometheusMetricsProperties,
 ) : RecordSamplingListener, SmartLifecycle {
 
     private val executor = Executors.newFixedThreadPool(
@@ -93,6 +109,22 @@ class RecordStructureAnalyzerExecutor(
         ArrayDeque(properties.executor.maxQueueSize)
     private val queueLock = ReentrantLock()
     private val queueCondition = queueLock.newCondition()
+
+    private val sampledMessagesCount = sampledMessagesCountHolder.metric(promProperties)
+    private val failedMessagesCount = failedMessagesCountHolder.metric(promProperties)
+    private val droppedMessagesCount = droppedMessagesCountHolder.metric(promProperties)
+    private val queueSize = queueSizeHolder.metric(promProperties)
+    private val recordsStructuresCount = recordsStructuresCountHolder.metric(promProperties)
+    private val jobExecutionsCount = jobExecutionsCountHolder.metric(promProperties)
+    private val analyzeLatency = analyzeLatencyHolder.metric(promProperties)
+
+    private fun incrementTrimRecordsStructuresCount(counter: Int) {
+        recordsStructuresCount.labels("trim").inc(counter.toDouble())
+    }
+
+    private fun incrementDumpRecordsStructuresCount(counter: Int) {
+        recordsStructuresCount.labels("dump").inc(counter.toDouble())
+    }
 
     @Volatile
     private var running = false
