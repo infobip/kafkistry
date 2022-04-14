@@ -10,51 +10,51 @@ abstract class KafkistryException : RuntimeException {
     open val httpStatus: Int = HttpStatus.INTERNAL_SERVER_ERROR.value()
 }
 
-class KafkaClusterManagementException : KafkistryException {
+open class KafkaClusterManagementException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(cause: Throwable) : super(cause)
     constructor(msg: String, cause: Throwable) : super(msg, cause)
 }
 
-class KafkistryIntegrityException(msg: String) : KafkistryException(msg)
+open class KafkistryIntegrityException(msg: String) : KafkistryException(msg)
 
-class KafkistryIllegalStateException(msg: String) : KafkistryException(msg)
+open class KafkistryIllegalStateException(msg: String) : KafkistryException(msg)
 
-class KafkistryUnsupportedOperationException(msg: String) : KafkistryException(msg) {
+open class KafkistryUnsupportedOperationException(msg: String) : KafkistryException(msg) {
     override val httpStatus: Int = HttpStatus.METHOD_NOT_ALLOWED.value()
 }
 
-class KafkistryValidationException(msg: String) : KafkistryException(msg) {
+open class KafkistryValidationException(msg: String) : KafkistryException(msg) {
     override val httpStatus: Int = HttpStatus.BAD_REQUEST.value()
 }
 
-class KafkistryGitException : KafkistryException {
+open class KafkistryGitException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(msg: String, cause: Throwable) : super(msg, cause)
 }
 
-class KafkistryStorageException : KafkistryException {
+open class KafkistryStorageException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(msg: String, cause: Throwable) : super(msg, cause)
 }
 
-class TopicWizardException : KafkistryException {
+open class TopicWizardException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(msg: String, cause: Throwable) : super(msg, cause)
     override val httpStatus: Int = HttpStatus.BAD_REQUEST.value()
 }
 
-class KafkistryConsumeException : KafkistryException {
+open class KafkistryConsumeException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(msg: String, cause: Throwable) : super(msg, cause)
 }
 
-class KafkistryClusterReadException : KafkistryException {
+open class KafkistryClusterReadException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(msg: String, cause: Throwable) : super(msg, cause)
 }
 
-class KafkistrySQLException : KafkistryException {
+open class KafkistrySQLException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(msg: String, cause: Throwable) : super(msg, cause)
 }
