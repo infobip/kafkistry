@@ -277,6 +277,63 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
     }
 
     @Test
+    fun `test invalid re-assignment`() {
+        val initialAssignments = mapOf(
+            0 to listOf(0, 1),
+            1 to listOf(1, 2),
+            2 to listOf(2, 0),
+        )
+        val topics = doOnKafka {
+            it.createTopic(KafkaTopicConfiguration(
+                name = "invalid-re-assign-partition-replicas-test-topic",
+                partitionsReplicas = initialAssignments,
+                config = emptyMap()
+            )).get()
+            it.awaitTopicCreated("invalid-re-assign-partition-replicas-test-topic")
+            it.listAllTopics().get()
+        }
+        assertThat(topics).hasSize(1)
+        val existingTopic = topics[0]
+        assertThat(existingTopic.name).isEqualTo("invalid-re-assign-partition-replicas-test-topic")
+
+        val newAssignmentsInvalidBroker = mapOf(
+            0 to listOf(3, 1),
+            1 to listOf(1, 4),
+            2 to listOf(5, 0),
+        )
+        assertThatThrownBy {
+            doOnKafka {
+                it.reAssignPartitions("invalid-re-assign-partition-replicas-test-topic", newAssignmentsInvalidBroker, 1024).get()
+            }
+        }.isInstanceOf(KafkaClusterManagementException::class.java)
+            .hasMessageContaining("verify reassignments used brokers")
+            .rootCause
+            .isInstanceOf(KafkaClusterManagementException::class.java)
+            .hasMessageContaining("Unknown broker(s) used in assignments")
+
+        val newAssignmentsInvalidPartitions = mapOf(
+            0 to listOf(0, 1),
+            1 to listOf(1, 2),
+            3 to listOf(2, 0),
+        )
+        assertThatThrownBy {
+            doOnKafka {
+                it.reAssignPartitions("invalid-re-assign-partition-replicas-test-topic", newAssignmentsInvalidPartitions, 1024).get()
+            }
+        }.isInstanceOf(KafkaClusterManagementException::class.java)
+            .hasMessageContaining("verify reassignments partitions")
+            .rootCause
+            .isInstanceOf(KafkaClusterManagementException::class.java)
+            .hasMessageContaining("Trying to reassign non-existent topic partitions")
+
+        val topicsAfter = doOnKafka { it.listAllTopics().get() }
+        assertThat(topicsAfter).hasSize(1)
+        val existingTopicAfter = topicsAfter[0]
+        assertThat(existingTopicAfter.name).isEqualTo("invalid-re-assign-partition-replicas-test-topic")
+        assertThat(existingTopicAfter.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(initialAssignments)
+    }
+
+    @Test
     fun `test elect preferred leader replica`() {
         doOnKafka {
             it.createTopic(KafkaTopicConfiguration(

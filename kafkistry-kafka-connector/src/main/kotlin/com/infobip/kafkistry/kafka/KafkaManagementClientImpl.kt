@@ -1,6 +1,10 @@
 package com.infobip.kafkistry.kafka
 
-import kafka.admin.ReassignPartitionsCommand
+import com.infobip.kafkistry.kafka.OffsetSeekType.*
+import com.infobip.kafkistry.kafka.recordsampling.RecordReadSampler
+import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.KafkaClusterManagementException
+import com.infobip.kafkistry.service.KafkistryClusterReadException
 import kafka.log.LogConfig
 import kafka.server.ConfigType
 import kafka.server.DynamicConfig
@@ -25,11 +29,6 @@ import org.apache.kafka.common.quota.ClientQuotaFilter
 import org.apache.kafka.common.resource.ResourcePattern
 import org.apache.kafka.common.utils.Sanitizer
 import org.apache.kafka.common.utils.Time
-import com.infobip.kafkistry.kafka.OffsetSeekType.*
-import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.kafka.recordsampling.RecordReadSampler
-import com.infobip.kafkistry.service.KafkaClusterManagementException
-import com.infobip.kafkistry.service.KafkistryClusterReadException
 import scala.Option
 import java.time.Duration
 import java.util.*
@@ -460,45 +459,60 @@ class KafkaManagementClientImpl(
                     }
                 }
                 .toMap()
-        val newAssignmentsScala = partitionsAssignments
-            .mapValues { it.value.toScalaList().toSeq() }
-            .toScalaMap()
 
         runOperation("verify reassignments used brokers") {
             val brokerIds = partitionsAssignments.values.flatten().toSet()
-            ReassignPartitionsCommand.verifyBrokerIds(adminClient, brokerIds.toScalaList().toSet())
+            val allNodeIds = adminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
+                .nodes().asCompletableFuture().get().map { it.id() }.toSet()
+            brokerIds.filter { it !in allNodeIds }.takeIf { it.isNotEmpty() }?.run {
+                throw KafkaClusterManagementException("Unknown broker(s) used in assignments: $this")
+            }
+        }
+        val currentPartitionAssignments = adminClient
+            .describeTopics(topicPartitionsAssignments.keys, DescribeTopicsOptions().withReadTimeout())
+            .all().asCompletableFuture().get()
+            .flatMap { (topic, description) ->
+                description.partitions()
+                    .map { it.toPartitionAssignments() }
+                    .map { partitionsAssignments ->
+                        val partitionReplicas = partitionsAssignments.replicasAssignments.map { it.brokerId }
+                        TopicPartition(topic, partitionsAssignments.partition) to partitionReplicas
+                    }
+            }
+            .toMap()
+        runOperation("verify reassignments partitions") {
+            val nonExistentPartitions = partitionsAssignments.keys.filter { it !in currentPartitionAssignments.keys }
+            if (nonExistentPartitions.isNotEmpty()) {
+                throw KafkaClusterManagementException("Trying to reassign non-existent topic partitions: $nonExistentPartitions")
+            }
         }
         fun setupThrottle(currentReassignments: Map<TopicPartition, PartitionReassignment>) = runOperation("setup re-assignment throttle") {
-            val currentAssignments = ReassignPartitionsCommand.getReplicaAssignmentForPartitions(
-                adminClient, partitionsAssignments.keys.toScalaList().toSet()
+            val throttleRate = ThrottleRate(throttleBytesPerSec.toLong(), throttleBytesPerSec.toLong())
+            val topicsMoveMap = ReAssignmentSupport.calculateProposedMoveMap(
+                currentReassignments, partitionsAssignments, currentPartitionAssignments
             )
-            val moveMap = ReassignPartitionsCommand.calculateProposedMoveMap(
-                currentReassignments.toScalaMap(), newAssignmentsScala.cast(), currentAssignments
-            )
-            val leaderThrottles = ReassignPartitionsCommand.calculateLeaderThrottles(moveMap)
-            val followerThrottles = ReassignPartitionsCommand.calculateFollowerThrottles(moveMap)
-            val reassigningBrokers = ReassignPartitionsCommand.calculateReassigningBrokers(moveMap)
+            val leaderThrottlesMap = ReAssignmentSupport.calculateLeaderThrottles(topicsMoveMap)
+            val followerThrottlesMap = ReAssignmentSupport.calculateFollowerThrottles(topicsMoveMap)
+            val reassigningBrokersSet = ReAssignmentSupport.calculateReassigningBrokers(topicsMoveMap)
 
-            if (clusterVersion() >= VERSION_2_4) {
-                ReassignPartitionsCommand.modifyTopicThrottles(adminClient, leaderThrottles, followerThrottles)
-                ReassignPartitionsCommand.modifyInterBrokerThrottle(
-                    adminClient, reassigningBrokers, throttleBytesPerSec.toLong()
-                )
-            } else {
-                ReassignPartitionsCommand.modifyTopicThrottles(zkClient, leaderThrottles, followerThrottles)
-                ReassignPartitionsCommand.modifyBrokerThrottles(
-                    zkClient, reassigningBrokers, throttleBytesPerSec.toLong()
-                )
-            }
+            val topicNames = leaderThrottlesMap.keys + followerThrottlesMap.keys
+            topicNames.map { topic ->
+                val topicThrottleConfig = mapOf(
+                    LogConfig.LeaderReplicationThrottledReplicasProp() to leaderThrottlesMap[topic],
+                    LogConfig.FollowerReplicationThrottledReplicasProp() to followerThrottlesMap[topic],
+                ).filterValues { it != null }
+                updateTopicConfig(topic, topicThrottleConfig)
+            }.forEach { it.get() }
+            reassigningBrokersSet.map { updateThrottleRate(it, throttleRate) }.forEach { it.get() }
         }
         return if (clusterVersion() < VERSION_2_4) {
             runOperation("execute re-assignment via ZK") {
-                ReassignPartitionsCommand.verifyReplicasAndBrokersInAssignment(
-                    zkClient, newAssignmentsScala.cast()
-                )
                 if (throttleBytesPerSec >= 0) {
                     setupThrottle(currentReassignments = emptyMap())
                 }
+                val newAssignmentsScala = partitionsAssignments
+                    .mapValues { it.value.toScalaList().toSeq() }
+                    .toScalaMap()
                 zkClient.createPartitionReassignment(newAssignmentsScala.cast())
             }
             CompletableFuture.completedFuture(Unit)
