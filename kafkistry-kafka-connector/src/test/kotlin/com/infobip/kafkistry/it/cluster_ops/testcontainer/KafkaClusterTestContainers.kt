@@ -1,18 +1,9 @@
 package com.infobip.kafkistry.it.cluster_ops.testcontainer
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.io.Files
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.admin.NewTopic
-import org.apache.kafka.clients.consumer.*
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.TopicPartition
-import org.apache.kafka.common.serialization.ByteArrayDeserializer
-import org.apache.kafka.common.serialization.ByteArraySerializer
-import org.awaitility.Awaitility
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.util.SocketUtils
@@ -22,10 +13,7 @@ import java.io.File
 import java.net.InetAddress
 import java.time.Duration
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 class KafkaClusterContainer(
@@ -40,7 +28,6 @@ class KafkaClusterContainer(
     }
 
     private val client = AtomicReference<AdminClient>()
-    private val objectMapper = ObjectMapper()
 
     constructor(
             kafkaImage: String = "wurstmeister/kafka:latest",
@@ -87,68 +74,6 @@ class KafkaClusterContainer(
     }
 
     fun getBrokersUrl(): String = brokersConfigs.hostsPorts.joinToString(",") { "${it.host}:${it.port}" }
-
-    fun <K, V> sendMessages(
-            topic: String,
-            numberOfMessages: Int = 1,
-            delay: Long = 0,
-            producerConfigs: ProducerConfigs = ProducerConfigs(getBrokersUrl()),
-            generateKey: (Int) -> K? = { null },
-            generateMessage: (Int) -> V
-    ) {
-        if (topics.find { it.name() == topic } == null) {
-            log.error("Topic $topic is not in the list")
-            return
-        }
-        KafkaProducer<ByteArray, ByteArray>(producerConfigs.value()).use { producer ->
-            sendMessages(numberOfMessages) { value, latch ->
-                if (delay > 0) {
-                    Thread.sleep(delay)
-                }
-                val record = ProducerRecord(
-                        topic,
-                        objectMapper.writeValueAsBytes(generateKey(value)),
-                        objectMapper.writeValueAsBytes(generateMessage(value))
-                )
-                producer.send(record) { _, ex ->
-                    if (ex != null) {
-                        log.error("Error while sending ", ex)
-                    }
-                    latch.countDown()
-                }
-            }.await(10, TimeUnit.SECONDS)
-        }
-
-    }
-
-    private fun sendMessages(numberOfMessages: Int, sendMessage: (Int, CountDownLatch) -> Unit) = CountDownLatch(numberOfMessages).also { latch ->
-        repeat(numberOfMessages) {
-            sendMessage(it, latch)
-        }
-    }
-
-    fun <K, V> getConsumer(
-            topic: String,
-            consumerConfigs: ConsumerConfigs = ConsumerConfigs(getBrokersUrl()),
-            handle: (Consumer<K, V>) -> Unit) {
-        val description = topics.find { it.name() == topic }
-        if (description == null) {
-            log.error("Topic $topic is not in the list")
-            return
-        }
-        val checker = ConsumerAssignmentChecker()
-        KafkaConsumer<K, V>(consumerConfigs.value()).use { consumer ->
-            consumer.subscribe(listOf(topic), checker)
-            consumer.poll(Duration.ZERO)
-            checker.waitForAssignment(listOf(topic), description.numPartitions())
-            handle(consumer)
-        }
-    }
-
-    fun <K, V> readMessages(consumer: Consumer<K, V>, timeout: Long = 5000, handle: (ConsumerRecords<K, V>) -> Boolean) {
-        while (!handle(consumer.poll(Duration.ofMillis(timeout)))) {
-        }
-    }
 
 }
 
@@ -202,37 +127,6 @@ ${brokersConfigs.toYamlEnvironment()}
     
 """
 
-class ConsumerAssignmentChecker(
-        private val prototype: ConsumerRebalanceListener? = null
-) : ConsumerRebalanceListener {
-
-    private val store = ConcurrentHashMap<String, AtomicInteger>()
-
-    override fun onPartitionsAssigned(partitions: MutableCollection<TopicPartition>) {
-        partitions.forEach { tp ->
-            store.computeIfAbsent(tp.topic()) { AtomicInteger() }.getAndIncrement()
-        }
-        prototype?.onPartitionsAssigned(partitions)
-    }
-
-    override fun onPartitionsRevoked(partitions: MutableCollection<TopicPartition>) {
-        partitions.forEach { tp ->
-            store[tp.topic()]?.getAndDecrement()
-        }
-        prototype?.onPartitionsRevoked(partitions)
-    }
-
-    fun waitForAssignment(topics: List<String>, expectedNumberOfPartitions: Int, timeToWait: Long = 5) {
-        topics.forEach { topic ->
-            Awaitility.await().atMost(timeToWait, TimeUnit.SECONDS).until {
-                (store[topic]?.get() ?: 0) == expectedNumberOfPartitions
-            }
-        }
-    }
-
-
-}
-
 private fun createBrokersConfigs(
         kafkaImage: String,
         customConfig: Map<String, String>,
@@ -284,40 +178,4 @@ data class HostPort(val host: String, val port: Int) {
                 port = SocketUtils.findAvailableTcpPort()
         )
     }
-}
-
-class ProducerConfigs(
-        val brokerUrl: String,
-        val customConfig: Map<String, Any> = emptyMap()
-) {
-
-    private val defaultConfig = mapOf(
-            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to brokerUrl,
-            ProducerConfig.RETRIES_CONFIG to 0,
-            ProducerConfig.BATCH_SIZE_CONFIG to 16384,
-            ProducerConfig.LINGER_MS_CONFIG to 1,
-            ProducerConfig.BUFFER_MEMORY_CONFIG to 33554432,
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java
-    )
-
-    fun value(): Map<String, Any> = defaultConfig.plus(customConfig)
-}
-
-class ConsumerConfigs(
-        val brokerUrl: String,
-        val groupId: String = "test_group",
-        val customConfig: Map<String, Any> = emptyMap()
-) {
-
-    private val defaultConfig = mapOf(
-            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to brokerUrl,
-            ConsumerConfig.GROUP_ID_CONFIG to groupId,
-            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java,
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to ByteArrayDeserializer::class.java
-    )
-
-    fun value() = defaultConfig.plus(customConfig)
 }

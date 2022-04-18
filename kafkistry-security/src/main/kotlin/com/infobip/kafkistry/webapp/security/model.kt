@@ -109,5 +109,8 @@ data class UserRole(
 
     @JsonIgnore
     override fun getAuthority(): String = "ROLE_$name"  //spring's specification for roles naming
+
+    override fun toString() = "UserRole(name=$name)"
+
 }
 

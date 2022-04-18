@@ -56,8 +56,9 @@ class DryRunAnalyzerInspector {
         payload: ByteArray? = null, headers: Map<String, ByteArray?> = emptyMap()
     ) = ConsumerRecord(
         TOPIC, 0, 0, 0, TimestampType.CREATE_TIME,
-        0, 0, 0,
+        0, 0,
         byteArrayOf(0x0), payload,
-        RecordHeaders(headers.map { RecordHeader(it.key, it.value) })
+        RecordHeaders(headers.map { RecordHeader(it.key, it.value) }),
+        Optional.empty(),
     )
 }

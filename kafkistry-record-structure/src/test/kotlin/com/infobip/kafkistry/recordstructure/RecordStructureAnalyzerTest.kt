@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.utils.test.newTestFolder
 import org.junit.Test
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import kotlin.system.measureTimeMillis
@@ -60,9 +61,10 @@ class RecordStructureAnalyzerTest {
         analyzeRecord(
             CLUSTER, ConsumerRecord(
                 TOPIC, 0, 0, 0, TimestampType.CREATE_TIME,
-                0, 0, 0,
+                0, 0,
                 byteArrayOf(0x0), payload?.encodeToByteArray(),
-                RecordHeaders(headers.map { RecordHeader(it.key, it.value?.encodeToByteArray()) })
+                RecordHeaders(headers.map { RecordHeader(it.key, it.value?.encodeToByteArray()) }),
+                Optional.empty(),
             )
         )
     }

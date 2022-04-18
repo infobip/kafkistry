@@ -48,7 +48,7 @@ class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverCo
 @EmbeddedKafka(
         count = 3,
         brokerProperties = [
-            "authorizer.class.name=kafka.security.auth.SimpleAclAuthorizer",
+            "authorizer.class.name=kafka.security.authorizer.AclAuthorizer",
             "super.users=User:ANONYMOUS",
             "auto.leader.rebalance.enable=false",
         ]

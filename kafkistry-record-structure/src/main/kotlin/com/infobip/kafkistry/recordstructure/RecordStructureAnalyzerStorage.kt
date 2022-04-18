@@ -3,7 +3,7 @@ package com.infobip.kafkistry.recordstructure
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.apache.commons.io.FileUtils
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
@@ -38,7 +38,7 @@ class DirectoryRecordStructureAnalyzerStorage(
     private val storage = File(properties.storageDir)
 
     private val objectMapper = ObjectMapper().apply {
-        registerModule(KotlinModule())
+        registerKotlinModule()
         enable(SerializationFeature.INDENT_OUTPUT)
     }
 

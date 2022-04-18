@@ -2,6 +2,7 @@ package com.infobip.kafkistry.service.topic.wizard
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.apache.kafka.common.config.TopicConfig.*
 import com.infobip.kafkistry.kafkastate.KafkaClusterState
 import com.infobip.kafkistry.kafkastate.StateData
@@ -188,7 +189,7 @@ private class PartitionCountAssignor(
 ) {
 
     private val thresholdsConfig: ThresholdsConfig = ObjectMapper()
-            .registerModule(KotlinModule())
+            .registerKotlinModule()
             .readValue(wizardPartitionThresholdsJson, ThresholdsConfig::class.java)
 
     fun assignPartitionCount(msgPerSec: Double, clusterRef: ClusterRef): Int {

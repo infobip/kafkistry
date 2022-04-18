@@ -230,7 +230,7 @@ fun newWizardAnswers(
         purpose: String = "no test purpose",
         teamName: String = "Test_Team",
         producerServiceName: String = "test-produces",
-        messagesPerDay: Long = 3600 * 24,
+        messagesPerDay: Long = 3600L * 24,
         avgMessageSizeBytes: Int = 4096,
         retentionDays: Int = 7,
         highAvailability: HighAvailability = HighAvailability.BASIC,

@@ -23,13 +23,13 @@ import org.apache.kafka.common.acl.AccessControlEntry
 import org.apache.kafka.common.acl.AclBinding
 import org.apache.kafka.common.acl.AclBindingFilter
 import org.apache.kafka.common.config.ConfigResource
+import org.apache.kafka.common.config.internals.QuotaConfigs
 import org.apache.kafka.common.quota.ClientQuotaAlteration
 import org.apache.kafka.common.quota.ClientQuotaEntity
 import org.apache.kafka.common.quota.ClientQuotaFilter
 import org.apache.kafka.common.resource.ResourcePattern
 import org.apache.kafka.common.utils.Sanitizer
 import org.apache.kafka.common.utils.Time
-import scala.Option
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -70,8 +70,11 @@ class KafkaManagementClientImpl(
             zkConnection, false,
             readRequestTimeoutMs.toInt(), writeRequestTimeoutMs.toInt(),
             Int.MAX_VALUE, Time.SYSTEM,
-            "kr.zk.kafka.server", "SessionExpireListener",
-            Option.apply("KR"), Option.empty()
+            "",
+            org.apache.zookeeper.client.ZKClientConfig(),
+            "kr.zk.kafka.server",
+            "SessionExpireListener",
+            false,
         )
     }
     private val zkClient: KafkaZkClient by zkClientLazy
@@ -306,7 +309,7 @@ class KafkaManagementClientImpl(
                 .thenCompose { topicNames ->
                     val topicsPartitionDescriptionsFuture = adminClient
                             .describeTopics(topicNames, DescribeTopicsOptions().withReadTimeout())
-                            .all()
+                            .allTopicNames()
                             .asCompletableFuture()
                     val topicsConfigPropertiesFuture = adminClient
                             .describeConfigs(
@@ -470,7 +473,8 @@ class KafkaManagementClientImpl(
         }
         val currentPartitionAssignments = adminClient
             .describeTopics(topicPartitionsAssignments.keys, DescribeTopicsOptions().withReadTimeout())
-            .all().asCompletableFuture().get()
+            .allTopicNames()
+            .asCompletableFuture().get()
             .flatMap { (topic, description) ->
                 description.partitions()
                     .map { it.toPartitionAssignments() }
@@ -560,7 +564,7 @@ class KafkaManagementClientImpl(
                     partitionReAssignments.associateBy { it.partition }
                 }
         val currentTopicDescription = adminClient.describeTopics(listOf(topicName), DescribeTopicsOptions().withReadTimeout())
-                .all().asCompletableFuture().get().getOrElse(topicName) {
+                .allTopicNames().asCompletableFuture().get().getOrElse(topicName) {
                     throw KafkaClusterManagementException("Failed to get current topic description for topic: '$topicName'")
                 }
         val currentAssignments = currentTopicDescription.partitions()
@@ -667,7 +671,7 @@ class KafkaManagementClientImpl(
         }
         return adminClient
                 .describeTopics(topicNames, DescribeTopicsOptions().withReadTimeout())
-                .all()
+                .allTopicNames()
                 .asCompletableFuture()
                 .thenApply { topicsPartitionDescriptions ->
                     topicsPartitionDescriptions.flatMap { (topicName, partitionsDescription) ->
@@ -1052,7 +1056,7 @@ class KafkaManagementClientImpl(
         val adminZkClient = AdminZkClient(zkClient)
         fun Properties.toQuotaValues(): Map<String, Double> = this
             .mapKeys { it.key.toString() }
-            .filterKeys { DynamicConfig.`QuotaConfigs$`.`MODULE$`.isQuotaConfig(it) }
+            .filterKeys { QuotaConfigs.isClientOrUserConfig(it) }
             .mapValues { it.value.toString().toDouble() }
         fun String.deSanitize(): String = when (this) {
             QuotaEntity.DEFAULT -> this
@@ -1116,15 +1120,14 @@ class KafkaManagementClientImpl(
             else -> throw IllegalArgumentException("Both user and clientId are null")
         }
         val props = adminZkClient.fetchEntityConfig(configType, path)
-        val dynamicConf = DynamicConfig.`QuotaConfigs$`.`MODULE$`
         alteration.ops().forEach { op ->
             when (op.value()) {
                 null -> props.remove(op.key())
                 else -> {
                     val value = when (op.key()) {
-                        dynamicConf.ProducerByteRateOverrideProp() -> op.value().toLong().toString()
-                        dynamicConf.ConsumerByteRateOverrideProp() -> op.value().toLong().toString()
-                        dynamicConf.RequestPercentageOverrideProp() -> op.value().toString()
+                        QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG -> op.value().toLong().toString()
+                        QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG -> op.value().toLong().toString()
+                        QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG -> op.value().toString()
                         else -> throw IllegalArgumentException("Unknown quota property key '${op.key()}'")
                     }
                     props[op.key()] = value
@@ -1201,20 +1204,18 @@ class KafkaManagementClientImpl(
     )
 
     private fun Map<String, Double>.toQuotaProperties(): QuotaProperties {
-        val dynamicConf = DynamicConfig.`QuotaConfigs$`.`MODULE$`
         return QuotaProperties(
-            producerByteRate = this[dynamicConf.ProducerByteRateOverrideProp()]?.toLong(),
-            consumerByteRate = this[dynamicConf.ConsumerByteRateOverrideProp()]?.toLong(),
-            requestPercentage = this[dynamicConf.RequestPercentageOverrideProp()],
+            producerByteRate = this[QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG]?.toLong(),
+            consumerByteRate = this[QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG]?.toLong(),
+            requestPercentage = this[QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG],
         )
     }
 
     private fun QuotaProperties.toQuotaAlterationOps(): List<ClientQuotaAlteration.Op> {
-        val dynamicConf = DynamicConfig.`QuotaConfigs$`.`MODULE$`
         return listOf(
-            ClientQuotaAlteration.Op(dynamicConf.ProducerByteRateOverrideProp(), producerByteRate?.toDouble()),
-            ClientQuotaAlteration.Op(dynamicConf.ConsumerByteRateOverrideProp(), consumerByteRate?.toDouble()),
-            ClientQuotaAlteration.Op(dynamicConf.RequestPercentageOverrideProp(), requestPercentage),
+            ClientQuotaAlteration.Op(QuotaConfigs.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG, producerByteRate?.toDouble()),
+            ClientQuotaAlteration.Op(QuotaConfigs.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG, consumerByteRate?.toDouble()),
+            ClientQuotaAlteration.Op(QuotaConfigs.REQUEST_PERCENTAGE_OVERRIDE_CONFIG, requestPercentage),
         )
     }
 

@@ -22,9 +22,11 @@ import com.infobip.kafkistry.service.newQuota
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.toAclRule
 import com.infobip.kafkistry.service.toKafkaCluster
+import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole
 import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
+import org.apache.kafka.clients.producer.Callback
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
@@ -37,6 +39,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.env.get
 import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import java.io.File
+import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.time.Duration
 import java.util.*
@@ -110,7 +113,7 @@ class DataStateInitializer(
     private val kafka = EmbeddedKafkaRule(6)
         .brokerProperty("log.retention.bytes", "123456789")
         .brokerProperty("log.segment.bytes", "12345678")
-        .brokerProperty("authorizer.class.name", "kafka.security.auth.SimpleAclAuthorizer")
+        .brokerProperty("authorizer.class.name", kafka.security.authorizer.AclAuthorizer::class.java.name)
         .brokerProperty("super.users", "User:ANONYMOUS")
         .also {
             log.info("EmbeddedKafka starting...")
@@ -126,9 +129,10 @@ class DataStateInitializer(
             } catch (ex: Exception) {
                 attemptsLeft--
                 if (attemptsLeft <= 0) {
-                    ex.printStackTrace()
+                    log.warn("exhausted re-try attempts", ex)
                     return null
                 }
+                Thread.sleep(500)
             }
         }
     }
@@ -218,7 +222,7 @@ class DataStateInitializer(
         api = ctx.createAdminApiClient()
         val serverPort = ctx.localServerPort()
         val rootPath = ctx.httpRootPath()
-        log.info("KR started on http://localhost:$serverPort/$rootPath")
+        log.info("KR started on http://localhost:$serverPort$rootPath")
         val clusterIdentifier = "kafka-${System.getProperty("user.name")}-pc"
         val cluster = api.testClusterConnection(kafka.embeddedKafka.brokersAsString)
             .copy(identifier = clusterIdentifier)
@@ -384,7 +388,18 @@ class DataStateInitializer(
                         val partition = selector.nextPartition()
                         ProducerRecord(name, partition, "key_$it", """{"id":$it,"msg":"Dummy message $it"}""")
                     }
-                    .map { producer.send(it) }
+                    .map { record ->
+                        producer.send(record)
+//                        log.info("topic4 produce: going to produce {}", record.key())
+//                        producer.send(record) { meta, ex ->
+//                            if (ex != null) {
+//                                log.info("topic4 produce: failed to produce {}, cause: {}", record.key(), ex.deepToString())
+//                            } else  {
+//                                log.info("topic4 produce: competed produce of {}", record.key())
+//                            }
+//
+//                        }.also { log.info("topic4 produce: sent {}", record.key()) }
+                    }
                     .also { producer.flush() }
                     .forEach { it.get() }
             }
@@ -527,7 +542,9 @@ class DataStateInitializer(
         log.info("Completed initialization")
         NetworkInterface.getNetworkInterfaces().asSequence()
             .flatMap { it.inetAddresses.asSequence() }
+            .filterIsInstance<Inet4Address>()
             .map { it.hostAddress }
+            .plus("localhost")
             .forEach { log.info("server: http://$it:$serverPort$rootPath/topics/") }
 
     }

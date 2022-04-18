@@ -16,7 +16,7 @@ class LagInspectProperties {
     var partitionNoLagAmount: Long = 100
     var partitionMinorLagAmount: Long = 20_000
     var partitionNoLagTimeSec: Long = 60
-    var partitionMinorLagTimeSec: Long = 15 * 60
+    var partitionMinorLagTimeSec: Long = 15 * 60L
 
     fun noLagAmountRange() = 0L until partitionNoLagAmount
     fun minorAmountLagRange() = partitionNoLagAmount until partitionMinorLagAmount

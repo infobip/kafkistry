@@ -1,7 +1,6 @@
 package com.infobip.kafkistry.service.generator.balance
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.service.generator.BrokerLoad
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
@@ -398,7 +397,7 @@ fun state4(): GlobalState {
           }
         }
     """.trimIndent()
-    return ObjectMapper().apply { registerModule(KotlinModule()) }.readValue(json, GlobalState::class.java)
+    return jacksonObjectMapper().readValue(json, GlobalState::class.java)
 }
 
 fun state5(): GlobalState {

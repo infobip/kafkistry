@@ -10,6 +10,7 @@ import com.infobip.kafkistry.service.consume.filter.JsonPathParser
 import com.infobip.kafkistry.service.consume.filter.MatcherFactory
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
 import org.junit.Test
+import java.util.*
 
 class RecordFilterTest {
 
@@ -438,10 +439,10 @@ class RecordFilterTest {
                 TimestampType.LOG_APPEND_TIME,
                 0,
                 0,
-                0,
                 ByteArray(0),
                 value.toByteArray(Charsets.UTF_8),
-                RecordHeaders(headers.map { RecordHeader(it.key, it.value.toByteArray(Charsets.UTF_8)) })
+                RecordHeaders(headers.map { RecordHeader(it.key, it.value.toByteArray(Charsets.UTF_8)) }),
+                Optional.empty(),
         ))
     }
 

@@ -111,10 +111,10 @@ class RecordFactoryTest {
             TimestampType.NO_TIMESTAMP_TYPE,
             0,
             0,
-            0,
             binKey,
             binValue,
             RecordHeaders(binHeaders.map { KafkaRecordHeader(it.key, it.value) }),
+            Optional.empty(),
         )
     }
 }
