@@ -3,7 +3,7 @@ package com.infobip.kafkistry.audit
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -14,7 +14,7 @@ class ManagementEventLoggingSubscriber : ManagementEventSubscriber {
 
     private val loggers = ConcurrentHashMap<String, Logger>()
     private val objectMapper = ObjectMapper().apply {
-        registerModule(KotlinModule())
+        registerKotlinModule()
         enable(SerializationFeature.INDENT_OUTPUT)
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
     }
