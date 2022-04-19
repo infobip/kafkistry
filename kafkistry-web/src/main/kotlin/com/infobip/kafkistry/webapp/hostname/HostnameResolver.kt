@@ -38,7 +38,7 @@ class HostnameResolver(
 
     private fun execHostname(): String? {
         return try {
-            Runtime.getRuntime().exec("hostname")
+            Runtime.getRuntime().exec(arrayOf("hostname"))
                 .inputStream.reader(Charsets.UTF_8)
                 .readText()
                 .trim()
