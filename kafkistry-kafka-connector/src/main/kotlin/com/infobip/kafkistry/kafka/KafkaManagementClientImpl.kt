@@ -87,22 +87,24 @@ class KafkaManagementClientImpl(
 
     private fun bootstrapClusterVersionAndZkConnection(): String {
         val controllerConfig = adminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
-                .controller()
-                .asCompletableFuture()
-                .thenCompose { controllerNode ->
-                    adminClient
-                            .describeConfigs(
-                                    listOf(ConfigResource(ConfigResource.Type.BROKER, controllerNode.id().toString())),
-                                    DescribeConfigsOptions().withReadTimeout()
-                            )
-                            .all()
-                            .asCompletableFuture()
-                }
-                .thenApply { configs -> configs.values.first().entries().associate { it.name() to it.toTopicConfigValue() } }
-                .whenComplete { _, ex ->
-                    if (ex != null) adminClient.close(Duration.ofMillis(writeRequestTimeoutMs))
-                }
-                .get()
+            .controller()
+            .asCompletableFuture("initial describe cluster")
+            .thenCompose { controllerNode ->
+                adminClient
+                    .describeConfigs(
+                        listOf(ConfigResource(ConfigResource.Type.BROKER, controllerNode.id().toString())),
+                        DescribeConfigsOptions().withReadTimeout()
+                    )
+                    .all()
+                    .asCompletableFuture("initial describe broker configs")
+            }
+            .thenApply { configs ->
+                configs.values.first().entries().associate { it.name() to it.toTopicConfigValue() }
+            }
+            .whenComplete { _, ex ->
+                if (ex != null) adminClient.close(Duration.ofMillis(writeRequestTimeoutMs))
+            }
+            .get()
         val zookeeperConnection = controllerConfig["zookeeper.connect"]?.value ?: ""
         val majorVersion = controllerConfig["inter.broker.protocol.version"]?.value
         majorVersion?.let { Version.parse(it) }?.also(currentClusterVersionRef::set)
@@ -123,74 +125,73 @@ class KafkaManagementClientImpl(
 
     override fun test() {
         adminClient
-                .listTopics(ListTopicsOptions().withReadTimeout())
-                .names()
-                .asCompletableFuture()
-                .get()
+            .listTopics(ListTopicsOptions().withReadTimeout())
+            .names()
+            .asCompletableFuture("test list topic names")
+            .get()
         recordReadSampler.test()
     }
 
     override fun clusterInfo(identifier: KafkaClusterIdentifier): CompletableFuture<ClusterInfo> {
         val clusterResult = adminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
-        val clusterIdFuture = clusterResult.clusterId().asCompletableFuture()
-        val controllerNodeFuture = clusterResult.controller().asCompletableFuture()
-        val nodesFuture = clusterResult.nodes().asCompletableFuture()
+        val clusterIdFuture = clusterResult.clusterId().asCompletableFuture("describe clusterId")
+        val controllerNodeFuture = clusterResult.controller().asCompletableFuture("describe cluster controller")
+        val nodesFuture = clusterResult.nodes().asCompletableFuture("describe cluster nodes")
         return CompletableFuture.allOf(clusterIdFuture, controllerNodeFuture, nodesFuture)
-                .thenCompose {
-                    val clusterId = clusterIdFuture.get()
-                    val controllerNode = controllerNodeFuture.get()
-                    val nodes = nodesFuture.get()
-                    adminClient
-                            .describeConfigs(
-                                    nodes.map { node ->
-                                        ConfigResource(ConfigResource.Type.BROKER, node.id().toString())
-                                    },
-                                    DescribeConfigsOptions().withReadTimeout()
-                            )
-                            .all()
-                            .asCompletableFuture()
-                            .thenApply { configsResponse ->
-                                val brokerConfigs = configsResponse
-                                        .mapKeys { it.key.name().toInt() }
-                                        .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
-                                val controllerConfig = brokerConfigs[controllerNode.id()]
-                                        ?: brokerConfigs.values.first()
-                                val zookeeperConnection = controllerConfig["zookeeper.connect"]?.value ?: ""
-                                val majorVersion = controllerConfig["inter.broker.protocol.version"]?.value
-                                val clusterVersion = majorVersion?.let { Version.parse(it) }?.also(currentClusterVersionRef::set)
-                                val securityEnabled = controllerConfig["authorizer.class.name"]?.value?.isNotEmpty() == true
-                                val onlineNodeIds = nodes.map { it.id() }.sorted()
-                                val allKnownNodeIds = onlineNodeIds
-                                    .plus(topicAssignmentsUsedBrokerIdsRef.get() ?: emptySet())
-                                    .distinct()
-                                    .sorted()
-                                if (onlineNodeIds.toSet() == allKnownNodeIds.toSet()) {
-                                    knownBrokers.keys.retainAll(onlineNodeIds)
-                                }
-                                val allKnownBrokers = nodes.asSequence()
-                                    .map { ClusterBroker(it.id(), it.host(), it.port(), it.rack()) }
-                                    .onEach { knownBrokers[it.brokerId] = it }
-                                    .plus(knownBrokers.values)
-                                    .distinctBy { it.brokerId }
-                                    .sortedBy { it.brokerId }
-                                    .toList()
-                                ClusterInfo(
-                                        clusterId = clusterId,
-                                        identifier = identifier,
-                                        config = controllerConfig,
-                                        perBrokerConfig = brokerConfigs,
-                                        perBrokerThrottle = brokerConfigs.mapValues { it.value.extractThrottleRate() },
-                                        controllerId = controllerNode.id(),
-                                        nodeIds = allKnownNodeIds,
-                                        onlineNodeIds = onlineNodeIds,
-                                        brokers = allKnownBrokers,
-                                        connectionString = nodes.joinToString(",") { it.host() + ":" + it.port() },
-                                        zookeeperConnectionString = zookeeperConnection,
-                                        clusterVersion = clusterVersion,
-                                        securityEnabled = securityEnabled,
-                                )
-                            }
+            .thenCompose {
+                val clusterId = clusterIdFuture.get()
+                val controllerNode = controllerNodeFuture.get()
+                val nodes = nodesFuture.get()
+                val nodeConfigResources = nodes.map { node ->
+                    ConfigResource(ConfigResource.Type.BROKER, node.id().toString())
                 }
+                adminClient
+                    .describeConfigs(nodeConfigResources, DescribeConfigsOptions().withReadTimeout())
+                    .all()
+                    .asCompletableFuture("describe cluster all brokers configs")
+                    .thenApply { configsResponse ->
+                        val brokerConfigs = configsResponse
+                            .mapKeys { it.key.name().toInt() }
+                            .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
+                        val controllerConfig = brokerConfigs[controllerNode.id()]
+                            ?: brokerConfigs.values.first()
+                        val zookeeperConnection = controllerConfig["zookeeper.connect"]?.value ?: ""
+                        val majorVersion = controllerConfig["inter.broker.protocol.version"]?.value
+                        val clusterVersion = majorVersion?.let { Version.parse(it) }
+                            ?.also(currentClusterVersionRef::set)
+                        val securityEnabled = controllerConfig["authorizer.class.name"]?.value?.isNotEmpty() == true
+                        val onlineNodeIds = nodes.map { it.id() }.sorted()
+                        val allKnownNodeIds = onlineNodeIds
+                            .plus(topicAssignmentsUsedBrokerIdsRef.get() ?: emptySet())
+                            .distinct()
+                            .sorted()
+                        if (onlineNodeIds.toSet() == allKnownNodeIds.toSet()) {
+                            knownBrokers.keys.retainAll(onlineNodeIds)
+                        }
+                        val allKnownBrokers = nodes.asSequence()
+                            .map { ClusterBroker(it.id(), it.host(), it.port(), it.rack()) }
+                            .onEach { knownBrokers[it.brokerId] = it }
+                            .plus(knownBrokers.values)
+                            .distinctBy { it.brokerId }
+                            .sortedBy { it.brokerId }
+                            .toList()
+                        ClusterInfo(
+                            clusterId = clusterId,
+                            identifier = identifier,
+                            config = controllerConfig,
+                            perBrokerConfig = brokerConfigs,
+                            perBrokerThrottle = brokerConfigs.mapValues { it.value.extractThrottleRate() },
+                            controllerId = controllerNode.id(),
+                            nodeIds = allKnownNodeIds,
+                            onlineNodeIds = onlineNodeIds,
+                            brokers = allKnownBrokers,
+                            connectionString = nodes.joinToString(",") { it.host() + ":" + it.port() },
+                            zookeeperConnectionString = zookeeperConnection,
+                            clusterVersion = clusterVersion,
+                            securityEnabled = securityEnabled,
+                        )
+                    }
+            }
     }
 
     private fun resolveBrokerConfig(config: Config, brokerId: Int): Map<String, ConfigValue> {
@@ -203,52 +204,58 @@ class KafkaManagementClientImpl(
             null
         }
         return config.entries()
-                .map {
-                    if (it.source() == ConfigEntry.ConfigSource.DYNAMIC_BROKER_CONFIG && it.value() == null) {
-                        val zkValue = zkBrokerConfig?.getProperty(it.name())?.toString()
-                        ConfigEntry(it.name(), zkValue)
-                    } else {
-                        it
-                    }
+            .map {
+                if (it.source() == ConfigEntry.ConfigSource.DYNAMIC_BROKER_CONFIG && it.value() == null) {
+                    val zkValue = zkBrokerConfig?.getProperty(it.name())?.toString()
+                    ConfigEntry(it.name(), zkValue)
+                } else {
+                    it
                 }
-                .associate { it.name() to it.toTopicConfigValue() }
-                .let { existingConfigs ->
-                    val dynamicConfigs = DynamicConfig.`Broker$`.`MODULE$`.names().associateWith {
-                        ConfigValue(null, default = true, readOnly = false, sensitive = false, ConfigEntry.ConfigSource.DYNAMIC_BROKER_CONFIG)
-                    }
-                    dynamicConfigs + existingConfigs
+            }
+            .associate { it.name() to it.toTopicConfigValue() }
+            .let { existingConfigs ->
+                val dynamicConfigs = DynamicConfig.`Broker$`.`MODULE$`.names().associateWith {
+                    ConfigValue(
+                        null,
+                        default = true,
+                        readOnly = false,
+                        sensitive = false,
+                        ConfigEntry.ConfigSource.DYNAMIC_BROKER_CONFIG
+                    )
                 }
-                .map { it }.sortedBy { it.key }.associate { it.toPair() }
+                dynamicConfigs + existingConfigs
+            }
+            .map { it }.sortedBy { it.key }.associate { it.toPair() }
     }
 
     override fun describeReplicas(): CompletableFuture<List<TopicPartitionReplica>> {
         return adminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
-                .nodes()
-                .asCompletableFuture()
-                .thenApply { nodes -> nodes.map { it.id() } }
-                .thenCompose { brokerIds ->
-                    adminClient
-                            .describeLogDirs(brokerIds, DescribeLogDirsOptions().withReadTimeout())
-                            .allDescriptions()
-                            .asCompletableFuture()
-                }
-                .thenApply { brokersReplicas ->
-                    brokersReplicas.flatMap { (broker, dirReplicas) ->
-                        dirReplicas.flatMap { (rootDir, replicas) ->
-                            replicas.replicaInfos().map { (topicPartition, replica) ->
-                                TopicPartitionReplica(
-                                        rootDir = rootDir,
-                                        brokerId = broker,
-                                        topic = topicPartition.topic(),
-                                        partition = topicPartition.partition(),
-                                        sizeBytes = replica.size(),
-                                        offsetLag = replica.offsetLag(),
-                                        isFuture = replica.isFuture
-                                )
-                            }
+            .nodes()
+            .asCompletableFuture("describe replicas all nodes")
+            .thenApply { nodes -> nodes.map { it.id() } }
+            .thenCompose { brokerIds ->
+                adminClient
+                    .describeLogDirs(brokerIds, DescribeLogDirsOptions().withReadTimeout())
+                    .allDescriptions()
+                    .asCompletableFuture("describe replicas log dirs")
+            }
+            .thenApply { brokersReplicas ->
+                brokersReplicas.flatMap { (broker, dirReplicas) ->
+                    dirReplicas.flatMap { (rootDir, replicas) ->
+                        replicas.replicaInfos().map { (topicPartition, replica) ->
+                            TopicPartitionReplica(
+                                rootDir = rootDir,
+                                brokerId = broker,
+                                topic = topicPartition.topic(),
+                                partition = topicPartition.partition(),
+                                sizeBytes = replica.size(),
+                                offsetLag = replica.offsetLag(),
+                                isFuture = replica.isFuture
+                            )
                         }
                     }
                 }
+            }
     }
 
     override fun listReAssignments(): CompletableFuture<List<TopicPartitionReAssignment>> {
@@ -263,100 +270,113 @@ class KafkaManagementClientImpl(
                 )
                 val partitionStates = zkClient.getTopicPartitionStates(assignmentForTopics.keys().toSeq())
                 assignmentForTopics.toJavaMap()
-                        .mapNotNull { (topicPartition, reAssignment) ->
-                            val allReplicas = reAssignment.replicas().toJavaList().cast<List<BrokerId>>()
-                            val isr = partitionStates.get(topicPartition)
-                                    .map { it.leaderAndIsr().isr().toJavaList().cast<List<BrokerId>>() }
-                                    .getOrElse { emptyList<BrokerId>() }
-                            if (allReplicas.toSet() == isr.toSet()) {
-                                return@mapNotNull null
-                            }
-                            val targets = targetAssignments[topicPartition] ?: emptyList()
-                            TopicPartitionReAssignment(
-                                    topic = topicPartition.topic(),
-                                    partition = topicPartition.partition(),
-                                    addingReplicas = targets - isr,
-                                    removingReplicas = allReplicas - targets,
-                                    allReplicas = allReplicas
-                            )
+                    .mapNotNull { (topicPartition, reAssignment) ->
+                        val allReplicas = reAssignment.replicas().toJavaList().cast<List<BrokerId>>()
+                        val isr = partitionStates.get(topicPartition)
+                            .map { it.leaderAndIsr().isr().toJavaList().cast<List<BrokerId>>() }
+                            .getOrElse { emptyList<BrokerId>() }
+                        if (allReplicas.toSet() == isr.toSet()) {
+                            return@mapNotNull null
                         }
+                        val targets = targetAssignments[topicPartition] ?: emptyList()
+                        TopicPartitionReAssignment(
+                            topic = topicPartition.topic(),
+                            partition = topicPartition.partition(),
+                            addingReplicas = targets - isr,
+                            removingReplicas = allReplicas - targets,
+                            allReplicas = allReplicas
+                        )
+                    }
             }
             return CompletableFuture.completedFuture(result)
         }
         return adminClient.listPartitionReassignments(ListPartitionReassignmentsOptions().withReadTimeout())
-                .reassignments()
-                .asCompletableFuture()
-                .thenApply { partitionReAssignments ->
-                    partitionReAssignments.map { (topicPartition, reAssignment) ->
-                        TopicPartitionReAssignment(
-                                topic = topicPartition.topic(),
-                                partition = topicPartition.partition(),
-                                addingReplicas = reAssignment.addingReplicas(),
-                                removingReplicas = reAssignment.removingReplicas(),
-                                allReplicas = reAssignment.replicas()
-                        )
-                    }
+            .reassignments()
+            .asCompletableFuture("list partition reassignments")
+            .thenApply { partitionReAssignments ->
+                partitionReAssignments.map { (topicPartition, reAssignment) ->
+                    TopicPartitionReAssignment(
+                        topic = topicPartition.topic(),
+                        partition = topicPartition.partition(),
+                        addingReplicas = reAssignment.addingReplicas(),
+                        removingReplicas = reAssignment.removingReplicas(),
+                        allReplicas = reAssignment.replicas()
+                    )
                 }
-
+            }
     }
 
     override fun listAllTopicNames(): CompletableFuture<List<TopicName>> {
-        return adminClient.listTopics(ListTopicsOptions().listInternal(true).withReadTimeout())
-                .names()
-                .asCompletableFuture()
-                .thenApply { it.sorted() }
+        return adminClient
+            .listTopics(ListTopicsOptions().listInternal(true).withReadTimeout())
+            .names()
+            .asCompletableFuture("list all topic names")
+            .thenApply { it.sorted() }
     }
 
     override fun listAllTopics(): CompletableFuture<List<KafkaExistingTopic>> {
         return listAllTopicNames()
-                .thenCompose { topicNames ->
-                    val topicsPartitionDescriptionsFuture = adminClient
-                            .describeTopics(topicNames, DescribeTopicsOptions().withReadTimeout())
-                            .allTopicNames()
-                            .asCompletableFuture()
-                    val topicsConfigPropertiesFuture = adminClient
-                            .describeConfigs(
-                                    topicNames.map { ConfigResource(ConfigResource.Type.TOPIC, it) },
-                                    DescribeConfigsOptions().withReadTimeout()
-                            )
-                            .all()
-                            .asCompletableFuture()
-                            .thenApply { resourceConfigs -> resourceConfigs.mapKeys { it.key.name() } }
-                    topicsPartitionDescriptionsFuture.thenCombine(topicsConfigPropertiesFuture) { topicsPartitionDescriptions, topicsConfigProperties ->
-                        topicNames.map { topicName ->
-                            val topicDescription = topicsPartitionDescriptions[topicName]
-                                    ?: throw KafkaClusterManagementException("Invalid response, missing topic '$topicName' in partition descriptions")
-                            val topicConfig = topicsConfigProperties[topicName]
-                                    ?: throw KafkaClusterManagementException("Invalid response, missing topic '$topicName' in config descriptions")
-                            KafkaExistingTopic(
-                                    name = topicName,
-                                    internal = topicDescription.isInternal,
-                                    config = topicConfig.entries()
-                                            .sortedBy { it.name() }
-                                            .associate { it.name() to it.toTopicConfigValue() },
-                                    partitionsAssignments = topicDescription.partitions().map { it.toPartitionAssignments() }
-                            )
-                        }
+            .thenCompose { topicNames ->
+                val topicsPartitionDescriptionsFuture = adminClient
+                    .describeTopics(topicNames, DescribeTopicsOptions().withReadTimeout())
+                    .allTopicNames()
+                    .asCompletableFuture("describe all topics partitions")
+                val topicsConfigPropertiesFuture = adminClient
+                    .describeConfigs(
+                        topicNames.map { ConfigResource(ConfigResource.Type.TOPIC, it) },
+                        DescribeConfigsOptions().withReadTimeout()
+                    )
+                    .all()
+                    .asCompletableFuture("describe all topics configs")
+                    .thenApply { resourceConfigs -> resourceConfigs.mapKeys { it.key.name() } }
+                topicsPartitionDescriptionsFuture.thenCombine(topicsConfigPropertiesFuture) { topicsPartitionDescriptions, topicsConfigProperties ->
+                    topicNames.map { topicName ->
+                        val topicDescription = topicsPartitionDescriptions[topicName]
+                            ?: throw KafkaClusterManagementException("Invalid response, missing topic '$topicName' in partition descriptions")
+                        val topicConfig = topicsConfigProperties[topicName]
+                            ?: throw KafkaClusterManagementException("Invalid response, missing topic '$topicName' in config descriptions")
+                        KafkaExistingTopic(
+                            name = topicName,
+                            internal = topicDescription.isInternal,
+                            config = topicConfig.entries()
+                                .sortedBy { it.name() }
+                                .associate { it.name() to it.toTopicConfigValue() },
+                            partitionsAssignments = topicDescription.partitions().map { it.toPartitionAssignments() }
+                        )
                     }
                 }
-                .whenComplete { topics, _ ->
-                    if (topics != null) {
-                        val usedReplicaBrokerIds = topics.asSequence()
-                                .flatMap { it.partitionsAssignments.asSequence() }
-                                .flatMap { it.replicasAssignments }
-                                .map { it.brokerId }
-                                .toSet()
-                        topicAssignmentsUsedBrokerIdsRef.set(usedReplicaBrokerIds)
-                    }
+            }
+            .whenComplete { topics, _ ->
+                if (topics != null) {
+                    val usedReplicaBrokerIds = topics.asSequence()
+                        .flatMap { it.partitionsAssignments.asSequence() }
+                        .flatMap { it.replicasAssignments }
+                        .map { it.brokerId }
+                        .toSet()
+                    topicAssignmentsUsedBrokerIdsRef.set(usedReplicaBrokerIds)
                 }
+            }
     }
 
     override fun createTopic(topic: KafkaTopicConfiguration): CompletableFuture<Unit> {
         return adminClient
-                .createTopics(mutableListOf(topic.toNewTopic()), CreateTopicsOptions().withWriteTimeout())
-                .all()
-                .asCompletableFuture()
-                .thenApply {  }
+            .createTopics(mutableListOf(topic.toNewTopic()), CreateTopicsOptions().withWriteTimeout())
+            .all()
+            .asCompletableFuture("create topic")
+            .thenApply { }
+    }
+
+    override fun topicFullyExists(topicName: TopicName): CompletableFuture<Boolean> {
+        val describeTopicOk = adminClient
+            .describeTopics(mutableListOf(topicName), DescribeTopicsOptions().withReadTimeout())
+            .allTopicNames().asCompletableFuture("try describe topic")
+            .thenApply { true }.exceptionally { false }
+        val describeTopicConfigOk = adminClient
+            .describeConfigs(mutableListOf(ConfigResource(ConfigResource.Type.TOPIC, topicName)), DescribeConfigsOptions().withReadTimeout())
+            .all().asCompletableFuture("try describe topic configs")
+            .thenApply { true }.exceptionally { false }
+        return CompletableFuture.allOf(describeTopicOk, describeTopicConfigOk)
+            .thenApply { describeTopicOk.get() && describeTopicConfigOk.get() }
     }
 
     private fun updateConfig(
@@ -382,73 +402,69 @@ class KafkaManagementClientImpl(
             } else {
                 //suppressing since its deprecated for version 2.3.0 but it's only way for older broker versions
                 @Suppress("DEPRECATION")
-                adminClient
-                        .alterConfigs(
-                                mapOf(configResource to alterConfigs()),
-                                AlterConfigsOptions().withWriteTimeout()
-                        )
+                adminClient.alterConfigs(
+                    mapOf(configResource to alterConfigs()), AlterConfigsOptions().withWriteTimeout()
+                )
             }
         } else {
-            adminClient
-                    .incrementalAlterConfigs(
-                            mapOf(configResource to alterConfigOps()),
-                            AlterConfigsOptions().withWriteTimeout()
-                    )
+            adminClient.incrementalAlterConfigs(
+                mapOf(configResource to alterConfigOps()), AlterConfigsOptions().withWriteTimeout()
+            )
         }
         return alterConfigsResult
-                .all()
-                .asCompletableFuture()
-                .thenApply { }
+            .all()
+            .asCompletableFuture("alter configs")
+            .thenApply { }
     }
 
     override fun updateTopicConfig(topicName: TopicName, updatingConfig: TopicConfigMap): CompletableFuture<Unit> {
         return updateConfig(
-                configResource = ConfigResource(ConfigResource.Type.TOPIC, topicName),
-                alterConfigs = { updatingConfig.toKafkaConfig() },
-                alterConfigOps = { updatingConfig.toToTopicAlterOps() },
+            configResource = ConfigResource(ConfigResource.Type.TOPIC, topicName),
+            alterConfigs = { updatingConfig.toKafkaConfig() },
+            alterConfigOps = { updatingConfig.toToTopicAlterOps() },
         )
     }
 
     override fun setBrokerConfig(brokerId: BrokerId, config: Map<String, String>): CompletableFuture<Unit> {
         return updateConfig(
-                configResource = ConfigResource(ConfigResource.Type.BROKER, brokerId.toString()),
-                alterConfigs = { config.toKafkaConfig() },
-                alterConfigOps = { config.toToAlterSetOps() },
+            configResource = ConfigResource(ConfigResource.Type.BROKER, brokerId.toString()),
+            alterConfigs = { config.toKafkaConfig() },
+            alterConfigOps = { config.toToAlterSetOps() },
         )
     }
 
     override fun unsetBrokerConfig(brokerId: BrokerId, configKeys: Set<String>): CompletableFuture<Unit> {
         return updateConfig(
-                configResource = ConfigResource(ConfigResource.Type.BROKER, brokerId.toString()),
-                alterConfigs = { configKeys.associateWith { null }.toKafkaConfig() },
-                alterConfigOps = { configKeys.toToAlterUnsetOps() },
+            configResource = ConfigResource(ConfigResource.Type.BROKER, brokerId.toString()),
+            alterConfigs = { configKeys.associateWith { null }.toKafkaConfig() },
+            alterConfigOps = { configKeys.toToAlterUnsetOps() },
         )
     }
 
     override fun deleteTopic(topicName: TopicName): CompletableFuture<Unit> {
         return adminClient
-                .deleteTopics(mutableListOf(topicName), DeleteTopicsOptions().withWriteTimeout())
-                .all()
-                .asCompletableFuture()
-                .thenApply { }
+            .deleteTopics(mutableListOf(topicName), DeleteTopicsOptions().withWriteTimeout())
+            .all()
+            .asCompletableFuture("delete topic")
+            .thenApply { }
     }
 
     override fun addTopicPartitions(
-            topicName: TopicName, totalPartitionsCount: Int, newPartitionsAssignments: Map<Partition, List<BrokerId>>
+        topicName: TopicName, totalPartitionsCount: Int, newPartitionsAssignments: Map<Partition, List<BrokerId>>
     ): CompletableFuture<Unit> {
         val newAssignments = newPartitionsAssignments.asSequence()
-                .sortedBy { it.key }
-                .map { it.value }
-                .toList()
+            .sortedBy { it.key }
+            .map { it.value }
+            .toList()
         val newPartitions = NewPartitions.increaseTo(totalPartitionsCount, newAssignments)
         return adminClient
-                .createPartitions(
-                        mapOf(topicName to newPartitions),
-                        CreatePartitionsOptions().withWriteTimeout()
-                )
-                .all()
-                .asCompletableFuture()
-                .thenApply { }
+            .createPartitions(
+                mapOf(topicName to newPartitions),
+                CreatePartitionsOptions().withWriteTimeout()
+            )
+            .all()
+            .asCompletableFuture("add topic partitions")
+            .thenApply { }
     }
 
     override fun reAssignPartitions(
@@ -459,17 +475,19 @@ class KafkaManagementClientImpl(
         topicPartitionsAssignments: Map<TopicName, Map<Partition, List<BrokerId>>>, throttleBytesPerSec: Int
     ): CompletableFuture<Unit> {
         val partitionsAssignments = topicPartitionsAssignments
-                .flatMap { (topic, partitionAssignments) ->
-                    partitionAssignments.map { (partition, replicas) ->
-                        TopicPartition(topic, partition) to replicas
-                    }
+            .flatMap { (topic, partitionAssignments) ->
+                partitionAssignments.map { (partition, replicas) ->
+                    TopicPartition(topic, partition) to replicas
                 }
-                .toMap()
+            }
+            .toMap()
 
         runOperation("verify reassignments used brokers") {
             val brokerIds = partitionsAssignments.values.flatten().toSet()
             val allNodeIds = adminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
-                .nodes().asCompletableFuture().get().map { it.id() }.toSet()
+                .nodes()
+                .asCompletableFuture("describe cluster for re-assignments")
+                .get().map { it.id() }.toSet()
             brokerIds.filter { it !in allNodeIds }.takeIf { it.isNotEmpty() }?.run {
                 throw KafkaClusterManagementException("Unknown broker(s) used in assignments: $this")
             }
@@ -477,7 +495,7 @@ class KafkaManagementClientImpl(
         val currentPartitionAssignments = adminClient
             .describeTopics(topicPartitionsAssignments.keys, DescribeTopicsOptions().withReadTimeout())
             .allTopicNames()
-            .asCompletableFuture().get()
+            .asCompletableFuture("describe re-assigning topics").get()
             .flatMap { (topic, description) ->
                 description.partitions()
                     .map { it.toPartitionAssignments() }
@@ -534,45 +552,49 @@ class KafkaManagementClientImpl(
             adminClient
                 .alterPartitionReassignments(reassignments, AlterPartitionReassignmentsOptions().withWriteTimeout())
                 .all()
-                .asCompletableFuture()
+                .asCompletableFuture("alter partition reassignments")
                 .thenApply { }
         }
     }
 
     override fun updateThrottleRate(brokerId: BrokerId, throttleRate: ThrottleRate): CompletableFuture<Unit> {
         val dynamicConf = DynamicConfig.`Broker$`.`MODULE$`
-        val configs = mapOf(
-                dynamicConf.LeaderReplicationThrottledRateProp() to throttleRate.leaderRate?.takeIf { it > 0 }?.toString(),
-                dynamicConf.FollowerReplicationThrottledRateProp() to throttleRate.followerRate?.takeIf { it > 0 }?.toString(),
-                dynamicConf.ReplicaAlterLogDirsIoMaxBytesPerSecondProp() to throttleRate.alterDirIoRate?.takeIf { it > 0 }?.toString(),
-        )
-
+        val configs = with(dynamicConf) {
+            mapOf(
+                LeaderReplicationThrottledRateProp() to throttleRate.leaderRate?.takeIf { it > 0 }?.toString(),
+                FollowerReplicationThrottledRateProp() to throttleRate.followerRate?.takeIf { it > 0 }?.toString(),
+                ReplicaAlterLogDirsIoMaxBytesPerSecondProp() to throttleRate.alterDirIoRate?.takeIf { it > 0 }?.toString(),
+            )
+        }
         return updateConfig(ConfigResource(ConfigResource.Type.BROKER, brokerId.toString()),
-                alterConfigs = { Config(configs.map { ConfigEntry(it.key, it.value) }) },
-                alterConfigOps = {
-                    configs.map {
-                        AlterConfigOp(
-                                ConfigEntry(it.key, it.value),
-                                if (it.value != null) AlterConfigOp.OpType.SET else AlterConfigOp.OpType.DELETE
-                        )
-                    }
+            alterConfigs = { Config(configs.map { ConfigEntry(it.key, it.value) }) },
+            alterConfigOps = {
+                configs.map {
+                    AlterConfigOp(
+                        ConfigEntry(it.key, it.value),
+                        if (it.value != null) AlterConfigOp.OpType.SET else AlterConfigOp.OpType.DELETE
+                    )
                 }
+            }
         )
     }
 
     override fun verifyReAssignPartitions(topicName: TopicName, partitionsAssignments: Map<Partition, List<BrokerId>>): String {
         val currentReAssignments = listReAssignments().get()
-                .groupBy { it.topic }
-                .mapValues { (_, partitionReAssignments) ->
-                    partitionReAssignments.associateBy { it.partition }
-                }
-        val currentTopicDescription = adminClient.describeTopics(listOf(topicName), DescribeTopicsOptions().withReadTimeout())
-                .allTopicNames().asCompletableFuture().get().getOrElse(topicName) {
-                    throw KafkaClusterManagementException("Failed to get current topic description for topic: '$topicName'")
-                }
+            .groupBy { it.topic }
+            .mapValues { (_, partitionReAssignments) ->
+                partitionReAssignments.associateBy { it.partition }
+            }
+        val currentTopicDescription = adminClient
+            .describeTopics(listOf(topicName), DescribeTopicsOptions().withReadTimeout())
+            .allTopicNames()
+            .asCompletableFuture("describe topics for reassignment verification")
+            .get().getOrElse(topicName) {
+                throw KafkaClusterManagementException("Failed to get current topic description for topic: '$topicName'")
+            }
         val currentAssignments = currentTopicDescription.partitions()
-                .map { it.toPartitionAssignments() }
-                .toPartitionReplicasMap()
+            .map { it.toPartitionAssignments() }
+            .toPartitionReplicasMap()
         val partitionStatuses = partitionsAssignments.mapValues { (partition, replicas) ->
             val currentReplicas = currentAssignments[partition] ?: emptyList()
             val reAssignment = currentReAssignments[topicName]?.get(partition)
@@ -592,24 +614,30 @@ class KafkaManagementClientImpl(
             }
         }
         if (partitionStatuses.values.all { it == ReAssignmentStatus.COMPLETED }) {
-            val topicConfig = adminClient.describeConfigs(listOf(ConfigResource(ConfigResource.Type.TOPIC, topicName)), DescribeConfigsOptions().withWriteTimeout())
-                    .all().asCompletableFuture().get().getOrElse(ConfigResource(ConfigResource.Type.TOPIC, topicName)) {
-                        throw KafkaClusterManagementException("Failed to get current topic description for topic: '$topicName'")
-                    }
-                    .entries().associate { it.name() to it.toTopicConfigValue() }
-                    .filterValues { !it.default }
-                    .mapValues { it.value.value }
-                    .plus(mapOf(
-                            LogConfig.FollowerReplicationThrottledReplicasProp() to null,
-                            LogConfig.LeaderReplicationThrottledReplicasProp() to null,
-                    ))
+            val topicConfig = adminClient.describeConfigs(
+                listOf(ConfigResource(ConfigResource.Type.TOPIC, topicName)),
+                DescribeConfigsOptions().withWriteTimeout()
+            )
+                .all().asCompletableFuture("describe topic configs for reassignment verification")
+                .get().getOrElse(ConfigResource(ConfigResource.Type.TOPIC, topicName)) {
+                    throw KafkaClusterManagementException("Failed to get current topic description for topic: '$topicName'")
+                }
+                .entries().associate { it.name() to it.toTopicConfigValue() }
+                .filterValues { !it.default }
+                .mapValues { it.value.value }
+                .plus(
+                    mapOf(
+                        LogConfig.FollowerReplicationThrottledReplicasProp() to null,
+                        LogConfig.LeaderReplicationThrottledReplicasProp() to null,
+                    )
+                )
             updateTopicConfig(topicName, topicConfig).get()
             resultMsg.append("Topic: Throttle was removed.\n")
         }
         if (currentReAssignments.isEmpty()) {
             clusterInfo("").get().nodeIds
-                    .map { updateThrottleRate(it, ThrottleRate.NO_THROTTLE) }
-                    .forEach { it.get() }
+                .map { updateThrottleRate(it, ThrottleRate.NO_THROTTLE) }
+                .forEach { it.get() }
             resultMsg.append("Brokers: Throttle was removed.\n")
         } else {
             resultMsg.append("Brokers: Keeping throttle because of topics re-assigning ${currentReAssignments.keys}.\n")
@@ -625,12 +653,12 @@ class KafkaManagementClientImpl(
             throw KafkaClusterManagementException("Unsupported operation for cluster version < $VERSION_2_4, current: ${clusterVersion()}")
         }
         val topicPartitions = partitions
-                .associate { TopicPartition(topicName, it) to Optional.empty<NewPartitionReassignment>() }
+            .associate { TopicPartition(topicName, it) to Optional.empty<NewPartitionReassignment>() }
         return adminClient
-                .alterPartitionReassignments(topicPartitions, AlterPartitionReassignmentsOptions().withWriteTimeout())
-                .all()
-                .asCompletableFuture()
-                .thenApply { }
+            .alterPartitionReassignments(topicPartitions, AlterPartitionReassignmentsOptions().withWriteTimeout())
+            .all()
+            .asCompletableFuture("cancel partition reassignments")
+            .thenApply { }
     }
 
     override fun runPreferredReplicaElection(topicName: TopicName, partitions: List<Partition>) {
@@ -642,94 +670,100 @@ class KafkaManagementClientImpl(
             }
             else -> {
                 adminClient
-                        .electLeaders(
-                                ElectionType.PREFERRED,
-                                topicPartitions,
-                                ElectLeadersOptions().withWriteTimeout()
-                        )
-                        .all().asCompletableFuture().get()
+                    .electLeaders(
+                        ElectionType.PREFERRED, topicPartitions, ElectLeadersOptions().withWriteTimeout()
+                    )
+                    .all().asCompletableFuture("run preferred leader election")
+                    .get()
             }
         }
     }
 
     override fun topicsOffsets(topicNames: List<TopicName>): CompletableFuture<Map<TopicName, Map<Partition, PartitionOffsets>>> {
-        fun combineTopicOffsetsResult(allTopicsPartitions: List<TopicPartition>,
-                                      endOffsets: Map<TopicPartition, ListOffsetsResultInfo>,
-                                      beginOffsets: Map<TopicPartition, ListOffsetsResultInfo>
+        fun combineTopicOffsetsResult(
+            allTopicsPartitions: List<TopicPartition>,
+            endOffsets: Map<TopicPartition, ListOffsetsResultInfo>,
+            beginOffsets: Map<TopicPartition, ListOffsetsResultInfo>
         ): Map<TopicName, Map<Partition, PartitionOffsets>> {
             return allTopicsPartitions.groupBy { it.topic() }
-                    .mapValues { (_, partitions) ->
-                        partitions.sortedBy { it.partition() }.associate {
-                            val begin = beginOffsets[it]
-                                    ?: throw KafkistryClusterReadException("Could not read begin offset for $it")
-                            val end = endOffsets[it]
-                                    ?: throw KafkistryClusterReadException("Could not read end offset for $it")
-                            val partitionOffsets = PartitionOffsets(
-                                    begin = begin.offset(),
-                                    end = end.offset()
-                            )
-                            it.partition() to partitionOffsets
-                        }
+                .mapValues { (_, partitions) ->
+                    partitions.sortedBy { it.partition() }.associate {
+                        val begin = beginOffsets[it]
+                            ?: throw KafkistryClusterReadException("Could not read begin offset for $it")
+                        val end = endOffsets[it]
+                            ?: throw KafkistryClusterReadException("Could not read end offset for $it")
+                        val partitionOffsets = PartitionOffsets(
+                            begin = begin.offset(),
+                            end = end.offset()
+                        )
+                        it.partition() to partitionOffsets
                     }
+                }
         }
         return adminClient
-                .describeTopics(topicNames, DescribeTopicsOptions().withReadTimeout())
-                .allTopicNames()
-                .asCompletableFuture()
-                .thenApply { topicsPartitionDescriptions ->
-                    topicsPartitionDescriptions.flatMap { (topicName, partitionsDescription) ->
-                        val hasPartitionWithNoLeader = partitionsDescription.partitions().any { it.leader() == null }
-                        if (hasPartitionWithNoLeader) {
-                            emptyList()
-                        } else {
-                            partitionsDescription.partitions().map { TopicPartition(topicName, it.partition()) }
-                        }
+            .describeTopics(topicNames, DescribeTopicsOptions().withReadTimeout())
+            .allTopicNames()
+            .asCompletableFuture("describe topics for offests")
+            .thenApply { topicsPartitionDescriptions ->
+                topicsPartitionDescriptions.flatMap { (topicName, partitionsDescription) ->
+                    val hasPartitionWithNoLeader = partitionsDescription.partitions().any { it.leader() == null }
+                    if (hasPartitionWithNoLeader) {
+                        emptyList()
+                    } else {
+                        partitionsDescription.partitions().map { TopicPartition(topicName, it.partition()) }
                     }
                 }
-                .thenCompose { allTopicsPartitions ->
-                    adminClient
-                            .listOffsets(allTopicsPartitions.associateWith { OffsetSpec.latest() }, ListOffsetsOptions().withReadTimeout())
-                            .all()
-                            .asCompletableFuture()
-                            .thenApply { endOffsets -> allTopicsPartitions to endOffsets }
-                }
-                .thenCompose { (allTopicsPartitions, endOffsets) ->
-                    adminClient
-                            .listOffsets(allTopicsPartitions.associateWith { OffsetSpec.earliest() }, ListOffsetsOptions().withReadTimeout())
-                            .all()
-                            .asCompletableFuture()
-                            .thenApply { beginOffsets ->
-                                combineTopicOffsetsResult(allTopicsPartitions, endOffsets, beginOffsets)
-                            }
-                }
+            }
+            .thenCompose { allTopicsPartitions ->
+                adminClient
+                    .listOffsets(
+                        allTopicsPartitions.associateWith { OffsetSpec.latest() },
+                        ListOffsetsOptions().withReadTimeout()
+                    )
+                    .all()
+                    .asCompletableFuture("list topics latest offsets")
+                    .thenApply { endOffsets -> allTopicsPartitions to endOffsets }
+            }
+            .thenCompose { (allTopicsPartitions, endOffsets) ->
+                adminClient
+                    .listOffsets(
+                        allTopicsPartitions.associateWith { OffsetSpec.earliest() },
+                        ListOffsetsOptions().withReadTimeout()
+                    )
+                    .all()
+                    .asCompletableFuture("list topics earliest offsets")
+                    .thenApply { beginOffsets ->
+                        combineTopicOffsetsResult(allTopicsPartitions, endOffsets, beginOffsets)
+                    }
+            }
     }
 
     override fun consumerGroups(): CompletableFuture<List<ConsumerGroupId>> {
         return adminClient
-                .listConsumerGroups(ListConsumerGroupsOptions().withReadTimeout())
-                .valid()
-                .asCompletableFuture()
-                .thenApply { groups ->
-                    groups.map { it.groupId() }.sorted()
-                }
+            .listConsumerGroups(ListConsumerGroupsOptions().withReadTimeout())
+            .valid()
+            .asCompletableFuture("list consumer groups")
+            .thenApply { groups ->
+                groups.map { it.groupId() }.sorted()
+            }
     }
 
     override fun consumerGroup(groupId: ConsumerGroupId): CompletableFuture<ConsumerGroup> {
         val groupDescriptionFuture = adminClient
-                .describeConsumerGroups(listOf(groupId), DescribeConsumerGroupsOptions().withReadTimeout())
-                .describedGroups()[groupId]!!
-                .asCompletableFuture()
+            .describeConsumerGroups(listOf(groupId), DescribeConsumerGroupsOptions().withReadTimeout())
+            .describedGroups()[groupId]!!
+            .asCompletableFuture("describe consumer group")
         val topicPartitionOffsetsFuture = adminClient
-                .listConsumerGroupOffsets(groupId, ListConsumerGroupOffsetsOptions().withReadTimeout())
-                .partitionsToOffsetAndMetadata()
-                .asCompletableFuture()
-                .thenApply { topicsOffsets -> topicsOffsets.mapValues { it.value?.offset() } }
+            .listConsumerGroupOffsets(groupId, ListConsumerGroupOffsetsOptions().withReadTimeout())
+            .partitionsToOffsetAndMetadata()
+            .asCompletableFuture("list consumer group offsets")
+            .thenApply { topicsOffsets -> topicsOffsets.mapValues { it.value?.offset() } }
         return groupDescriptionFuture.thenCombine(topicPartitionOffsetsFuture) { groupDescription, topicPartitionOffsets ->
             val members = groupDescription.members().map {
                 ConsumerGroupMember(
-                        memberId = it.consumerId(),
-                        clientId = it.clientId(),
-                        host = it.host()
+                    memberId = it.consumerId(),
+                    clientId = it.clientId(),
+                    host = it.host()
                 )
             }.sortedBy { it.memberId }
             val offsets = topicPartitionOffsets
@@ -749,22 +783,22 @@ class KafkaManagementClientImpl(
                 }
                 .sortedBy { it.topic + it.partition }
             ConsumerGroup(
-                    id = groupId,
-                    status = groupDescription.state().convert(),
-                    partitionAssignor = groupDescription.partitionAssignor(),
-                    members = members,
-                    offsets = offsets,
-                    assignments = assignments,
+                id = groupId,
+                status = groupDescription.state().convert(),
+                partitionAssignor = groupDescription.partitionAssignor(),
+                members = members,
+                offsets = offsets,
+                assignments = assignments,
             )
         }
     }
 
     override fun deleteConsumer(groupId: ConsumerGroupId): CompletableFuture<Unit> {
         return adminClient
-                .deleteConsumerGroups(listOf(groupId), DeleteConsumerGroupsOptions().withWriteTimeout())
-                .all()
-                .asCompletableFuture()
-                .thenApply { }
+            .deleteConsumerGroups(listOf(groupId), DeleteConsumerGroupsOptions().withWriteTimeout())
+            .all()
+            .asCompletableFuture("delete consumer group")
+            .thenApply { }
     }
 
     override fun deleteConsumerOffsets(
@@ -779,7 +813,7 @@ class KafkaManagementClientImpl(
         return adminClient
             .deleteConsumerGroupOffsets(groupId, topicPartitionsSet, DeleteConsumerGroupOffsetsOptions().withWriteTimeout())
             .all()
-            .asCompletableFuture()
+            .asCompletableFuture("delete consumer group offsets")
             .thenApply { }
     }
 
@@ -830,28 +864,28 @@ class KafkaManagementClientImpl(
         }
 
         fun resolveTopicPartitionSeeks(
-                topicsOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>
+            topicsOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>
         ): Map<TopicPartition, OffsetSeek> {
             return reset.topics
-                    .associateBy { it.topic }
-                    .mapValues { (topic, topicSeek) ->
-                        val topicPartitions = topicsOffsets[topic]?.keys
-                                ?: throw KafkaClusterManagementException("Did not get response offsets for topic '$topic'")
-                        when (topicSeek.partitions) {
-                            null -> topicPartitions.associate { TopicPartition(topic, it) to reset.seek }
-                            else -> topicSeek.partitions.associate {
-                                val topicPartition = TopicPartition(topic, it.partition)
-                                if (it.partition !in topicPartitions) {
-                                    throw KafkaClusterManagementException("$topicPartition does not exist, can't perform offset reset")
-                                }
-                                topicPartition to (it.seek ?: reset.seek)
+                .associateBy { it.topic }
+                .mapValues { (topic, topicSeek) ->
+                    val topicPartitions = topicsOffsets[topic]?.keys
+                        ?: throw KafkaClusterManagementException("Did not get response offsets for topic '$topic'")
+                    when (topicSeek.partitions) {
+                        null -> topicPartitions.associate { TopicPartition(topic, it) to reset.seek }
+                        else -> topicSeek.partitions.associate {
+                            val topicPartition = TopicPartition(topic, it.partition)
+                            if (it.partition !in topicPartitions) {
+                                throw KafkaClusterManagementException("$topicPartition does not exist, can't perform offset reset")
                             }
+                            topicPartition to (it.seek ?: reset.seek)
                         }
                     }
-                    .flatMap { (_, partitionSeeks) ->
-                        partitionSeeks.map { it.toPair() }
-                    }
-                    .associate { it }
+                }
+                .flatMap { (_, partitionSeeks) ->
+                    partitionSeeks.map { it.toPair() }
+                }
+                .associate { it }
         }
 
         fun resolveTargetOffsets(
@@ -875,21 +909,21 @@ class KafkaManagementClientImpl(
 
             val lookupOffsetsFuture = if (lookupSeeks.isNotEmpty()) {
                 adminClient
-                        .listOffsets(lookupSeeks, ListOffsetsOptions().withReadTimeout())
-                        .all()
-                        .asCompletableFuture()
-                        .thenApply { topicOffsets -> topicOffsets.mapValues { it.value.offset() } }
-                        .thenApply { topicOffsets ->
-                            topicOffsets.mapValues { (topicPartition, offset) ->
-                                topicPartitionSeeks[topicPartition]?.let {
-                                    when (it.type) {
-                                        EARLIEST -> offset + it.offset()
-                                        LATEST -> offset - it.offset()
-                                        else -> null
-                                    }
-                                } ?: offset
-                            }
+                    .listOffsets(lookupSeeks, ListOffsetsOptions().withReadTimeout())
+                    .all()
+                    .asCompletableFuture("reset offsets - list topic offsets")
+                    .thenApply { topicOffsets -> topicOffsets.mapValues { it.value.offset() } }
+                    .thenApply { topicOffsets ->
+                        topicOffsets.mapValues { (topicPartition, offset) ->
+                            topicPartitionSeeks[topicPartition]?.let {
+                                when (it.type) {
+                                    EARLIEST -> offset + it.offset()
+                                    LATEST -> offset - it.offset()
+                                    else -> null
+                                }
+                            } ?: offset
                         }
+                    }
             } else {
                 CompletableFuture.completedFuture(emptyMap())
             }
@@ -900,7 +934,7 @@ class KafkaManagementClientImpl(
                     adminClient
                         .listConsumerGroupOffsets(clonedGroup, ListConsumerGroupOffsetsOptions().withReadTimeout())
                         .partitionsToOffsetAndMetadata()
-                        .asCompletableFuture()
+                        .asCompletableFuture("reset offsets - list group offsets")
                         .thenApply { groupOffsets ->
                             neededTopicPartitions.associateWith {
                                 groupOffsets[it]?.offset() ?: throw KafkaClusterManagementException(
@@ -914,10 +948,10 @@ class KafkaManagementClientImpl(
             val relativeOffsets = if (relativeSeeks.isNotEmpty()) {
                 relativeSeeks.mapValues { (topicPartition, seek) ->
                     val currentOffset = currentGroupOffsets[topicPartition]
-                            ?: throw KafkaClusterManagementException(
-                                    "Can't perform relative seek for topic partition not assigned to consumer group: $topicPartition, " +
-                                            "there might be other active consumer in group"
-                            )
+                        ?: throw KafkaClusterManagementException(
+                            "Can't perform relative seek for topic partition not assigned to consumer group: $topicPartition, " +
+                                    "there might be other active consumer in group"
+                        )
                     currentOffset + seek
                 }
             } else {
@@ -952,13 +986,13 @@ class KafkaManagementClientImpl(
         }
 
         fun doResetConsumerGroup(
-                topicPartitionTargetOffsets: Map<TopicPartition, Long>
+            topicPartitionTargetOffsets: Map<TopicPartition, Long>
         ): CompletableFuture<Void> {
             val offsets = topicPartitionTargetOffsets.mapValues { OffsetAndMetadata(it.value) }
             return adminClient
-                    .alterConsumerGroupOffsets(groupId, offsets, AlterConsumerGroupOffsetsOptions().withWriteTimeout())
-                    .all()
-                    .asCompletableFuture()
+                .alterConsumerGroupOffsets(groupId, offsets, AlterConsumerGroupOffsetsOptions().withWriteTimeout())
+                .all()
+                .asCompletableFuture("reset offsets - alter offsets")
         }
 
         fun constructResult(
@@ -971,19 +1005,19 @@ class KafkaManagementClientImpl(
             )
             val changes = targetOffsets.map { (topicPartition, targetOffset) ->
                 TopicPartitionOffsetChange(
-                        topic = topicPartition.topic(),
-                        partition = topicPartition.partition(),
-                        offset = targetOffset,
-                        delta = currentOffsets[topicPartition]
-                            ?.takeUnless { newlyInitialized }
-                            ?.let { targetOffset - it }
+                    topic = topicPartition.topic(),
+                    partition = topicPartition.partition(),
+                    offset = targetOffset,
+                    delta = currentOffsets[topicPartition]
+                        ?.takeUnless { newlyInitialized }
+                        ?.let { targetOffset - it }
                 )
             }.sortedBy { it.topic + it.partition }
             return GroupOffsetResetChange(
-                    groupId = groupId,
-                    changes = changes,
-                    totalSkip = changes.mapNotNull { it.delta }.filter { it > 0 }.sum(),
-                    totalRewind = -changes.mapNotNull { it.delta }.filter { it < 0 }.sum()
+                groupId = groupId,
+                changes = changes,
+                totalSkip = changes.mapNotNull { it.delta }.filter { it > 0 }.sum(),
+                totalRewind = -changes.mapNotNull { it.delta }.filter { it < 0 }.sum()
             )
         }
 
@@ -995,36 +1029,38 @@ class KafkaManagementClientImpl(
         val consumerGroupFuture = consumerGroup(groupId)
         val currentGroupOffsets: Map<TopicPartition, Long> by lazy { currentGroupOffsets() }
         return CompletableFuture.allOf(topicsOffsets, consumerGroupFuture)
-                .thenApply { checkGroupState(consumerGroupFuture.get()) }
-                .thenApply { resolveTopicPartitionSeeks(topicsOffsets.get()) }
-                .thenCompose { resolveTargetOffsets(it, currentGroupOffsets) }
-                .thenApply { ensureTargetOffsetsWithinBounds(it, topicsOffsets.get()) }
-                .thenCompose { targetOffsets -> doResetConsumerGroup(targetOffsets).thenApply { targetOffsets } }
-                .thenApply { targetOffsets -> constructResult(currentGroupOffsets, targetOffsets, consumerGroupFuture.get()) }
+            .thenApply { checkGroupState(consumerGroupFuture.get()) }
+            .thenApply { resolveTopicPartitionSeeks(topicsOffsets.get()) }
+            .thenCompose { resolveTargetOffsets(it, currentGroupOffsets) }
+            .thenApply { ensureTargetOffsetsWithinBounds(it, topicsOffsets.get()) }
+            .thenCompose { targetOffsets -> doResetConsumerGroup(targetOffsets).thenApply { targetOffsets } }
+            .thenApply { targetOffsets ->
+                constructResult(currentGroupOffsets, targetOffsets, consumerGroupFuture.get())
+            }
     }
 
     override fun listAcls(): CompletableFuture<List<KafkaAclRule>> {
         return adminClient
-                .describeAcls(AclBindingFilter.ANY, DescribeAclsOptions().withReadTimeout())
-                .values()
-                .asCompletableFuture()
-                .thenApply { aclBindings -> aclBindings.map { it.toAclRule() } }
+            .describeAcls(AclBindingFilter.ANY, DescribeAclsOptions().withReadTimeout())
+            .values()
+            .asCompletableFuture("list acls")
+            .thenApply { aclBindings -> aclBindings.map { it.toAclRule() } }
     }
 
     override fun createAcls(acls: List<KafkaAclRule>): CompletableFuture<Unit> {
         val aclBindings = acls.map { it.toAclBinding() }
         return adminClient.createAcls(aclBindings, CreateAclsOptions().withWriteTimeout())
-                .all()
-                .asCompletableFuture()
-                .thenApply { }
+            .all()
+            .asCompletableFuture("create acls")
+            .thenApply { }
     }
 
     override fun deleteAcls(acls: List<KafkaAclRule>): CompletableFuture<Unit> {
         val aclFilters = acls.map { it.toAclBinding().toFilter() }
         return adminClient.deleteAcls(aclFilters, DeleteAclsOptions().withWriteTimeout())
-                .all()
-                .asCompletableFuture()
-                .thenApply { }
+            .all()
+            .asCompletableFuture("delete acls")
+            .thenApply { }
     }
 
     override fun sampleRecords(
@@ -1047,7 +1083,7 @@ class KafkaManagementClientImpl(
         return adminClient
             .describeClientQuotas(ClientQuotaFilter.all(), DescribeClientQuotasOptions().withReadTimeout())
             .entities()
-            .asCompletableFuture()
+            .asCompletableFuture("describe client quotas")
             .thenApply { entityQuotas ->
                 entityQuotas.map { (entity, quotas) ->
                     ClientQuota(entity.toQuotaEntity(), quotas.toQuotaProperties())
@@ -1104,7 +1140,7 @@ class KafkaManagementClientImpl(
         return adminClient
             .alterClientQuotas(quotaAlterations, AlterClientQuotasOptions().withWriteTimeout())
             .all()
-            .asCompletableFuture()
+            .asCompletableFuture("alter client quotas")
             .thenApply {  }
     }
 
@@ -1145,48 +1181,48 @@ class KafkaManagementClientImpl(
     }
 
     private fun ConfigEntry.toTopicConfigValue() = ConfigValue(
-            value = value(),
-            default = isDefault,
-            readOnly = isReadOnly,
-            sensitive = isSensitive,
-            source = source()
+        value = value(),
+        default = isDefault,
+        readOnly = isReadOnly,
+        sensitive = isSensitive,
+        source = source()
     )
 
     private fun TopicPartitionInfo.toPartitionAssignments(): PartitionAssignments {
         val leaderBrokerId = leader()?.id()
         val inSyncBrokerIds = isr().map { it.id() }.toSet()
         return PartitionAssignments(
-                partition = partition(),
-                replicasAssignments = replicas().mapIndexed { index, broker ->
-                    ReplicaAssignment(
-                            brokerId = broker.id(),
-                            leader = leaderBrokerId == broker.id(),
-                            inSyncReplica = broker.id() in inSyncBrokerIds,
-                            preferredLeader = index == 0,
-                            rank = index
-                    )
-                }
+            partition = partition(),
+            replicasAssignments = replicas().mapIndexed { index, broker ->
+                ReplicaAssignment(
+                    brokerId = broker.id(),
+                    leader = leaderBrokerId == broker.id(),
+                    inSyncReplica = broker.id() in inSyncBrokerIds,
+                    preferredLeader = index == 0,
+                    rank = index
+                )
+            }
         )
     }
 
     private fun TopicConfigMap.toKafkaConfig(): Config = this
-            .mapNotNull { e -> ConfigEntry(e.key, e.value).takeIf { it.value() != null } }
-            .let { Config(it) }
+        .mapNotNull { e -> ConfigEntry(e.key, e.value).takeIf { it.value() != null } }
+        .let { Config(it) }
 
     private fun TopicConfigMap.toToAlterSetOps(): Collection<AlterConfigOp> = this
-            .map { e -> ConfigEntry(e.key, e.value.takeIf { it != null }) }
-            .map { AlterConfigOp(it, if (it.value() != null) AlterConfigOp.OpType.SET else AlterConfigOp.OpType.DELETE) }
+        .map { e -> ConfigEntry(e.key, e.value.takeIf { it != null }) }
+        .map { AlterConfigOp(it, if (it.value() != null) AlterConfigOp.OpType.SET else AlterConfigOp.OpType.DELETE) }
 
     private fun Set<String>.toToAlterUnsetOps(): Collection<AlterConfigOp> = this
-            .map { ConfigEntry(it, null) }
-            .map { AlterConfigOp(it, AlterConfigOp.OpType.DELETE) }
+        .map { ConfigEntry(it, null) }
+        .map { AlterConfigOp(it, AlterConfigOp.OpType.DELETE) }
 
     private fun TopicConfigMap.toToTopicAlterOps(): Collection<AlterConfigOp> = this
-            .toToAlterSetOps()
-            .plus(TOPIC_CONFIG_PROPERTIES
-                    .filter { it !in this.keys }
-                    .map { AlterConfigOp(ConfigEntry(it, null), AlterConfigOp.OpType.DELETE) }
-            )
+        .toToAlterSetOps()
+        .plus(TOPIC_CONFIG_PROPERTIES
+            .filter { it !in this.keys }
+            .map { AlterConfigOp(ConfigEntry(it, null), AlterConfigOp.OpType.DELETE) }
+        )
 
     private fun ClientQuotaEntity.toQuotaEntity(): QuotaEntity {
         val entries = entries().mapValues { it.value.orDefault() }
@@ -1245,12 +1281,14 @@ class KafkaManagementClientImpl(
 
     private fun readTimeoutDuration() = Duration.ofMillis(readRequestTimeoutMs)
 
-    private fun <T> KafkaFuture<T>.asCompletableFuture(): CompletableFuture<T> {
+    private fun <T> KafkaFuture<T>.asCompletableFuture(ofWhat: String): CompletableFuture<T> {
         return CompletableFuture<T>().also {
             whenComplete { result, ex ->
                 when (ex) {
                     null -> it.complete(result)
-                    else -> it.completeExceptionally(KafkaClusterManagementException(ex))
+                    else -> it.completeExceptionally(
+                        KafkaClusterManagementException("Execution exception for: $ofWhat", ex)
+                    )
                 }
             }
         }
@@ -1258,33 +1296,33 @@ class KafkaManagementClientImpl(
 
     private fun AclBinding.toAclRule(): KafkaAclRule {
         return KafkaAclRule(
-                principal = entry().principal(),
-                resource = AclResource(
-                        type = pattern().resourceType().convert(),
-                        name = pattern().name(),
-                        namePattern = pattern().patternType().convert()
-                ),
-                host = entry().host(),
-                operation = AclOperation(
-                        type = entry().operation().convert(),
-                        policy = entry().permissionType().convert()
-                )
+            principal = entry().principal(),
+            resource = AclResource(
+                type = pattern().resourceType().convert(),
+                name = pattern().name(),
+                namePattern = pattern().patternType().convert()
+            ),
+            host = entry().host(),
+            operation = AclOperation(
+                type = entry().operation().convert(),
+                policy = entry().permissionType().convert()
+            )
         )
     }
 
     private fun KafkaAclRule.toAclBinding(): AclBinding {
         return AclBinding(
-                ResourcePattern(
-                        resource.type.convert(),
-                        resource.name,
-                        resource.namePattern.convert()
-                ),
-                AccessControlEntry(
-                        principal,
-                        host,
-                        operation.type.convert(),
-                        operation.policy.convert()
-                )
+            ResourcePattern(
+                resource.type.convert(),
+                resource.name,
+                resource.namePattern.convert()
+            ),
+            AccessControlEntry(
+                principal,
+                host,
+                operation.type.convert(),
+                operation.policy.convert()
+            )
         )
     }
 

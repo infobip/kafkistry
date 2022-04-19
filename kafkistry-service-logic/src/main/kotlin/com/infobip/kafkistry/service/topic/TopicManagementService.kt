@@ -4,6 +4,7 @@ import org.apache.kafka.clients.admin.ConfigEntry
 import com.infobip.kafkistry.events.*
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
+import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicConfigMap
 import com.infobip.kafkistry.model.TopicName
@@ -55,8 +56,30 @@ class TopicManagementService(
         clientProvider.doWithClient(kafkaCluster) {
             it.createTopic(KafkaTopicConfiguration(topicName, assignments.newAssignments, config)).get()
         }
+        kafkaCluster.ensureRepeatedlyReportsExisting(topicName)
         kafkaStateProvider.refreshClusterState(clusterIdentifier)
         eventPublisher.publish(TopicCreatedEvent(clusterIdentifier, topicName))
+    }
+
+    private fun KafkaCluster.ensureRepeatedlyReportsExisting(
+        topicName: TopicName,
+        timeoutMs: Long = 15_000, delayMs: Long = 500, requiredInRowCount: Int = 3
+    ) {
+        // This nasty loop exist because successful completion of AdminClient.createTopics()
+        // DOES NOT mean that topic creation fully propagated across all brokers in cluster.
+        // Subsequent calls of AdminClient.describeTopics() or AdminClient.describeConfigs() might result in
+        // org.apache.kafka.common.errors.UnknownTopicOrPartitionException: This server does not host this topic-partition.
+        // This loop is working wait for topic to be describe-able several times in row with success.
+        val start = System.currentTimeMillis()
+        var okInRow = 0
+        while (true) {
+            val exist = clientProvider.doWithClient(this) { it.topicFullyExists(topicName).get() }
+            if (exist) okInRow++ else okInRow = 0
+            if (okInRow >= requiredInRowCount || System.currentTimeMillis() - start > timeoutMs) {
+                break
+            }
+            Thread.sleep(delayMs)
+        }
     }
 
     fun applyUnexpectedOrUnknownTopicDeletion(

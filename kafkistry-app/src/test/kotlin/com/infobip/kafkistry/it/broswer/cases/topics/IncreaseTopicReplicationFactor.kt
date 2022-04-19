@@ -82,6 +82,12 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
             browser.assertPageText().containsPattern(Pattern.compile("(completed successfully(.|\n)*){6}"))
             browser.assertPageText().contains("Topic: Throttle was removed")
         }
+        await {
+            browser.navigate().refresh()
+            await {
+                browser.assertPageText().contains("Topic status on cluster\n" + "OK")
+            }
+        }
 
         //go back to topic inspection page
         browser.findElementWithText("Back").scrollIntoView().click()

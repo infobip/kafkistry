@@ -69,7 +69,13 @@ abstract class DeleteUnknownTopic(contextSupplier: () -> Context) : UITestCase(c
             assertThat(browser.currentUrl).contains("/topics/cluster-inspect")
             browser.assertPageText().contains("Topic my-delete-1")
         }
-        browser.assertPageText().contains("UNAVAILABLE", "(no data for selected cluster)")
+
+        await {
+            browser.navigate().refresh()
+            await(timeoutSecs = 2) {
+                browser.assertPageText().contains("UNAVAILABLE", "(no data for selected cluster)")
+            }
+        }
     }
 
 }

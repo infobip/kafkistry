@@ -16,6 +16,7 @@ interface KafkaManagementClient : AutoCloseable {
     fun listAllTopicNames(): CompletableFuture<List<TopicName>>
     fun listAllTopics(): CompletableFuture<List<KafkaExistingTopic>>
     fun createTopic(topic: KafkaTopicConfiguration): CompletableFuture<Unit>
+    fun topicFullyExists(topicName: TopicName): CompletableFuture<Boolean>
     fun deleteTopic(topicName: TopicName): CompletableFuture<Unit>
     fun updateTopicConfig(topicName: TopicName, updatingConfig: TopicConfigMap): CompletableFuture<Unit>
     fun setBrokerConfig(brokerId: BrokerId, config: Map<String, String>): CompletableFuture<Unit>

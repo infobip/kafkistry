@@ -84,7 +84,6 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
                     "NEEDS_LEADER_ELECTION",
                     "HAS_UNVERIFIED_REASSIGNMENTS",
                     "WRONG_CONFIG",
-                    "Partition and leader assignments over brokers is optimal"
             )
         }
 
@@ -98,9 +97,12 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
             browser.assertPageText().doesNotContain("is still in progress", "failed")
         }
 
-        browser.navigate().refresh()
         await {
-            browser.assertPageText().contains("Topic my-rebalance-1")
+            browser.navigate().refresh()
+            await {
+                browser.assertPageText().contains("Topic my-rebalance-1")
+            }
+            browser.assertPageText().contains("Partition and leader assignments over brokers is optimal")
         }
 
         browser.assertPageText().contains("NEEDS_LEADER_ELECTION")
