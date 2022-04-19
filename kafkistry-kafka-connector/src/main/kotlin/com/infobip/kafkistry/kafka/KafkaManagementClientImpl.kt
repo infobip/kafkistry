@@ -99,6 +99,9 @@ class KafkaManagementClientImpl(
                             .asCompletableFuture()
                 }
                 .thenApply { configs -> configs.values.first().entries().associate { it.name() to it.toTopicConfigValue() } }
+                .whenComplete { _, ex ->
+                    if (ex != null) adminClient.close(Duration.ofMillis(writeRequestTimeoutMs))
+                }
                 .get()
         val zookeeperConnection = controllerConfig["zookeeper.connect"]?.value ?: ""
         val majorVersion = controllerConfig["inter.broker.protocol.version"]?.value
