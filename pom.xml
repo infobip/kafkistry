@@ -32,17 +32,17 @@
     </modules>
 
     <properties>
-        <jdk.version>11</jdk.version>
-        <java.version>11</java.version>
+        <jdk.version>18</jdk.version>
+        <java.version>18</java.version>
         <kotlin.jvm.target>11</kotlin.jvm.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.source>18</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <docker.skip-build>true</docker.skip-build>
-        <docker.from-image>openjdk:11.0.12-oracle</docker.from-image>
-        <docker.to-image>kafkistry:${project.version}</docker.to-image>
+        <docker.from-image>openjdk:18-jdk</docker.from-image>
+        <docker.to-image>infobip/kafkistry:${project.version}</docker.to-image>
         <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <git-commit-id-maven-plugin.skip>false</git-commit-id-maven-plugin.skip>
@@ -325,7 +325,7 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>3.1.4</version>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
