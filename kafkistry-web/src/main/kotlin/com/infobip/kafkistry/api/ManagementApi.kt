@@ -40,7 +40,8 @@ class ManagementApi(
     fun updateTopicOnClusterToExpectedConfig(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
         @RequestParam("topicName") topicName: TopicName,
-    ): Unit = managementService.applyWrongTopicConfigUpdate(topicName, clusterIdentifier)
+        @RequestBody expectedTopicConfig: TopicConfigMap,
+    ): Unit = managementService.applyWrongTopicConfigUpdate(topicName, clusterIdentifier, expectedTopicConfig)
 
     @PostMapping("/add-topic-partitions")
     fun addTopicPartitionsOnCluster(

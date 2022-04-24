@@ -108,21 +108,35 @@ class TopicManagementService(
     }
 
     fun applyWrongTopicConfigUpdate(
-            topicName: TopicName,
-            clusterIdentifier: KafkaClusterIdentifier
+        topicName: TopicName,
+        clusterIdentifier: KafkaClusterIdentifier,
+        expectedTopicConfig: TopicConfigMap,
     ) {
         val topicDescription = topicsRegistry.getTopic(topicName)
         val kafkaCluster = clustersRegistry.getCluster(clusterIdentifier)
         val config = topicDescription.configForCluster(kafkaCluster.ref())
         val inspectionResult = inspectionService.inspectTopicOnCluster(topicDescription, kafkaCluster.ref())
+        val finalConfigToSet = resolveTopicConfigToUpdate(
+            clusterIdentifier, topicName, inspectionResult, expectedTopicConfig
+        )
+        config.forEach { (key, expectedValue) ->
+            val valueToSet = finalConfigToSet[key]
+            if (valueToSet != expectedValue) {
+                throw KafkistryIllegalStateException(
+                    "Topic '$topicName' on cluster '$clusterIdentifier', has different expected value for property='$key' " +
+                            " expected='$expectedValue' settingValue='$valueToSet' (configuration changed in meantime?)"
+                )
+            }
+        }
         if (WRONG_CONFIG !in inspectionResult.status.types) {
             throw KafkistryIllegalStateException(
-                    "Topic '$topicName' is not WRONG_CONFIG on cluster '$clusterIdentifier', can't be updated, topic status: ${inspectionResult.status}"
+                "Topic '$topicName' is not WRONG_CONFIG on cluster '$clusterIdentifier', can't be updated, " +
+                        "topic status: ${inspectionResult.status}"
             )
         }
         checkRuleViolations(inspectionResult.status)
         clientProvider.doWithClient(kafkaCluster) {
-            it.updateTopicConfig(topicName, config).get()
+            it.updateTopicConfig(topicName, finalConfigToSet).get()
         }
         kafkaStateProvider.refreshClusterState(clusterIdentifier)
         eventPublisher.publish(TopicUpdatedEvent(clusterIdentifier, topicName))
@@ -342,33 +356,45 @@ class TopicManagementService(
 
     fun setTopicConfigOnCluster(clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName, topicConfigToSet: TopicConfigMap) {
         val cluster = clustersRegistry.getCluster(clusterIdentifier)
-        val clusterConfig = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.config
-        val currentConfig = inspectionService.inspectTopicOnCluster(topicName, clusterIdentifier)
-                .let {
-                    it.existingTopicInfo?.config ?: throw KafkistryIllegalStateException(
-                            "Topic '$topicName' does not exist on cluster '$clusterIdentifier'"
-                    )
-                }
-        val finalConfig = currentConfig
-                .filterValues { it.source == ConfigEntry.ConfigSource.DYNAMIC_TOPIC_CONFIG && it.value != null }
-                .mapValues { it.value.value }
-                .plus(topicConfigToSet
-                        .filter { it.value != currentConfig[it.key]?.value }
-                        .mapValues {
-                            val valueMeetsClusterExpectation = configValueInspector.isValueSameAsExpectedByCluster(
-                                    it.key, it.value, clusterConfig
-                            )
-                            when (valueMeetsClusterExpectation) {
-                                true -> null   //keep value being defined by static broker config
-                                false -> it.value
-                            }
-                        }
-                )
+        val topicInspection = inspectionService.inspectTopicOnCluster(topicName, clusterIdentifier)
+        val finalConfig = resolveTopicConfigToUpdate(
+            clusterIdentifier, topicName, topicInspection, topicConfigToSet
+        )
         clientProvider.doWithClient(cluster) {
             it.updateTopicConfig(topicName, finalConfig).get()
         }
         kafkaStateProvider.refreshClusterState(clusterIdentifier)
         eventPublisher.publish(TopicUpdatedEvent(clusterIdentifier, topicName))
+    }
+
+    private fun resolveTopicConfigToUpdate(
+        clusterIdentifier: KafkaClusterIdentifier,
+        topicName: TopicName,
+        topicInspection: TopicClusterStatus,
+        topicConfigToSet: TopicConfigMap,
+    ): Map<String, String?> {
+        val clusterConfig = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.config
+        val currentConfig = topicInspection.let {
+                it.existingTopicInfo?.config ?: throw KafkistryIllegalStateException(
+                    "Topic '$topicName' does not exist on cluster '$clusterIdentifier'"
+                )
+            }
+        val finalConfig = currentConfig
+            .filterValues { it.source == ConfigEntry.ConfigSource.DYNAMIC_TOPIC_CONFIG && it.value != null }
+            .mapValues { it.value.value }
+            .plus(topicConfigToSet
+                .filter { it.value != currentConfig[it.key]?.value }
+                .mapValues {
+                    val valueMeetsClusterExpectation = configValueInspector.isValueSameAsExpectedByCluster(
+                        it.key, it.value, clusterConfig
+                    )
+                    when (valueMeetsClusterExpectation) {
+                        true -> null   //keep value being defined by static broker config
+                        false -> it.value
+                    }
+                }
+            )
+        return finalConfig
     }
 
     private fun checkRuleViolations(result: TopicOnClusterInspectionResult) {

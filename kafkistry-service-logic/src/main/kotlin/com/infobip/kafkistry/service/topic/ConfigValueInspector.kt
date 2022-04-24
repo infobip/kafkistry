@@ -107,8 +107,8 @@ class ConfigValueInspector {
                         "segment.index.bytes" -> clusterConfig["log.index.size.max.bytes"]
                         "segment.jitter.ms" -> clusterConfig["log.roll.jitter.ms"]
                         "segment.ms" -> clusterConfig["log.roll.ms"]
-                        "follower.replication.throttled.replicas" -> ConfigValue(null, default = true, readOnly = false, sensitive = false, source = ConfigEntry.ConfigSource.DEFAULT_CONFIG)
-                        "leader.replication.throttled.replicas" -> ConfigValue(null, default = true, readOnly = false, sensitive = false, source = ConfigEntry.ConfigSource.DEFAULT_CONFIG)
+                        "follower.replication.throttled.replicas" -> ConfigValue("", default = true, readOnly = false, sensitive = false, source = ConfigEntry.ConfigSource.DEFAULT_CONFIG)
+                        "leader.replication.throttled.replicas" -> ConfigValue("", default = true, readOnly = false, sensitive = false, source = ConfigEntry.ConfigSource.DEFAULT_CONFIG)
                         else -> null
                     }
                 }

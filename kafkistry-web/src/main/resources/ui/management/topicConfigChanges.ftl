@@ -28,11 +28,26 @@
 <#list configChanges as configChange>
     <tr>
         <td>${configChange.key}</td>
-        <td class="conf-value" data-name="${configChange.key}" data-value="${configChange.oldValue!''}"
-            style="word-break: break-word;">${configChange.oldValue!'[null]'}</td>
-        <td class="conf-value" data-name="${configChange.key}" data-value="${configChange.newValue!''}">
+        <td class="conf-value old-value" data-name="${configChange.key}" data-value="${configChange.oldValue!''}"
+            data-is-null="${(configChange.oldValue??)?then("false", "true")}" style="word-break: break-word;">
+            <#if configChange.oldValue??>
+                <#if configChange.oldValue == "">
+                    <i>(empty)</i>
+                <#else>
+                    ${configChange.oldValue}
+                </#if>
+            <#else>
+                <span class="text-primary">null</span>
+            </#if>
+        </td>
+        <td class="conf-value new-value" data-name="${configChange.key}" data-value="${configChange.newValue!''}"
+            data-is-null="${(configChange.newValue??)?then("false", "true")}">
             <#if configChange.newValue??>
-                ${configChange.newValue}
+                <#if configChange.newValue == "">
+                    <i>(empty)</i>
+                <#else>
+                    ${configChange.newValue}
+                </#if>
             <#else>
                 <span class="text-primary">null</span>
             </#if>
