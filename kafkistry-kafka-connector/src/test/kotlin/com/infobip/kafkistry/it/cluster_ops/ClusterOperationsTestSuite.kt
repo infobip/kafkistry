@@ -903,7 +903,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             it.createTopic(KafkaTopicConfiguration(
                     name = "re-assignment-progress-test",
                     partitionsReplicas = oldAssignment,
-                    config = emptyMap()
+                    config = mapOf("retention.bytes" to "111222333"),
             )).get()
             it.awaitTopicCreated("re-assignment-progress-test")
         }
@@ -960,6 +960,17 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         assertThat(reAssignmentCompleted - reAssignmentStarted).`as`("ReAssignment duration").isBetween(4_000, 6_500)
 
         assertThat(doOnKafka { it.listReAssignments().get() }).`as`("ReAssignments after completion").isEmpty()
+
+        val topicAfter = doOnKafka { it.listAllTopics().get() }.first { it.name == "re-assignment-progress-test" }
+        assertThat(topicAfter.config["retention.bytes"])
+            .`as`("topic config should not be influenced by re-assignment")
+            .isEqualTo(
+                ConfigValue(
+                    value = "111222333",
+                    default = false, readOnly = false, sensitive = false,
+                    source = ConfigEntry.ConfigSource.DYNAMIC_TOPIC_CONFIG
+                )
+            )
     }
 
     @Test

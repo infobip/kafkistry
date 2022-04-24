@@ -379,6 +379,28 @@ class KafkaManagementClientImpl(
             .thenApply { describeTopicOk.get() && describeTopicConfigOk.get() }
     }
 
+    private fun partialUpdateTopicConfig(
+        topicName: TopicName,
+        config: TopicConfigMap,
+    ) : CompletableFuture<Unit> {
+        val configResource = ConfigResource(ConfigResource.Type.TOPIC, topicName)
+        return updateConfig(
+            configResource = configResource,
+            alterConfigs = {
+                val resourceConfigs = adminClient
+                    .describeConfigs(listOf(configResource), DescribeConfigsOptions().withReadTimeout())
+                    .all()
+                    .asCompletableFuture("partial topic update config read current")
+                    .get()
+                val currentConfig = resourceConfigs[configResource]
+                    ?: throw KafkaClusterManagementException("Did not get response for config of topic $topicName")
+                val fullConfig = currentConfig.entries().associate { it.name() to it.value() }.plus(config)
+                fullConfig.toKafkaConfig()
+            },
+            alterConfigOps = { config.toToAlterSetOps() },
+        )
+    }
+
     private fun updateConfig(
             configResource: ConfigResource,
             alterConfigs: () -> Config,
@@ -526,7 +548,7 @@ class KafkaManagementClientImpl(
                     LogConfig.LeaderReplicationThrottledReplicasProp() to leaderThrottlesMap[topic],
                     LogConfig.FollowerReplicationThrottledReplicasProp() to followerThrottlesMap[topic],
                 ).filterValues { it != null }
-                updateTopicConfig(topic, topicThrottleConfig)
+                partialUpdateTopicConfig(topic, topicThrottleConfig)
             }.forEach { it.get() }
             reassigningBrokersSet.map { updateThrottleRate(it, throttleRate) }.forEach { it.get() }
         }
