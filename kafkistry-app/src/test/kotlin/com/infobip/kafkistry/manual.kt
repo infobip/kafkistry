@@ -22,11 +22,9 @@ import com.infobip.kafkistry.service.newQuota
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.toAclRule
 import com.infobip.kafkistry.service.toKafkaCluster
-import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole
 import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
-import org.apache.kafka.clients.producer.Callback
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
@@ -388,18 +386,7 @@ class DataStateInitializer(
                         val partition = selector.nextPartition()
                         ProducerRecord(name, partition, "key_$it", """{"id":$it,"msg":"Dummy message $it"}""")
                     }
-                    .map { record ->
-                        producer.send(record)
-//                        log.info("topic4 produce: going to produce {}", record.key())
-//                        producer.send(record) { meta, ex ->
-//                            if (ex != null) {
-//                                log.info("topic4 produce: failed to produce {}, cause: {}", record.key(), ex.deepToString())
-//                            } else  {
-//                                log.info("topic4 produce: competed produce of {}", record.key())
-//                            }
-//
-//                        }.also { log.info("topic4 produce: sent {}", record.key()) }
-                    }
+                    .map { producer.send(it) }
                     .also { producer.flush() }
                     .forEach { it.get() }
             }
