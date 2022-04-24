@@ -114,18 +114,21 @@ class TopicManagementService(
     ) {
         val topicDescription = topicsRegistry.getTopic(topicName)
         val kafkaCluster = clustersRegistry.getCluster(clusterIdentifier)
-        val config = topicDescription.configForCluster(kafkaCluster.ref())
+        val registrySpecificConfig = topicDescription.configForCluster(kafkaCluster.ref())
         val inspectionResult = inspectionService.inspectTopicOnCluster(topicDescription, kafkaCluster.ref())
         val finalConfigToSet = resolveTopicConfigToUpdate(
             clusterIdentifier, topicName, inspectionResult, expectedTopicConfig
         )
-        config.forEach { (key, expectedValue) ->
-            val valueToSet = finalConfigToSet[key]
-            if (valueToSet != expectedValue) {
-                throw KafkistryIllegalStateException(
-                    "Topic '$topicName' on cluster '$clusterIdentifier', has different expected value for property='$key' " +
-                            " expected='$expectedValue' settingValue='$valueToSet' (configuration changed in meantime?)"
-                )
+        finalConfigToSet.forEach { (key, value) ->
+            registrySpecificConfig[key]?.also { registryValue ->
+                if (registryValue != value) {
+                    throw KafkistryIllegalStateException(
+                        "Topic '$topicName' on cluster '$clusterIdentifier', has different config " +
+                                " key='$key' with expected value='$registryValue' " +
+                                " comparing to write attempt value='$value'  " +
+                                " (did topic configuration changed in meantime?)"
+                    )
+                }
             }
         }
         if (WRONG_CONFIG !in inspectionResult.status.types) {
