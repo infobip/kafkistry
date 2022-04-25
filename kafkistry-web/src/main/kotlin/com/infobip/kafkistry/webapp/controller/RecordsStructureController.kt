@@ -4,14 +4,12 @@ import com.infobip.kafkistry.api.ExistingValuesApi
 import com.infobip.kafkistry.api.RecordsStructureApi
 import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.recordstructure.AnalyzeRecords
 import com.infobip.kafkistry.webapp.url.RecordsStructureUrls.Companion.RECORDS_STRUCTURE
 import com.infobip.kafkistry.webapp.url.RecordsStructureUrls.Companion.RECORDS_STRUCTURE_DRY_RUN
 import com.infobip.kafkistry.webapp.url.RecordsStructureUrls.Companion.RECORDS_STRUCTURE_DRY_RUN_INSPECT
 import com.infobip.kafkistry.webapp.url.RecordsStructureUrls.Companion.RECORDS_STRUCTURE_TOPIC
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView

@@ -2,7 +2,6 @@ package com.infobip.kafkistry.events.listeners
 
 import com.infobip.kafkistry.events.ClusterEvent
 import com.infobip.kafkistry.events.EventListener
-import com.infobip.kafkistry.events.TopicEvent
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

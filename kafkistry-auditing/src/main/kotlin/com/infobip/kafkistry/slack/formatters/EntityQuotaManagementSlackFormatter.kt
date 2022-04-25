@@ -5,7 +5,6 @@ import com.github.seratch.jslack.api.model.block.LayoutBlock
 import com.github.seratch.jslack.api.model.block.SectionBlock
 import com.github.seratch.jslack.api.model.block.composition.TextObject
 import com.infobip.kafkistry.audit.EntityQuotaManagementAuditEvent
-import com.infobip.kafkistry.model.QuotaProperties
 import com.infobip.kafkistry.slack.AuditEventSlackFormatter
 import com.infobip.kafkistry.slack.EventLink
 import com.infobip.kafkistry.slack.SlackMessageFormatter

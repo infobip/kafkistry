@@ -3,7 +3,6 @@ package com.infobip.kafkistry.webapp.controller
 import com.infobip.kafkistry.api.*
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.generator.balance.BalanceSettings
-import com.infobip.kafkistry.webapp.url.ClustersUrls
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ADD
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_BALANCE

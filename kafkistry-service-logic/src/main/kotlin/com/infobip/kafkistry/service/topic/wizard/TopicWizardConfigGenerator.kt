@@ -1,7 +1,6 @@
 package com.infobip.kafkistry.service.topic.wizard
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.apache.kafka.common.config.TopicConfig.*
 import com.infobip.kafkistry.kafkastate.KafkaClusterState

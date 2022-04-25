@@ -3,7 +3,6 @@ package com.infobip.kafkistry.service.consumers.config
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
-import java.util.concurrent.TimeUnit
 
 @Configuration
 @EnableConfigurationProperties(LagInspectProperties::class)
