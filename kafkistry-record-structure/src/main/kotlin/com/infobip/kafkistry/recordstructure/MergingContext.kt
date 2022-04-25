@@ -1,8 +1,6 @@
 package com.infobip.kafkistry.recordstructure
 
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.model.PayloadType
-import com.infobip.kafkistry.model.RecordFieldType
 import kotlin.math.absoluteValue
 
 open class MergingContext(
@@ -55,31 +53,17 @@ open class MergingContext(
         if (thisIsTooOldDynamicField) {
             return other
         }
+        return this doMerge other
+    }
 
+    private infix fun List<TimestampWrapper<TimestampWrappedRecordField>>.doMerge(
+        other: List<TimestampWrapper<TimestampWrappedRecordField>>
+    ): List<TimestampWrapper<TimestampWrappedRecordField>> {
         val thisNames = this.map { it.field.name }.toSet()
         val otherNames = other.map { it.field.name }.toSet()
 
         if (isNotEmpty() && other.isNotEmpty()) {
-            infix fun Int.differentMagnitude(other: Int): Boolean {
-                val thresholdDiff = properties.cardinalityDiffThreshold
-                val thresholdFactor = properties.cardinalityMagnitudeFactorThreshold
-                return (this - other).absoluteValue > thresholdDiff && (this > thresholdFactor * other || thresholdFactor * this < other)
-            }
-
-            fun Collection<String?>.hasDynamicFieldNames() = any { it?.isDynamicName() ?: true }
-            fun commonNames() = thisNames.intersect(otherNames)
-            fun namesCountDiffTooMuch() = thisNames.size.differentMagnitude(otherNames.size)
-            fun isDynamic() = thisNames.hasDynamicFieldNames() || otherNames.hasDynamicFieldNames() ||
-                    namesCountDiffTooMuch() || commonNames().isEmpty()
-
-            if (isDynamic()) {
-                //we have variable/dynamic key(s)
-                return (this + other)
-                    .groupBy { it.field.type }
-                    .map { (_, values) ->
-                        values.squashAsVariable()
-                    }
-            }
+            maybeCollapseAsDynamicFieldNames(other, thisNames, otherNames)?.run { return this }
         }
 
         val thisNulls = filter { it.field.type == RecordFieldType.NULL }.associateBy { it.field.name }
@@ -104,6 +88,33 @@ open class MergingContext(
                 otherField != null -> if (thisNull != null || fieldName !in thisNames) otherField.asNullable() else otherField
                 else -> null
             }
+        }
+    }
+
+    private fun List<TimestampWrapper<TimestampWrappedRecordField>>.maybeCollapseAsDynamicFieldNames(
+        other: List<TimestampWrapper<TimestampWrappedRecordField>>,
+        thisNames: Set<String?>,
+        otherNames: Set<String?>,
+    ): List<TimestampWrapper<TimestampWrappedRecordField>>? {
+        infix fun Int.differentMagnitude(other: Int): Boolean {
+            val thresholdDiff = properties.cardinalityDiffThreshold
+            val thresholdFactor = properties.cardinalityMagnitudeFactorThreshold
+            return (this - other).absoluteValue > thresholdDiff && (this > thresholdFactor * other || thresholdFactor * this < other)
+        }
+
+        fun Collection<String?>.hasDynamicFieldNames() = any { it?.isDynamicName() ?: true }
+        fun commonNames() = thisNames.intersect(otherNames)
+        fun namesCountDiffTooMuch() = thisNames.size.differentMagnitude(otherNames.size)
+        fun isDynamic() = thisNames.hasDynamicFieldNames() || otherNames.hasDynamicFieldNames() ||
+                namesCountDiffTooMuch() || commonNames().isEmpty()
+
+        return when (isDynamic()) {
+            true -> (this + other)
+                .groupBy { it.field.type }
+                .map { (_, values) ->
+                    values.squashAsVariable()
+                }
+            false -> null
         }
     }
 
