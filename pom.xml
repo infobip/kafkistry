@@ -64,8 +64,6 @@
         <testcontainers.version>1.15.0</testcontainers.version>
         <kotlintest.version>2.0.2</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
-        <!-- for Hazelcast -->
-        <test.open-modules>--add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED --add-opens jdk.management/com.ibm.lang.management.internal=ALL-UNNAMED </test.open-modules>
     </properties>
 
     <dependencyManagement>
@@ -241,7 +239,6 @@
                     <excludes>
                         <exclude>**/it/**</exclude>
                     </excludes>
-                    <argLine>${test.open-modules}</argLine>
                 </configuration>
             </plugin>
 
@@ -270,7 +267,6 @@
                     <excludes>
                         <exclude />  <!-- inner classes were excluded by default -->
                     </excludes>
-                    <argLine>${test.open-modules}</argLine>
                 </configuration>
             </plugin>
 
