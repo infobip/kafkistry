@@ -1,6 +1,5 @@
 package com.infobip.kafkistry.service.acl
 
-import com.google.common.base.Supplier
 import com.google.common.base.Suppliers
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.kafkastate.*
@@ -13,7 +12,6 @@ import com.infobip.kafkistry.service.quotas.QuotasRegistryService
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.toKafkaAclRule
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
-import com.infobip.kafkistry.model.*
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
@@ -276,17 +274,19 @@ class AclLinkResolver(
             val expireSeconds: Int
     ) {
         @Volatile   //ensure invalidation is guaranteed for all threads
-        lateinit var supplier: Supplier<IndexSnapshot>
+        lateinit var supplier: () -> IndexSnapshot
 
         init {
             setNewSupplier()
         }
 
         fun setNewSupplier() {
-            supplier = Suppliers.memoizeWithExpiration({ createIndex() }, expireSeconds.toLong(), TimeUnit.SECONDS)
+            supplier = Suppliers.memoizeWithExpiration(
+                { createIndex() }, expireSeconds.toLong(), TimeUnit.SECONDS
+            ).let { { it.get() } }
         }
 
-        operator fun invoke(): IndexSnapshot = supplier.get()
+        operator fun invoke(): IndexSnapshot = supplier()
     }
 }
 
