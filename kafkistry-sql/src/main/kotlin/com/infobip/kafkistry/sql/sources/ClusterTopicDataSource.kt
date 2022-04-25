@@ -38,7 +38,12 @@ class ClusterTopicDataSource(
         val allClustersTopicReplicaInfos = replicaDirsService.allClustersTopicReplicaInfos()
         val allClustersTopicOldestAges = oldestRecordAgeService.orElse(null)
             ?.allClustersTopicOldestRecordAges().orEmpty()
-        return (allTopicsInspections + unknownTopics).flatMap { topicStatuses ->
+        val allTopicNames = (allTopicsInspections + unknownTopics).map { it.topicName }.toSet()
+        val allReplicaTopicNames = allClustersTopicReplicaInfos.values
+            .flatMap { it.values.map { replicas -> replicas.topic } }.toSet()
+        val orphanTopics = allReplicaTopicNames.minus(allTopicNames)
+            .map { inspectionService.inspectTopic(it) }
+        return (allTopicsInspections + unknownTopics + orphanTopics).flatMap { topicStatuses ->
             val topicName = topicStatuses.topicName
             topicStatuses.statusPerClusters.map {
                 val topicOffsets = topicOffsetsService.topicOffsets(it.clusterIdentifier, topicName)
@@ -117,48 +122,49 @@ class ClusterTopicDataSource(
                 actualConfig = existingTopicInfo.config.map {
                     it.toExistingKafkaConfigEntry()
                 }
-                val usedReplicas = mutableSetOf<Pair<Partition, BrokerId>>()
-                val assignedReplicas =
-                    existingTopicInfo.partitionsAssignments.flatMap { partitionAssignments ->
-                        partitionAssignments.replicasAssignments.mapIndexed { index, replica ->
-                            val replicaInfos = topicReplicas?.partitionBrokerReplicas
-                                ?.get(partitionAssignments.partition)
-                                ?.get(replica.brokerId)
-                            usedReplicas.add(partitionAssignments.partition to replica.brokerId)
-                            PartitionBrokerReplica().apply {
-                                brokerId = replica.brokerId
-                                partition = partitionAssignments.partition
-                                orphan = false
-                                rank = index
-                                inSync = replica.inSyncReplica
-                                leader = replica.leader
-                                dir = replicaInfos?.rootDir
-                                sizeBytes = replicaInfos?.sizeBytes
-                                offsetLag = replicaInfos?.offsetLag
-                                isFuture = replicaInfos?.isFuture
-                            }
-                        }
-                    }
-                val orphanReplicas = topicReplicas?.partitionBrokerReplicas?.values
-                    ?.flatMap { it.values }
-                    ?.filter { (it.partition to it.brokerId) !in usedReplicas }
-                    ?.map { replicaInfos ->
-                        PartitionBrokerReplica().apply {
-                            brokerId = replicaInfos.brokerId
-                            partition = replicaInfos.partition
-                            orphan = true
-                            rank = null
-                            inSync = null
-                            leader = null
-                            dir = replicaInfos.rootDir
-                            sizeBytes = replicaInfos.sizeBytes
-                            offsetLag = replicaInfos.offsetLag
-                            isFuture = replicaInfos.isFuture
-                        }
-                    }
-                    ?: emptyList()
-                replicas = assignedReplicas + orphanReplicas
             }
+            val usedReplicas = mutableSetOf<Pair<Partition, BrokerId>>()
+            val assignedReplicas = existingTopicInfo?.partitionsAssignments
+                ?.flatMap { partitionAssignments ->
+                    partitionAssignments.replicasAssignments.mapIndexed { index, replica ->
+                        val replicaInfos = topicReplicas?.partitionBrokerReplicas
+                            ?.get(partitionAssignments.partition)
+                            ?.get(replica.brokerId)
+                        usedReplicas.add(partitionAssignments.partition to replica.brokerId)
+                        PartitionBrokerReplica().apply {
+                            brokerId = replica.brokerId
+                            partition = partitionAssignments.partition
+                            orphan = false
+                            rank = index
+                            inSync = replica.inSyncReplica
+                            leader = replica.leader
+                            dir = replicaInfos?.rootDir
+                            sizeBytes = replicaInfos?.sizeBytes
+                            offsetLag = replicaInfos?.offsetLag
+                            isFuture = replicaInfos?.isFuture
+                        }
+                    }
+                }
+                ?: emptyList()
+            val orphanReplicas = topicReplicas?.partitionBrokerReplicas?.values
+                ?.flatMap { it.values }
+                ?.filter { (it.partition to it.brokerId) !in usedReplicas }
+                ?.map { replicaInfos ->
+                    PartitionBrokerReplica().apply {
+                        brokerId = replicaInfos.brokerId
+                        partition = replicaInfos.partition
+                        orphan = true
+                        rank = null
+                        inSync = null
+                        leader = null
+                        dir = replicaInfos.rootDir
+                        sizeBytes = replicaInfos.sizeBytes
+                        offsetLag = replicaInfos.offsetLag
+                        isFuture = replicaInfos.isFuture
+                    }
+                }
+                ?: emptyList()
+            replicas = assignedReplicas + orphanReplicas
             if (topicOffsets != null) {
                 partitions = topicOffsets.partitionsOffsets.map { (p, offsets) ->
                     TopicPartition().apply {
