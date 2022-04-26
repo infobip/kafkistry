@@ -40,7 +40,10 @@ class KafkaTopicReaderTest {
 
         @ClassRule
         @JvmField
-        val kafka = EmbeddedKafkaRule(3, false)
+        val kafka = EmbeddedKafkaRule(
+            3, false,
+            topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8,
+        )
     }
 
     private val producer: KafkaProducer<String, ByteArray> = KafkaProducer(
