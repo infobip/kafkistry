@@ -76,13 +76,7 @@ class ConfigValueInspector {
                 ValueInspection(true, actualValue.value, clusterExpectedValue.value, true)
             } else {
                 when (nameKey) {
-                    "message.format.version" -> {
-                        if (actualValue.value.matchesMessageFormatVersion(clusterExpectedValue.value)) {
-                            ValueInspection(true, actualValue.value, actualValue.value, true)
-                        } else {
-                            ValueInspection(false, actualValue.value, clusterExpectedValue.value, true)
-                        }
-                    }
+                    "message.format.version" -> inspectMessageFormatVersion(actualValue, clusterExpectedValue)
                     else -> ValueInspection(false, actualValue.value, clusterExpectedValue.value, true)
                 }
             }
@@ -122,9 +116,18 @@ class ConfigValueInspector {
         return this ?: supplier()
     }
 
-    private fun String?.matchesMessageFormatVersion(expected: String?): Boolean {
-        if (expected == null) return false
-        return this?.startsWith(expected) ?: false
+    private fun inspectMessageFormatVersion(
+        actualValue: ConfigValue, clusterExpectedValue: ConfigValue,
+    ): ValueInspection {
+        fun String?.matchesMessageFormatVersion(expected: String?): Boolean {
+            if (expected == null) return false
+            return this?.startsWith(expected) ?: false
+        }
+        return if (actualValue.value.matchesMessageFormatVersion(clusterExpectedValue.value)) {
+            ValueInspection(true, actualValue.value, actualValue.value, true)
+        } else {
+            ValueInspection(false, actualValue.value, clusterExpectedValue.value, true)
+        }
     }
 
 }

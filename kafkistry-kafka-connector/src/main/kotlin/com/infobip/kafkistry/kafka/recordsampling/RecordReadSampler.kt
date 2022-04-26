@@ -86,17 +86,15 @@ class RecordReadSampler(
                 if (gotNew) {
                     consumer.assign(remainingPartitions)
                 }
-            } else {
-                when (samplingPosition) {
-                    SamplingPosition.OLDEST -> break
-                    SamplingPosition.NEWEST -> {
-                        if (rewindAttempt >= 2) {
-                            break
-                        }
-                        poolAttemptsLeft += remainingPartitions.size
-                        rewindAttempt++
-                        rewindConsumer(allNeededPartitionsOffsets, remainingPartitions, rewindAttempt)
-                    }
+                continue
+            }
+            when (samplingPosition) {   //didn't get any record and still haven't received records from all partitions
+                SamplingPosition.OLDEST -> break
+                SamplingPosition.NEWEST -> {
+                    if (rewindAttempt >= 2) break
+                    poolAttemptsLeft += remainingPartitions.size
+                    rewindAttempt++
+                    rewindConsumer(allNeededPartitionsOffsets, remainingPartitions, rewindAttempt)
                 }
             }
         }

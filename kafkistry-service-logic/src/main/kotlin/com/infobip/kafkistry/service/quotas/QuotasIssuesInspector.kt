@@ -31,23 +31,7 @@ class QuotasIssuesInspector(
         val statusType = when {
             clusterQuotasState.stateType == StateType.DISABLED -> CLUSTER_DISABLED
             clusterQuotasState.stateType != StateType.VISIBLE || clusterQuotas == null -> CLUSTER_UNREACHABLE
-            else -> {
-                val exists = actualQuota != null
-                if (quotaDescription == null) {
-                    if (exists) UNKNOWN
-                    else UNAVAILABLE
-                } else {
-                    if (actualQuota != null) {
-                        if (shouldExist) {
-                            if (valuesInspection.ok) OK
-                            else WRONG_VALUE
-                        } else UNEXPECTED
-                    } else {
-                        if (shouldExist) MISSING
-                        else NOT_PRESENT_AS_EXPECTED
-                    }
-                }
-            }
+            else -> computeResultType(actualQuota, quotaDescription, shouldExist, valuesInspection)
         }
         return QuotasInspection(
             entity = entity,
@@ -62,6 +46,24 @@ class QuotasIssuesInspector(
                 else -> aclLinkResolver.findQuotaAffectingPrincipals(entity, clusterRef.identifier)
             }
         )
+    }
+
+    private fun computeResultType(
+        actualQuota: QuotaProperties?,
+        quotaDescription: QuotaDescription?,
+        shouldExist: Boolean,
+        valuesInspection: ValuesInspection,
+    ): QuotasInspectionResultType {
+        val exists = actualQuota != null
+        if (quotaDescription == null) {
+            return if (exists) UNKNOWN else UNAVAILABLE
+        }
+        if (actualQuota != null) {
+            return if (shouldExist) {
+                if (valuesInspection.ok) OK else WRONG_VALUE
+            } else UNEXPECTED
+        }
+        return if (shouldExist) MISSING else NOT_PRESENT_AS_EXPECTED
     }
 
     private fun inspectValues(
