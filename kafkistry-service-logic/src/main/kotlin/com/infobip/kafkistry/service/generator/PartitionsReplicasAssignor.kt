@@ -336,8 +336,8 @@ class PartitionsReplicasAssignor {
         var iteration = 0   //fail-safe for inf loop
         while (true) {
             val brokerPartitionCounts = brokersPartitions
-                    .filterKeys { it !in excludedBrokers }
-                    .mapValues { (_, partitions) -> partitions.size }
+                .filterKeys { it !in excludedBrokers }
+                .mapValues { (_, partitions) -> partitions.size }
             val overloadedBrokerAndCount = brokerPartitionCounts.maxByOrNull { it.value }!!
             val underloadedBrokerAndCount = brokerPartitionCounts.minByOrNull { it.value }!!
             if (underloadedBrokerAndCount.value + 1 >= overloadedBrokerAndCount.value || iteration > 2 * allBrokers.size * partitionsBrokers.size) {
@@ -351,36 +351,51 @@ class PartitionsReplicasAssignor {
                     }  //prefer migration of replicas of partition which haven't been touched
                     .sortedBy {
                         existingPartitionLoads[it]?.diskSize ?: 0L
-                    }    //prefer migration of partitions smallen in size
+                    }    //prefer migration of partitions smaller in size
             iteration++
-            for (partition in brokerPartitions) {
-                if (!partitionFilter(partition)) {
-                    continue
-                }
-                if (moveOnlyNewAssignments && brokerWasInitiallyAssignedOnPartition(srcBroker, partition)) {
-                    continue
-                }
-                if (!brokerAssignedOnPartition(dstBroker, partition)) {
-                    removeBrokerForPartition(srcBroker, partition)
-                    addBrokerForPartition(dstBroker, partition)
-                    partitionMoveCount.merge(partition, 1, Int::plus)
-                    break
-                }
-                if (moveOnlyNewAssignments) {
-                    if (try3waySwap(srcBroker, dstBroker, partition, partitionMoveCount, excludedBrokers)) {
-                        break
-                    }
-                }
+            makeSwap(
+                srcBroker, dstBroker,
+                brokerPartitions, moveOnlyNewAssignments,
+                partitionMoveCount,
+                excludedBrokers, partitionFilter,
+            )
+        }
+    }
+
+    private fun AssignmentContext.makeSwap(
+        src: BrokerId,
+        dst: BrokerId,
+        brokerPartitions: List<Partition>,
+        moveOnlyNewAssignments: Boolean,
+        partitionMoveCount: MutableMap<Partition, Int>,
+        excludedBrokers: List<BrokerId>,
+        partitionFilter: (Partition) -> Boolean,
+    ) {
+        for (partition in brokerPartitions) {
+            if (!partitionFilter(partition)) {
+                continue
+            }
+            if (moveOnlyNewAssignments && brokerWasInitiallyAssignedOnPartition(src, partition)) {
+                continue
+            }
+            if (!brokerAssignedOnPartition(dst, partition)) {
+                removeBrokerForPartition(src, partition)
+                addBrokerForPartition(dst, partition)
+                partitionMoveCount.merge(partition, 1, Int::plus)
+                break
+            }
+            if (moveOnlyNewAssignments && try3waySwap(src, dst, partition, partitionMoveCount, excludedBrokers)) {
+                break
             }
         }
     }
 
     private fun AssignmentContext.try3waySwap(
-            srcBroker: BrokerId,
-            dstBroker: BrokerId,
-            partition: Partition,
-            partitionMoveCount: MutableMap<Partition, Int>,
-            excludedBrokers: List<BrokerId>
+        srcBroker: BrokerId,
+        dstBroker: BrokerId,
+        partition: Partition,
+        partitionMoveCount: MutableMap<Partition, Int>,
+        excludedBrokers: List<BrokerId>
     ): Boolean {
         //try to find 3-way swap
         val pivotBrokers = allBrokers.filter { it != srcBroker && it != dstBroker && it !in excludedBrokers }
