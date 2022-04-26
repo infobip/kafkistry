@@ -173,19 +173,7 @@ class SQLiteRepository(
                         }
                     }
                     val resourceFactory = resourceLinkDetector.detectLinkedResource(columns)
-                    val rows = sequence {
-                        while (resultSet.next()) {
-                            val values = (1..resultSet.metaData.columnCount).map { column ->
-                                when (resultSet.metaData.getColumnType(column)) {
-                                    Types.BOOLEAN -> resultSet.getBoolean(column)
-                                        .let { if (resultSet.wasNull()) null else it }
-                                    else -> resultSet.getObject(column)
-                                }
-                            }
-                            val linkedResource = resourceFactory.extractLinkedResource(values)
-                            yield(QueryResultRow(values, linkedResource))
-                        }
-                    }.toList()
+                    val rows = resultSet.readQueryResultRows(resourceFactory)
                     QueryResult(
                         count = rows.size,
                         totalCount = count ?: rows.size,
@@ -198,6 +186,21 @@ class SQLiteRepository(
             }
         }
     }
+
+    private fun ResultSet.readQueryResultRows(
+        resourceFactory: ResourceLinkDetector.LinkedResourceFactory
+    ): List<QueryResultRow> = sequence {
+        while (next()) {
+            val values = (1..metaData.columnCount).map { column ->
+                when (metaData.getColumnType(column)) {
+                    Types.BOOLEAN -> getBoolean(column).let { if (wasNull()) null else it }
+                    else -> getObject(column)
+                }
+            }
+            val linkedResource = resourceFactory.extractLinkedResource(values)
+            yield(QueryResultRow(values, linkedResource))
+        }
+    }.toList()
 
     private fun Session.countResultsOf(sql: String): Int? {
         if (!sql.contains("SELECT", ignoreCase = true)) {
