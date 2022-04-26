@@ -60,9 +60,11 @@ abstract class IncreaseTopicPartitionCount(contextSupplier: () -> Context) : UIT
 
         browser.findElementWithText("Back").scrollIntoView().click()
         await {
-            browser.assertPageText().contains(
-                    "Topic: my-partitions-1"
-            )
+            browser.assertPageText().contains("Topic: my-partitions-1")
+        }
+        browser.navigate().refresh()
+        await {
+            browser.assertPageText().contains("Topic: my-partitions-1")
         }
         browser.assertPageText().contains("ALL OK", "OK")
     }
