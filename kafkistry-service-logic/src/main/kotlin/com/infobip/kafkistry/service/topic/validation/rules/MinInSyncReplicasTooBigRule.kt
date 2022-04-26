@@ -4,6 +4,7 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.propertiesForCluster
 import com.infobip.kafkistry.service.withClusterProperty
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import org.apache.kafka.common.config.TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG
 import org.springframework.stereotype.Component
 import kotlin.math.max
 
@@ -16,10 +17,10 @@ class MinInSyncReplicasTooBigRule : ValidationRule {
         val replicationFactor = topicDescriptionView.properties.replicationFactor
         val minInSyncReplicas =
                 try {
-                    config["min.insync.replicas"]?.toInt()
+                    config[MIN_IN_SYNC_REPLICAS_CONFIG]?.toInt()
                 } catch (e: NumberFormatException) {
                     return violated(
-                        message = "min.insync.replicas property is not numeric value, (${config["min.insync.replicas"]})",
+                        message = "$MIN_IN_SYNC_REPLICAS_CONFIG property is not numeric value, (${config[MIN_IN_SYNC_REPLICAS_CONFIG]})",
                         severity = RuleViolation.Severity.ERROR,
                     )
                 } ?: return valid()
@@ -27,15 +28,15 @@ class MinInSyncReplicasTooBigRule : ValidationRule {
         return when {
             replicationFactor == 1 && minInSyncReplicas == 1 -> valid()
             replicationFactor == 1 && minInSyncReplicas > 1 -> violated(
-                message = "min.insync.replicas property ($minInSyncReplicas) is larger than replication.factor = 1",
+                message = "$MIN_IN_SYNC_REPLICAS_CONFIG property ($minInSyncReplicas) is larger than replication.factor = 1",
                 severity = RuleViolation.Severity.WARNING,
             )
             minInSyncReplicas == replicationFactor -> violated(
-                message = "min.insync.replicas property ($minInSyncReplicas) not less than  replication.factor = $replicationFactor",
+                message = "$MIN_IN_SYNC_REPLICAS_CONFIG property ($minInSyncReplicas) not less than  replication.factor = $replicationFactor",
                 severity = RuleViolation.Severity.WARNING,
             )
             minInSyncReplicas > replicationFactor -> violated(
-                message = "min.insync.replicas property ($minInSyncReplicas) must not be bigger than  replication.factor = $replicationFactor",
+                message = "$MIN_IN_SYNC_REPLICAS_CONFIG property ($minInSyncReplicas) must not be bigger than  replication.factor = $replicationFactor",
                 severity = RuleViolation.Severity.ERROR,
             )
             else -> valid()
@@ -49,7 +50,7 @@ class MinInSyncReplicasTooBigRule : ValidationRule {
     }
 
     private fun TopicDescription.withMinInSyncReplicas(minInSyncReplicas: Int, clusterIdentifier: KafkaClusterIdentifier): TopicDescription {
-        return withClusterProperty(clusterIdentifier, "min.insync.replicas", "$minInSyncReplicas")
+        return withClusterProperty(clusterIdentifier, MIN_IN_SYNC_REPLICAS_CONFIG, "$minInSyncReplicas")
     }
 
 }
