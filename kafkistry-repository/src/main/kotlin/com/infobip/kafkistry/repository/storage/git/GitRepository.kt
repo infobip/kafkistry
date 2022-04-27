@@ -649,7 +649,7 @@ class GitRepository(
     }
 
     private fun String.toSimpleBranchName(): String = when {
-        "refs/heads/" in this -> substringAfter("refs/heads/")
+        Constants.R_HEADS in this -> substringAfter(Constants.R_HEADS)
         "origin/" in this -> substringAfter("origin/")
         else -> this
     }
@@ -689,7 +689,7 @@ class GitRepository(
         fetchResult.messages.forEach { log.debug("Fetch msg: {}", it) }
     }
 
-    private fun String.toFullBranchName() = ensureStartsWith("refs/heads/")
+    private fun String.toFullBranchName() = ensureStartsWith(Constants.R_HEADS)
     private fun String.ensureStartsWith(prefix: String) = if (startsWith(prefix)) this else "$prefix$this"
 
     @Throws(IOException::class)
