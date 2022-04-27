@@ -401,6 +401,7 @@ class KafkaManagementClientImpl(
         )
     }
 
+    @SuppressWarnings("kotlin:S1874")   //sonar: deprecation usage
     private fun updateConfig(
             configResource: ConfigResource,
             alterConfigs: () -> Config,
@@ -422,7 +423,7 @@ class KafkaManagementClientImpl(
                 }
                 return CompletableFuture.completedFuture(Unit)
             } else {
-                //suppressing since its deprecated for version 2.3.0 but it's only way for older broker versions
+                //suppressing since it's deprecated for version 2.3.0 but, it's the only way for older broker versions
                 @Suppress("DEPRECATION")
                 adminClient.alterConfigs(
                     mapOf(configResource to alterConfigs()), AlterConfigsOptions().withWriteTimeout()
