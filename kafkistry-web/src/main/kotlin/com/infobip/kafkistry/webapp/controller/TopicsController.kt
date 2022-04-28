@@ -77,13 +77,7 @@ class TopicsController(
             @RequestParam("topicName") topicName: TopicName
     ): ModelAndView {
         val topicDescription = topicsApi.getTopic(topicName)
-        val existingValues = existingValuesApi.all()
-        return ModelAndView("topics/edit", mutableMapOf(
-                "title" to "Edit topic",
-                "topic" to topicDescription,
-                "existingValues" to existingValues,
-                "topicSourceType" to "EDIT"
-        ))
+        return showEditForm(topicDescription, "Edit topic")
     }
 
     @GetMapping(TOPICS_EDIT_ON_BRANCH)
@@ -109,13 +103,7 @@ class TopicsController(
             @RequestParam("topicName") topicName: TopicName
     ): ModelAndView {
         val suggestedTopic = suggestionApi.suggestTopicUpdate(topicName)
-        val existingValues = existingValuesApi.all()
-        return ModelAndView("topics/edit", mutableMapOf(
-                "title" to "Suggested edit to match current state on clusters",
-                "topic" to suggestedTopic,
-                "existingValues" to existingValues,
-                "topicSourceType" to "EDIT"
-        ))
+        return showEditForm(suggestedTopic, "Suggested edit to match current state on clusters")
     }
 
     @GetMapping(TOPICS_FIX_VIOLATIONS_EDIT)
@@ -123,12 +111,18 @@ class TopicsController(
             @RequestParam("topicName") topicName: TopicName
     ): ModelAndView {
         val fixedTopic = suggestionApi.fixViolationsUpdate(topicName)
+        return showEditForm(fixedTopic, "Edit with generated fixes for validation rules")
+    }
+
+    private fun showEditForm(
+        topic: TopicDescription, title: String,
+    ): ModelAndView {
         val existingValues = existingValuesApi.all()
         return ModelAndView("topics/edit", mutableMapOf(
-                "title" to "Edit with generated fixes for validation rules",
-                "topic" to fixedTopic,
-                "existingValues" to existingValues,
-                "topicSourceType" to "EDIT"
+            "title" to title,
+            "topic" to topic,
+            "existingValues" to existingValues,
+            "topicSourceType" to "EDIT"
         ))
     }
 
