@@ -25,6 +25,7 @@ class ConsumeRecordsUrls(base: String) : BaseUrls() {
             null, null, null, null, null, null, null, null
     )
 
+    @SuppressWarnings("kotlin:S107")
     fun showConsumePage(
         topicName: TopicName?,
         clusterIdentifier: KafkaClusterIdentifier?,

@@ -125,6 +125,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
             clusterIdentifier: KafkaClusterIdentifier
     ) = showBulkReBalanceTopicsForm.render("clusterIdentifier" to clusterIdentifier)
 
+    @SuppressWarnings("kotlin:S107")
     fun showBulkReBalanceTopics(
         clusterIdentifier: KafkaClusterIdentifier,
         reBalanceMode: String,
