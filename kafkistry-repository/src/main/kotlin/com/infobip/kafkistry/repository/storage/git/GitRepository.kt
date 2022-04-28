@@ -654,23 +654,6 @@ class GitRepository(
         else -> this
     }
 
-    private fun Repository.extractBranchRef(branchName: String): Ref {
-        val fullBranchName = Constants.R_HEADS + Repository.shortenRefName(branchName)
-        return exactRef(fullBranchName) ?: throw Exception("can't find branch $branchName")
-    }
-
-    private fun RevWalk.extractCommitsDiff(baseBranchRef: Ref, targetBranchRef: Ref): CommitsDiff {
-        val baseBranchCommit = parseCommit(baseBranchRef.objectId)
-        val targetBranchCommit = parseCommit(targetBranchRef.objectId)
-        val commonAncestorCommit = findCommonAncestorCommit(baseBranchCommit, targetBranchCommit)
-        reset()
-        revFilter = RevFilter.ALL
-        val commitsAhead = RevWalkUtils.find(this, targetBranchCommit, commonAncestorCommit)
-        val commitsBehind = RevWalkUtils.find(this, baseBranchCommit, commonAncestorCommit)
-        return CommitsDiff(commitsAhead, commitsBehind)
-
-    }
-
     private data class CommitsDiff(
             val ahead: List<RevCommit>,
             val behind: List<RevCommit>
