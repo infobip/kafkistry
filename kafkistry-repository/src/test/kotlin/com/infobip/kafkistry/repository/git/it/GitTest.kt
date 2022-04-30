@@ -17,9 +17,13 @@ import com.infobip.kafkistry.repository.storage.CommitChange
 import com.infobip.kafkistry.repository.storage.StoredFile
 import com.infobip.kafkistry.repository.storage.git.GitRepository
 import com.infobip.kafkistry.repository.storage.git.GitWriteBranchSelector
+import com.infobip.kafkistry.service.KafkistryGitException
 import com.infobip.kafkistry.utils.test.newTestFolder
+import org.apache.commons.io.FileUtils.deleteDirectory
+import org.assertj.core.api.SoftAssertions
 import org.junit.Rule
 import org.junit.Test
+import org.junit.jupiter.api.assertThrows
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils
 import java.io.File
@@ -474,6 +478,29 @@ class GitTest {
         assertThat(git3.fileExists("dir", "file"))
             .`as`("file should exist after pulling merged b1 into master")
             .isTrue
+    }
+
+    @Test
+    fun `test recover corrupted git`() {
+        newGit().writeFile(WriteContext(user, "test msg", "master"), "dir", "test.txt", "test content")
+        val localDir = File(newTestFolder("git"))
+        fun GitRepository.doAssertions() {
+            SoftAssertions().apply {
+                assertThat(listBranches()).containsExactly("master")
+                assertThat(listMainBranchHistory().map { it.commit }).hasSize(1)
+            }.assertAll()
+        }
+        newGit(dirPath = localDir.absolutePath).use { it.doAssertions() }
+        deleteDirectory(File(localDir, ".git"))    //deliberate corruption
+        newGit(dirPath = localDir.absolutePath).use { it.doAssertions() }
+        newGit(dirPath = localDir.absolutePath).use {
+            deleteDirectory(File(localDir, ".git"))    //deliberate corruption
+            assertThrows<KafkistryGitException> {
+                it.doAssertions()
+            }
+            it.refreshRepository()  //recover from corruption
+            it.doAssertions()
+        }
     }
 
     private fun newGit(

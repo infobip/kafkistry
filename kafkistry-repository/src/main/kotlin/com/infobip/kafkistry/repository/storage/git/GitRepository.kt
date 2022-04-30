@@ -62,7 +62,7 @@ class GitRepository(
     private val strictSshHostKeyChecking: Boolean = false,
     private val dropLocalBranchesMissingOnRemote: Boolean = false,
     promProperties: PrometheusMetricsProperties,
-) {
+) : AutoCloseable {
 
     private val log = LoggerFactory.getLogger(GitRepository::class.java)
 
@@ -90,6 +90,10 @@ class GitRepository(
         repository = FileRepository(dir.child("/.git"))
         git = Git(repository)
         refreshRepository()
+    }
+
+    override fun close() {
+        git.close()
     }
 
     private fun logConfig() {
@@ -163,33 +167,55 @@ class GitRepository(
 
     private fun File.child(name: String) = File(this, name)
 
+    private fun repoState(): RepoState {
+        if (!dir.exists() || dir.listFiles().orEmpty().isEmpty()) {
+            return RepoState.MISSING
+        }
+        val isGit = RepositoryCache.FileKey.isGitRepository(dir.child("/.git"), FS.detect())
+        if (!isGit || repository.fullBranch == null) {
+            return RepoState.INVALID
+        }
+        return RepoState.OK
+    }
+
+    enum class RepoState {
+        MISSING, INVALID, OK
+    }
+
     private fun updateOrInitRepository() {
-        if (!repoAlreadyExist()) {
-            log.warn("Local repository does not exist, going to clone or init")
-            try {
-                cloneOrInitNewRepo()
-            } catch (e: Exception) {
-                throw KafkistryGitException("Failed to initialize repository", e).also {
-                    lastErrorMsg.set(it.deepToString())
+        when (repoState()) {
+            RepoState.MISSING -> {
+                log.info("Local repository does not exist, going to clone")
+                try {
+                    cloneOrInitNewRepo()
+                } catch (e: Exception) {
+                    log.warn("Failed to clone repo", e)
+                    throw KafkistryGitException("Failed to clone repository", e).also {
+                        lastErrorMsg.set(it.deepToString())
+                    }
+                }
+            }
+            RepoState.INVALID -> {
+                log.warn("Local repository is in invalid/corrupted state")
+                try {
+                    reCloneRepository()
+                } catch (e: Exception) {
+                    throw KafkistryGitException("Failed to re-clone repository", e).also {
+                        lastErrorMsg.set(it.deepToString())
+                    }
+                }
+            }
+            RepoState.OK -> {
+                try {
+                    doRefreshRepository()
+                } catch (e: Exception) {
+                    throw KafkistryGitException("Failed to refresh repository", e).also {
+                        lastErrorMsg.set(it.deepToString())
+                    }
                 }
             }
         }
-        try {
-            doRefreshRepository()
-        } catch (e: Exception) {
-            throw KafkistryGitException("Failed to refresh repository", e).also {
-                lastErrorMsg.set(it.deepToString())
-            }
-        }
         lastErrorMsg.set(null)
-    }
-
-    private fun repoAlreadyExist(): Boolean {
-        return if (dir.exists()) {
-            RepositoryCache.FileKey.isGitRepository(dir.child("/.git"), FS.detect())
-        } else {
-            false
-        }
     }
 
     fun refreshRepository() {
@@ -228,6 +254,7 @@ class GitRepository(
                 setString("remote", "origin", "prune", "true")
             }
             log.info("Successful GIT CLONE $gitRemoteUri into directory $dir")
+            ensureHasCommit()
         }
     }
 
@@ -278,16 +305,22 @@ class GitRepository(
                 )
             }
         }
-        if (repository.isEmpty()) {
-            log.info("Repository has no commits (is empty), creating new empty commit")
-            makeEmptyCommit()
-            log.info("Pushing empty commit...")
-            git.push()
-                    .setTransportConfigCallback(transportCallback)
-                    .call()
-        }
+        ensureHasCommit()
         checkoutBranch(mainBranch)
         log.info("Successful GIT PULL!")
+    }
+
+    private fun ensureHasCommit() {
+        if (!repository.isEmpty())
+            return
+        log.info("Repository has no commits (is empty), creating new empty commit")
+        makeEmptyCommit()
+        if (noRemote)
+            return
+        log.info("Pushing empty commit...")
+        git.push()
+            .setTransportConfigCallback(transportCallback)
+            .call()
     }
 
     fun mainBranch(): String = mainBranch
@@ -492,7 +525,7 @@ class GitRepository(
 
     fun reCloneRepository() {
         if (noRemote) {
-            throw KafkistryGitException("Can't delete repository if no remopte to re-clone from")
+            throw KafkistryGitException("Can't delete repository if no remote to re-clone from")
         }
         log.info("Going to completely delete local git dir $dir and re-clone it")
         FileUtils.deleteDirectory(dir)
@@ -514,7 +547,7 @@ class GitRepository(
 
     private fun branchRef(branchName: String): Ref {
         return repository.exactRef(Constants.R_HEADS + Repository.shortenRefName(branchName))
-                ?: throw Exception("can't find ref of branch '$branchName'")
+                ?: throw KafkistryGitException("can't find ref of branch '$branchName'")
     }
 
     private fun doInUserBranch(
@@ -556,7 +589,9 @@ class GitRepository(
 
     private fun <T> exclusiveOnMainBranch(block: () -> T): T {
         return exclusive {
-            val currentBranch = repository.fullBranch.toSimpleBranchName()
+            val currentBranch = repository.fullBranch
+                .also { if (it == null) throw KafkistryGitException("Git is in corrupted state, fullBranch == null") }
+                .toSimpleBranchName()
             if (currentBranch != mainBranch) {
                 throw KafkistryGitException("Refusing to do operations when not on main branch $mainBranch, currently on $currentBranch")
             }
@@ -653,11 +688,6 @@ class GitRepository(
         "origin/" in this -> substringAfter("origin/")
         else -> this
     }
-
-    private data class CommitsDiff(
-            val ahead: List<RevCommit>,
-            val behind: List<RevCommit>
-    )
 
     private fun fetch() {
         val firstRemote = git.remoteList().call().first()
