@@ -4,7 +4,6 @@ import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.yaml.YamlMapper
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.BulkReAssignmentOptions.TopicBy.MIGRATION_BYTES
 import com.infobip.kafkistry.service.BulkReAssignmentOptions.TopicBy.RE_ASSIGNED_PARTITIONS_COUNT
@@ -37,7 +36,6 @@ class OperationSuggestionService(
     private val rulesValidator: TopicConfigurationValidator,
     private val configValueInspector: ConfigValueInspector,
     private val overridesMinimizer: OverridesMinimizer,
-    private val yamlMapper: YamlMapper,
     private val partitionsAssignor: PartitionsReplicasAssignor,
     private val resourcesInspector: RequiredResourcesInspector,
     private val topicWizardConfigGenerator: TopicWizardConfigGenerator,
@@ -401,7 +399,22 @@ class OperationSuggestionService(
 
     fun suggestFixRuleViolations(topicName: TopicName): TopicDescription {
         val topicDescription = topicsRegistryService.getTopic(topicName)
-        val topicStatuses = inspectionService.inspectTopic(topicName)
+        var fixedTopicDescription = topicDescription
+        var attempts = 100
+        while (attempts-- > 0) {
+            // might need several iterations, because one validation rule fix
+            // can introduce violation for other already executed rule
+            val prevTopicDescription = fixedTopicDescription
+            fixedTopicDescription = doSuggestFixRuleViolations(fixedTopicDescription)
+            if (prevTopicDescription == fixedTopicDescription) {
+                break
+            }
+        }
+        return fixedTopicDescription
+    }
+
+    private fun doSuggestFixRuleViolations(topicDescription: TopicDescription): TopicDescription {
+        val topicStatuses = inspectionService.inspectTopic(topicDescription.name)
         val affectedClusters = topicStatuses.statusPerClusters
             .filter { CONFIG_RULE_VIOLATIONS in it.status.types && CLUSTER_UNREACHABLE !in it.status.types }
             .map { it to clusterStateProvider.getLatestClusterState(it.clusterIdentifier) }
