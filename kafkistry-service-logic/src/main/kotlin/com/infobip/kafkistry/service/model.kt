@@ -13,7 +13,6 @@ import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.resources.TopicResourceRequiredUsages
 import com.infobip.kafkistry.service.topic.validation.rules.Placeholder
 import com.infobip.kafkistry.service.topic.validation.rules.RuleViolation
-import com.infobip.kafkistry.model.*
 import java.io.Serializable
 
 data class OptionalValue<V>(
@@ -468,7 +467,6 @@ enum class ReBalanceMode {
     REPLICAS_THEN_LEADERS,
     LEADERS_THEN_REPLICAS,
     ROUND_ROBIN,
-    RANDOM
 }
 
 data class ExistingValues(

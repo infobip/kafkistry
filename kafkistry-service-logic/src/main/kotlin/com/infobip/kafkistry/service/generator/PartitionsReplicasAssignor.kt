@@ -22,14 +22,6 @@ import kotlin.math.max
 @Component
 class PartitionsReplicasAssignor {
 
-    constructor() : this(System.currentTimeMillis())
-
-    constructor(randomSeed: Long) {
-        random = Random(randomSeed)
-    }
-
-    private val random: Random
-
     /**
      * Method for adding new partitions
      */
@@ -266,19 +258,6 @@ class PartitionsReplicasAssignor {
                 existingPartitionLoads = emptyMap(),
                 clusterBrokersLoad = emptyMap()
         )
-        return computeChangeDiff(existingAssignments, tmpAssignmentsChange.newAssignments)
-    }
-
-    fun reBalanceRandom(
-            existingAssignments: Map<Partition, List<BrokerId>>, allBrokers: List<BrokerId>
-    ): AssignmentsChange {
-        val partitionCount = existingAssignments.size
-        val replicationFactor = existingAssignments.values.first().size
-        val tmpAssignmentsChange = (0 until partitionCount)
-                .associateWith {
-                    allBrokers.shuffled(random).take(replicationFactor)
-                }
-                .let { reBalanceReplicasThenLeaders(it, allBrokers, emptyMap()) }
         return computeChangeDiff(existingAssignments, tmpAssignmentsChange.newAssignments)
     }
 
@@ -786,7 +765,7 @@ private data class AssignmentContext(
 }
 
 private fun PartitionsBrokers.toImmutableAssignments(): Map<Partition, List<BrokerId>> = mapValues { it.value.toList() }
-private fun <T> nothingComparing(): Comparator<T> = comparing { _: T -> 0 }
+private fun <T> nothingComparing(): Comparator<T> = comparing { 0 }
 private typealias PartitionsBrokers = MutableMap<Partition, MutableList<BrokerId>>
 private typealias BrokersPartitions = MutableMap<BrokerId, MutableList<Partition>>
 private typealias BrokerPartitions = Map.Entry<BrokerId, MutableList<Partition>>

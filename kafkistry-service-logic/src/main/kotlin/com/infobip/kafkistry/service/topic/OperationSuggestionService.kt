@@ -126,23 +126,20 @@ class OperationSuggestionService(
         return reAssignTopicSuggestion(topicName, clusterIdentifier) {
             when (reBalanceMode) {
                 REPLICAS -> partitionsAssignor.reBalanceReplicasAssignments(
-                    existingAssignments,
-                    allClusterBrokers,
-                    partitionLoads
+                    existingAssignments, allClusterBrokers, partitionLoads
                 )
-                LEADERS -> partitionsAssignor.reBalancePreferredLeaders(existingAssignments, allClusterBrokers)
+                LEADERS -> partitionsAssignor.reBalancePreferredLeaders(
+                    existingAssignments, allClusterBrokers
+                )
                 REPLICAS_THEN_LEADERS -> partitionsAssignor.reBalanceReplicasThenLeaders(
-                    existingAssignments,
-                    allClusterBrokers,
-                    partitionLoads
+                    existingAssignments, allClusterBrokers, partitionLoads
                 )
                 LEADERS_THEN_REPLICAS -> partitionsAssignor.reBalanceLeadersThenReplicas(
-                    existingAssignments,
-                    allClusterBrokers,
-                    partitionLoads
+                    existingAssignments, allClusterBrokers, partitionLoads
                 )
-                ROUND_ROBIN -> partitionsAssignor.reBalanceRoundRobin(existingAssignments, allClusterBrokers)
-                RANDOM -> partitionsAssignor.reBalanceRandom(existingAssignments, allClusterBrokers)
+                ROUND_ROBIN -> partitionsAssignor.reBalanceRoundRobin(
+                    existingAssignments, allClusterBrokers
+                )
             }
         }
     }

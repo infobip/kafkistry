@@ -55,10 +55,6 @@
                     class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode.name() == "ROUND_ROBIN">active</#if>">
                 Round robin
             </button>
-            <button data-href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterIdentifier, "RANDOM")}"
-                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode.name() == "RANDOM">active</#if>">
-                Random
-            </button>
         </p>
     </div>
 
