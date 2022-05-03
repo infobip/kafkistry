@@ -266,5 +266,38 @@
     HAVING avg(t.sizeBytes) > 0
     ORDER BY "diskBytes partition(max-min)" DESC
     LIMIT 30
+- title: "Empty topics count"
+  sql: |
+    SELECT
+    	s.status,
+        --s.topic, s.cluster,
+        count(*) as numTopics
+    FROM (
+        SELECT
+            g.Topic_topic as topic,
+            g.Topic_cluster as cluster,
+            CASE
+                WHEN g.maxEnd = 0 THEN "EMPTY_SINCE_CREATION"
+                WHEN g.messagesCount = 0 THEN "EMPTY_CURRENTLY"
+                WHEN g.minPartitionCount = 0 THEN "HAVE_EMPTY_PARTITIONS"
+                ELSE "NOT_EMPTY"
+            END as status
+        FROM (
+            SELECT
+                t.Topic_topic,
+                t.Topic_cluster,
+                sum(t.count) as messagesCount,
+                min(t.end) as minEnd,
+                max(t.end) as maxEnd,
+                min(t.count) as minPartitionCount
+            FROM Topics_Partitions AS t
+            GROUP BY t.Topic_topic, t.Topic_cluster
+        ) AS g
+    ) AS s
+    --WHERE s.status = "HAVE_EMPTY_PARTITIONS"
+    GROUP BY
+    	--s.topic, s.cluster,
+    	s.status
+    LIMIT 100
 
 
