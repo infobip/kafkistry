@@ -50,6 +50,7 @@
                 <tr>
                     <th>Client Entity</th>
                     <th>Owner</th>
+                    <th>Presence</th>
                     <th>OK</th>
                     <th>Statuses</th>
                 </tr>
@@ -63,13 +64,13 @@
                                 <@quotaUtil.entity entity = entityStatus.entity/>
                             </a>
                         </td>
-                        <td>
-                            <#if entityStatus.quotaDescription??>
-                                ${entityStatus.quotaDescription.owner}
-                            <#else>
-                                <span class="text-primary text-monospace small">[none]</span>
-                            </#if>
-                        </td>
+                        <#if entityStatus.quotaDescription??>
+                            <td>${entityStatus.quotaDescription.owner}</td>
+                            <td><@util.presence presence = entityStatus.quotaDescription.presence inline = false/></td>
+                        <#else>
+                            <td><span class="text-primary text-monospace small">[none]</span></td>
+                            <td><span class="text-primary text-monospace small">[undefined]</span></td>
+                        </#if>
                         <td>
                             <@util.ok ok = entityStatus.status.ok/>
                         </td>

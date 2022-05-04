@@ -220,17 +220,19 @@
     <#return "alert-secondary">
 </#function>
 
-<#macro presence presence>
+<#macro presence presence inline = true>
 <#-- @ftlvariable name="presence"  type="com.infobip.kafkistry.model.Presence" -->
     <div class="alert alert-sm alert-inline m-1 ${presenceTypeClass(presence.type)}">
         ${presence.type.name()?replace("_", " ")}
     </div>
     <#if (presence.kafkaClusterIdentifiers)??>
+        <#if !inline><br/></#if>
         <#list presence.kafkaClusterIdentifiers as cluster>
             <small>${cluster}</small><#if !cluster?is_last>,</#if>
         </#list>
     </#if>
     <#if (presence.tag)??>
+        <#if !inline><br/></#if>
         <span class="badge badge-secondary">${presence.tag}</span>
     </#if>
 </#macro>

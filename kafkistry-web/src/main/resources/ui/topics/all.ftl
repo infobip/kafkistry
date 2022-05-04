@@ -59,6 +59,7 @@
         <tr>
             <th scope="col">Topic</th>
             <th scope="col">Owner</th>
+            <th scope="col">Presence</th>
             <th scope="col">Status</th>
         </tr>
         </thead>
@@ -73,8 +74,10 @@
                 </td>
                 <#if topic.topicDescription??>
                     <td>${topic.topicDescription.owner}</td>
+                    <td><@util.presence presence = topic.topicDescription.presence inline = false/></td>
                 <#else>
                     <td><span class="text-primary text-monospace small">[none]</span></td>
+                    <td><span class="text-primary text-monospace small">[undefined]</span></td>
                 </#if>
                 <td>
                     <#assign statusFlags = topic.aggStatusFlags>
