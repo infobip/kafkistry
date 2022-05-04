@@ -265,7 +265,7 @@ class SecurityPermissionsRestApiItTest {
 
     @Test
     fun `user AddCluster`() = assertThat(apiUser.tryAddCluster(kafkaCluster("user")))
-            .isEqualTo(OpResult.FORBIDDEN).void()
+            .isEqualTo(OpResult.SUCCESS).void()
 
     @Test
     fun `user SuggestDefaultTopicConfig`() = assertThat(apiUser.trySuggestDefaultTopicConfig()).isEqualTo(OpResult.SUCCESS).void()

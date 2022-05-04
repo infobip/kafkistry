@@ -1,8 +1,8 @@
 package com.infobip.kafkistry.webapp.security
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
 import java.io.Serializable
 
 data class User(
@@ -75,26 +75,27 @@ data class UserRole(
         }
 
         val ADMIN = UserRole("ADMIN",
-                UserAuthority.VIEW_DATA,
-                UserAuthority.REQUEST_CLUSTER_UPDATES,
-                UserAuthority.REQUEST_TOPIC_UPDATES,
-                UserAuthority.REQUEST_ACL_UPDATES,
-                UserAuthority.REQUEST_QUOTA_UPDATES,
-                UserAuthority.MANAGE_GIT,
-                UserAuthority.MANAGE_KAFKA,
-                UserAuthority.MANAGE_CONSUMERS,
-                UserAuthority.READ_TOPIC
+            UserAuthority.VIEW_DATA,
+            UserAuthority.REQUEST_CLUSTER_UPDATES,
+            UserAuthority.REQUEST_TOPIC_UPDATES,
+            UserAuthority.REQUEST_ACL_UPDATES,
+            UserAuthority.REQUEST_QUOTA_UPDATES,
+            UserAuthority.MANAGE_GIT,
+            UserAuthority.MANAGE_KAFKA,
+            UserAuthority.MANAGE_CONSUMERS,
+            UserAuthority.READ_TOPIC
         )
         val USER = UserRole("USER",
-                UserAuthority.VIEW_DATA,
-                UserAuthority.REQUEST_TOPIC_UPDATES,
-                UserAuthority.REQUEST_ACL_UPDATES,
-                UserAuthority.REQUEST_QUOTA_UPDATES,
-                UserAuthority.MANAGE_CONSUMERS,
-                UserAuthority.READ_TOPIC
+            UserAuthority.VIEW_DATA,
+            UserAuthority.REQUEST_CLUSTER_UPDATES,
+            UserAuthority.REQUEST_TOPIC_UPDATES,
+            UserAuthority.REQUEST_ACL_UPDATES,
+            UserAuthority.REQUEST_QUOTA_UPDATES,
+            UserAuthority.MANAGE_CONSUMERS,
+            UserAuthority.READ_TOPIC
         )
         val READ_SERVICE = UserRole("READ_SERVICE",
-                UserAuthority.VIEW_DATA
+            UserAuthority.VIEW_DATA
         )
         val EMPTY = UserRole("EMPTY")
     }
