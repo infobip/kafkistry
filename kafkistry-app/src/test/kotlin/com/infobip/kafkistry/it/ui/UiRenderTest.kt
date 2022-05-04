@@ -243,7 +243,7 @@ class UiRenderTest {
         assertThat(page.select(".topic-row")).extracting(
                 Function { it.selectFirst("a").text() },
                 Function { it.selectFirst("a").attr("href") },
-                Function { it.selectFirst("td:nth-child(3) .status-flag").text() }
+                Function { it.selectFirst("td:nth-child(4) .status-flag").text() }
         ).containsOnly(
                 tuple("topic_ok", "/kafkistry/topics/inspect?topicName=topic_ok", "ALL OK"),
                 tuple("topic_expected_missing", "/kafkistry/topics/inspect?topicName=topic_expected_missing", "ALL OK"),
@@ -318,7 +318,7 @@ class UiRenderTest {
         assertThat(page.select(".topic-row")).extracting(
             Function { it.selectFirst("a").text() },
             Function { it.selectFirst("a").attr("href") },
-            Function { it.selectFirst("td:nth-child(3) .status-flag").text() }
+            Function { it.selectFirst("td:nth-child(4) .status-flag").text() }
         ).containsOnly(
             tuple("topic_ok", "/kafkistry/topics/inspect?topicName=topic_ok", "UNKNOWN"),
             tuple("topic_expected_missing", "/kafkistry/topics/inspect?topicName=topic_expected_missing", "UNKNOWN"),
