@@ -7,6 +7,7 @@
 
 <head>
     <#include "../commonResources.ftl"/>
+    <script src="static/topic/management/topicConfigUpdate.js?ver=${lastCommit}"></script>
     <script src="static/topic/management/topicConfigBulkUpdate.js?ver=${lastCommit}"></script>
     <script src="static/bulkUtil.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Cluster topic config bulk update</title>

@@ -8,6 +8,9 @@ function bulkUpdateTopicConfig() {
         "Updating topic config on clusters", "wrong-config-topic", "POST",
         "api/management/update-topic-to-config",
         "topicName", topicName,
-        "clusterIdentifier", "data-cluster-identifier"
+        "clusterIdentifier", "data-cluster-identifier",
+        function (clusterIdentifier) {
+            return extractTopicConfigUpdates(topicName, clusterIdentifier);
+        }
     );
 }

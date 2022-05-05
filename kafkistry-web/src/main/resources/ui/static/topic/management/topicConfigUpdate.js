@@ -6,7 +6,7 @@ function updateTopicConfig() {
     let button = $(this);
     let topicName = button.attr("data-topic-name");
     let clusterIdentifier = button.attr("data-cluster-identifier");
-    let topicConfigToSet = extractTopicConfigUpdates();
+    let topicConfigToSet = extractTopicConfigUpdates(topicName, clusterIdentifier);
     showOpProgress("Updating topic config...");
     $
         .ajax("api/management/update-topic-to-config" +
@@ -25,9 +25,13 @@ function updateTopicConfig() {
         });
 }
 
-function extractTopicConfigUpdates() {
+function extractTopicConfigUpdates(topicName, clusterIdentifier) {
     let configValues = {};
-    $(".new-value").each(function () {
+    $("" +
+        "[data-topic=" + cleanupIdHtmlSelector(topicName) + "]" +
+        "[data-cluster=" + cleanupIdHtmlSelector(clusterIdentifier) + "]" +
+        " .new-value"
+    ).each(function () {
         let value = $(this).attr("data-value");
         let key = $(this).attr("data-name");
         let isNull = $(this).attr("data-is-null") === "true";

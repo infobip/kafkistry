@@ -26,7 +26,7 @@
     <th>New value</th>
 </tr>
 <#list configChanges as configChange>
-    <tr>
+    <tr data-topic="${topicName}" data-cluster="${clusterIdentifier}">
         <td>${configChange.key}</td>
         <td class="conf-value old-value" data-name="${configChange.key}" data-value="${configChange.oldValue!''}"
             data-is-null="${(configChange.oldValue??)?then("false", "true")}" style="word-break: break-word;">
