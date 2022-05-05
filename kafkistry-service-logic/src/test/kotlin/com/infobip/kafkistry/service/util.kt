@@ -15,6 +15,7 @@ import com.infobip.kafkistry.service.InspectionResultType.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.model.*
+import org.apache.kafka.clients.admin.ConfigEntry
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -80,7 +81,10 @@ fun KafkaCluster.newState(
     numBrokers: Int = 6,
     clusterConfig: ExistingConfig = emptyMap(),
     acls: List<KafkaAclRule> = emptyList(),
-    securityEnabled: Boolean = false
+    securityEnabled: Boolean = false,
+    existingTopicsGenerator: (TopicDescription) -> KafkaExistingTopic = {
+        it.newExistingKafkaTopic(identifier, nonDefaultConfig, defaultConfig, numBrokers)
+    },
 ) = StateData(
         stateType = stateType,
         clusterIdentifier = identifier,
@@ -98,7 +102,7 @@ fun KafkaCluster.newState(
                         connectionString = connectionString,
                         securityEnabled = securityEnabled
                 ),
-                topics = topics.map { it.newExistingKafkaTopic(identifier, nonDefaultConfig, defaultConfig, numBrokers) },
+                topics = topics.map { existingTopicsGenerator(it) },
                 acls = acls
         ).takeIf { stateType == StateType.VISIBLE }
 )
@@ -323,3 +327,24 @@ fun KafkaManagementClient.deleteAllOnCluster() {
     }
 
 }
+
+fun Map<Partition, List<BrokerId>>.toOkPartitionAssignments(): List<PartitionAssignments> {
+    return map { (partition, brokerIds) ->
+        PartitionAssignments(
+            partition = partition,
+            replicasAssignments = brokerIds.mapIndexed { index, brokerId ->
+                ReplicaAssignment(
+                    brokerId = brokerId,
+                    leader = index == 0,
+                    inSyncReplica = true,
+                    preferredLeader = index == 0,
+                    rank = index
+                )
+            }
+        )
+    }
+}
+
+fun Any?.asTopicConfigValue() = ConfigValue(
+    value = this?.toString(), default = false, readOnly = false, sensitive = false, source = DYNAMIC_TOPIC_CONFIG
+)

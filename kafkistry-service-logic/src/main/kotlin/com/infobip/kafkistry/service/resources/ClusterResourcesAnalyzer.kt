@@ -50,8 +50,8 @@ class ClusterResourcesAnalyzer(
 
         val brokerUsages = context.brokerIds.associateWith {
             val usage = BrokerDiskUsage(
-                replicasCount = brokerReplicas[it],
-                totalUsedBytes =  brokerTotalBytes[it],
+                replicasCount = brokerReplicas[it] ?: 0,
+                totalUsedBytes =  brokerTotalBytes[it] ?: 0,
                 boundedReplicasCount = boundedReplicas[it] ?: 0,
                 boundedSizePossibleUsedBytes = finiteTotalRetentionBytes[it] ?: 0,
                 unboundedReplicasCount = unboundedReplicas[it] ?: 0,
