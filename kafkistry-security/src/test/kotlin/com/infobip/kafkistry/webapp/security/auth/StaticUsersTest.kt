@@ -77,6 +77,7 @@ internal class StaticUsersTest {
                       name: "USER"
                       authorities:
                       - name: "VIEW_DATA"
+                      - name: "REQUEST_CLUSTER_UPDATES"
                       - name: "REQUEST_TOPIC_UPDATES"
                       - name: "REQUEST_ACL_UPDATES"
                       - name: "REQUEST_QUOTA_UPDATES"
