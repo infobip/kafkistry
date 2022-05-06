@@ -82,7 +82,9 @@ function processElement(element, dataSupplier) {
                 let errorMsg = extractErrMsg(error);
                 showOpErrorOnId(statusId, bulkOpName + " failed: " + progressMsg + servedByMsg(error), errorMsg);
             })
-            .always(processNext);
+            .always(function () {
+                processNext(dataSupplier);
+            });
 }
 
 function servedByMsg(xhr) {
