@@ -103,12 +103,19 @@ operator fun BrokerDiskUsage.plus(other: BrokerDiskUsage) = BrokerDiskUsage(
 // topic usage
 ////////////////////////
 
-data class DiskUsage(
+data class TopicDiskUsage(
     val replicasCount: Int,
     val orphanedReplicasCount: Int,
     val actualUsedBytes: Long?,
     val expectedUsageBytes: Long?,
     val retentionBoundedBytes: Long?,
+    val existingRetentionBoundedBytes: Long?,
+    val unboundedUsageBytes: Long?,
+    val orphanedUsedBytes: Long,
+)
+
+data class TopicDiskUsageExt(
+    val usage: TopicDiskUsage,
     val retentionBoundedBrokerTotalBytes: Long?,
     val retentionBoundedBrokerPossibleBytes: Long?,
 )
@@ -128,23 +135,39 @@ data class UsagePortions(
     val totalPossibleClusterUsageLevel: UsageLevel,
 )
 
-operator fun DiskUsage.plus(other: DiskUsage) = DiskUsage(
+data class TopicClusterDiskUsage(
+    val unboundedSizeRetention: Boolean,
+    val configuredReplicaRetentionBytes: Long,
+    val combined: TopicDiskUsage,
+    val brokerUsages: Map<BrokerId, TopicDiskUsage>,
+)
+
+data class TopicClusterDiskUsageExt(
+    val unboundedSizeRetention: Boolean,
+    val configuredReplicaRetentionBytes: Long,
+    val combined: TopicDiskUsageExt,
+    val combinedPortions: UsagePortions,
+    val brokerUsages: Map<BrokerId, TopicDiskUsageExt>,
+    val brokerPortions: Map<BrokerId, UsagePortions>,
+    val clusterDiskUsage: ClusterDiskUsage,
+)
+
+operator fun TopicDiskUsage.plus(other: TopicDiskUsage) = TopicDiskUsage(
     replicasCount = replicasCount + other.replicasCount,
     orphanedReplicasCount = orphanedReplicasCount + other.orphanedReplicasCount,
     actualUsedBytes = actualUsedBytes plusNullable other.actualUsedBytes,
     expectedUsageBytes = expectedUsageBytes plusNullable other.expectedUsageBytes,
     retentionBoundedBytes = retentionBoundedBytes plusNullable other.retentionBoundedBytes,
+    existingRetentionBoundedBytes = existingRetentionBoundedBytes plusNullable other.existingRetentionBoundedBytes,
+    orphanedUsedBytes = orphanedUsedBytes + other.orphanedUsedBytes,
+    unboundedUsageBytes = unboundedUsageBytes plusNullable other.unboundedUsageBytes,
+)
+
+operator fun TopicDiskUsageExt.plus(other: TopicDiskUsageExt) = TopicDiskUsageExt(
+    usage = usage + other.usage,
     retentionBoundedBrokerTotalBytes = retentionBoundedBrokerTotalBytes plusNullable other.retentionBoundedBrokerTotalBytes,
     retentionBoundedBrokerPossibleBytes = retentionBoundedBrokerPossibleBytes plusNullable other.retentionBoundedBrokerPossibleBytes,
 )
 
-data class TopicDiskUsage(
-    val unboundedSizeRetention: Boolean,
-    val configuredReplicaRetentionBytes: Long,
-    val combined: DiskUsage,
-    val combinedPortions: UsagePortions,
-    val brokerUsages: Map<BrokerId, DiskUsage>,
-    val brokerPortions: Map<BrokerId, UsagePortions>,
-    val clusterDiskUsage: ClusterDiskUsage,
-)
+
 

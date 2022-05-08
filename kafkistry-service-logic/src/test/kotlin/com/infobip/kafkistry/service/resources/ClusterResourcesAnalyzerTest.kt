@@ -1,14 +1,20 @@
 package com.infobip.kafkistry.service.resources
 
-import com.infobip.kafkistry.kafka.*
+import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafka.KafkaExistingTopic
+import com.infobip.kafkistry.kafka.Partition
+import com.infobip.kafkistry.kafka.TopicPartitionReplica
 import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.acl.AclLinkResolver
+import com.infobip.kafkistry.service.asTopicConfigValue
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
+import com.infobip.kafkistry.service.newState
+import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
+import com.infobip.kafkistry.service.toOkPartitionAssignments
 import com.infobip.kafkistry.service.topic.ConfigValueInspector
 import com.infobip.kafkistry.service.topic.TopicIssuesInspector
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
@@ -47,11 +53,17 @@ internal class ClusterResourcesAnalyzerTest {
         configValueInspector = ConfigValueInspector(),
         replicaDirsService = ReplicaDirsService(replicasInfoProvider),
         reAssignmentsMonitorService = mock(),
+    )
 
+    private val topicDiskAnalyzer = TopicDiskAnalyzer(
+        clustersStateProvider = clusterStateProvider,
+        topicsInspectionService = topicsInspectionService,
+        replicaDirsService = ReplicaDirsService(replicasInfoProvider),
+        assignor = PartitionsReplicasAssignor(),
     )
 
     private val analyzer = ClusterResourcesAnalyzer(
-        replicasInfoProvider, brokerDiskMetricsProvider, topicsInspectionService, usageLevelClassifier
+        replicasInfoProvider, brokerDiskMetricsProvider, topicsInspectionService, usageLevelClassifier, topicsRegistry, topicDiskAnalyzer
     )
 
     private fun newCluster(
@@ -96,6 +108,7 @@ internal class ClusterResourcesAnalyzerTest {
     private fun mockClusterState(state: StateData<KafkaClusterState>) {
         reset(clusterStateProvider)
         whenever(clusterStateProvider.getLatestClusterState(state.clusterIdentifier)).thenReturn(state)
+        whenever(clusterStateProvider.getLatestClusterStateValue(state.clusterIdentifier)).thenReturn(state.value())
     }
 
     private fun mockReplicas(identifier: KafkaClusterIdentifier, topicReplicas: List<TopicPartitionReplica>) {
@@ -156,7 +169,8 @@ internal class ClusterResourcesAnalyzerTest {
         mockClusterState(
             cluster.newState(*topics.toTypedArray(), numBrokers = 3) {
                 when (it.name) {
-                    "myTopic1" -> KafkaExistingTopic(it.name, false,
+                    "myTopic1" -> KafkaExistingTopic(
+                        it.name, false,
                         config = mapOf("retention.bytes" to 3_000_000.asTopicConfigValue()),
                         partitionsAssignments = mapOf(
                             0 to listOf(1, 2),
@@ -164,7 +178,8 @@ internal class ClusterResourcesAnalyzerTest {
                             2 to listOf(2, 3),
                         ).toOkPartitionAssignments(),
                     )
-                    "myTopic2" -> KafkaExistingTopic(it.name, false,
+                    "myTopic2" -> KafkaExistingTopic(
+                        it.name, false,
                         config = mapOf("retention.bytes" to 10_000.asTopicConfigValue()),
                         partitionsAssignments = mapOf(0 to listOf(1, 2, 3)).toOkPartitionAssignments(),
                     )
@@ -199,6 +214,85 @@ internal class ClusterResourcesAnalyzerTest {
                 boundedSizePossibleUsedBytes = 6 * 3_000_000L + 3 * 10_000L,
                 totalCapacityBytes = 30_000_000,
                 freeCapacityBytes = 15_000_000,
+            )
+        )
+    }
+
+    @Test
+    fun `test dry run adding tag which implies new topic`() {
+        val cluster = newCluster("myCluster")
+        val topic = newTopic(
+            name = "myTopic",
+            properties = TopicProperties(10, 2),
+            config = mapOf(
+                "retention.bytes" to "10000"
+            ),
+            presence = Presence(PresenceType.TAGGED_CLUSTERS, tag = "test-tag")
+        )
+        mockTopicsRegistry(listOf(topic))
+        mockClusterRegistry(cluster)
+        mockClusterState(cluster.newState(numBrokers = 2))
+        mockDiskMetrics(cluster.identifier, 2, 1_000_000, 900_000)
+        mockReplicas(cluster.identifier, emptyList())
+        val usageEmpty = analyzer.dryRunClusterDiskUsage(cluster)
+        assertThat(usageEmpty.combined.usage).isEqualTo(
+            BrokerDiskUsage.ZERO.copy(totalCapacityBytes = 2_000_000, freeCapacityBytes = 1_800_000)
+        )
+        val usage = analyzer.dryRunClusterDiskUsage(
+            cluster.copy(tags = listOf("test-tag"))
+        )
+        assertThat(usage.combined.usage).isEqualTo(
+            BrokerDiskUsage.ZERO.copy(
+                replicasCount = 20,
+                totalUsedBytes = 20 * 10_000L,
+                boundedReplicasCount = 20,
+                boundedSizePossibleUsedBytes = 20 * 10_000L,
+                totalCapacityBytes = 2_000_000,
+                freeCapacityBytes = 1_800_000,
+            )
+        )
+    }
+
+    @Test
+    fun `test dry run adding tag which implies bigger topic config`() {
+        val cluster = newCluster("myCluster")
+        val topic = newTopic(
+            name = "myTopic",
+            properties = TopicProperties(1, 2),
+            config = mapOf("retention.bytes" to "10000"),
+            perTagProperties = mapOf("test-tag" to TopicProperties(5, 3)),
+            perTagConfigOverrides = mapOf("test-tag" to mapOf("retention.bytes" to "30000")),
+        )
+        mockTopicsRegistry(listOf(topic))
+        mockClusterRegistry(cluster)
+        mockClusterState(cluster.newState(topic, numBrokers = 3))
+        mockDiskMetrics(cluster.identifier, 3, 1_000_000, 900_000)
+        mockReplicas(cluster.identifier, listOf(
+            newReplica("myTopic", 1, 0, 9_000),
+            newReplica("myTopic", 2, 0, 9_000),
+        ))
+        val usageBeforeTag = analyzer.dryRunClusterDiskUsage(cluster)
+        assertThat(usageBeforeTag.combined.usage).isEqualTo(
+            BrokerDiskUsage.ZERO.copy(
+                replicasCount = 2,
+                totalUsedBytes = 18_000,
+                boundedReplicasCount = 2,
+                boundedSizePossibleUsedBytes = 2 * 10_000L,
+                totalCapacityBytes = 3_000_000,
+                freeCapacityBytes = 2_700_000,
+            )
+        )
+        val usageAfterTag = analyzer.dryRunClusterDiskUsage(
+            cluster.copy(tags = listOf("test-tag"))
+        )
+        assertThat(usageAfterTag.combined.usage).isEqualTo(
+            BrokerDiskUsage.ZERO.copy(
+                replicasCount = 15,
+                totalUsedBytes = 18_000,
+                boundedReplicasCount = 15,
+                boundedSizePossibleUsedBytes = 15 * 30_000L,
+                totalCapacityBytes = 3_000_000,
+                freeCapacityBytes = 2_700_000,
             )
         )
     }

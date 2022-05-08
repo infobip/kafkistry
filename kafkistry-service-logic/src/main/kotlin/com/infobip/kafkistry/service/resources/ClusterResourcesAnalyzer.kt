@@ -1,19 +1,18 @@
 package com.infobip.kafkistry.service.resources
 
-import org.apache.kafka.common.config.TopicConfig
 import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafka.Partition
-import com.infobip.kafkistry.kafka.TopicPartitionReplica
 import com.infobip.kafkistry.kafkastate.BrokerDiskMetricsStateProvider
 import com.infobip.kafkistry.kafkastate.KafkaReplicasInfoProvider
 import com.infobip.kafkistry.kafkastate.ReplicaDirs
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
+import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.ClusterTopicStatus
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
-import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
+import com.infobip.kafkistry.service.topic.TopicsInspectionService
+import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import org.springframework.stereotype.Service
 
 @Service
@@ -22,50 +21,24 @@ class ClusterResourcesAnalyzer(
     private val brokerDiskMetricsStateProvider: BrokerDiskMetricsStateProvider,
     private val topicsInspectionService: TopicsInspectionService,
     private val usageLevelClassifier: UsageLevelClassifier,
+    private val topicsRegistry: TopicsRegistryService,
+    private val topicDiskAnalyzer: TopicDiskAnalyzer,
 ) {
 
-    private data class ReplicaKey(
-        val brokerId: BrokerId,
-        val topic: TopicName,
-        val partition: Partition,
-    )
-
     fun clusterDiskUsage(clusterIdentifier: KafkaClusterIdentifier): ClusterDiskUsage {
-        val context = collectData(clusterIdentifier)
-        val replicaRetentions = extractReplicaRetentions(context.topicStatuses)
-        val replicaSizes = extractReplicaSizes(context.replicaDirs.replicas)
+        return clusterDiskUsage(clusterIdentifier, null)
+    }
 
-        val brokerTotalBytes = replicaSizes.sumPerBroker()
-        val (infiniteRetentions, finiteRetentions) = replicaRetentions.partition { it.value == INF_RETENTION }
+    fun dryRunClusterDiskUsage(kafkaCluster: KafkaCluster): ClusterDiskUsage {
+        return clusterDiskUsage(kafkaCluster.identifier, kafkaCluster)
+    }
 
-        val finiteTotalRetentionBytes = finiteRetentions.sumPerBroker()
-        val brokerUnboundedRetentionsBytes = infiniteRetentions.mapValues { replicaSizes[it.key] ?: 0L }.sumPerBroker()
-
-        val brokerReplicas = replicaSizes.countPerBroker()
-        val boundedReplicas = finiteRetentions.countPerBroker()
-        val unboundedReplicas = infiniteRetentions.countPerBroker()
-        val (_, orphanedReplicaSizes) = replicaSizes.partition { it.key in replicaRetentions }
-        val orphanedReplicas = orphanedReplicaSizes.countPerBroker()
-        val brokerOrphanedSizes = orphanedReplicaSizes.sumPerBroker()
-
-        val brokerUsages = context.brokerIds.associateWith {
-            val usage = BrokerDiskUsage(
-                replicasCount = brokerReplicas[it] ?: 0,
-                totalUsedBytes =  brokerTotalBytes[it] ?: 0,
-                boundedReplicasCount = boundedReplicas[it] ?: 0,
-                boundedSizePossibleUsedBytes = finiteTotalRetentionBytes[it] ?: 0,
-                unboundedReplicasCount = unboundedReplicas[it] ?: 0,
-                unboundedSizeUsedBytes = brokerUnboundedRetentionsBytes[it] ?: 0,
-                orphanedReplicasCount = orphanedReplicas[it] ?: 0,
-                orphanedReplicasSizeUsedBytes = brokerOrphanedSizes[it] ?: 0,
-                totalCapacityBytes = context.brokersMetrics[it]?.total,
-                freeCapacityBytes = context.brokersMetrics[it]?.free,
-            )
-            BrokerDisk(
-                usage = usage,
-                portions = usage.portionsOf(context.brokersMetrics[it]),
-            )
-        }
+    private fun clusterDiskUsage(
+        clusterIdentifier: KafkaClusterIdentifier,
+        kafkaCluster: KafkaCluster?,
+    ): ClusterDiskUsage {
+        val context = collectData(clusterIdentifier, kafkaCluster)
+        val brokerUsages = context.computeBrokerUsages()
         val combinedDiskUsage = brokerUsages.values.map { it.usage }.fold(BrokerDiskUsage.ZERO, BrokerDiskUsage::plus)
         val combinedDiskMetrics = context.brokersMetrics.values
             .reduceOrNull { acc, metrics ->
@@ -83,6 +56,33 @@ class ClusterResourcesAnalyzer(
         )
     }
 
+    private fun ContextData.computeBrokerUsages(): Map<BrokerId, BrokerDisk> {
+        return topicsDisks.values
+            .flatMap { it.brokerUsages.entries }
+            .groupBy({ it.key }, { it.value })
+            .let { brokerDisks ->
+                brokerIds.associateWith { brokerDisks[it].orEmpty() }
+            }
+            .mapValues { (brokerId, topicsDisks) ->
+                val usage = BrokerDiskUsage(
+                    replicasCount = topicsDisks.sumOf { it.replicasCount },
+                    totalUsedBytes = topicsDisks.sumOf { it.actualUsedBytes ?: it.retentionBoundedBytes ?: 0L },
+                    boundedReplicasCount = topicsDisks.sumOf { if (it.retentionBoundedBytes != null) it.replicasCount else 0 },
+                    boundedSizePossibleUsedBytes = topicsDisks.sumOf { it.retentionBoundedBytes ?: 0L },
+                    unboundedReplicasCount = topicsDisks.sumOf { if (it.unboundedUsageBytes != null && it.unboundedUsageBytes > 0) it.replicasCount else 0 },
+                    unboundedSizeUsedBytes = topicsDisks.sumOf { it.unboundedUsageBytes ?: 0L },
+                    orphanedReplicasCount = topicsDisks.sumOf { it.orphanedReplicasCount },
+                    orphanedReplicasSizeUsedBytes = topicsDisks.sumOf { it.orphanedUsedBytes },
+                    totalCapacityBytes = brokersMetrics[brokerId]?.total,
+                    freeCapacityBytes = brokersMetrics[brokerId]?.free,
+                )
+                BrokerDisk(
+                    usage = usage,
+                    portions = usage.portionsOf(brokersMetrics[brokerId]),
+                )
+            }
+    }
+
     private fun BrokerDiskUsage.portionsOf(diskMetric: BrokerDiskMetric?): BrokerDiskPortions {
         val usedPercentOfCapacity = totalUsedBytes percentageOfNullable diskMetric?.total
         val possibleUsedPercentOfCapacity = boundedSizePossibleUsedBytes percentageOfNullable diskMetric?.total
@@ -95,8 +95,16 @@ class ClusterResourcesAnalyzer(
         )
     }
 
-    private fun collectData(clusterIdentifier: KafkaClusterIdentifier): ContextData {
-        val clusterStatuses = topicsInspectionService.inspectCluster(clusterIdentifier)
+    private fun collectData(
+        clusterIdentifier: KafkaClusterIdentifier,
+        kafkaCluster: KafkaCluster?,
+    ): ContextData {
+        val clusterStatuses = if (kafkaCluster == null) {
+            topicsInspectionService.inspectCluster(clusterIdentifier)
+        } else {
+            topicsInspectionService.inspectCluster(kafkaCluster)
+        }
+        val clusterRef = (kafkaCluster ?: clusterStatuses.cluster).ref()
         val topicStatuses = clusterStatuses.statusPerTopics
         val brokerIds = clusterStatuses.clusterInfo?.nodeIds
         if (topicStatuses == null || brokerIds == null) {
@@ -109,38 +117,22 @@ class ClusterResourcesAnalyzer(
             .valueOrNull()
             ?.brokersMetrics
             .orEmpty()
-        return ContextData(topicStatuses, brokerIds, replicaDirs, brokersMetrics)
-    }
-
-    private fun extractReplicaRetentions(topicStatuses: List<ClusterTopicStatus>): Map<ReplicaKey, Long> =
-        topicStatuses.mapNotNull { it.existingTopicInfo }
-            .flatMap { topic ->
-                val retentionBytes = topic.config[TopicConfig.RETENTION_BYTES_CONFIG]
-                    ?.value?.toLongOrNull()
-                    ?: return@flatMap emptyList()
-                topic.partitionsAssignments
-                    .flatMap { assignments ->
-                        assignments.replicasAssignments
-                            .map { ReplicaKey(it.brokerId, topic.name, assignments.partition) to retentionBytes }
-                    }
-            }
-            .toMap()
-
-    private fun extractReplicaSizes(replicaInfos: List<TopicPartitionReplica>): Map<ReplicaKey, Long> =
-        replicaInfos.associate { ReplicaKey(it.brokerId, it.topic, it.partition) to it.sizeBytes }
-
-    private fun Map<ReplicaKey, Long>.sumPerBroker() = entries
-        .groupingBy { it.key.brokerId }
-        .fold(0L) { accumulator, entry -> accumulator + entry.value }
-
-    private fun Map<ReplicaKey, Long>.countPerBroker() = entries
-        .groupingBy { it.key.brokerId }
-        .eachCount()
-
-    private fun <K, V> Map<K, V>.partition(predicate: (Map.Entry<K, V>) -> Boolean): Pair<Map<K, V>, Map<K, V>> {
-        return entries.partition(predicate).let { (p1, p2) ->
-            p1.associate { it.toPair() } to p2.associate { it.toPair() }
+        val topicNames = if (kafkaCluster != null) {
+            topicStatuses
+                .filter {
+                    topicsRegistry.findTopic(it.topicName)?.presence?.needToBeOnCluster(kafkaCluster.ref()) ?: false
+                }
+                .map { it.topicName }
+        } else {
+            replicaDirs.replicas.map { it.topic }.distinct()
         }
+        val topicsDisks = topicNames.associateWith { topicName ->
+            topicDiskAnalyzer.analyzeTopicDiskUsage(
+                topic = topicName, topicDescription = topicsRegistry.findTopic(topicName),
+                clusterRef = clusterRef, preferUsingDescriptionProps = kafkaCluster != null
+            )
+        }
+        return ContextData(topicStatuses, brokerIds, replicaDirs, brokersMetrics, topicsDisks)
     }
 
     private data class ContextData(
@@ -148,6 +140,7 @@ class ClusterResourcesAnalyzer(
         val brokerIds: List<BrokerId>,
         val replicaDirs: ReplicaDirs,
         val brokersMetrics: Map<BrokerId, BrokerDiskMetric>,
+        val topicsDisks: Map<TopicName, TopicClusterDiskUsage>,
     )
 
 }

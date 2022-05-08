@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
-<#-- @ftlvariable name="topicResources" type="com.infobip.kafkistry.service.resources.TopicDiskUsage" -->
+<#-- @ftlvariable name="topicResources" type="com.infobip.kafkistry.service.resources.TopicClusterDiskUsageExt" -->
 
 <#import "../common/util.ftl" as rUtil>
 <#import "../common/infoIcon.ftl" as rInfo>
@@ -14,9 +14,9 @@
         </h4>
     </div>
     <div class="card-body p-0">
-        <#assign hasActual = topicResources.combined.actualUsedBytes??>
-        <#assign hasPossible = topicResources.combined.retentionBoundedBytes??>
-        <#assign hasOrphaned = topicResources.combined.orphanedReplicasCount gt 0>
+        <#assign hasActual = topicResources.combined.usage.actualUsedBytes??>
+        <#assign hasPossible = topicResources.combined.usage.retentionBoundedBytes??>
+        <#assign hasOrphaned = topicResources.combined.usage.orphanedReplicasCount gt 0>
         <table class="table table-bordered m-0">
             <thead class="thead-dark table-sm text-center">
             <tr>
@@ -86,18 +86,18 @@
             </tr>
             </thead>
             <#macro diskUsage broker, usage, portions, brokerUsage, brokerPortions>
-            <#-- @ftlvariable name="usage" type="com.infobip.kafkistry.service.resources.DiskUsage" -->
+            <#-- @ftlvariable name="usage" type="com.infobip.kafkistry.service.resources.TopicDiskUsageExt" -->
             <#-- @ftlvariable name="portions" type="com.infobip.kafkistry.service.resources.UsagePortions" -->
             <#-- @ftlvariable name="brokerUsage" type="type="com.infobip.kafkistry.service.resources.BrokerDiskUsage" -->
             <#-- @ftlvariable name="brokerPortions" type="com.infobip.kafkistry.service.resources.BrokerDiskPortions" -->
                 <th>${broker}</th>
                 <td>
-                    ${usage.replicasCount}
+                    ${usage.usage.replicasCount}
                 </td>
                 <#if hasActual>
                     <td>
-                        <#if usage.actualUsedBytes??>
-                            ${rUtil.prettyDataSize(usage.actualUsedBytes)}
+                        <#if usage.usage.actualUsedBytes??>
+                            ${rUtil.prettyDataSize(usage.usage.actualUsedBytes)}
                         <#else>
                             ---
                         </#if>
@@ -120,7 +120,7 @@
                 <#if hasPossible>
                     <td>
                         <#if usage.retentionBoundedBytes??>
-                            ${rUtil.prettyDataSize(usage.retentionBoundedBytes)}
+                            ${rUtil.prettyDataSize(usage.usage.retentionBoundedBytes)}
                         <#else>
                             ---
                         </#if>
@@ -142,14 +142,14 @@
                 </#if>
                 <td>
                     <#if usage.expectedUsageBytes??>
-                        ${rUtil.prettyDataSize(usage.expectedUsageBytes)}
+                        ${rUtil.prettyDataSize(usage.usage.expectedUsageBytes)}
                     <#else>
                         ---
                     </#if>
                 </td>
 
                 <#if hasOrphaned>
-                    <td>${usage.orphanedReplicasCount}</td>
+                    <td>${usage.usage.orphanedReplicasCount}</td>
                 </#if>
 
                 <#assign brokerUsageLevelClass = rUtil.usageLevelToHtmlClass(brokerPortions.usageLevel)>
