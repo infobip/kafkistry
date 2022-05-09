@@ -119,7 +119,7 @@
                 </#if>
                 <#if hasPossible>
                     <td>
-                        <#if usage.retentionBoundedBytes??>
+                        <#if usage.usage.retentionBoundedBytes??>
                             ${rUtil.prettyDataSize(usage.usage.retentionBoundedBytes)}
                         <#else>
                             ---
@@ -141,7 +141,7 @@
                     </td>
                 </#if>
                 <td>
-                    <#if usage.expectedUsageBytes??>
+                    <#if usage.usage.expectedUsageBytes??>
                         ${rUtil.prettyDataSize(usage.usage.expectedUsageBytes)}
                     <#else>
                         ---
