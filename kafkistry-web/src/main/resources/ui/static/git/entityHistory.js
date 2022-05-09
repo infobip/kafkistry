@@ -17,6 +17,7 @@ function loadChangesHistory() {
             historyTable.html(response);
             registerAllInfoTooltips();
             createTextLinks(container);
+            formatTimestamp();
         })
         .fail(function (error) {
             let errHtml = extractErrHtml(error);
