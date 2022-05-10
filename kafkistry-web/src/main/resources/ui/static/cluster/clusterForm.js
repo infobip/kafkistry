@@ -86,8 +86,8 @@ function extractClusterData() {
         connectionString: connectionString,
         sslEnabled: ssl,
         saslEnabled: sasl,
+        tags: tags,
         profiles: profiles,
-        tags: tags
     };
 }
 
