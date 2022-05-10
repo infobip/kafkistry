@@ -91,7 +91,7 @@ class ClustersApi(
     ): List<ClusterRequest> = clustersRegistryService.findPendingRequests(clusterIdentifier)
 
     @GetMapping("/single/pending-requests/branch")
-    fun pendingPrincipalRequest(
+    fun pendingClusterRequest(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
         @RequestParam("branch") branch: String,
     ): ClusterRequest = clustersRegistryService.pendingRequest(clusterIdentifier, branch)

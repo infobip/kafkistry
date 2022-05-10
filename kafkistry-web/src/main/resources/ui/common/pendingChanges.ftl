@@ -53,6 +53,15 @@
                         </span>
                     </#list>
                 </div>
+                <#if request.class.getSimpleName() == "ClusterRequest">
+                <#-- @ftlvariable name="clusterRequest"  type="com.infobip.kafkistry.service.ClusterRequest" -->
+                    <#assign clusterRequest = request>
+                    <div class="col- m-1">
+                        <a href="${appUrl.clusters().showEditClusterOnBranch(clusterRequest.identifier, clusterRequest.branch)}">
+                            <button class="btn btn-outline-primary btn-sm">Edit... <@info.icon tooltip=doc.editPendingChangeBtn/></button>
+                        </a>
+                    </div>
+                </#if>
                 <#if request.class.getSimpleName() == "TopicRequest">
                 <#-- @ftlvariable name="topicRequest"  type="com.infobip.kafkistry.service.TopicRequest" -->
                     <#assign topicRequest = request>

@@ -10,11 +10,13 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ADD
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_BALANCE
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_DRY_RUN_INSPECT
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_EDIT
+import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_EDIT_ON_BRANCH
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INCREMENTAL_BALANCING
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INCREMENTAL_BALANCING_SUGGESTION
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_REMOVE
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_RESOURCES
+import com.infobip.kafkistry.webapp.url.TopicsUrls
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
@@ -57,6 +59,24 @@ class ClustersController(
         return ModelAndView("clusters/edit", mapOf(
             "cluster" to cluster,
             "existingValues" to existingValues
+        ))
+    }
+
+    @GetMapping(CLUSTERS_EDIT_ON_BRANCH)
+    fun showEditTopicOnBranch(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+        @RequestParam("branch") branch: String
+    ): ModelAndView {
+        val clusterRequest = clustersApi.pendingClusterRequest(clusterIdentifier, branch)
+        val clusterExists = clustersApi.listClusters().any { it.identifier == clusterIdentifier }
+        val existingValues = existingValuesApi.all()
+        return ModelAndView("clusters/editOnBranch", mutableMapOf(
+            "title" to "Edit pending cluster request",
+            "clusterRequest" to clusterRequest,
+            "existingValues" to existingValues,
+            "branch" to branch,
+            "clusterSourceType" to "BRANCH_EDIT",
+            "clusterExists" to clusterExists,
         ))
     }
 

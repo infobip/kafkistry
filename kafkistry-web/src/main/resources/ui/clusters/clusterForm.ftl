@@ -1,6 +1,10 @@
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="cluster" type="com.infobip.kafkistry.model.KafkaCluster" -->
 <#-- @ftlvariable name="showDryRunInspect" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="clusterSourceType" type="java.lang.String" -->
+<#-- @ftlvariable name="clusterExists" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="branch" type="java.lang.String" -->
+
 
 <#macro tagInput tag>
     <div class="tag-input form-group row mb-0">
@@ -17,7 +21,7 @@
      data-cluster-source-type="${clusterSourceType}"
      data-cluster-identifier="<#if !(newName??)>${cluster.identifier!''}</#if>"
      data-branch-name="${branch!''}"
-     data-cluster-exists="${(clusterExists!false)?then("yes", "no")}"
+     data-object-exists="${(clusterExists!false)?then("yes", "no")}"
 >
 </div>
 <div hidden="hidden" id="yaml-source-metadata"
@@ -27,7 +31,7 @@
      data-field-name="cluster"
      data-api-path-part="clusters"
      data-branch-name="${branch!''}"
-     data-entity-exists="${(clusterExists!false)?then("yes", "no")}"
+     data-object-exists="${(clusterExists!false)?then("yes", "no")}"
 >
 </div>
 
