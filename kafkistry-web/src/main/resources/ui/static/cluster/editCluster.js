@@ -22,7 +22,10 @@ function editCluster() {
             data: JSON.stringify(cluster)
         })
         .done(function () {
-            showOpSuccess("Successfully edited cluster")
+            showOpSuccess("Successfully edited cluster");
+            setTimeout(function () {
+                location.href = urlFor("clusters.showCluster", {clusterIdentifier: cluster.identifier});
+            }, 1000);
         })
         .fail(function (error) {
             let errorMsg = extractErrMsg(error);

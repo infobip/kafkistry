@@ -22,6 +22,7 @@ $(document).ready(function () {
 
 let existingTags = [];
 let lastTestedClusterInfo = null;
+let kafkaClusterDryRunInspected = null;
 
 function addTag() {
     let template = $("#tag-template").html();
@@ -91,7 +92,7 @@ function extractClusterData() {
     };
 }
 
-function validateCluster(cluster) {
+function validateCluster(cluster, ignoreDryRun) {
     if (!cluster.identifier.trim()) {
         return "Cluster identifier must not be blank";
     }
@@ -119,6 +120,9 @@ function validateCluster(cluster) {
     }
     if (lastTestedClusterInfo.profiles.join(",") !== cluster.profiles.join(",")) {
         return "Properties profiles changed since last connection test, re-test needed";
+    }
+    if (!ignoreDryRun && JSON.stringify(kafkaClusterDryRunInspected) !== JSON.stringify(cluster)) {
+        return "Please perform 'Dry run inspect' before saving";
     }
 }
 

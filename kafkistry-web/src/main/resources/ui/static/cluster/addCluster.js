@@ -43,7 +43,7 @@ function advanceToSaveStep(clusterInfo) {
 function addCluster() {
     showOpProgress("Adding new cluster...");
     let clusterData = extractClusterData();
-    let validateErr = validateCluster(clusterData);
+    let validateErr = validateCluster(clusterData, true);
     if (validateErr) {
         showOpError(validateErr);
         return;
@@ -61,6 +61,15 @@ function addCluster() {
         })
         .done(function () {
             showOpSuccess("Successfully added cluster to registry");
+            setTimeout(function () {
+                $.get("api/clusters/single?clusterIdentifier=" + encodeURI(clusterData.identifier))
+                    .done(function () {
+                        location.href = urlFor("clusters.showCluster", {clusterIdentifier: clusterData.identifier})
+                    })
+                    .fail(function () {
+                        location.href = urlFor("clusters.showClusters");
+                    })
+            }, 1000);
         })
         .fail(function (error) {
             let errMsg = extractErrMsg(error);

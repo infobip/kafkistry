@@ -8,6 +8,7 @@ function clusterDryRunInspect() {
     console.log("going to dry-run inspect cluster");
     showOpProgressOnId(CLUSTER_DRY_RUN_INSPECT_OP, "Dry-run inspecting cluster...")
     let kafkaCluster = extractClusterData();
+    kafkaClusterDryRunInspected = kafkaCluster;
     $
         .ajax(urlFor("clusters.showClusterDryRunInspect"), {
             method: "POST",
