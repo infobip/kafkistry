@@ -1,5 +1,6 @@
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="cluster" type="com.infobip.kafkistry.model.KafkaCluster" -->
+<#-- @ftlvariable name="showDryRunInspect" type="java.lang.Boolean" -->
 
 <#macro tagInput tag>
     <div class="tag-input form-group row mb-0">
@@ -111,7 +112,9 @@
         </div>
     </div>
 
-    <#include "dryRunInspectContainer.ftl">
+    <#if showDryRunInspect!false>
+        <#include "dryRunInspectContainer.ftl">
+    </#if>
 
     <#include "../common/updateForm.ftl">
 

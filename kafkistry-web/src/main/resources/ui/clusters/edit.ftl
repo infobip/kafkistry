@@ -23,6 +23,7 @@
 
     <#assign clusterSourceType = "EDIT">
     <#assign clusterExist = true>
+    <#assign showDryRunInspect = true>
     <#include "clusterForm.ftl">
 
     <button id="edit-cluster-btn" class=" btn btn-primary btn-sm">Edit cluster</button>
