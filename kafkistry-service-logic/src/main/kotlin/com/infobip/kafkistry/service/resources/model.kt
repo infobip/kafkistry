@@ -1,11 +1,15 @@
 package com.infobip.kafkistry.service.resources
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
+import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
 
 const val INF_RETENTION = -1L
 
 infix fun Long?.plusNullable(other: Long?) = if (this != null && other != null) this + other else null
 infix fun Int?.plusNullable(other: Int?) = if (this != null && other != null) this + other else null
+infix fun Long?.minusNullable(other: Long?) = if (this != null && other != null) this - other else null
+infix fun Int?.minusNullable(other: Int?) = if (this != null && other != null) this - other else null
 
 
 ////////////////////////
@@ -98,6 +102,51 @@ operator fun BrokerDiskUsage.plus(other: BrokerDiskUsage) = BrokerDiskUsage(
     freeCapacityBytes = freeCapacityBytes plusNullable other.freeCapacityBytes,
 )
 
+fun BrokerDiskUsage.portionsOf(diskMetric: BrokerDiskMetric?, usageLevelClassifier: UsageLevelClassifier): BrokerDiskPortions {
+    val usedPercentOfCapacity = totalUsedBytes percentageOfNullable diskMetric?.total
+    val possibleUsedPercentOfCapacity = boundedSizePossibleUsedBytes percentageOfNullable diskMetric?.total
+    return BrokerDiskPortions(
+        usedPercentOfCapacity = usedPercentOfCapacity,
+        usageLevel = usageLevelClassifier.determineLevel(usedPercentOfCapacity),
+        possibleUsedPercentOfCapacity = possibleUsedPercentOfCapacity,
+        possibleUsageLevel = usageLevelClassifier.determineLevel(possibleUsedPercentOfCapacity),
+        unboundedUsedPercentOfTotalUsed = unboundedSizeUsedBytes percentageOfNullable totalUsedBytes,
+    )
+}
+
+operator fun ClusterDiskUsage.minus(other: ClusterDiskUsage) = ClusterDiskUsage(
+    combined = combined - other.combined,
+    brokerUsages = (brokerUsages.keys + other.brokerUsages.keys).associateWith { brokerId ->
+        val first = brokerUsages[brokerId]
+        val second = other.brokerUsages[brokerId]
+        when {
+            first != null && second != null -> first - second
+            first != null -> first
+            second != null -> -second
+            else -> throw IllegalStateException("can't subtract two nulls")
+        }
+    }
+)
+
+operator fun BrokerDisk.minus(other: BrokerDisk): BrokerDisk {
+    val brokerDiskMetric = BrokerDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)
+    val usageDiff = usage - other.usage
+    val diffPortions = usageDiff.portionsOf(brokerDiskMetric, UsageLevelClassifier.NONE)
+    return BrokerDisk(usageDiff.copy(totalCapacityBytes = null, freeCapacityBytes = null), diffPortions)
+}
+
+operator fun BrokerDisk.unaryMinus(): BrokerDisk {
+    val brokerDiskMetric = BrokerDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)
+    val first = BrokerDiskUsage.ZERO.copy(
+        totalCapacityBytes = usage.totalCapacityBytes,
+        freeCapacityBytes = usage.freeCapacityBytes,
+    )
+    val usageDiff = first - usage
+    val diffPortions = usageDiff.portionsOf(brokerDiskMetric, UsageLevelClassifier.NONE)
+    return BrokerDisk(usageDiff.copy(totalCapacityBytes = null, freeCapacityBytes = null), diffPortions)
+}
+
+
 
 ////////////////////////
 // topic usage
@@ -169,5 +218,17 @@ operator fun TopicDiskUsageExt.plus(other: TopicDiskUsageExt) = TopicDiskUsageEx
     retentionBoundedBrokerPossibleBytes = retentionBoundedBrokerPossibleBytes plusNullable other.retentionBoundedBrokerPossibleBytes,
 )
 
+operator fun BrokerDiskUsage.minus(other: BrokerDiskUsage) = BrokerDiskUsage(
+    replicasCount = replicasCount minusNullable other.replicasCount,
+    totalUsedBytes = totalUsedBytes minusNullable other.totalUsedBytes,
+    boundedReplicasCount = boundedReplicasCount - other.boundedReplicasCount,
+    boundedSizePossibleUsedBytes = boundedSizePossibleUsedBytes - other.boundedSizePossibleUsedBytes,
+    unboundedReplicasCount = unboundedReplicasCount - other.unboundedReplicasCount,
+    unboundedSizeUsedBytes = unboundedSizeUsedBytes - other.unboundedSizeUsedBytes,
+    orphanedReplicasCount = orphanedReplicasCount - other.orphanedReplicasCount,
+    orphanedReplicasSizeUsedBytes = orphanedReplicasSizeUsedBytes - other.orphanedReplicasSizeUsedBytes,
+    totalCapacityBytes = totalCapacityBytes minusNullable other.totalCapacityBytes,
+    freeCapacityBytes = freeCapacityBytes minusNullable other.freeCapacityBytes,
+)
 
 

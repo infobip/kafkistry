@@ -7,6 +7,7 @@
     <#include "../commonResources.ftl"/>
     <script src="static/cluster/addCluster.js?ver=${lastCommit}"></script>
     <script src="static/cluster/clusterForm.js?ver=${lastCommit}"></script>
+    <script src="static/cluster/clusterDryRunInspect.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Add cluster</title>
     <meta name="current-nav" content="nav-clusters"/>
 </head>

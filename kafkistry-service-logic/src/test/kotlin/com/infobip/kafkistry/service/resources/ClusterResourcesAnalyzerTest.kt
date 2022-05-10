@@ -33,7 +33,7 @@ internal class ClusterResourcesAnalyzerTest {
 
     private val replicasInfoProvider: KafkaReplicasInfoProvider = mock()
     private val brokerDiskMetricsProvider: BrokerDiskMetricsStateProvider = mock()
-    private val usageLevelClassifier = UsageLevelClassifier(UsageLevelThresholds())
+    private val usageLevelClassifier = DefaultUsageLevelClassifier(UsageLevelThresholds())
     private val clustersRegistry: ClustersRegistryService = mock()
     private val topicsRegistry: TopicsRegistryService = mock()
     private val clusterStateProvider: KafkaClustersStateProvider = mock()

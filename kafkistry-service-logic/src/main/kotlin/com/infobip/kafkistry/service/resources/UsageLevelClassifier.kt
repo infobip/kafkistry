@@ -2,6 +2,7 @@ package com.infobip.kafkistry.service.resources
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
+import kotlin.math.abs
 
 @Component
 @ConfigurationProperties("app.resources.thresholds")
@@ -10,12 +11,25 @@ class UsageLevelThresholds {
     var medium = 90.0
 }
 
-@Component
-class UsageLevelClassifier(private val thresholds: UsageLevelThresholds) {
+interface UsageLevelClassifier {
 
-    fun determineLevel(percentage: Double?): UsageLevel {
+    fun determineLevel(percentage: Double?): UsageLevel
+
+    companion object {
+        val NONE = object : UsageLevelClassifier {
+            override fun determineLevel(percentage: Double?): UsageLevel = UsageLevel.NONE
+        }
+    }
+
+}
+
+@Component
+class DefaultUsageLevelClassifier(private val thresholds: UsageLevelThresholds) : UsageLevelClassifier {
+
+    override fun determineLevel(percentage: Double?): UsageLevel {
+        val absPercentage = percentage?.let { abs(it) }
         return with(thresholds) {
-            when (percentage) {
+            when (absPercentage) {
                 null -> UsageLevel.NONE
                 in 0.0..low -> UsageLevel.LOW
                 in low..medium -> UsageLevel.MEDIUM

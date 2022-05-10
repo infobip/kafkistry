@@ -1,14 +1,18 @@
 package com.infobip.kafkistry.service.resources
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.model.TopicProperties
+import com.infobip.kafkistry.service.ExistingTopicInfo
 import com.infobip.kafkistry.service.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.propertiesForCluster
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
+import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import org.apache.kafka.common.config.TopicConfig
 import org.springframework.stereotype.Component
@@ -35,30 +39,17 @@ class TopicDiskAnalyzer(
             topicsInspectionService.inspectTopicOnCluster(topic, clusterRef)
         }
         val replicaInfos = replicaDirsService.topicReplicaInfos(clusterRef.identifier, topic)
-        val brokerActualUsage = replicaInfos?.brokerPartitionReplicas
-            ?.mapValues { (_, partitionReplicas) ->
-                partitionReplicas.entries.sumOf { it.value.sizeBytes }
-            }
-        val brokerReplicaCounts = replicaInfos?.brokerPartitionReplicas
-            ?.takeIf { !preferUsingDescriptionProps }
-            ?.mapValues { (_, partitionReplicas) -> partitionReplicas.size }
-            ?: topicDescription
-                ?.propertiesForCluster(clusterRef)
-                ?.let { properties ->
-                    //topic either does not exist so let's see possible assignment/impact if it were created
-                    //or we prefer using props from topic's description
-                    assignor
-                        .assignNewPartitionReplicas(
-                            emptyMap(), brokerIds,
-                            properties.partitionCount, properties.replicationFactor,
-                            emptyMap()
-                        )
-                        .newAssignments
-                        .flatMap { it.value }
-                        .groupingBy { it }
-                        .eachCount()
-                }
-        val expectedUsageBytes = topicClusterStatus.resourceRequiredUsages.value?.diskUsagePerBroker
+        val existingAssignments = existingAssignments(
+            topicClusterStatus.existingTopicInfo, replicaInfos
+        )
+        val topicProperties = if (preferUsingDescriptionProps) {
+            topicDescription?.propertiesForCluster(clusterRef) ?: existingAssignments?.topicProperties()
+        } else {
+            existingAssignments?.topicProperties() ?: topicDescription?.propertiesForCluster(clusterRef)
+        }
+        val brokerReplicaCounts = topicProperties
+            ?.let { brokerReplicasCount(it, brokerIds, existingAssignments) }
+            ?.brokerReplicaCount()
         val existingTopicRetentionBytes = topicClusterStatus.existingTopicInfo?.config
             ?.get(TopicConfig.RETENTION_BYTES_CONFIG)?.value
             ?.toLongOrNull()
@@ -70,30 +61,28 @@ class TopicDiskAnalyzer(
         } else {
             existingTopicRetentionBytes ?: describedTopicRetentionBytes
         }
-        val brokerRetentionBoundedBytes =
-            if (brokerReplicaCounts != null && configuredReplicaRetentionBytes?.takeIf { it != INF_RETENTION } != null) {
-                brokerReplicaCounts.mapValues { (_, replicas) -> configuredReplicaRetentionBytes * replicas }
-            } else {
-                null
-            }
-        val existingAssignments = topicClusterStatus.existingTopicInfo
+        val existingBrokerAssignments = topicClusterStatus.existingTopicInfo
             ?.partitionsAssignments
             ?.flatMap { (partition, replicas) -> replicas.map { it.brokerId to partition } }
             ?.groupBy({ it.first }, { it.second })
-        val brokerExistingRetentionBoundedBytes = existingAssignments
+        val brokerExistingRetentionBoundedBytes = existingBrokerAssignments
             ?.mapValues { (_, partitions) ->
                 existingTopicRetentionBytes?.let { partitions.size * it }
             }
         val brokerOrphanedReplicas = replicaInfos?.brokerPartitionReplicas
             ?.mapValues { (brokerId, partitionReplicas) ->
-                val assignedPartitions = existingAssignments?.get(brokerId).orEmpty()
+                val assignedPartitions = existingBrokerAssignments?.get(brokerId).orEmpty()
                 partitionReplicas.keys.count { it !in assignedPartitions }
             }
         val brokerOrphanedBytes = replicaInfos?.brokerPartitionReplicas
             ?.mapValues { (brokerId, partitionReplicas) ->
-                val assignedPartitions = existingAssignments?.get(brokerId).orEmpty()
+                val assignedPartitions = existingBrokerAssignments?.get(brokerId).orEmpty()
                 partitionReplicas.filter { it.key !in assignedPartitions }.entries.sumOf { it.value.sizeBytes }
             }
+        val brokerActualUsage = replicaInfos?.brokerActualUsageBytes()
+        val brokerRetentionBoundedBytes = computeBrokerPossibleUsageBytes(
+            brokerReplicaCounts, configuredReplicaRetentionBytes
+        )
         val brokerUsages = brokerIds.associateWith {
             val retentionBoundedBytes = brokerRetentionBoundedBytes?.run { this[it] ?: 0L }
             val actualUsedBytes = brokerActualUsage?.run { this[it] ?: 0L }
@@ -101,7 +90,7 @@ class TopicDiskAnalyzer(
                 replicasCount = brokerReplicaCounts?.get(it) ?: 0,
                 orphanedReplicasCount = brokerOrphanedReplicas?.get(it) ?: 0,
                 actualUsedBytes = actualUsedBytes,
-                expectedUsageBytes = expectedUsageBytes,
+                expectedUsageBytes = topicClusterStatus.resourceRequiredUsages.value?.diskUsagePerBroker,
                 retentionBoundedBytes = retentionBoundedBytes,
                 existingRetentionBoundedBytes = brokerExistingRetentionBoundedBytes?.get(it),
                 orphanedUsedBytes = brokerOrphanedBytes?.get(it) ?: 0L,
@@ -116,6 +105,84 @@ class TopicDiskAnalyzer(
             brokerUsages = brokerUsages,
         )
     }
+
+    private fun computeBrokerPossibleUsageBytes(
+        brokerReplicaCounts: Map<BrokerId, Int>?,
+        configuredReplicaRetentionBytes: Long?
+    ) = if (brokerReplicaCounts != null && configuredReplicaRetentionBytes?.takeIf { it != INF_RETENTION } != null) {
+        brokerReplicaCounts.mapValues { (_, replicas) -> configuredReplicaRetentionBytes * replicas }
+    } else {
+        null
+    }
+
+    private fun existingAssignments(
+        existingTopicInfo: ExistingTopicInfo?,
+        replicaInfos: TopicReplicaInfos?,
+    ): Map<Partition, List<BrokerId>>? {
+        if (existingTopicInfo != null) {
+            return existingTopicInfo.partitionsAssignments.associate { partitionAssignments ->
+                partitionAssignments.partition to partitionAssignments.replicasAssignments.map { it.brokerId }
+            }
+        }
+        if (replicaInfos != null) {
+            return replicaInfos
+                .partitionBrokerReplicas
+                .mapValues { (_, brokerReplicas) -> brokerReplicas.keys.toList() }
+        }
+        return null
+    }
+
+    private fun TopicReplicaInfos.brokerActualUsageBytes(): Map<BrokerId, Long> = brokerPartitionReplicas
+        .mapValues { (_, partitionReplicas) ->
+            partitionReplicas.entries.sumOf { it.value.sizeBytes }
+        }
+
+    private fun brokerReplicasCount(
+        topicProperties: TopicProperties,
+        brokerIds: List<BrokerId>,
+        existingAssignments: Map<Partition, List<BrokerId>>?,
+    ): Map<Partition, List<BrokerId>> {
+        if (existingAssignments == null) {
+            //topic doesn't exist, generate all assignments
+            return assignor.assignNewPartitionReplicas(
+                emptyMap(), brokerIds,
+                topicProperties.partitionCount, topicProperties.replicationFactor,
+                emptyMap()
+            ).newAssignments
+        }
+        val existingTopicProperties = existingAssignments.topicProperties()
+        val correctRFAssignments = when {
+            topicProperties.replicationFactor < existingTopicProperties.replicationFactor -> assignor
+                .reduceReplicationFactor(existingAssignments, topicProperties.replicationFactor)
+                .newAssignments
+            topicProperties.replicationFactor > existingTopicProperties.replicationFactor -> assignor
+                .assignPartitionsNewReplicas(
+                    existingAssignments, brokerIds,
+                    replicationFactorIncrease = topicProperties.replicationFactor - existingTopicProperties.replicationFactor,
+                    emptyMap()
+                ).newAssignments
+            else -> existingAssignments
+        }
+        return if (topicProperties.partitionCount > existingTopicProperties.partitionCount) {
+            assignor.assignNewPartitionReplicas(
+                correctRFAssignments, brokerIds,
+                numberOfNewPartitions = topicProperties.partitionCount - existingTopicProperties.partitionCount,
+                topicProperties.replicationFactor, emptyMap()
+            ).newAssignments
+        } else {
+            correctRFAssignments
+        }
+    }
+
+    private fun Map<Partition, List<BrokerId>>.brokerReplicaCount(): Map<BrokerId, Int> = asSequence()
+        .flatMap { (_, replicas) -> replicas.map { it } }
+        .groupingBy { it }
+        .eachCount()
+
+    private fun Map<Partition, List<BrokerId>>.topicProperties() = TopicProperties(
+        partitionCount = size,
+        replicationFactor = values.maxOf { it.size },
+    )
 
 }
 

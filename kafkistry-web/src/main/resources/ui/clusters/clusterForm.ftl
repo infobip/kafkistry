@@ -111,6 +111,7 @@
         </div>
     </div>
 
+    <#include "dryRunInspectContainer.ftl">
 
     <#include "../common/updateForm.ftl">
 

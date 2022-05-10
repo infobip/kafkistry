@@ -10,7 +10,6 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.ClusterTopicStatus
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
-import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import org.springframework.stereotype.Service
@@ -50,7 +49,7 @@ class ClusterResourcesAnalyzer(
         return ClusterDiskUsage(
             combined = BrokerDisk(
                 usage = combinedDiskUsage,
-                portions = combinedDiskUsage.portionsOf(combinedDiskMetrics)
+                portions = combinedDiskUsage.portionsOf(combinedDiskMetrics, usageLevelClassifier)
             ),
             brokerUsages = brokerUsages,
         )
@@ -78,21 +77,9 @@ class ClusterResourcesAnalyzer(
                 )
                 BrokerDisk(
                     usage = usage,
-                    portions = usage.portionsOf(brokersMetrics[brokerId]),
+                    portions = usage.portionsOf(brokersMetrics[brokerId], usageLevelClassifier),
                 )
             }
-    }
-
-    private fun BrokerDiskUsage.portionsOf(diskMetric: BrokerDiskMetric?): BrokerDiskPortions {
-        val usedPercentOfCapacity = totalUsedBytes percentageOfNullable diskMetric?.total
-        val possibleUsedPercentOfCapacity = boundedSizePossibleUsedBytes percentageOfNullable diskMetric?.total
-        return BrokerDiskPortions(
-            usedPercentOfCapacity = usedPercentOfCapacity,
-            usageLevel = usageLevelClassifier.determineLevel(usedPercentOfCapacity),
-            possibleUsedPercentOfCapacity = possibleUsedPercentOfCapacity,
-            possibleUsageLevel = usageLevelClassifier.determineLevel(possibleUsedPercentOfCapacity),
-            unboundedUsedPercentOfTotalUsed = unboundedSizeUsedBytes percentageOfNullable totalUsedBytes,
-        )
     }
 
     private fun collectData(

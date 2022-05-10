@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.api
 
+import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
@@ -21,6 +22,11 @@ class ResourceAnalyzerApi(
     fun getClusterStatus(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ClusterDiskUsage = clusterResourcesAnalyzer.clusterDiskUsage(clusterIdentifier)
+
+    @PostMapping("/cluster/resources/dry-run")
+    fun getClusterStatus(
+        @RequestBody kafkaCluster: KafkaCluster,
+    ): ClusterDiskUsage = clusterResourcesAnalyzer.dryRunClusterDiskUsage(kafkaCluster)
 
     @GetMapping("/topic/cluster/resources")
     fun getTopicStatusOnCluster(
