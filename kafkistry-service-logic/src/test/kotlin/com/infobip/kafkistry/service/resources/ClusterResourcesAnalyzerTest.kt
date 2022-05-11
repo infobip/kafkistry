@@ -234,12 +234,12 @@ internal class ClusterResourcesAnalyzerTest {
         mockClusterState(cluster.newState(numBrokers = 2))
         mockDiskMetrics(cluster.identifier, 2, 1_000_000, 900_000)
         mockReplicas(cluster.identifier, emptyList())
-        val usageEmpty = analyzer.dryRunClusterDiskUsage(cluster)
+        val usageEmpty = analyzer.dryRunClusterDiskUsage(cluster.ref())
         assertThat(usageEmpty.combined.usage).isEqualTo(
             BrokerDiskUsage.ZERO.copy(totalCapacityBytes = 2_000_000, freeCapacityBytes = 1_800_000)
         )
         val usage = analyzer.dryRunClusterDiskUsage(
-            cluster.copy(tags = listOf("test-tag"))
+            cluster.ref().copy(tags = listOf("test-tag"))
         )
         assertThat(usage.combined.usage).isEqualTo(
             BrokerDiskUsage.ZERO.copy(
@@ -271,7 +271,7 @@ internal class ClusterResourcesAnalyzerTest {
             newReplica("myTopic", 1, 0, 9_000),
             newReplica("myTopic", 2, 0, 9_000),
         ))
-        val usageBeforeTag = analyzer.dryRunClusterDiskUsage(cluster)
+        val usageBeforeTag = analyzer.dryRunClusterDiskUsage(cluster.ref())
         assertThat(usageBeforeTag.combined.usage).isEqualTo(
             BrokerDiskUsage.ZERO.copy(
                 replicasCount = 2,
@@ -283,7 +283,7 @@ internal class ClusterResourcesAnalyzerTest {
             )
         )
         val usageAfterTag = analyzer.dryRunClusterDiskUsage(
-            cluster.copy(tags = listOf("test-tag"))
+            cluster.ref().copy(tags = listOf("test-tag"))
         )
         assertThat(usageAfterTag.combined.usage).isEqualTo(
             BrokerDiskUsage.ZERO.copy(

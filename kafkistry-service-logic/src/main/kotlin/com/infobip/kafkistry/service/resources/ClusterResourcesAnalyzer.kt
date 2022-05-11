@@ -5,13 +5,14 @@ import com.infobip.kafkistry.kafkastate.BrokerDiskMetricsStateProvider
 import com.infobip.kafkistry.kafkastate.KafkaReplicasInfoProvider
 import com.infobip.kafkistry.kafkastate.ReplicaDirs
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
-import com.infobip.kafkistry.model.KafkaCluster
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.ClusterTopicStatus
+import com.infobip.kafkistry.service.KafkistryException
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
+import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
+import com.infobip.kafkistry.utils.deepToString
 import org.springframework.stereotype.Service
 
 @Service
@@ -28,15 +29,15 @@ class ClusterResourcesAnalyzer(
         return clusterDiskUsage(clusterIdentifier, null)
     }
 
-    fun dryRunClusterDiskUsage(kafkaCluster: KafkaCluster): ClusterDiskUsage {
-        return clusterDiskUsage(kafkaCluster.identifier, kafkaCluster)
+    fun dryRunClusterDiskUsage(clusterRef: ClusterRef): ClusterDiskUsage {
+        return clusterDiskUsage(clusterRef.identifier, clusterRef.tags)
     }
 
     private fun clusterDiskUsage(
         clusterIdentifier: KafkaClusterIdentifier,
-        kafkaCluster: KafkaCluster?,
+        tags: List<Tag>?,
     ): ClusterDiskUsage {
-        val context = collectData(clusterIdentifier, kafkaCluster)
+        val context = collectData(clusterIdentifier, tags)
         val brokerUsages = context.computeBrokerUsages()
         val combinedDiskUsage = brokerUsages.values.map { it.usage }.fold(BrokerDiskUsage.ZERO, BrokerDiskUsage::plus)
         val combinedDiskMetrics = context.brokersMetrics.values
@@ -52,11 +53,15 @@ class ClusterResourcesAnalyzer(
                 portions = combinedDiskUsage.portionsOf(combinedDiskMetrics, usageLevelClassifier)
             ),
             brokerUsages = brokerUsages,
+            errors = context.topicsDisks.mapNotNull { (topicName, optionalDisk) ->
+                optionalDisk.absentReason?.let { errorMsg -> "Topic: '$topicName', error: $errorMsg" }
+            }
         )
     }
 
     private fun ContextData.computeBrokerUsages(): Map<BrokerId, BrokerDisk> {
         return topicsDisks.values
+            .mapNotNull { it.value }
             .flatMap { it.brokerUsages.entries }
             .groupBy({ it.key }, { it.value })
             .let { brokerDisks ->
@@ -84,14 +89,14 @@ class ClusterResourcesAnalyzer(
 
     private fun collectData(
         clusterIdentifier: KafkaClusterIdentifier,
-        kafkaCluster: KafkaCluster?,
+        tags: List<Tag>?,
     ): ContextData {
-        val clusterStatuses = if (kafkaCluster == null) {
+        val clusterRef = tags?.let { ClusterRef(clusterIdentifier, tags) }
+        val clusterStatuses = if (clusterRef == null) {
             topicsInspectionService.inspectCluster(clusterIdentifier)
         } else {
-            topicsInspectionService.inspectCluster(kafkaCluster)
+            topicsInspectionService.inspectCluster(clusterRef)
         }
-        val clusterRef = (kafkaCluster ?: clusterStatuses.cluster).ref()
         val topicStatuses = clusterStatuses.statusPerTopics
         val brokerIds = clusterStatuses.clusterInfo?.nodeIds
         if (topicStatuses == null || brokerIds == null) {
@@ -104,20 +109,24 @@ class ClusterResourcesAnalyzer(
             .valueOrNull()
             ?.brokersMetrics
             .orEmpty()
-        val topicNames = if (kafkaCluster != null) {
+        val topicNames = if (clusterRef != null) {
             topicStatuses
                 .filter {
-                    topicsRegistry.findTopic(it.topicName)?.presence?.needToBeOnCluster(kafkaCluster.ref()) ?: false
+                    topicsRegistry.findTopic(it.topicName)?.presence?.needToBeOnCluster(clusterRef) ?: false
                 }
                 .map { it.topicName }
         } else {
             replicaDirs.replicas.map { it.topic }.distinct()
         }
         val topicsDisks = topicNames.associateWith { topicName ->
-            topicDiskAnalyzer.analyzeTopicDiskUsage(
-                topic = topicName, topicDescription = topicsRegistry.findTopic(topicName),
-                clusterRef = clusterRef, preferUsingDescriptionProps = kafkaCluster != null
-            )
+            try {
+                topicDiskAnalyzer.analyzeTopicDiskUsage(
+                    topic = topicName, topicDescription = topicsRegistry.findTopic(topicName),
+                    clusterRef = clusterRef ?: clusterStatuses.cluster.ref(), preferUsingDescriptionProps = clusterRef != null
+                ).let { OptionalValue.of(it) }
+            } catch (ex: KafkistryException) {
+                OptionalValue.absent(ex.deepToString())
+            }
         }
         return ContextData(topicStatuses, brokerIds, replicaDirs, brokersMetrics, topicsDisks)
     }
@@ -127,7 +136,7 @@ class ClusterResourcesAnalyzer(
         val brokerIds: List<BrokerId>,
         val replicaDirs: ReplicaDirs,
         val brokersMetrics: Map<BrokerId, BrokerDiskMetric>,
-        val topicsDisks: Map<TopicName, TopicClusterDiskUsage>,
+        val topicsDisks: Map<TopicName, OptionalValue<TopicClusterDiskUsage>>,
     )
 
 }

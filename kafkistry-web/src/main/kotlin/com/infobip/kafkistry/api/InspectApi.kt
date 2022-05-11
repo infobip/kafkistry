@@ -18,6 +18,8 @@ import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.model.QuotaEntityID
+import com.infobip.kafkistry.service.cluster.ClusterDryRunInspect
+import com.infobip.kafkistry.service.cluster.ClusterEditTagsInspectService
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -33,6 +35,7 @@ class InspectApi(
     private val topicComparator: TopicConfigComparatorService,
     private val aclsInspectionService: AclsInspectionService,
     private val quotasInspectionService: QuotasInspectionService,
+    private val clusterEditTagsInspectService: ClusterEditTagsInspectService,
 ) {
 
     @GetMapping("/topics")
@@ -149,5 +152,10 @@ class InspectApi(
 
     @GetMapping("/quotas/unknown-entities")
     fun inspectUnknownQuotaEntities(): List<EntityQuotasInspection> = quotasInspectionService.inspectUnknownClientEntities()
+
+    @PostMapping("/clusters/edit-inspect")
+    fun inspectClusterEditTagsDryRun(
+        @RequestBody cluster: KafkaCluster,
+    ): ClusterDryRunInspect = clusterEditTagsInspectService.inspectTagsEdit(cluster)
 
 }

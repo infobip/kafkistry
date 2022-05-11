@@ -26,7 +26,7 @@ class ResourceAnalyzerApi(
     @PostMapping("/cluster/resources/dry-run")
     fun getClusterStatus(
         @RequestBody kafkaCluster: KafkaCluster,
-    ): ClusterDiskUsage = clusterResourcesAnalyzer.dryRunClusterDiskUsage(kafkaCluster)
+    ): ClusterDiskUsage = clusterResourcesAnalyzer.dryRunClusterDiskUsage(kafkaCluster.ref())
 
     @GetMapping("/topic/cluster/resources")
     fun getTopicStatusOnCluster(

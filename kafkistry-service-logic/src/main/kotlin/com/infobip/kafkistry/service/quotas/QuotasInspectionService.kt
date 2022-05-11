@@ -1,10 +1,7 @@
 package com.infobip.kafkistry.service.quotas
 
 import com.infobip.kafkistry.kafkastate.KafkaQuotasProvider
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.QuotaDescription
-import com.infobip.kafkistry.model.QuotaEntity
-import com.infobip.kafkistry.model.QuotaEntityID
+import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.computePresence
 import org.springframework.stereotype.Service
@@ -37,8 +34,12 @@ class QuotasInspectionService(
 
     fun inspectClusterQuotas(clusterIdentifier: KafkaClusterIdentifier): ClusterQuotasInspection {
         val clusterRef = clustersRegistry.getCluster(clusterIdentifier).ref()
+        return inspectClusterQuotas(clusterRef)
+    }
+
+    fun inspectClusterQuotas(clusterRef: ClusterRef): ClusterQuotasInspection {
         val entityQuotaDescriptions = quotasRegistry.listAllQuotas().associateBy { it.entity }
-        val latestQuotasState = quotasProvider.getLatestState(clusterIdentifier)
+        val latestQuotasState = quotasProvider.getLatestState(clusterRef.identifier)
         val knownEntities = entityQuotaDescriptions.keys.toSet()
         val unknownEntities = latestQuotasState.valueOrNull()
             ?.quotas?.keys?.filter { it !in knownEntities }.orEmpty()
@@ -49,7 +50,7 @@ class QuotasInspectionService(
                 )
             }
         return ClusterQuotasInspection(
-            clusterIdentifier = clusterIdentifier,
+            clusterIdentifier = clusterRef.identifier,
             entityInspections = entityInspections,
             status = QuotaStatus.from(entityInspections),
         )

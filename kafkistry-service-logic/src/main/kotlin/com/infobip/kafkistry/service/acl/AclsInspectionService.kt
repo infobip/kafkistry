@@ -96,7 +96,11 @@ class AclsInspectionService(
 
     fun inspectClusterAcls(clusterIdentifier: KafkaClusterIdentifier): ClusterAclsInspection {
         val clusterRef = clustersRegistry.getCluster(clusterIdentifier).ref()
-        val latestClusterState = kafkaClustersStateProvider.getLatestClusterState(clusterIdentifier)
+        return inspectClusterAcls(clusterRef)
+    }
+
+    fun inspectClusterAcls(clusterRef: ClusterRef): ClusterAclsInspection {
+        val latestClusterState = kafkaClustersStateProvider.getLatestClusterState(clusterRef.identifier)
         return inspectClusterAcls(clusterRef, latestClusterState)
     }
 

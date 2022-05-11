@@ -51,6 +51,7 @@ enum class UsageLevel {
 data class ClusterDiskUsage(
     val combined: BrokerDisk,
     val brokerUsages: Map<BrokerId, BrokerDisk>,
+    val errors: List<String>,
 )
 
 data class BrokerDisk(
@@ -125,7 +126,8 @@ operator fun ClusterDiskUsage.minus(other: ClusterDiskUsage) = ClusterDiskUsage(
             second != null -> -second
             else -> throw IllegalStateException("can't subtract two nulls")
         }
-    }
+    },
+    errors = errors - other.errors,
 )
 
 operator fun BrokerDisk.minus(other: BrokerDisk): BrokerDisk {

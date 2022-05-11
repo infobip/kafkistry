@@ -96,10 +96,27 @@
     </span>
 </#macro>
 
-<#function prettyNumber number>
+<#function numberToString number ensureSign=false>
 <#-- @ftlvariable name="number"  type="java.lang.Number" -->
     <#if number?is_nan>
         <#return "NaN">
+    </#if>
+    <#if ensureSign && number gt 0>
+        <#return "+" + numberToString(number)>
+    </#if>
+    <#if number < 0>
+        <#return "-" + numberToString(-number)>
+    </#if>
+    <#return "${number}">
+</#function>
+
+<#function prettyNumber number ensureSign=false>
+<#-- @ftlvariable name="number"  type="java.lang.Number" -->
+    <#if number?is_nan>
+        <#return "NaN">
+    </#if>
+    <#if ensureSign && number gt 0>
+        <#return "+" + prettyNumber(number)>
     </#if>
     <#if number < 0>
         <#return "-" + prettyNumber(-number)>
@@ -127,8 +144,12 @@
     <#return "#{numG; m1M2}G">
 </#function>
 
-<#function prettyDataSize number>
+<#function prettyDataSize number ensureSign=false>
 <#-- @ftlvariable name="number"  type="java.lang.Number" -->
+    <#if ensureSign && number gt 0>
+        <#return "+" + prettyDataSize(number)>
+    </#if>
+
     <#if number < 0>
         <#return "-" + prettyDataSize(-number)>
     </#if>
@@ -159,7 +180,11 @@
     <#return "#{numY; m1M2}YB">
 </#function>
 
-<#function prettyDuration secs>
+<#function prettyDuration secs ensureSign=false>
+    <#if ensureSign && secs gt 0>
+        <#return "+" + prettyDuration(secs)>
+    </#if>
+
     <#if secs < 0>
         <#return "-" + prettyDuration(-secs)>
     </#if>

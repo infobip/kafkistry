@@ -101,6 +101,11 @@ class TopicsInspectionService(
         return inspectCluster(cluster)
     }
 
+    fun inspectCluster(clusterRef: ClusterRef): ClusterStatuses {
+        val cluster = clustersRegistry.getCluster(clusterRef.identifier)
+        return inspectCluster(cluster.copy(tags = clusterRef.tags))
+    }
+
     fun inspectCluster(cluster: KafkaCluster): ClusterStatuses {
         val allTopics = loadTopics().associateBy { it.name }
         return analyzeClusterTopics(allTopics, cluster)

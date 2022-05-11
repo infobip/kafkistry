@@ -4,7 +4,6 @@ import com.infobip.kafkistry.api.*
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.generator.balance.BalanceSettings
-import com.infobip.kafkistry.service.resources.minus
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ADD
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_BALANCE
@@ -16,7 +15,6 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INCREMEN
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_REMOVE
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_RESOURCES
-import com.infobip.kafkistry.webapp.url.TopicsUrls
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
@@ -156,14 +154,10 @@ class ClustersController(
     fun showClusterDryRunInspect(
         @RequestBody kafkaCluster: KafkaCluster,
     ): ModelAndView {
-        val currentClusterResources = resourcesAnalyzerApi.getClusterStatus(kafkaCluster.identifier)
-        val effectiveClusterResources = resourcesAnalyzerApi.getClusterStatus(kafkaCluster)
-        val diffClusterResources = effectiveClusterResources - currentClusterResources
+        val clusterDryRunInspect = inspectApi.inspectClusterEditTagsDryRun(kafkaCluster)
         return ModelAndView("clusters/dryRunInspect", mutableMapOf(
             "clusterIdentifier" to kafkaCluster.identifier,
-            "currentClusterResources" to currentClusterResources,
-            "effectiveClusterResources" to effectiveClusterResources,
-            "diffClusterResources" to diffClusterResources,
+            "clusterDryRunInspect" to clusterDryRunInspect,
         ))
     }
 

@@ -1,0 +1,48 @@
+package com.infobip.kafkistry.service.cluster
+
+import com.infobip.kafkistry.kafka.KafkaAclRule
+import com.infobip.kafkistry.model.QuotaEntity
+import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.AclInspectionResultType
+import com.infobip.kafkistry.service.InspectionResultType
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType
+import com.infobip.kafkistry.service.resources.ClusterDiskUsage
+
+data class ClusterDryRunInspect(
+    val errors: List<String>,
+    val clusterDiskUsageBefore: ClusterDiskUsage,
+    val clusterDiskUsageAfter: ClusterDiskUsage,
+    val clusterDiskUsageDiff: ClusterDiskUsage,
+    val topicsDiff: TopicsDryRunDiff,
+    val aclsDiff: AclsDryRunDiff,
+    val quotasDiff: QuotasDryRunDiff,
+)
+
+data class CountDiff(
+    val before: Int,
+    val after: Int,
+    val diff: Int,
+)
+
+infix fun Int.diff(after: Int) = CountDiff(this, after, after - this)
+
+data class TopicsDryRunDiff(
+    val statusCounts: Map<InspectionResultType, CountDiff>,
+    val topicsToCreate: List<TopicName>,
+    val topicsToDelete: List<TopicName>,
+    val topicsToReconfigure: List<TopicName>,
+    val topicsToReScale: List<TopicName>,
+)
+
+data class AclsDryRunDiff(
+    val statusCounts: Map<AclInspectionResultType, CountDiff>,
+    val aclsToCreate: List<KafkaAclRule>,
+    val aclsToDelete: List<KafkaAclRule>,
+)
+
+data class QuotasDryRunDiff(
+    val statusCounts: Map<QuotasInspectionResultType, CountDiff>,
+    val quotasToCreate: List<QuotaEntity>,
+    val quotasToDelete: List<QuotaEntity>,
+    val quotasToReconfigure: List<QuotaEntity>,
+)
