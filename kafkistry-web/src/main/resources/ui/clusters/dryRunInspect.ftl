@@ -94,7 +94,8 @@
 
 <br/>
 
-<#macro topicsList topics title>
+<#macro topicsList topics title topicDisks>
+<#-- @ftlvariable name="topicDisks" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.OptionalValue<com.infobip.kafkistry.service.resources.TopicClusterDiskUsage>>" -->
 <div class="card">
     <div class="card-header collapsed" data-target=".diff-topics-${title?replace('[^A-Za-z]', '_', 'r')}" data-toggle="collapsing">
         <div class="h5">
@@ -103,14 +104,68 @@
             <span class="message">${topics?size} ${title}...</span>
         </div>
     </div>
-    <div class="card-body diff-topics-${title?replace('[^A-Za-z]', '_', 'r')} collapseable">
-        <ul>
-        <#list topics as topic>
-            <li>
-                <a target="_blank" href="${appUrl.topics().showTopic(topic)}">${topic}</a>
-            </li>
-        </#list>
-        </ul>
+    <div class="card-body p-0 diff-topics-${title?replace('[^A-Za-z]', '_', 'r')} collapseable">
+        <table class="table">
+            <thead class="thead-light">
+            <tr>
+                <th>Topic</th>
+                <th>Replica count diff</th>
+                <th>Actual usage diff</th>
+                <th>Possible usage diff</th>
+                <th>Unbounded usage diff</th>
+            </tr>
+            </thead>
+            <#list topics as topic>
+                <tr>
+                    <td><a target="_blank" href="${appUrl.topics().showTopic(topic)}">${topic}</a></td>
+                    <#if (topicDisks[topic].value)??>
+                        <#assign topicDisk = topicDisks[topic].value>
+                        <#assign diffModeEnabled = true>
+                        <td>
+                            <span class="${signClass(topicDisk.combined.replicasCount)}">
+                                ${util.numberToString(topicDisk.combined.replicasCount, true)}
+                            </span>
+                        </td>
+                        <td>
+                            <#if topicDisk.combined.actualUsedBytes??>
+                                <span class="${signClass(topicDisk.combined.actualUsedBytes)}">
+                                    ${util.prettyDataSize(topicDisk.combined.actualUsedBytes, true)}
+                                </span>
+                            <#else>
+                                ---
+                            </#if>
+                        </td>
+                        <td>
+                            <#if topicDisk.combined.retentionBoundedBytes??>
+                                <span class="${signClass(topicDisk.combined.retentionBoundedBytes)}">
+                                    ${util.prettyDataSize(topicDisk.combined.retentionBoundedBytes, true)}
+                                </span>
+                            <#else>
+                                ---
+                            </#if>
+                        </td>
+                        <td>
+                            <#if topicDisk.combined.unboundedUsageBytes??>
+                                <span class="${signClass(topicDisk.combined.unboundedUsageBytes)}">
+                                    ${util.prettyDataSize(topicDisk.combined.unboundedUsageBytes, true)}
+                                </span>
+                            <#else>
+                                ---
+                            </#if>
+                        </td>
+                        <#assign diffModeEnabled = false>
+                    <#else>
+                        <td colspan="3">
+                            <#if (topicDisks[topic].absentReason)??>
+                                <div class="alert alert-danger">${topicDisks[topic].absentReason}</div>
+                            <#else>
+                                ---
+                            </#if>
+                        </td
+                    </#if>
+                </tr>
+            </#list>
+        </table>
     </div>
 </div>
 </#macro>
@@ -161,6 +216,7 @@
 </div>
 </#macro>
 
+<#assign topicsDiff = clusterDryRunInspect.topicsDiff>
 <div class="card">
     <div class="card-header">
         <h4>Topics diff</h4>
@@ -175,7 +231,7 @@
                 <th>Diff</th>
             </tr>
             </thead>
-            <#list clusterDryRunInspect.topicsDiff.statusCounts as stateType, countDiff>
+            <#list topicsDiff.statusCounts as stateType, countDiff>
                 <tr>
                     <td>
                         <#assign stateClass = util.statusToHtmlClass(stateType)>
@@ -189,17 +245,17 @@
                 </tr>
             </#list>
         </table>
-        <#if clusterDryRunInspect.topicsDiff.topicsToCreate?size gt 0>
-            <@topicsList topics=clusterDryRunInspect.topicsDiff.topicsToCreate title="topics to create"/>
+        <#if topicsDiff.topicsToCreate?size gt 0>
+            <@topicsList topics=topicsDiff.topicsToCreate title="topics to create" topicDisks=topicsDiff.topicDiskUsages/>
         </#if>
-        <#if clusterDryRunInspect.topicsDiff.topicsToDelete?size gt 0>
-            <@topicsList topics=clusterDryRunInspect.topicsDiff.topicsToDelete title="topics to delete"/>
+        <#if topicsDiff.topicsToDelete?size gt 0>
+            <@topicsList topics=clusterDryRunInspect.topicsDiff.topicsToDelete title="topics to delete" topicDisks=topicsDiff.topicDiskUsages/>
         </#if>
-        <#if clusterDryRunInspect.topicsDiff.topicsToReconfigure?size gt 0>
-            <@topicsList topics=clusterDryRunInspect.topicsDiff.topicsToReconfigure title="topics to re-configure"/>
+        <#if topicsDiff.topicsToReconfigure?size gt 0>
+            <@topicsList topics=topicsDiff.topicsToReconfigure title="topics to re-configure" topicDisks=topicsDiff.topicDiskUsages/>
         </#if>
         <#if clusterDryRunInspect.topicsDiff.topicsToReScale?size gt 0>
-            <@topicsList topics=clusterDryRunInspect.topicsDiff.topicsToReScale title="topics to re-scale"/>
+            <@topicsList topics=topicsDiff.topicsToReScale title="topics to re-scale" topicDisks=topicsDiff.topicDiskUsages/>
         </#if>
     </div>
 </div>

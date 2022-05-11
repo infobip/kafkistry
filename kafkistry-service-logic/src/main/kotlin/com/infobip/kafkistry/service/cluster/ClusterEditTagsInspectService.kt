@@ -11,8 +11,7 @@ import com.infobip.kafkistry.service.quotas.AvailableQuotasOperation.*
 import com.infobip.kafkistry.service.quotas.ClusterQuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspectionService
-import com.infobip.kafkistry.service.resources.ClusterResourcesAnalyzer
-import com.infobip.kafkistry.service.resources.minus
+import com.infobip.kafkistry.service.resources.*
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import org.springframework.stereotype.Service
 import kotlin.math.abs
@@ -55,7 +54,7 @@ class ClusterEditTagsInspectService(
             clusterDiskUsageBefore = clusterDiskUsageBefore,
             clusterDiskUsageAfter = clusterDiskUsageAfter,
             clusterDiskUsageDiff = clusterDiskUsageAfter - clusterDiskUsageBefore,
-            topicsDiff = computeTopicsDiff(topicsInspectBefore, topicsInspectAfter),
+            topicsDiff = computeTopicsDiff(topicsInspectBefore, topicsInspectAfter, clusterDiskUsageBefore, clusterDiskUsageAfter),
             aclsDiff = computeAclsDiff(aclsInspectBefore, aclsInspectAfter),
             quotasDiff = computeQuotasDiff(quotasInspectBefore, quotasInspectAfter),
         )
@@ -64,6 +63,8 @@ class ClusterEditTagsInspectService(
     private fun computeTopicsDiff(
         inspectBefore: ClusterStatuses,
         inspectAfter: ClusterStatuses,
+        clusterDiskUsageBefore: ClusterDiskUsage,
+        clusterDiskUsageAfter: ClusterDiskUsage,
     ): TopicsDryRunDiff {
         val countsBefore = inspectBefore.topicsStatusCounts
         val countsAfter = inspectAfter.topicsStatusCounts
@@ -85,6 +86,7 @@ class ClusterEditTagsInspectService(
             topicsToDelete = topicsAfter.topicsWhich { DELETE_TOPIC_ON_KAFKA in it.status.availableActions },
             topicsToReconfigure = topicsAfter.topicsWhich { ALTER_TOPIC_CONFIG in it.status.availableActions },
             topicsToReScale = topicsAfter.topicsWhich { ALTER_PARTITION_COUNT in it.status.availableActions },
+            topicDiskUsages = clusterDiskUsageAfter.topicDiskUsages.subtractOptionals(clusterDiskUsageBefore.topicDiskUsages, TopicClusterDiskUsage::minus, TopicClusterDiskUsage::unaryMinus)
         )
     }
 

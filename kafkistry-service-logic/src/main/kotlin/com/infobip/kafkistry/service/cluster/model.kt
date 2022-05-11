@@ -5,8 +5,10 @@ import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.AclInspectionResultType
 import com.infobip.kafkistry.service.InspectionResultType
+import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType
 import com.infobip.kafkistry.service.resources.ClusterDiskUsage
+import com.infobip.kafkistry.service.resources.TopicClusterDiskUsage
 
 data class ClusterDryRunInspect(
     val errors: List<String>,
@@ -32,6 +34,7 @@ data class TopicsDryRunDiff(
     val topicsToDelete: List<TopicName>,
     val topicsToReconfigure: List<TopicName>,
     val topicsToReScale: List<TopicName>,
+    val topicDiskUsages: Map<TopicName, OptionalValue<TopicClusterDiskUsage>>,
 )
 
 data class AclsDryRunDiff(

@@ -2,6 +2,8 @@ package com.infobip.kafkistry.service.resources
 
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
+import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
 
 const val INF_RETENTION = -1L
@@ -51,6 +53,7 @@ enum class UsageLevel {
 data class ClusterDiskUsage(
     val combined: BrokerDisk,
     val brokerUsages: Map<BrokerId, BrokerDisk>,
+    val topicDiskUsages: Map<TopicName, OptionalValue<TopicClusterDiskUsage>>,
     val errors: List<String>,
 )
 
@@ -117,16 +120,8 @@ fun BrokerDiskUsage.portionsOf(diskMetric: BrokerDiskMetric?, usageLevelClassifi
 
 operator fun ClusterDiskUsage.minus(other: ClusterDiskUsage) = ClusterDiskUsage(
     combined = combined - other.combined,
-    brokerUsages = (brokerUsages.keys + other.brokerUsages.keys).associateWith { brokerId ->
-        val first = brokerUsages[brokerId]
-        val second = other.brokerUsages[brokerId]
-        when {
-            first != null && second != null -> first - second
-            first != null -> first
-            second != null -> -second
-            else -> throw IllegalStateException("can't subtract two nulls")
-        }
-    },
+    brokerUsages  = brokerUsages.subtract(other.brokerUsages, BrokerDisk::minus, BrokerDisk::unaryMinus),
+    topicDiskUsages = topicDiskUsages.subtractOptionals(other.topicDiskUsages, TopicClusterDiskUsage::minus, TopicClusterDiskUsage::unaryMinus),
     errors = errors - other.errors,
 )
 
@@ -231,6 +226,69 @@ operator fun BrokerDiskUsage.minus(other: BrokerDiskUsage) = BrokerDiskUsage(
     orphanedReplicasSizeUsedBytes = orphanedReplicasSizeUsedBytes - other.orphanedReplicasSizeUsedBytes,
     totalCapacityBytes = totalCapacityBytes minusNullable other.totalCapacityBytes,
     freeCapacityBytes = freeCapacityBytes minusNullable other.freeCapacityBytes,
+)
+
+operator fun TopicDiskUsage.minus(other: TopicDiskUsage) = TopicDiskUsage(
+    replicasCount = replicasCount - other.replicasCount,
+    orphanedReplicasCount = orphanedReplicasCount - other.orphanedReplicasCount,
+    actualUsedBytes = actualUsedBytes minusNullable other.actualUsedBytes,
+    expectedUsageBytes = expectedUsageBytes minusNullable other.expectedUsageBytes,
+    retentionBoundedBytes = retentionBoundedBytes minusNullable other.retentionBoundedBytes,
+    existingRetentionBoundedBytes = existingRetentionBoundedBytes minusNullable other.existingRetentionBoundedBytes,
+    unboundedUsageBytes = unboundedUsageBytes minusNullable other.unboundedUsageBytes,
+    orphanedUsedBytes = orphanedUsedBytes - other.orphanedUsedBytes,
+)
+
+operator fun TopicDiskUsage.unaryMinus() = TopicDiskUsage(
+    replicasCount = -replicasCount,
+    orphanedReplicasCount = -orphanedReplicasCount,
+    actualUsedBytes = actualUsedBytes?.let { -it },
+    expectedUsageBytes = expectedUsageBytes?.let { -it },
+    retentionBoundedBytes = retentionBoundedBytes?.let { -it },
+    existingRetentionBoundedBytes = existingRetentionBoundedBytes?.let { -it },
+    unboundedUsageBytes = unboundedUsageBytes?.let { -it },
+    orphanedUsedBytes = -orphanedUsedBytes,
+)
+
+operator fun TopicClusterDiskUsage.minus(other: TopicClusterDiskUsage) = TopicClusterDiskUsage(
+    unboundedSizeRetention = !(unboundedSizeRetention xor other.unboundedSizeRetention),
+    configuredReplicaRetentionBytes = configuredReplicaRetentionBytes - other.configuredReplicaRetentionBytes,
+    combined = combined - other.combined,
+    brokerUsages = brokerUsages.subtract(other.brokerUsages, TopicDiskUsage::minus, TopicDiskUsage::unaryMinus),
+)
+
+operator fun TopicClusterDiskUsage.unaryMinus() = TopicClusterDiskUsage(
+    unboundedSizeRetention = unboundedSizeRetention,
+    configuredReplicaRetentionBytes = -configuredReplicaRetentionBytes,
+    combined = -combined,
+    brokerUsages = brokerUsages.mapValues { -it.value },
+)
+
+inline fun <K, V> Map<K, V>.subtract(
+    other: Map<K, V>, minus: (V, V) -> V, negative: (V) -> V
+): Map<K, V> = (keys + other.keys).associateWith { key ->
+    val first = this[key]
+    val second = other[key]
+    when {
+        first != null && second != null -> minus(first, second)
+        first != null -> first
+        second != null -> negative(second)
+        else -> throw IllegalStateException("can't subtract two nulls for '$key'")
+    }
+}
+
+inline fun <K, V> Map<K, OptionalValue<V>>.subtractOptionals(
+    other: Map<K, OptionalValue<V>>, minus: (V, V) -> V, negative: (V) -> V
+): Map<K, OptionalValue<V>> = subtract(
+    other,
+    minus = { first, second ->
+        if (first.value != null && second.value != null) {
+            OptionalValue.of(minus(first.value, second.value))
+        } else {
+            OptionalValue.absent(first.absentReason ?: second.absentReason ?: "")
+        }
+    },
+    negative = { it.value?.let { value -> OptionalValue.of(negative(value)) } ?: it }
 )
 
 
