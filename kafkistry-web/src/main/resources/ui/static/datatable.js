@@ -1,4 +1,8 @@
 $(document).ready(function () {
+    initDatatables();
+});
+
+function initDatatables() {
     let table = $(".datatable");
     let sortingEnabled = !table.hasClass("datatable-no-sort");
     table.DataTable({
@@ -23,8 +27,7 @@ $(document).ready(function () {
             table.show();
         }
     });
-});
-
+}
 function maybeFilterDatatableByUrlHash() {
     if(window.location.hash) {
         let hash = window.location.hash.substring(1);

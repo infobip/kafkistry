@@ -21,6 +21,7 @@ function clusterDryRunInspect() {
             $("#cluster-dry-run-inspect-result").html(response);
             registerAllInfoTooltips();
             refreshAllConfValues();
+            initDatatables();
         })
         .fail(function (error) {
             let errHtml = extractErrHtml(error);

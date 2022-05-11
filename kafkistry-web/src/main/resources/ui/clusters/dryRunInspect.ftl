@@ -104,8 +104,8 @@
             <span class="message">${topics?size} ${title}...</span>
         </div>
     </div>
-    <div class="card-body p-0 diff-topics-${title?replace('[^A-Za-z]', '_', 'r')} collapseable">
-        <table class="table">
+    <div class="card-body p-0 pt-2 pb-2 diff-topics-${title?replace('[^A-Za-z]', '_', 'r')} collapseable">
+        <table class="table table-bordered datatable">
             <thead class="thead-light">
             <tr>
                 <th>Topic</th>
@@ -121,12 +121,12 @@
                     <#if (topicDisks[topic].value)??>
                         <#assign topicDisk = topicDisks[topic].value>
                         <#assign diffModeEnabled = true>
-                        <td>
+                        <td data-order="${topicDisk.combined.replicasCount}">
                             <span class="${signClass(topicDisk.combined.replicasCount)}">
                                 ${util.numberToString(topicDisk.combined.replicasCount, true)}
                             </span>
                         </td>
-                        <td>
+                        <td data-order="${topicDisk.combined.actualUsedBytes!''}">
                             <#if topicDisk.combined.actualUsedBytes??>
                                 <span class="${signClass(topicDisk.combined.actualUsedBytes)}">
                                     ${util.prettyDataSize(topicDisk.combined.actualUsedBytes, true)}
@@ -135,7 +135,7 @@
                                 ---
                             </#if>
                         </td>
-                        <td>
+                        <td data-order="${topicDisk.combined.retentionBoundedBytes!''}">
                             <#if topicDisk.combined.retentionBoundedBytes??>
                                 <span class="${signClass(topicDisk.combined.retentionBoundedBytes)}">
                                     ${util.prettyDataSize(topicDisk.combined.retentionBoundedBytes, true)}
@@ -144,7 +144,7 @@
                                 ---
                             </#if>
                         </td>
-                        <td>
+                        <td data-order="${topicDisk.combined.unboundedUsageBytes!''}">
                             <#if topicDisk.combined.unboundedUsageBytes??>
                                 <span class="${signClass(topicDisk.combined.unboundedUsageBytes)}">
                                     ${util.prettyDataSize(topicDisk.combined.unboundedUsageBytes, true)}
@@ -155,13 +155,16 @@
                         </td>
                         <#assign diffModeEnabled = false>
                     <#else>
-                        <td colspan="3">
+                        <td colspan="4">
                             <#if (topicDisks[topic].absentReason)??>
                                 <div class="alert alert-danger">${topicDisks[topic].absentReason}</div>
                             <#else>
                                 ---
                             </#if>
-                        </td
+                        </td>
+                        <td style="display: none;"></td> <!-- datatable wants to have equal number of columns per each row -->
+                        <td style="display: none;"></td>
+                        <td style="display: none;"></td>
                     </#if>
                 </tr>
             </#list>
