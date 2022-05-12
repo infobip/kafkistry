@@ -173,4 +173,27 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
         )
     }
 
+    @Test
+    fun `test retention way bigger than MAX_INT segment bytes below acceptable range`() {
+        val topicDescriptionView = newTopicDescriptionView(
+            retentionBytes = 40_000_000_000L.toString(),
+            segmentBytes = 40_000_000.toString(),
+        )
+        val result = rule.check(topicDescriptionView, mock())
+        assertThat(result).isNotNull
+        assertThat(result?.renderMessage()).contains("having ratio 0.001 which is less than min configured ratio 0.02")
+    }
+
+    @Test
+    fun `test fix retention way bigger than MAX_INT segment bytes below acceptable range`() {
+        val topicDescription = newTopicDescription(
+            retentionBytes = 40_000_000_000L.toString(),
+            segmentBytes = 40_000_000.toString(),
+        )
+        val fixedTopicDescription = rule.doFixConfig(topicDescription, clusterMetadata)
+        assertThat(fixedTopicDescription.perClusterConfigOverrides["test-cluster"]).containsEntry(
+            TopicConfig.SEGMENT_BYTES_CONFIG, (40_000_000_000L * 0.02).toLong().toString()
+        )
+    }
+
 }

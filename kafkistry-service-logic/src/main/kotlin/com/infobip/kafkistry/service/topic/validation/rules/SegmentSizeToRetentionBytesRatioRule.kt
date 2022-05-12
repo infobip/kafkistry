@@ -74,7 +74,7 @@ class SegmentSizeToRetentionBytesRatioRule(
                     ),
                     severity = RuleViolation.Severity.WARNING,
                 )
-                ratio < minRatioToRetentionBytes && retentionBytes < Int.MAX_VALUE -> violated(
+                ratio < minRatioToRetentionBytes && segmentBytes < Int.MAX_VALUE -> violated(
                     message = "Configured ${TopicConfig.SEGMENT_BYTES_CONFIG} %segmentBytes% is too small " +
                             "comparing to ${TopicConfig.RETENTION_BYTES_CONFIG} %retentionBytes%, having ratio %ratio% " +
                             "which is less than min configured ratio %minRatio%. Topic's replicas might have many small segments.",
