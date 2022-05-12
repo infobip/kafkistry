@@ -161,6 +161,8 @@ class TopicWizardConfigGeneratorTest {
             assertThat(generator.determineSegmentBytes(600_000_000L)) shouldEqual 60_000_000L      //big
             assertThat(generator.determineSegmentBytes(1_000_000_000L)) shouldEqual 100_000_000L   //big
             assertThat(generator.determineSegmentBytes(5_000_000_000L)) shouldEqual 500_000_000L   //big
+            assertThat(generator.determineSegmentBytes(5L * Int.MAX_VALUE)) shouldEqual Int.MAX_VALUE.toLong() / 2   //big, not capped yet
+            assertThat(generator.determineSegmentBytes(20L * Int.MAX_VALUE)) shouldEqual Int.MAX_VALUE.toLong()   //capped at max-int
         }
     }
 

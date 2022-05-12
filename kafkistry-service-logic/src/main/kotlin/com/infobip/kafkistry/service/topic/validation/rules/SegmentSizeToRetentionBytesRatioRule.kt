@@ -52,6 +52,13 @@ class SegmentSizeToRetentionBytesRatioRule(
             )
         } ?: return valid()
 
+        if (segmentBytes > Int.MAX_VALUE) {
+            return violated(
+                message = "${TopicConfig.SEGMENT_BYTES_CONFIG} property is bigger than MAX_INT (${config[TopicConfig.SEGMENT_BYTES_CONFIG]})",
+                severity = RuleViolation.Severity.ERROR,
+            )
+        }
+
         val ratio = segmentBytes.toDouble() / retentionBytes.toDouble()
         return with(properties) {
             when {
@@ -67,7 +74,7 @@ class SegmentSizeToRetentionBytesRatioRule(
                     ),
                     severity = RuleViolation.Severity.WARNING,
                 )
-                ratio < minRatioToRetentionBytes -> violated(
+                ratio < minRatioToRetentionBytes && retentionBytes < Int.MAX_VALUE -> violated(
                     message = "Configured ${TopicConfig.SEGMENT_BYTES_CONFIG} %segmentBytes% is too small " +
                             "comparing to ${TopicConfig.RETENTION_BYTES_CONFIG} %retentionBytes%, having ratio %ratio% " +
                             "which is less than min configured ratio %minRatio%. Topic's replicas might have many small segments.",
@@ -97,7 +104,7 @@ class SegmentSizeToRetentionBytesRatioRule(
         } ?: 0L
         val maxSegmentBytes = retentionBytes.times(properties.maxRatioToRetentionBytes).toLong()
         val minSegmentBytes = retentionBytes.times(properties.minRatioToRetentionBytes).toLong()
-        val fixedSegmentBytes = segmentBytes.coerceIn(minSegmentBytes, maxSegmentBytes)
+        val fixedSegmentBytes = segmentBytes.coerceIn(minSegmentBytes, maxSegmentBytes).coerceAtMost(Int.MAX_VALUE.toLong())
         return topicDescription.withClusterProperty(
             clusterMetadata.ref.identifier, TopicConfig.SEGMENT_BYTES_CONFIG, fixedSegmentBytes.toString()
         )

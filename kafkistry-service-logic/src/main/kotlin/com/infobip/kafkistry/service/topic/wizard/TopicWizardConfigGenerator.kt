@@ -132,7 +132,7 @@ class TopicWizardConfigGenerator(
             when (retentionBytes < retentionSizeBigThreshold) {
                 true -> retentionBytes.times(toRetentionRatioSmall).toLong()
                 false -> retentionBytes.times(toRetentionRatioBig).toLong().coerceAtLeast(thresholdSegmentBytes)
-            }
+            }.coerceAtMost(Int.MAX_VALUE.toLong())
         }
     }
 
