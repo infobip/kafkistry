@@ -171,12 +171,11 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
                 ),
                 properties = TopicProperties(36, 4),
                 config = mapOf(
-                        "retention.bytes" to "24576000000",     //------ calculated based on resource requirements override
+                        "retention.bytes" to "24576000000",     //----- calculated based on resource requirements override
                         "retention.ms" to "43200000",
-                        "segment.bytes" to "2457600000",        //----- calculated from retention.bytes
+                        "segment.bytes" to "${Int.MAX_VALUE}",  //----- calculated from retention.bytes (would be 2457600000) and capped down to MAX_INT
                         "max.message.bytes" to "10240",
-                        "segment.ms" to "3600000"
-
+                        "segment.ms" to "3600000",
                 ),
                 perClusterProperties = mapOf(
                         CLUSTER_IDENTIFIER to TopicProperties(24, 3)
