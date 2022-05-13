@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="title" type="java.lang.String" -->
-<#-- @ftlvariable name="clusterRequest" type="com.infobip.kafkistry.service.ClusterRequest" -->
+<#-- @ftlvariable name="clusterRequest" type="com.infobip.kafkistry.service.history.ClusterRequest" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="branch" type="java.lang.String" -->
 

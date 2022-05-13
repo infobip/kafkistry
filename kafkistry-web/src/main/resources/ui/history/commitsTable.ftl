@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="allCommits" type="java.util.List<com.infobip.kafkistry.service.ChangeCommit<com.infobip.kafkistry.service.Change>>" -->
+<#-- @ftlvariable name="allCommits" type="java.util.List<com.infobip.kafkistry.service.history.ChangeCommit<com.infobip.kafkistry.service.history.Change>>" -->
 <#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitEmbeddedBrowse"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="jiraBaseUrl"  type="java.lang.String" -->
@@ -37,9 +37,9 @@
                     </span>
                 </td>
 
-                <#-- @ftlvariable name="topicChange" type="com.infobip.kafkistry.service.TopicChange" -->
-                <#-- @ftlvariable name="clusterChange" type="com.infobip.kafkistry.service.ClusterChange" -->
-                <#-- @ftlvariable name="aclsChange" type="com.infobip.kafkistry.service.AclsChange" -->
+                <#-- @ftlvariable name="topicChange" type="com.infobip.kafkistry.service.history.TopicChange" -->
+                <#-- @ftlvariable name="clusterChange" type="com.infobip.kafkistry.service.history.ClusterChange" -->
+                <#-- @ftlvariable name="aclsChange" type="com.infobip.kafkistry.service.history.AclsChange" -->
                 <#-- @ftlvariable name="quotasChange" type="com.infobip.kafkistry.service.quotas.QuotasChange" -->
                 <#switch change.class.getSimpleName()>
                     <#case "TopicChange">

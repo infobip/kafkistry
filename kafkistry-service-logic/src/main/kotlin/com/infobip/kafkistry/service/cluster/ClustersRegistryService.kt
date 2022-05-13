@@ -10,6 +10,8 @@ import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.repository.*
 import com.infobip.kafkistry.service.*
+import com.infobip.kafkistry.service.history.ClusterChange
+import com.infobip.kafkistry.service.history.ClusterRequest
 import com.infobip.kafkistry.service.topic.validation.NamingValidator
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import org.springframework.stereotype.Service

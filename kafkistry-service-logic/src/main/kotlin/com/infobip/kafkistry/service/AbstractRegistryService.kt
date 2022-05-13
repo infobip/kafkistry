@@ -4,6 +4,9 @@ import com.infobip.kafkistry.events.EventPublisher
 import com.infobip.kafkistry.events.RepositoryEvent
 import com.infobip.kafkistry.repository.*
 import com.infobip.kafkistry.repository.storage.CommitsRange
+import com.infobip.kafkistry.service.history.Change
+import com.infobip.kafkistry.service.history.ChangeCommit
+import com.infobip.kafkistry.service.history.PendingRequest
 import com.infobip.kafkistry.repository.RequestingKeyValueRepository as Repository
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 

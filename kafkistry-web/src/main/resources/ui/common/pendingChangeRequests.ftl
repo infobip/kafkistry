@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="pendingUpdates"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.PendingRequest>>" -->
+<#-- @ftlvariable name="pendingUpdates"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.history.PendingRequest>>" -->
 <#-- @ftlvariable name="entityName"  type="java.lang.String" -->
 
 <div class="card pending-updates-container">

@@ -2,9 +2,11 @@ package com.infobip.kafkistry.api
 
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.UpdateContext
+import com.infobip.kafkistry.service.history.ChangeCommit
+import com.infobip.kafkistry.service.history.TopicChange
+import com.infobip.kafkistry.service.history.TopicRequest
 import org.springframework.web.bind.annotation.*
 
 /**

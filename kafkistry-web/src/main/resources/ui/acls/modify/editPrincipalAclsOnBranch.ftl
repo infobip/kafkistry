@@ -1,6 +1,6 @@
 
 <#-- @ftlvariable name="title" type="java.lang.String" -->
-<#-- @ftlvariable name="aclsRequest" type="com.infobip.kafkistry.service.AclsRequest" -->
+<#-- @ftlvariable name="aclsRequest" type="com.infobip.kafkistry.service.history.AclsRequest" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="branch" type="java.lang.String" -->
 

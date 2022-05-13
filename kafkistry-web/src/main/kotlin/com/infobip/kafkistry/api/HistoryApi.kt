@@ -1,8 +1,8 @@
 package com.infobip.kafkistry.api
 
-import com.infobip.kafkistry.service.Change
-import com.infobip.kafkistry.service.ChangeCommit
-import com.infobip.kafkistry.service.HistoryService
+import com.infobip.kafkistry.service.history.Change
+import com.infobip.kafkistry.service.history.ChangeCommit
+import com.infobip.kafkistry.service.history.HistoryService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam

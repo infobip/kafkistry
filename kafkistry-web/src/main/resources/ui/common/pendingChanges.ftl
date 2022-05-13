@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="pendingRequests"  type="java.util.List<com.infobip.kafkistry.service.PendingRequest>" -->
+<#-- @ftlvariable name="pendingRequests"  type="java.util.List<com.infobip.kafkistry.service.history.PendingRequest>" -->
 <#-- @ftlvariable name="gitBranchBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitEmbeddedBrowse"  type="java.lang.Boolean" -->
@@ -54,7 +54,7 @@
                     </#list>
                 </div>
                 <#if request.class.getSimpleName() == "ClusterRequest">
-                <#-- @ftlvariable name="clusterRequest"  type="com.infobip.kafkistry.service.ClusterRequest" -->
+                <#-- @ftlvariable name="clusterRequest"  type="com.infobip.kafkistry.service.history.ClusterRequest" -->
                     <#assign clusterRequest = request>
                     <div class="col- m-1">
                         <a href="${appUrl.clusters().showEditClusterOnBranch(clusterRequest.identifier, clusterRequest.branch)}">
@@ -63,7 +63,7 @@
                     </div>
                 </#if>
                 <#if request.class.getSimpleName() == "TopicRequest">
-                <#-- @ftlvariable name="topicRequest"  type="com.infobip.kafkistry.service.TopicRequest" -->
+                <#-- @ftlvariable name="topicRequest"  type="com.infobip.kafkistry.service.history.TopicRequest" -->
                     <#assign topicRequest = request>
                     <div class="col- m-1">
                         <a href="${appUrl.topics().showEditTopicOnBranch(topicRequest.topicName, topicRequest.branch)}">
@@ -72,7 +72,7 @@
                     </div>
                 </#if>
                 <#if request.class.getSimpleName() == "AclsRequest">
-                <#-- @ftlvariable name="aclsRequest"  type="com.infobip.kafkistry.service.AclsRequest" -->
+                <#-- @ftlvariable name="aclsRequest"  type="com.infobip.kafkistry.service.history.AclsRequest" -->
                     <#assign aclsRequest = request>
                     <div class="col- m-1">
                         <a href="${appUrl.acls().showEditPrincipalOnBranch(aclsRequest.principal, aclsRequest.branch)}">

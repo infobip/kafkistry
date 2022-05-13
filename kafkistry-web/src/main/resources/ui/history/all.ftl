@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="allCommits" type="java.util.List<com.infobip.kafkistry.service.ChangeCommit<com.infobip.kafkistry.service.Change>>" -->
+<#-- @ftlvariable name="allCommits" type="java.util.List<com.infobip.kafkistry.service.history.ChangeCommit<com.infobip.kafkistry.service.history.Change>>" -->
 <#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitEmbeddedBrowse"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="jiraBaseUrl"  type="java.lang.String" -->

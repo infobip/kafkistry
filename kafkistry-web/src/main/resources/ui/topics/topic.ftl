@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="topic"  type="com.infobip.kafkistry.service.topic.TopicStatuses" -->
-<#-- @ftlvariable name="pendingTopicRequests"  type="java.util.List<com.infobip.kafkistry.service.PendingRequest>" -->
+<#-- @ftlvariable name="pendingTopicRequests"  type="java.util.List<com.infobip.kafkistry.service.history.PendingRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 
 <html lang="en">

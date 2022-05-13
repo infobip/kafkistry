@@ -3,9 +3,8 @@ package com.infobip.kafkistry.service.quotas
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.repository.storage.ChangeType
 import com.infobip.kafkistry.repository.storage.CommitChange
-import com.infobip.kafkistry.service.Change
-import com.infobip.kafkistry.service.PendingRequest
-import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.history.Change
+import com.infobip.kafkistry.service.history.PendingRequest
 
 
 data class QuotasRequest(

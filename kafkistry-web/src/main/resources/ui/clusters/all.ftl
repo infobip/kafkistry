@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clustersTopics"  type="java.util.List<com.infobip.kafkistry.service.topic.ClusterTopicsStatuses>" -->
-<#-- @ftlvariable name="pendingClustersUpdates"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.ClusterRequest>>" -->
+<#-- @ftlvariable name="pendingClustersUpdates"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.history.ClusterRequest>>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 
 <html lang="en">

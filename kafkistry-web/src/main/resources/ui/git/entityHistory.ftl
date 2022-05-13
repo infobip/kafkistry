@@ -1,5 +1,5 @@
 
-<#-- @ftlvariable name="historyChangeRequests"  type="java.util.List<com.infobip.kafkistry.service.PendingRequest>" -->
+<#-- @ftlvariable name="historyChangeRequests"  type="java.util.List<com.infobip.kafkistry.service.history.PendingRequest>" -->
 <#-- @ftlvariable name="gitBranchBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitEmbeddedBrowse"  type="java.lang.Boolean" -->

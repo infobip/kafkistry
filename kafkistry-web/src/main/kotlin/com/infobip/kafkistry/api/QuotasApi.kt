@@ -2,7 +2,7 @@ package com.infobip.kafkistry.api
 
 import com.infobip.kafkistry.model.QuotaDescription
 import com.infobip.kafkistry.model.QuotaEntityID
-import com.infobip.kafkistry.service.ChangeCommit
+import com.infobip.kafkistry.service.history.ChangeCommit
 import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.service.quotas.QuotasChange
 import com.infobip.kafkistry.service.quotas.QuotasRegistryService

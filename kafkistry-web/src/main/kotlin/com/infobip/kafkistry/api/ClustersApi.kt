@@ -9,7 +9,7 @@ import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.KafkaProfile
-import com.infobip.kafkistry.service.ClusterRequest
+import com.infobip.kafkistry.service.history.ClusterRequest
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.UpdateContext
 import org.springframework.web.bind.annotation.*

@@ -7,8 +7,8 @@ import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.repository.ChangeRequest
 import com.infobip.kafkistry.repository.EntityCommitChange
 import com.infobip.kafkistry.repository.KafkaAclsRepository
-import com.infobip.kafkistry.service.AclsChange
-import com.infobip.kafkistry.service.AclsRequest
+import com.infobip.kafkistry.service.history.AclsChange
+import com.infobip.kafkistry.service.history.AclsRequest
 import com.infobip.kafkistry.service.KafkistryIntegrityException
 import com.infobip.kafkistry.service.AbstractRegistryService
 import com.infobip.kafkistry.service.UpdateContext

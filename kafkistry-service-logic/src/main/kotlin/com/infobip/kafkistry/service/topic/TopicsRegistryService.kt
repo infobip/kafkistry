@@ -8,8 +8,8 @@ import com.infobip.kafkistry.repository.ChangeRequest
 import com.infobip.kafkistry.repository.EntityCommitChange
 import com.infobip.kafkistry.repository.KafkaTopicsRepository
 import com.infobip.kafkistry.service.KafkistryIntegrityException
-import com.infobip.kafkistry.service.TopicChange
-import com.infobip.kafkistry.service.TopicRequest
+import com.infobip.kafkistry.service.history.TopicChange
+import com.infobip.kafkistry.service.history.TopicRequest
 import com.infobip.kafkistry.service.AbstractRegistryService
 import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.service.topic.validation.NamingValidator

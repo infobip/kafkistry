@@ -4,7 +4,7 @@
 <#-- @ftlvariable name="principalClusterRules"  type="com.infobip.kafkistry.service.acl.PrincipalAclsInspection" -->
 <#-- @ftlvariable name="selectedRule"  type="java.lang.String" -->
 <#-- @ftlvariable name="selectedCluster"  type="java.lang.String" -->
-<#-- @ftlvariable name="pendingPrincipalRequests"  type="java.util.List<com.infobip.kafkistry.service.AclsRequest>" -->
+<#-- @ftlvariable name="pendingPrincipalRequests"  type="java.util.List<com.infobip.kafkistry.service.history.AclsRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 
 <html lang="en">

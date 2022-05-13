@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="entityInspection"  type="com.infobip.kafkistry.service.quotas.EntityQuotasInspection" -->
-<#-- @ftlvariable name="pendingEntityQuotasRequests"  type="java.util.List<com.infobip.kafkistry.service.AclsRequest>" -->
+<#-- @ftlvariable name="pendingEntityQuotasRequests"  type="java.util.List<com.infobip.kafkistry.service.history.AclsRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 
 <html lang="en">

@@ -1,4 +1,4 @@
-package com.infobip.kafkistry.service
+package com.infobip.kafkistry.service.history
 
 import com.infobip.kafkistry.repository.storage.CommitsRange
 import com.infobip.kafkistry.service.quotas.QuotasRegistryService
