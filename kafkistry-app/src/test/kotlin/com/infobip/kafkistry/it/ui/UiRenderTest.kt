@@ -27,9 +27,9 @@ import com.infobip.kafkistry.repository.KafkaTopicsRepository
 import com.infobip.kafkistry.repository.OptionalEntity
 import com.infobip.kafkistry.repository.storage.Commit
 import com.infobip.kafkistry.repository.storage.CommitChange
-import com.infobip.kafkistry.service.configForCluster
+import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.propertiesForCluster
+import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.junit.Before

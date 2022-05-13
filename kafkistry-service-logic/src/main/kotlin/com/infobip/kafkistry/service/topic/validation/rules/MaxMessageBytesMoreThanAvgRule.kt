@@ -3,7 +3,7 @@ package com.infobip.kafkistry.service.topic.validation.rules
 import org.apache.kafka.common.config.TopicConfig
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.toBytes
-import com.infobip.kafkistry.service.withClusterProperty
+import com.infobip.kafkistry.service.topic.withClusterProperty
 import org.springframework.stereotype.Component
 
 @Component

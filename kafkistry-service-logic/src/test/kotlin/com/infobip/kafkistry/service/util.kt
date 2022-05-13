@@ -13,9 +13,7 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.repository.storage.git.GitRepository
 import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.topic.TopicsRegistryService
-import com.infobip.kafkistry.service.topic.InspectionResultType
-import com.infobip.kafkistry.service.topic.WrongValueAssertion
+import com.infobip.kafkistry.service.topic.*
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 

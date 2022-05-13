@@ -2,8 +2,8 @@ package com.infobip.kafkistry.service.generator
 
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.clustersTags
-import com.infobip.kafkistry.service.configForCluster
-import com.infobip.kafkistry.service.propertiesForCluster
+import com.infobip.kafkistry.service.topic.configForCluster
+import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.service.quotas.quotaForCluster
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier

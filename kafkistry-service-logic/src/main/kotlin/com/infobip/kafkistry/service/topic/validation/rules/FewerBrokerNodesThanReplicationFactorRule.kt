@@ -2,8 +2,8 @@ package com.infobip.kafkistry.service.topic.validation.rules
 
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
-import com.infobip.kafkistry.service.propertiesForCluster
-import com.infobip.kafkistry.service.withClusterProperties
+import com.infobip.kafkistry.service.topic.propertiesForCluster
+import com.infobip.kafkistry.service.topic.withClusterProperties
 import com.infobip.kafkistry.model.ClusterRef
 import org.springframework.stereotype.Component
 

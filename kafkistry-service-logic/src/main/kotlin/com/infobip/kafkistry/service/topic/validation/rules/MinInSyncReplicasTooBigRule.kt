@@ -1,8 +1,8 @@
 package com.infobip.kafkistry.service.topic.validation.rules
 
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.propertiesForCluster
-import com.infobip.kafkistry.service.withClusterProperty
+import com.infobip.kafkistry.service.topic.propertiesForCluster
+import com.infobip.kafkistry.service.topic.withClusterProperty
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.apache.kafka.common.config.TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG
 import org.springframework.stereotype.Component

@@ -4,8 +4,8 @@ import com.infobip.kafkistry.kafka.ClusterInfo
 import com.infobip.kafkistry.kafka.TOPIC_CONFIG_PROPERTIES
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.topic.ConfigValueInspector
-import com.infobip.kafkistry.service.configForCluster
-import com.infobip.kafkistry.service.propertiesForCluster
+import com.infobip.kafkistry.service.topic.configForCluster
+import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.model.ClusterRef
 
 interface ValidationRule {

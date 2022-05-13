@@ -9,7 +9,7 @@ import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.generator.OverridesMinimizer
-import com.infobip.kafkistry.service.propertiesForCluster
+import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.service.resources.RequiredResourcesInspector
 import com.infobip.kafkistry.service.topic.validation.NamingValidator
 import com.infobip.kafkistry.model.ClusterRef

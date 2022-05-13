@@ -8,8 +8,8 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryIntegrityException
-import com.infobip.kafkistry.service.propertiesForCluster
-import com.infobip.kafkistry.service.withClusterProperties
+import com.infobip.kafkistry.service.topic.propertiesForCluster
+import com.infobip.kafkistry.service.topic.withClusterProperties
 import com.infobip.kafkistry.utils.ClusterTopicFilter
 import com.infobip.kafkistry.utils.ClusterTopicFilterProperties
 import org.springframework.boot.context.properties.ConfigurationProperties

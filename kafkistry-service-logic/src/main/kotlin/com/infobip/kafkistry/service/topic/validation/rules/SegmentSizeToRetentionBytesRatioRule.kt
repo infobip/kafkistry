@@ -2,9 +2,9 @@ package com.infobip.kafkistry.service.topic.validation.rules
 
 import org.apache.kafka.common.config.TopicConfig
 import com.infobip.kafkistry.model.TopicDescription
-import com.infobip.kafkistry.service.configForCluster
+import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.resources.INF_RETENTION
-import com.infobip.kafkistry.service.withClusterProperty
+import com.infobip.kafkistry.service.topic.withClusterProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Component

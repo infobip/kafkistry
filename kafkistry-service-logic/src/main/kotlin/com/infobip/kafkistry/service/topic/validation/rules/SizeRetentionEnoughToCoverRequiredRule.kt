@@ -5,7 +5,7 @@ import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.service.resources.INF_RETENTION
 import com.infobip.kafkistry.service.resources.RequiredResourcesInspector
 import com.infobip.kafkistry.service.resources.TopicResourceRequiredUsages
-import com.infobip.kafkistry.service.withClusterProperty
+import com.infobip.kafkistry.service.topic.withClusterProperty
 import org.springframework.stereotype.Component
 
 @Component

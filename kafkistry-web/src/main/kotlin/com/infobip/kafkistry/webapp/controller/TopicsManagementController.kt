@@ -11,6 +11,8 @@ import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.AvailableAction
 import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.topic.ReBalanceMode
+import com.infobip.kafkistry.service.topic.partitionsToReElectLeader
+import com.infobip.kafkistry.service.topic.toAssignmentsInfo
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATE
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING

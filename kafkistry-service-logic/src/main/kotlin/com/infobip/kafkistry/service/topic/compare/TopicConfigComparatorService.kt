@@ -3,7 +3,6 @@ package com.infobip.kafkistry.service.topic.compare
 import com.infobip.kafkistry.kafka.ConfigValue
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
-import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.compare.ComparingSubjectType.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.*

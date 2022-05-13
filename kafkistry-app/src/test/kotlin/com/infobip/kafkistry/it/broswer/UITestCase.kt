@@ -13,9 +13,9 @@ import com.infobip.kafkistry.kafka.KafkaTopicConfiguration
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
-import com.infobip.kafkistry.service.configForCluster
+import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.propertiesForCluster
+import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.junit.jupiter.api.BeforeEach
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor

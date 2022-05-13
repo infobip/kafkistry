@@ -5,6 +5,8 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.generator.OverridesMinimizer
+import com.infobip.kafkistry.service.topic.configForCluster
+import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.junit.Test
 import java.util.*
 

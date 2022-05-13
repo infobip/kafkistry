@@ -6,7 +6,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryIntegrityException
-import com.infobip.kafkistry.service.toAssignmentsInfo
+import com.infobip.kafkistry.service.topic.toAssignmentsInfo
 import com.infobip.kafkistry.webapp.WizardTopicNameProperties
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS_CLONE_ADD_NEW
