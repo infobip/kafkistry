@@ -99,9 +99,9 @@ class KafkaTopicReader(
 
     private fun KafkaConsumer<*, *>.setOffsets(fromOffset: Offset, partitionFromOffset: Map<Partition, Long>) {
         val partitionsToResolve = assignment().filter { it.partition() !in partitionFromOffset.keys }
-        fun calcOffsets(calc: (begin: Long, end: Long) -> Long): Map<TopicPartition, Long> {
-            val beginOffsets = beginningOffsets(partitionsToResolve)
-            val endOffsets = endOffsets(partitionsToResolve)
+        fun Collection<TopicPartition>.calcOffsets(calc: (begin: Long, end: Long) -> Long): Map<TopicPartition, Long> {
+            val beginOffsets = beginningOffsets(this)
+            val endOffsets = endOffsets(this)
             return (beginOffsets.keys + endOffsets.keys).distinct()
                 .associateWith { topicPartition ->
                     val begin = beginOffsets[topicPartition] ?: 0L
@@ -111,19 +111,19 @@ class KafkaTopicReader(
         }
 
         val resolvedOffsets = when (fromOffset.type) {
-            EARLIEST -> calcOffsets { begin, _ -> begin + fromOffset.offset }
-            LATEST -> calcOffsets { _, end -> end - fromOffset.offset }
+            EARLIEST -> partitionsToResolve.calcOffsets { begin, _ -> begin + fromOffset.offset }
+            LATEST -> partitionsToResolve.calcOffsets { _, end -> end - fromOffset.offset }
             EXPLICIT -> partitionsToResolve.associateWith { fromOffset.offset }
             TIMESTAMP -> offsetsForTimes(partitionsToResolve.associateWith { fromOffset.offset })
                 .filter { (_: TopicPartition, time: OffsetAndTimestamp?) -> time != null }
                 .mapValues { (_: TopicPartition, time: OffsetAndTimestamp) -> time.offset() }
-                .also {
-                    if (it.isEmpty()) throw KafkistryConsumeException(
+                .let { partitionOffsets ->
+                    val unresolvedPartitions = partitionsToResolve.filter { it !in partitionOffsets.keys }
+                    if (unresolvedPartitions.toSet() == assignment()) throw KafkistryConsumeException(
                         "There is no messages with timestamp greater than %d".format(fromOffset.offset)
                     )
-                    if (assignment() != it.keys) {
-                        assign(it.keys)
-                    }
+                    val defaultToEndOffsets = unresolvedPartitions.calcOffsets { _, end -> end }
+                    partitionOffsets + defaultToEndOffsets
                 }
         }
         val newOffsets = assignment().associateWith {
