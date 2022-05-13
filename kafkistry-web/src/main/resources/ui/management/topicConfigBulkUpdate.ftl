@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="topicName" type="java.lang.String" -->
-<#-- @ftlvariable name="clusterConfigChanges" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.ConfigValueChange>" -->
+<#-- @ftlvariable name="clusterConfigChanges" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.ConfigValueChange>" -->
 
 <html lang="en">
 

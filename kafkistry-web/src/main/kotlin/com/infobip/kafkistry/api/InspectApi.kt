@@ -14,12 +14,12 @@ import com.infobip.kafkistry.service.quotas.ClusterQuotasInspection
 import com.infobip.kafkistry.service.quotas.EntityQuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspectionService
-import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.model.QuotaEntityID
 import com.infobip.kafkistry.service.cluster.ClusterDryRunInspect
 import com.infobip.kafkistry.service.cluster.ClusterEditTagsInspectService
+import com.infobip.kafkistry.service.topic.*
 import org.springframework.web.bind.annotation.*
 
 /**

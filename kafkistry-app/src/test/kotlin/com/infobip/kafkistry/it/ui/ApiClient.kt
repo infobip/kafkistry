@@ -3,9 +3,8 @@ package com.infobip.kafkistry.it.ui
 import io.kotlintest.matchers.fail
 import com.infobip.kafkistry.kafka.ClusterInfo
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.TopicStatuses
+import com.infobip.kafkistry.service.topic.TopicStatuses
 import com.infobip.kafkistry.service.consumers.ClusterConsumerGroups
-import com.infobip.kafkistry.model.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.springframework.http.HttpRequest
@@ -14,7 +13,6 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForObject
 import java.net.HttpURLConnection
 
 class ApiClient(

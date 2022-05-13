@@ -2,7 +2,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="cluster" type="com.infobip.kafkistry.model.KafkaCluster" -->
 <#-- @ftlvariable name="topicName" type="java.lang.String" -->
-<#-- @ftlvariable name="configChanges" type="java.util.List<com.infobip.kafkistry.service.ConfigValueChange>" -->
+<#-- @ftlvariable name="configChanges" type="java.util.List<com.infobip.kafkistry.service.topic.ConfigValueChange>" -->
 
 <html lang="en">
 

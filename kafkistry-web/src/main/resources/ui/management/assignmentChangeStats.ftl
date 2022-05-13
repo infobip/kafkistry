@@ -1,5 +1,5 @@
-<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.PartitionsAssignmentsStatus" -->
-<#-- @ftlvariable name="dataMigration" type="com.infobip.kafkistry.service.DataMigration" -->
+<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus" -->
+<#-- @ftlvariable name="dataMigration" type="com.infobip.kafkistry.service.topic.DataMigration" -->
 <#import "../common/util.ftl" as __util>
 
 <tr>

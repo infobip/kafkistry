@@ -6,7 +6,7 @@ import com.infobip.kafkistry.api.InspectApi
 import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.InspectionResultType
+import com.infobip.kafkistry.service.topic.InspectionResultType
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.topic.compare.ComparedValue
 import com.infobip.kafkistry.service.topic.compare.ComparingRequest

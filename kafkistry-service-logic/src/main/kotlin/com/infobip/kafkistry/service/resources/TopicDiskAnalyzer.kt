@@ -7,7 +7,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.model.TopicProperties
-import com.infobip.kafkistry.service.ExistingTopicInfo
+import com.infobip.kafkistry.service.topic.ExistingTopicInfo
 import com.infobip.kafkistry.service.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.propertiesForCluster

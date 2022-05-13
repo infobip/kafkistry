@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
-<#-- @ftlvariable name="expectedTopicInfo" type="com.infobip.kafkistry.service.ExpectedTopicInfo" -->
+<#-- @ftlvariable name="expectedTopicInfo" type="com.infobip.kafkistry.service.topic.ExpectedTopicInfo" -->
 <#-- @ftlvariable name="bulkIterateBy" type="java.lang.String" -->
 
 <#import "../common/util.ftl" as etUtil>

@@ -4,7 +4,6 @@ import org.apache.kafka.clients.admin.ConfigEntry.ConfigSource.DEFAULT_CONFIG
 import org.apache.kafka.clients.admin.ConfigEntry.ConfigSource.DYNAMIC_TOPIC_CONFIG
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.kafka.ConfigValue
-import com.infobip.kafkistry.service.ConfigValueChange
 import com.infobip.kafkistry.service.topic.ConfigValueInspectorTest.Validity.*
 import com.infobip.kafkistry.service.topic.ConfigValueInspectorTest.Inclusion.*
 import org.junit.Test

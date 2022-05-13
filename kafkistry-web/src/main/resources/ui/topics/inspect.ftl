@@ -2,11 +2,11 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="topicName"  type="java.lang.String" -->
 <#-- @ftlvariable name="clusterIdentifier"  type="java.lang.String" -->
-<#-- @ftlvariable name="topicStatus"  type="com.infobip.kafkistry.service.TopicClusterStatus" -->
-<#-- @ftlvariable name="expectedTopicInfo"  type="com.infobip.kafkistry.service.ExpectedTopicInfo" -->
+<#-- @ftlvariable name="topicStatus"  type="com.infobip.kafkistry.service.topic.TopicClusterStatus" -->
+<#-- @ftlvariable name="expectedTopicInfo"  type="com.infobip.kafkistry.service.topic.ExpectedTopicInfo" -->
 <#-- @ftlvariable name="wrongPartitionValues"  type="java.util.List<java.lang.String>" -->
 <#-- @ftlvariable name="clusterInfo"  type="com.infobip.kafkistry.kafka.ClusterInfo" -->
-<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.PartitionsAssignmentsStatus" -->
+<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus" -->
 <#-- @ftlvariable name="topicConsumerGroups" type="java.util.List<com.infobip.kafkistry.service.consumers.KafkaConsumerGroup>" -->
 <#-- @ftlvariable name="topicOffsets" type="com.infobip.kafkistry.service.topic.offsets.TopicOffsets" -->
 <#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->

@@ -1,6 +1,6 @@
 
 <#-- @ftlvariable name="config"  type="java.util.Map<java.lang.String, com.infobip.kafkistry.kafka.ConfigValue>" -->
-<#-- @ftlvariable name="configEntryStatuses"  type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.ValueInspection>" -->
+<#-- @ftlvariable name="configEntryStatuses"  type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.ValueInspection>" -->
 <#-- @ftlvariable name="expectedConfig"  type="java.util.Map<java.lang.String, java.lang.String>" -->
 <#-- @ftlvariable name="showExpected"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="topicConfigDoc" type="java.util.Map<java.lang.String, java.lang.String>" -->

@@ -6,12 +6,11 @@ import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.AclStatus
 import com.infobip.kafkistry.service.PrincipalAclsClusterInspection
-import com.infobip.kafkistry.service.TopicClusterStatus
-import com.infobip.kafkistry.service.TopicOnClusterInspectionResult
+import com.infobip.kafkistry.service.topic.TopicClusterStatus
+import com.infobip.kafkistry.service.topic.TopicOnClusterInspectionResult
 import com.infobip.kafkistry.service.quotas.QuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType
 import com.infobip.kafkistry.webapp.security.User
-import com.infobip.kafkistry.model.*
 
 abstract class AuditEvent {
     lateinit var serviceClass: String

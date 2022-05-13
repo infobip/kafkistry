@@ -14,6 +14,9 @@ import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
+import com.infobip.kafkistry.service.topic.InspectionResultType
+import com.infobip.kafkistry.service.topic.IssueCategory
+import com.infobip.kafkistry.service.topic.TopicClusterStatus
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.service.topic.validation.rules.RuleViolation
 import com.infobip.kafkistry.sql.*

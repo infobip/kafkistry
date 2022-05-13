@@ -6,8 +6,7 @@ import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.compare.ComparingSubjectType.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.topic.TopicsInspectionService
-import com.infobip.kafkistry.service.topic.TopicsRegistryService
+import com.infobip.kafkistry.service.topic.*
 import org.springframework.stereotype.Service
 
 @Service
@@ -110,8 +109,8 @@ class TopicConfigComparatorService(
     }
 
     private data class Subject(
-            val status: TopicClusterStatus,
-            val properties: SubjectProperties?
+        val status: TopicClusterStatus,
+        val properties: SubjectProperties?
     )
 
     private data class SubjectProperties(

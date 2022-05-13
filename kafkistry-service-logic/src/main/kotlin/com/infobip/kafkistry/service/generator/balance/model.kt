@@ -3,7 +3,7 @@ package com.infobip.kafkistry.service.generator.balance
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.DataMigration
+import com.infobip.kafkistry.service.topic.DataMigration
 import com.infobip.kafkistry.service.generator.AssignmentsChange
 
 /////////////////////////////
@@ -156,12 +156,12 @@ data class TopicPartitionMigration(
 )
 
 data class ProposedMigrations(
-      val clusterBalanceBefore: ClusterBalanceStatus,
-      val clusterBalanceAfter: ClusterBalanceStatus,
-      val iterationMigrations: List<List<TopicPartitionMigration>>,
-      val migrations: List<TopicPartitionMigration>,
-      val dataMigration: DataMigration,
-      val topicsAssignmentChanges: Map<TopicName, AssignmentsChange>,
+    val clusterBalanceBefore: ClusterBalanceStatus,
+    val clusterBalanceAfter: ClusterBalanceStatus,
+    val iterationMigrations: List<List<TopicPartitionMigration>>,
+    val migrations: List<TopicPartitionMigration>,
+    val dataMigration: DataMigration,
+    val topicsAssignmentChanges: Map<TopicName, AssignmentsChange>,
 )
 
 

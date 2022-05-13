@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="topicStatuses" type="com.infobip.kafkistry.service.TopicStatuses" -->
+<#-- @ftlvariable name="topicStatuses" type="com.infobip.kafkistry.service.topic.TopicStatuses" -->
 <#-- @ftlvariable name="clustersResources" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.OptionalValue<com.infobip.kafkistry.service.resources.TopicDiskUsage>>" -->
 
 <#import "../common/util.ftl" as util_>

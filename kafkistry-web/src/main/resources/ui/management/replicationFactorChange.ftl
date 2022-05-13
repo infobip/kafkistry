@@ -2,8 +2,8 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
 <#-- @ftlvariable name="topicName" type="java.lang.String" -->
-<#-- @ftlvariable name="replicationFactorChange" type="com.infobip.kafkistry.service.PartitionPropertyChange" -->
-<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.PartitionsAssignmentsStatus" -->
+<#-- @ftlvariable name="replicationFactorChange" type="com.infobip.kafkistry.service.topic.PartitionPropertyChange" -->
+<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus" -->
 <#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
 
 <html lang="en">

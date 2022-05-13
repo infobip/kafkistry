@@ -3,8 +3,6 @@ package com.infobip.kafkistry.service.topic
 import org.apache.kafka.clients.admin.ConfigEntry
 import com.infobip.kafkistry.kafka.ConfigValue
 import com.infobip.kafkistry.kafka.ExistingConfig
-import com.infobip.kafkistry.service.ConfigValueChange
-import com.infobip.kafkistry.service.ValueInspection
 import org.springframework.stereotype.Component
 
 @Component

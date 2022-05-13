@@ -8,13 +8,12 @@ import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.InspectionResultType.*
+import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.UpdateContext
-import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.service.topic.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test

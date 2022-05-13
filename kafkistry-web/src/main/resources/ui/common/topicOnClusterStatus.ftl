@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="topicOnClusterStatus" type="com.infobip.kafkistry.service.TopicOnClusterInspectionResult" -->
+<#-- @ftlvariable name="topicOnClusterStatus" type="com.infobip.kafkistry.service.topic.TopicOnClusterInspectionResult" -->
 
 <#assign detailedStatuses = []>
 <#list (topicOnClusterStatus.wrongValues)![] as wrongValue>
@@ -77,7 +77,7 @@
 </#function>
 
 <#macro interpretMessage violation>
-<#-- @ftlvariable name="violation" type="com.infobip.kafkistry.service.RuleViolationIssue" -->
+<#-- @ftlvariable name="violation" type="com.infobip.kafkistry.service.topic.RuleViolationIssue" -->
     <#assign messageTemplate = violation.message?replace(
         "%(\\w+)%",
         "<@valueMacro placeholderName='$1' placeholders=placeholders/>",

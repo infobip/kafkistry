@@ -8,7 +8,9 @@ import com.infobip.kafkistry.kafkastate.KafkaClusterState
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.InspectionResultType.*
+import com.infobip.kafkistry.service.topic.AvailableAction
+import com.infobip.kafkistry.service.topic.InspectionResultType.*
+import com.infobip.kafkistry.service.topic.ReBalanceMode
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATE
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING

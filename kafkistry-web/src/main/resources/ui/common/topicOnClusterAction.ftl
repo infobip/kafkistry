@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="availableActions"  type="java.util.List<com.infobip.kafkistry.service.AvailableAction>" -->
+<#-- @ftlvariable name="availableActions"  type="java.util.List<com.infobip.kafkistry.service.topic.AvailableAction>" -->
 <#-- @ftlvariable name="topicName"  type="java.lang.String" -->
 <#-- @ftlvariable name="clusterIdentifier"  type="java.lang.String" -->
 

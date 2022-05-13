@@ -6,7 +6,7 @@ import com.infobip.kafkistry.kafkastate.KafkaReplicasInfoProvider
 import com.infobip.kafkistry.kafkastate.ReplicaDirs
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.ClusterTopicStatus
+import com.infobip.kafkistry.service.topic.ClusterTopicStatus
 import com.infobip.kafkistry.service.KafkistryException
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.OptionalValue

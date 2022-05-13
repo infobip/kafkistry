@@ -7,8 +7,7 @@ import com.infobip.kafkistry.yaml.YamlMapper
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.acl.AclsSuggestionService
 import com.infobip.kafkistry.service.quotas.QuotasSuggestionService
-import com.infobip.kafkistry.service.topic.OperationSuggestionService
-import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.topic.*
 import org.springframework.web.bind.annotation.*
 
 @RestController

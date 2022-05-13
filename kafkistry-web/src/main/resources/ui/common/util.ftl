@@ -10,7 +10,7 @@
 </#function>
 
 <#function statusToHtmlClass statusType>
-<#-- @ftlvariable name="statusType"  type="com.infobip.kafkistry.service.InspectionResultType" -->
+<#-- @ftlvariable name="statusType"  type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
     <#switch statusType.name()>
         <#case "CLUSTER_UNREACHABLE">
         <#case "MISSING">
@@ -56,7 +56,7 @@
 </#function>
 
 <#function clusterStatusFlags statusPerClusters>
-<#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.TopicClusterStatus>" -->
+<#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.topic.TopicClusterStatus>" -->
     <#assign clusterFlags = {}>
     <#list statusPerClusters as clusterStatus>
         <#assign clusterFlags = clusterFlags + {clusterStatus.clusterIdentifier: clusterStatus.status.flags}>
@@ -65,7 +65,7 @@
 </#function>
 
 <#function nonOkTopicStatusTypes statusPerClusters>
-<#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.TopicClusterStatus>" -->
+<#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.topic.TopicClusterStatus>" -->
     <#assign allTypes = []>
     <#list statusPerClusters as clusterStatus>
         <#list clusterStatus.status.types as statusType>
@@ -78,7 +78,7 @@
 </#function>
 
 <#function allTopicStatusTypes statusPerClusters>
-<#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.TopicClusterStatus>" -->
+<#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.topic.TopicClusterStatus>" -->
     <#assign allTypes = []>
     <#list statusPerClusters as clusterStatus>
         <#list clusterStatus.status.types as statusType>

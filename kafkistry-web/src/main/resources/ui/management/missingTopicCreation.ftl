@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="cluster" type="com.infobip.kafkistry.model.KafkaCluster" -->
-<#-- @ftlvariable name="topicInfo" type="com.infobip.kafkistry.service.ExpectedTopicInfo" -->
+<#-- @ftlvariable name="topicInfo" type="com.infobip.kafkistry.service.topic.ExpectedTopicInfo" -->
 
 <html lang="en">
 

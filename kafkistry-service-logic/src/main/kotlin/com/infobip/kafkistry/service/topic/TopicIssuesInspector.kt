@@ -6,8 +6,8 @@ import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.AvailableAction.*
-import com.infobip.kafkistry.service.InspectionResultType.*
+import com.infobip.kafkistry.service.topic.AvailableAction.*
+import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.acl.AclLinkResolver
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos

@@ -9,7 +9,7 @@ import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
 import com.infobip.kafkistry.kafkastate.KafkaTopicReAssignmentsProvider
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.DataMigration
+import com.infobip.kafkistry.service.topic.DataMigration
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor

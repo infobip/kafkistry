@@ -8,8 +8,8 @@ import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.BulkReAssignmentOptions.TopicBy.MIGRATION_BYTES
 import com.infobip.kafkistry.service.BulkReAssignmentOptions.TopicBy.RE_ASSIGNED_PARTITIONS_COUNT
 import com.infobip.kafkistry.service.BulkReAssignmentSuggestion.SelectionLimitedCause
-import com.infobip.kafkistry.service.InspectionResultType.*
-import com.infobip.kafkistry.service.ReBalanceMode.*
+import com.infobip.kafkistry.service.topic.InspectionResultType.*
+import com.infobip.kafkistry.service.topic.ReBalanceMode.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.OverridesMinimizer

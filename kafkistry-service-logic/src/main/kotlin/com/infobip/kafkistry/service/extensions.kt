@@ -7,6 +7,7 @@ import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionLoad
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
+import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.topic.validation.rules.Placeholder
 import com.infobip.kafkistry.service.topic.validation.rules.RuleViolation
 

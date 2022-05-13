@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="topicName" type="java.lang.String" -->
-<#-- @ftlvariable name="configChanges" type="java.util.List<com.infobip.kafkistry.service.ConfigValueChange>" -->
+<#-- @ftlvariable name="configChanges" type="java.util.List<com.infobip.kafkistry.service.topic.ConfigValueChange>" -->
 
 <#-- @ftlvariable name="bulkIterateBy" type="java.lang.String" -->
 

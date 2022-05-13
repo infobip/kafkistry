@@ -9,7 +9,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicConfigMap
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.InspectionResultType.*
+import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import org.springframework.stereotype.Service

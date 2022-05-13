@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="statusType" type="com.infobip.kafkistry.service.InspectionResultType" -->
+<#-- @ftlvariable name="statusType" type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
 <#-- @ftlvariable name="asStatusFlag" type="java.lang.Boolean" -->
 
 <#import "util.ftl" as util>

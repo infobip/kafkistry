@@ -5,13 +5,15 @@ import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.AvailableAclOperation.*
-import com.infobip.kafkistry.service.AvailableAction.*
+import com.infobip.kafkistry.service.topic.AvailableAction.*
 import com.infobip.kafkistry.service.acl.AclsInspectionService
 import com.infobip.kafkistry.service.quotas.AvailableQuotasOperation.*
 import com.infobip.kafkistry.service.quotas.ClusterQuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspectionService
 import com.infobip.kafkistry.service.resources.*
+import com.infobip.kafkistry.service.topic.ClusterTopicStatus
+import com.infobip.kafkistry.service.topic.ClusterTopicsStatuses
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import org.springframework.stereotype.Service
 import kotlin.math.abs

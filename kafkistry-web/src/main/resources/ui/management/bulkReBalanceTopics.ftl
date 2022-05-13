@@ -2,9 +2,9 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
-<#-- @ftlvariable name="topicsReBalanceSuggestions" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.ReBalanceSuggestion>" -->
-<#-- @ftlvariable name="topicsReBalanceStatuses" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.PartitionsAssignmentsStatus>" -->
-<#-- @ftlvariable name="totalDataMigration" type="com.infobip.kafkistry.service.DataMigration" -->
+<#-- @ftlvariable name="topicsReBalanceSuggestions" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.ReBalanceSuggestion>" -->
+<#-- @ftlvariable name="topicsReBalanceStatuses" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus>" -->
+<#-- @ftlvariable name="totalDataMigration" type="com.infobip.kafkistry.service.topic.DataMigration" -->
 <#-- @ftlvariable name="clusterTopicsReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
 <#-- @ftlvariable name="selectionLimitedBy" type="java.util.List<com.infobip.kafkistry.service.BulkReAssignmentSuggestion.SelectionLimitedCause>" -->
 

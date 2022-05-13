@@ -5,9 +5,9 @@
 <#-- @ftlvariable name="clusterInfo"  type="com.infobip.kafkistry.kafka.ClusterInfo" -->
 <#-- @ftlvariable name="partitionsAssignments"  type="java.util.List<com.infobip.kafkistry.kafka.PartitionAssignments>" -->
 <#-- @ftlvariable name="assignmentsDisbalance"  type="com.infobip.kafkistry.service.generator.AssignmentsDisbalance" -->
-<#-- @ftlvariable name="partitionChange"  type="com.infobip.kafkistry.service.PartitionPropertyChange" -->
+<#-- @ftlvariable name="partitionChange"  type="com.infobip.kafkistry.service.topic.PartitionPropertyChange" -->
 
-<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.PartitionsAssignmentsStatus" -->
+<#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus" -->
 <#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
 <#-- @ftlvariable name="partitionReAssignments" type="java.util.Map<Partition, com.infobip.kafkistry.kafka.TopicPartitionReAssignment>" -->
 
