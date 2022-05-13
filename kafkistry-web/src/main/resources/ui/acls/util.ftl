@@ -26,7 +26,7 @@
 </#macro>
 
 <#function operationBtnClass operation>
-<#-- @ftlvariable name="operation" type="com.infobip.kafkistry.service.AvailableAclOperation" -->
+<#-- @ftlvariable name="operation" type="com.infobip.kafkistry.service.acl.AvailableAclOperation" -->
     <#switch operation.name()>
         <#case "CREATE_MISSING_ACLS">
             <#return "btn-outline-info">
@@ -47,7 +47,7 @@ Level:
   - PRINCIPAL_ON_CLUSTER        rule == ""
 -->
 <#macro availableOperation operation principal cluster rule>
-<#-- @ftlvariable name="operation" type="com.infobip.kafkistry.service.AvailableAclOperation" -->
+<#-- @ftlvariable name="operation" type="com.infobip.kafkistry.service.acl.AvailableAclOperation" -->
 <#-- @ftlvariable name="principal" type="java.lang.String" -->
 <#-- @ftlvariable name="cluster" type="java.lang.String" -->
 <#-- @ftlvariable name="rule" type="java.lang.String" OPTIONAL -->

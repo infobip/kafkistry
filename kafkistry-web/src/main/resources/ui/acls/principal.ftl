@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="principalRuleClusters"  type="com.infobip.kafkistry.service.PrincipalAclsClustersPerRuleInspection" -->
-<#-- @ftlvariable name="principalClusterRules"  type="com.infobip.kafkistry.service.PrincipalAclsInspection" -->
+<#-- @ftlvariable name="principalRuleClusters"  type="com.infobip.kafkistry.service.acl.PrincipalAclsClustersPerRuleInspection" -->
+<#-- @ftlvariable name="principalClusterRules"  type="com.infobip.kafkistry.service.acl.PrincipalAclsInspection" -->
 <#-- @ftlvariable name="selectedRule"  type="java.lang.String" -->
 <#-- @ftlvariable name="selectedCluster"  type="java.lang.String" -->
 <#-- @ftlvariable name="pendingPrincipalRequests"  type="java.util.List<com.infobip.kafkistry.service.AclsRequest>" -->

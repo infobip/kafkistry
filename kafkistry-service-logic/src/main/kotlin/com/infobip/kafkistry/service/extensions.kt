@@ -1,8 +1,6 @@
 package com.infobip.kafkistry.service
 
-import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.AclInspectionResultType.*
 import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.topic.validation.rules.Placeholder
 import com.infobip.kafkistry.service.topic.validation.rules.RuleViolation
@@ -67,66 +65,6 @@ fun Presence.withClusterIncluded(clusterRef: ClusterRef): Presence {
         }
     }
 }
-
-fun AclRule.toKafkaAclRule(principal: PrincipalId) = KafkaAclRule(
-        principal = principal,
-        host = host,
-        resource = resource,
-        operation = operation
-)
-
-fun KafkaAclRule.toAclRule(presence: Presence) = AclRule(
-        presence = presence,
-        host = host,
-        resource = resource,
-        operation = operation
-)
-
-fun PrincipalAclsInspection.transpose(): PrincipalAclsClustersPerRuleInspection {
-    val ruleStatuses = clusterInspections
-            .flatMap { clusterStatuses -> clusterStatuses.statuses.map { clusterStatuses.clusterIdentifier to it } }
-            .groupBy { (_, ruleStatus) -> ruleStatus.rule }
-            .map { (rule, statuses) ->
-                AclRuleClustersInspection(
-                        aclRule = rule,
-                        clusterStatuses = statuses.associate { it },
-                        status = AclStatus.from(statuses.map { (_, ruleStatus) -> ruleStatus }),
-                        availableOperations = statuses.mergeAvailableOps { it.second.availableOperations }
-                )
-            }
-    val clusterAffectingQuotaEntities = clusterInspections.associate {
-        it.clusterIdentifier to it.affectingQuotaEntities
-    }
-    return PrincipalAclsClustersPerRuleInspection(
-            principal = principal,
-            principalAcls = principalAcls,
-            statuses = ruleStatuses,
-            status = ruleStatuses.map { it.status }.aggregate(),
-            availableOperations = availableOperations,
-            clusterAffectingQuotaEntities = clusterAffectingQuotaEntities,
-            affectingQuotaEntities = affectingQuotaEntities,
-    )
-}
-
-fun <T> Iterable<T>.mergeAvailableOps(extractor: (T) -> List<AvailableAclOperation>): List<AvailableAclOperation> =
-        flatMap(extractor).distinct().sorted()
-
-fun AclInspectionResultType.availableOperations(
-        principalExists: Boolean
-): List<AvailableAclOperation> =
-        when (this) {
-            OK, NOT_PRESENT_AS_EXPECTED, CLUSTER_UNREACHABLE, SECURITY_DISABLED, CLUSTER_DISABLED, UNAVAILABLE -> emptyList()
-            MISSING -> listOf(AvailableAclOperation.CREATE_MISSING_ACLS, AvailableAclOperation.EDIT_PRINCIPAL_ACLS)
-            UNEXPECTED -> listOf(AvailableAclOperation.DELETE_UNWANTED_ACLS, AvailableAclOperation.EDIT_PRINCIPAL_ACLS)
-            UNKNOWN -> listOf(
-                    AvailableAclOperation.DELETE_UNWANTED_ACLS,
-                    if (principalExists) {
-                        AvailableAclOperation.EDIT_PRINCIPAL_ACLS
-                    } else {
-                        AvailableAclOperation.IMPORT_PRINCIPAL
-                    }
-            )
-        }
 
 
 private val RULE_VIOLATION_REGEX = Regex("%(\\w+)%")

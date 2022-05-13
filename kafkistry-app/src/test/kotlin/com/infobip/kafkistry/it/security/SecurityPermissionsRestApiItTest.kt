@@ -14,6 +14,7 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.kafka.parseAcl
+import com.infobip.kafkistry.service.acl.toAclRule
 import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole
 import com.infobip.kafkistry.webapp.security.auth.owners.UserOwnerVerifier

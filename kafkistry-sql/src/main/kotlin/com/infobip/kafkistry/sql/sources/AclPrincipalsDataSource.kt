@@ -4,7 +4,7 @@ package com.infobip.kafkistry.sql.sources
 
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.service.acl.AclsInspectionService
-import com.infobip.kafkistry.service.PrincipalAclsInspection
+import com.infobip.kafkistry.service.acl.PrincipalAclsInspection
 import com.infobip.kafkistry.sql.SqlDataSource
 import org.springframework.stereotype.Component
 import javax.persistence.Column

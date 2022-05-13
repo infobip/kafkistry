@@ -8,12 +8,8 @@ import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.PresenceType.EXCLUDED_CLUSTERS
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.AclInspectionResultType.*
-import com.infobip.kafkistry.service.AvailableAclOperation.*
-import com.infobip.kafkistry.service.acl.AclLinkResolver
-import com.infobip.kafkistry.service.acl.AclsInspectionService
-import com.infobip.kafkistry.service.acl.AclsSuggestionService
-import com.infobip.kafkistry.service.acl.AclsRegistryService
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
+import com.infobip.kafkistry.service.acl.AvailableAclOperation.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.UpdateContext
@@ -22,6 +18,7 @@ import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalAclRules
+import com.infobip.kafkistry.service.acl.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -411,30 +408,36 @@ class AclsInspectionTest {
         assertThat(clustersResult[2].status).isEqualTo(AclStatus(true, mapOf(OK to 5, NOT_PRESENT_AS_EXPECTED to 1)))
 
         assertThat(principalsResult).hasSize(3)
-        assertThat(principalsResult[0]).isEqualTo(PrincipalAclsInspection(
+        assertThat(principalsResult[0]).isEqualTo(
+            PrincipalAclsInspection(
                 principal = "User:P1",
                 principalAcls = p1Rules,
                 clusterInspections = listOf(expected_P1_on_c1, expected_P1_on_c2, expected_P1_on_c3),
                 status = AclStatus(true, mapOf(OK to 6)),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyMap(),
-        ))
-        assertThat(principalsResult[1]).isEqualTo(PrincipalAclsInspection(
+        )
+        )
+        assertThat(principalsResult[1]).isEqualTo(
+            PrincipalAclsInspection(
                 principal = "User:P2",
                 principalAcls = p2Rules,
                 clusterInspections = listOf(expected_P2_on_c1, expected_P2_on_c2, expected_P2_on_c3),
                 status = AclStatus(false, mapOf(OK to 3, UNKNOWN to 1)),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyMap(),
-        ))
-        assertThat(principalsResult[2]).isEqualTo(PrincipalAclsInspection(
+        )
+        )
+        assertThat(principalsResult[2]).isEqualTo(
+            PrincipalAclsInspection(
                 principal = "User:P3",
                 principalAcls = p3Rules,
                 clusterInspections = listOf(expected_P3_on_c1, expected_P3_on_c2, expected_P3_on_c3),
                 status = AclStatus(false, mapOf(OK to 7, UNEXPECTED to 1, NOT_PRESENT_AS_EXPECTED to 1)),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyMap(),
-        ))
+        )
+        )
 
         assertThat(unknownPrincipals).isEqualTo(listOf(
                 PrincipalAclsInspection(

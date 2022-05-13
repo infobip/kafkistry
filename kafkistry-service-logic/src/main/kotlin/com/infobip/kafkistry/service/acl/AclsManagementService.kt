@@ -8,7 +8,7 @@ import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalId
-import com.infobip.kafkistry.service.AclInspectionResultType.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.KafkistryIntegrityException
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService

@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="aclsStats"  type="java.util.Map<com.infobip.kafkistry.service.AclInspectionResultType, java.lang.Integer>" -->
+<#-- @ftlvariable name="aclsStats"  type="java.util.Map<com.infobip.kafkistry.service.acl.AclInspectionResultType, java.lang.Integer>" -->
 
 <#import "../common/util.ftl" as util>
 

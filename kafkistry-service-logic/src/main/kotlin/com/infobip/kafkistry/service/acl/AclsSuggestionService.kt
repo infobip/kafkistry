@@ -6,7 +6,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.AclInspectionResultType.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import org.springframework.stereotype.Service
 

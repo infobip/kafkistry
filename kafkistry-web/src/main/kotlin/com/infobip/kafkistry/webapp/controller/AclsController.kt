@@ -7,8 +7,8 @@ import com.infobip.kafkistry.api.SuggestionApi
 import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalId
-import com.infobip.kafkistry.service.AvailableAclOperation
-import com.infobip.kafkistry.service.transpose
+import com.infobip.kafkistry.service.acl.AvailableAclOperation
+import com.infobip.kafkistry.service.acl.transpose
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_BULK_CREATE_CLUSTER_RULES
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_BULK_CREATE_PRINCIPAL_RULES

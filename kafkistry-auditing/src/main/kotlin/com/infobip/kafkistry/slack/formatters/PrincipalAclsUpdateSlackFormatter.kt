@@ -6,7 +6,7 @@ import com.github.seratch.jslack.api.model.block.composition.TextObject
 import com.infobip.kafkistry.audit.PrincipalAclsUpdateAuditEvent
 import com.infobip.kafkistry.kafka.asString
 import com.infobip.kafkistry.service.acl.AclsRegistryService
-import com.infobip.kafkistry.service.toKafkaAclRule
+import com.infobip.kafkistry.service.acl.toKafkaAclRule
 import com.infobip.kafkistry.slack.AuditEventSlackFormatter
 import com.infobip.kafkistry.slack.EventLink
 import com.infobip.kafkistry.slack.SlackMessageFormatter

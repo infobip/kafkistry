@@ -6,9 +6,8 @@ import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.Presence
 import com.infobip.kafkistry.model.PresenceType
 import com.infobip.kafkistry.model.PrincipalAclRules
-import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.AclInspectionResultType.*
-import com.infobip.kafkistry.service.AvailableAclOperation.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
+import com.infobip.kafkistry.service.acl.AvailableAclOperation.*
 import org.junit.Test
 
 @Suppress("LocalVariableName")

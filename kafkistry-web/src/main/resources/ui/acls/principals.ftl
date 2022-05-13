@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="principals"  type="java.util.List<com.infobip.kafkistry.service.PrincipalAclsClustersPerRuleInspection>" -->
+<#-- @ftlvariable name="principals"  type="java.util.List<com.infobip.kafkistry.service.acl.PrincipalAclsClustersPerRuleInspection>" -->
 <#-- @ftlvariable name="pendingPrincipalRequests"  type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.AclsRequest>>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 

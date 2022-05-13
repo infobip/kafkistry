@@ -4,11 +4,12 @@ package com.infobip.kafkistry.sql.sources
 
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.acl.AclsInspectionService
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.sql.SqlDataSource
-import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType
+import com.infobip.kafkistry.service.acl.PrincipalAclsInspection
+import com.infobip.kafkistry.service.acl.toKafkaAclRule
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicLong
 import javax.persistence.*

@@ -5,8 +5,6 @@ import com.infobip.kafkistry.kafkastate.KafkaClusterState
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.acl.AclsInspectionService
 import com.infobip.kafkistry.service.topic.compare.ComparingRequest
 import com.infobip.kafkistry.service.topic.compare.ComparingResult
 import com.infobip.kafkistry.service.topic.compare.TopicConfigComparatorService
@@ -17,6 +15,7 @@ import com.infobip.kafkistry.service.quotas.QuotasInspectionService
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.model.QuotaEntityID
+import com.infobip.kafkistry.service.acl.*
 import com.infobip.kafkistry.service.cluster.ClusterDryRunInspect
 import com.infobip.kafkistry.service.cluster.ClusterEditTagsInspectService
 import com.infobip.kafkistry.service.topic.*

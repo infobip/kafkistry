@@ -20,7 +20,7 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.newQuota
 import com.infobip.kafkistry.service.newTopic
-import com.infobip.kafkistry.service.toAclRule
+import com.infobip.kafkistry.service.acl.toAclRule
 import com.infobip.kafkistry.service.toKafkaCluster
 import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole

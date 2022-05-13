@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
-<#-- @ftlvariable name="ruleStatus" type="com.infobip.kafkistry.service.AclRuleStatus" -->
+<#-- @ftlvariable name="ruleStatus" type="com.infobip.kafkistry.service.acl.AclRuleStatus" -->
 
 <#macro affectedTopic cluster, topic>
     <a href="${appUrl.topics().showInspectTopicOnCluster(topic, cluster)}">

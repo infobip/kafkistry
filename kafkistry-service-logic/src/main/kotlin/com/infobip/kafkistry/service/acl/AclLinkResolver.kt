@@ -10,7 +10,6 @@ import com.infobip.kafkistry.model.AclResource.Type.GROUP
 import com.infobip.kafkistry.model.AclResource.Type.TOPIC
 import com.infobip.kafkistry.service.quotas.QuotasRegistryService
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.toKafkaAclRule
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit

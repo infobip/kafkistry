@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="principalClusterRules"  type="com.infobip.kafkistry.service.PrincipalAclsInspection" -->
+<#-- @ftlvariable name="principalClusterRules"  type="com.infobip.kafkistry.service.acl.PrincipalAclsInspection" -->
 <#-- @ftlvariable name="selectedCluster"  type="java.lang.String" -->
 
 <#import "../common/util.ftl" as util>

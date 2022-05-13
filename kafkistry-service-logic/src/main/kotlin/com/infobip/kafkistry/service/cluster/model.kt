@@ -3,7 +3,7 @@ package com.infobip.kafkistry.service.cluster
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.AclInspectionResultType
+import com.infobip.kafkistry.service.acl.AclInspectionResultType
 import com.infobip.kafkistry.service.topic.InspectionResultType
 import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType

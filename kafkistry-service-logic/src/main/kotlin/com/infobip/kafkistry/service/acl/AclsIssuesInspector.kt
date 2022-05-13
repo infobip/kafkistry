@@ -7,9 +7,7 @@ import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.kafkastate.StateType.DISABLED
 import com.infobip.kafkistry.kafkastate.StateType.VISIBLE
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.AclInspectionResultType.*
-import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
 import org.springframework.stereotype.Component
 
 @Component

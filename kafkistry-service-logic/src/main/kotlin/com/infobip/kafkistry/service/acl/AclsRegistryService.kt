@@ -12,7 +12,6 @@ import com.infobip.kafkistry.service.AclsRequest
 import com.infobip.kafkistry.service.KafkistryIntegrityException
 import com.infobip.kafkistry.service.AbstractRegistryService
 import com.infobip.kafkistry.service.UpdateContext
-import com.infobip.kafkistry.service.toKafkaAclRule
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import org.springframework.stereotype.Service
 

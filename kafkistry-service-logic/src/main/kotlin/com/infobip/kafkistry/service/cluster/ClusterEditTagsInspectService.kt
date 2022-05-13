@@ -4,9 +4,11 @@ import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.AvailableAclOperation.*
+import com.infobip.kafkistry.service.acl.AclRuleStatus
+import com.infobip.kafkistry.service.acl.AvailableAclOperation.*
 import com.infobip.kafkistry.service.topic.AvailableAction.*
 import com.infobip.kafkistry.service.acl.AclsInspectionService
+import com.infobip.kafkistry.service.acl.ClusterAclsInspection
 import com.infobip.kafkistry.service.quotas.AvailableQuotasOperation.*
 import com.infobip.kafkistry.service.quotas.ClusterQuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspection
