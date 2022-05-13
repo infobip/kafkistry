@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="clusters"  type="java.util.List<com.infobip.kafkistry.service.ClusterStatuses>" -->
+<#-- @ftlvariable name="clustersTopics"  type="java.util.List<com.infobip.kafkistry.service.ClusterTopicsStatuses>" -->
 <#-- @ftlvariable name="pendingClustersUpdates"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.ClusterRequest>>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 
@@ -51,7 +51,7 @@
         </tr>
         </thead>
         <tbody>
-        <#list clusters as clusterInspection>
+        <#list clustersTopics as clusterInspection>
             <#assign clusterIdentifier = clusterInspection.cluster.identifier>
             <tr class="cluster-row table-row no-hover">
             <td>${clusterInspection?index + 1}</td>
@@ -103,7 +103,7 @@
             </#if>
             </tr>
         </#list>
-        <#if clusters?size == 0>
+        <#if clustersTopics?size == 0>
             <tr>
                 <td colspan="100">
                     <i>(no clusters in registry)</i>

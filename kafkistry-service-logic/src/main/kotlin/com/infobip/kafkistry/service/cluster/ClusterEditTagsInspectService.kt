@@ -61,8 +61,8 @@ class ClusterEditTagsInspectService(
     }
 
     private fun computeTopicsDiff(
-        inspectBefore: ClusterStatuses,
-        inspectAfter: ClusterStatuses,
+        inspectBefore: ClusterTopicsStatuses,
+        inspectAfter: ClusterTopicsStatuses,
         clusterDiskUsageBefore: ClusterDiskUsage,
         clusterDiskUsageAfter: ClusterDiskUsage,
     ): TopicsDryRunDiff {

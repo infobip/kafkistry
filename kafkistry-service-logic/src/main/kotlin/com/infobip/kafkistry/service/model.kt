@@ -106,7 +106,7 @@ enum class AvailableAction {
     INSPECT_TOPIC
 }
 
-data class ClusterStatuses(
+data class ClusterTopicsStatuses(
     val lastRefreshTime: Long,
     val cluster: KafkaCluster,
     val clusterInfo: ClusterInfo?,

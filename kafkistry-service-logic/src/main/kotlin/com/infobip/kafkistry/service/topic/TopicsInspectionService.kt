@@ -96,17 +96,17 @@ class TopicsInspectionService(
                 .map { topicsRegistry.getTopic(it.topicName) }
     }
 
-    fun inspectCluster(clusterIdentifier: KafkaClusterIdentifier): ClusterStatuses {
+    fun inspectCluster(clusterIdentifier: KafkaClusterIdentifier): ClusterTopicsStatuses {
         val cluster = clustersRegistry.getCluster(clusterIdentifier)
         return inspectCluster(cluster)
     }
 
-    fun inspectCluster(clusterRef: ClusterRef): ClusterStatuses {
+    fun inspectCluster(clusterRef: ClusterRef): ClusterTopicsStatuses {
         val cluster = clustersRegistry.getCluster(clusterRef.identifier)
         return inspectCluster(cluster.copy(tags = clusterRef.tags))
     }
 
-    fun inspectCluster(cluster: KafkaCluster): ClusterStatuses {
+    fun inspectCluster(cluster: KafkaCluster): ClusterTopicsStatuses {
         val allTopics = loadTopics().associateBy { it.name }
         return analyzeClusterTopics(allTopics, cluster)
     }
@@ -125,7 +125,7 @@ class TopicsInspectionService(
                 }
     }
 
-    fun inspectAllClusters(): List<ClusterStatuses> {
+    fun inspectAllClusters(): List<ClusterTopicsStatuses> {
         val allTopics = loadTopics().associateBy { it.name }
         return clustersRegistry.listClusters()
                 .map { analyzeClusterTopics(allTopics, it) }
@@ -134,7 +134,7 @@ class TopicsInspectionService(
     private fun analyzeClusterTopics(
             allRegistryTopics: Map<String, TopicDescription>,
             cluster: KafkaCluster
-    ): ClusterStatuses {
+    ): ClusterTopicsStatuses {
         val latestClusterState = kafkaClustersStateProvider.getLatestClusterState(cluster.identifier)
         val latestClusterData = latestClusterState.valueOrNull()
         val clusterTopicsMap = latestClusterData
@@ -162,7 +162,7 @@ class TopicsInspectionService(
         }
         val topicsStatusCounts = statusPerTopics.statusTypeCounts { it.status }
         val statusFlags = statusPerTopics.map { it.status.flags }.aggregate()
-        return ClusterStatuses(
+        return ClusterTopicsStatuses(
                 latestClusterState.lastRefreshTime, cluster,
                 latestClusterData.clusterInfo, latestClusterState.stateType,
                 statusFlags, statusPerTopics, topicsStatusCounts
@@ -171,13 +171,13 @@ class TopicsInspectionService(
 
     private fun nonVisibleClusterStatuses(
         cluster: KafkaCluster, latestClusterState: StateData<KafkaClusterState>
-    ): ClusterStatuses {
+    ): ClusterTopicsStatuses {
         val statusFlags = if (latestClusterState.stateType == StateType.DISABLED) {
             StatusFlags.DISABLED
         } else {
             StatusFlags.NON_VISIBLE
         }
-        return ClusterStatuses(
+        return ClusterTopicsStatuses(
                 latestClusterState.lastRefreshTime, cluster,
                 latestClusterState.valueOrNull()?.clusterInfo,
                 latestClusterState.stateType,

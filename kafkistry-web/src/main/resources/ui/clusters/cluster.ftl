@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="cluster"  type="com.infobip.kafkistry.service.ClusterStatuses" -->
+<#-- @ftlvariable name="clusterTopics"  type="com.infobip.kafkistry.service.ClusterTopicsStatuses" -->
 <#-- @ftlvariable name="clusterState"  type="com.infobip.kafkistry.kafkastate.StateData<com.infobip.kafkistry.kafkastate.KafkaClusterState>" -->
 <#-- @ftlvariable name="pendingClusterRequests"  type="java.util.List<com.infobip.kafkistry.service.ClusterRequest>" -->
 <#-- @ftlvariable name="pendingTopicsRequests"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.TopicRequest>>" -->
@@ -9,7 +9,7 @@
 
 <html lang="en">
 
-<#assign clusterModel = cluster.cluster>
+<#assign clusterModel = clusterTopics.cluster>
 <#assign clusterIdentifier = clusterModel.identifier>
 
 <head>
@@ -160,22 +160,22 @@
         <tr>
             <th>Cluster state</th>
             <td>
-                <#assign stateClass = util.clusterStatusToHtmlClass(cluster.clusterState)>
+                <#assign stateClass = util.clusterStatusToHtmlClass(clusterTopics.clusterState)>
                 <div class="alert ${stateClass} mb-0" role="alert">
-                    ${cluster.clusterState.name()}
+                    ${clusterTopics.clusterState.name()}
                 </div>
             </td>
         </tr>
         <tr>
             <th>Last refresh</th>
-            <td class="time" data-time="${cluster.lastRefreshTime?c}"></td>
+            <td class="time" data-time="${clusterTopics.lastRefreshTime?c}"></td>
         </tr>
         <tr>
             <th>Aggregated topics status counts</th>
             <td>
-                <#if cluster.topicsStatusCounts??>
+                <#if clusterTopics.topicsStatusCounts??>
                     <table class="table table-sm mb-0">
-                        <#list cluster.topicsStatusCounts as statusType, count>
+                        <#list clusterTopics.topicsStatusCounts as statusType, count>
                             <tr>
                                 <td class="status-filter-btn agg-count-status-type" data-status-type="${statusType}"
                                     title="Click to filter by...">
@@ -218,8 +218,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <#if cluster.statusPerTopics??>
-                    <#list cluster.statusPerTopics as topicStatus>
+                <#if clusterTopics.statusPerTopics??>
+                    <#list clusterTopics.statusPerTopics as topicStatus>
                         <#assign topicName = topicStatus.topicName>
                         <#assign statusTypes = util.enumListToStringList(topicStatus.status.types)>
                         <#assign presentInRegistry = !statusTypes?seq_contains("UNKNOWN")>
@@ -316,7 +316,7 @@
 
 
             <#else>
-                <p><i>(nothing to show because cluster state is ${cluster.clusterState.toString()})</i></p>
+                <p><i>(nothing to show because cluster state is ${clusterTopics.clusterState.toString()})</i></p>
             </#if>
         </div>
 
