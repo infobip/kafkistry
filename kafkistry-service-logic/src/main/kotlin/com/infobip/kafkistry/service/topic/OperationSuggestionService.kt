@@ -21,6 +21,7 @@ import com.infobip.kafkistry.service.topic.validation.rules.ClusterMetadata
 import com.infobip.kafkistry.service.topic.wizard.TopicWizardConfigGenerator
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.SelectionLimitedCause
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -294,11 +295,11 @@ class OperationSuggestionService(
         return BulkReAssignmentSuggestion(
             clusterInfo, topicsReBalanceSuggestions, topicsReBalanceStatuses, totalDataMigration,
             selectionLimitedBy = listOfNotNull(
-                takeIf { inclusionLimited.get() },
-                takeIf { exclusionLimited.get() },
-                takeIf { topicCountSum.get() > options.topicCountLimit },
-                takeIf { topicPartitionsSum.get() > options.topicPartitionCountLimit },
-                takeIf { migrationBytesSum.get() > options.totalMigrationBytesLimit },
+                SelectionLimitedCause.INCLUSION_FILTERED.takeIf { inclusionLimited.get() },
+                SelectionLimitedCause.EXCLUSION_FILTERED.takeIf { exclusionLimited.get() },
+                SelectionLimitedCause.TOPIC_COUNT.takeIf { topicCountSum.get() > options.topicCountLimit },
+                SelectionLimitedCause.PARTITION_COUNT.takeIf { topicPartitionsSum.get() > options.topicPartitionCountLimit },
+                SelectionLimitedCause.MIGRATION_BYTES.takeIf { migrationBytesSum.get() > options.totalMigrationBytesLimit },
             )
         )
     }
