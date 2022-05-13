@@ -487,3 +487,53 @@ enum class ReBalanceMode {
     LEADERS_THEN_REPLICAS,
     ROUND_ROBIN,
 }
+
+data class ThrottleBrokerTopicPartitions(
+    val clusterIdentifier: KafkaClusterIdentifier,
+    val brokerIds: List<BrokerId>,
+    val topicNames: List<TopicName>
+): Serializable
+
+data class ThrottleBrokerTopicPartitionsSuggestion(
+    val throttleRequest: ThrottleBrokerTopicPartitions,
+    val topicThrottleConfigs: Map<TopicName, TopicConfigMap>,
+    val maximumDataMigrations: Map<TopicName, DataMigration>,
+    val totalMaximumDataMigration: DataMigration,
+): Serializable
+
+data class BulkReAssignmentOptions(
+    val reBalanceMode: ReBalanceMode,
+    val includeTopicNamePattern: String?,
+    val excludeTopicNamePattern: String?,
+    val topicSelectOrder: TopicSelectOrder,
+    val topicBy: TopicBy,
+    val topicCountLimit: Int,
+    val topicPartitionCountLimit: Int,
+    val totalMigrationBytesLimit: Long,
+) {
+    enum class TopicBy {
+        MIGRATION_BYTES,
+        RE_ASSIGNED_PARTITIONS_COUNT
+    }
+
+    enum class TopicSelectOrder {
+        TOP, BOTTOM
+    }
+}
+
+data class BulkReAssignmentSuggestion(
+    val clusterInfo: ClusterInfo,
+    val topicsReBalanceSuggestions: Map<TopicName, ReBalanceSuggestion>,
+    val topicsReBalanceStatuses: Map<TopicName, PartitionsAssignmentsStatus>,
+    val totalDataMigration: DataMigration,
+    val selectionLimitedBy: List<SelectionLimitedCause>,
+) {
+
+    enum class SelectionLimitedCause {
+        TOPIC_COUNT,
+        PARTITION_COUNT,
+        MIGRATION_BYTES,
+        INCLUSION_FILTERED,
+        EXCLUSION_FILTERED,
+    }
+}

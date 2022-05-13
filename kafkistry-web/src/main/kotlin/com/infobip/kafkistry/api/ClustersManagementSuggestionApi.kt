@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.api
 
-import com.infobip.kafkistry.service.ThrottleBrokerTopicPartitions
+import com.infobip.kafkistry.service.topic.ThrottleBrokerTopicPartitions
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping

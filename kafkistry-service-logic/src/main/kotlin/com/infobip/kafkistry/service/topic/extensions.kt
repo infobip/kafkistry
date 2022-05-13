@@ -6,6 +6,7 @@ import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionLoad
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
+import com.infobip.kafkistry.service.sumPerValue
 
 fun TopicDescription.propertiesForCluster(cluster: ClusterRef): TopicProperties =
     perClusterProperties[cluster.identifier]
@@ -155,3 +156,17 @@ fun TopicDescription.withClusterProperties(
 ): TopicDescription = copy(
         perClusterProperties = perClusterProperties + Pair(clusterIdentifier, topicProperties)
 )
+
+fun Iterable<DataMigration>.merge() = DataMigration(
+    reAssignedPartitions = sumOf { it.reAssignedPartitions },
+    totalIOBytes = sumOf { it.totalIOBytes },
+    totalAddBytes = sumOf { it.totalAddBytes },
+    totalReleaseBytes = sumOf { it.totalReleaseBytes },
+    perBrokerTotalIOBytes = map { it.perBrokerTotalIOBytes }.sumPerValue(),
+    perBrokerInputBytes = map { it.perBrokerInputBytes }.sumPerValue(),
+    perBrokerOutputBytes = map { it.perBrokerOutputBytes }.sumPerValue(),
+    perBrokerReleasedBytes = map { it.perBrokerReleasedBytes }.sumPerValue(),
+    maxBrokerIOBytes = 0L
+).run {
+    copy(maxBrokerIOBytes = (perBrokerInputBytes.values + perBrokerOutputBytes.values).maxOrNull() ?: 0L)
+}

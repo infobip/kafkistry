@@ -13,7 +13,7 @@ import com.infobip.kafkistry.service.topic.DataMigration
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.merge
+import com.infobip.kafkistry.service.topic.merge
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsets
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService

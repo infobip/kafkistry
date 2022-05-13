@@ -12,6 +12,7 @@ import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.service.topic.validation.rules.renderMessage
 import org.springframework.stereotype.Service
 
 @Service

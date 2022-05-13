@@ -5,9 +5,8 @@ import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.BulkReAssignmentOptions.TopicBy.MIGRATION_BYTES
-import com.infobip.kafkistry.service.BulkReAssignmentOptions.TopicBy.RE_ASSIGNED_PARTITIONS_COUNT
-import com.infobip.kafkistry.service.BulkReAssignmentSuggestion.SelectionLimitedCause
+import com.infobip.kafkistry.service.topic.BulkReAssignmentOptions.TopicBy.MIGRATION_BYTES
+import com.infobip.kafkistry.service.topic.BulkReAssignmentOptions.TopicBy.RE_ASSIGNED_PARTITIONS_COUNT
 import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.topic.ReBalanceMode.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
@@ -295,11 +294,11 @@ class OperationSuggestionService(
         return BulkReAssignmentSuggestion(
             clusterInfo, topicsReBalanceSuggestions, topicsReBalanceStatuses, totalDataMigration,
             selectionLimitedBy = listOfNotNull(
-                SelectionLimitedCause.INCLUSION_FILTERED.takeIf { inclusionLimited.get() },
-                SelectionLimitedCause.EXCLUSION_FILTERED.takeIf { exclusionLimited.get() },
-                SelectionLimitedCause.TOPIC_COUNT.takeIf { topicCountSum.get() > options.topicCountLimit },
-                SelectionLimitedCause.PARTITION_COUNT.takeIf { topicPartitionsSum.get() > options.topicPartitionCountLimit },
-                SelectionLimitedCause.MIGRATION_BYTES.takeIf { migrationBytesSum.get() > options.totalMigrationBytesLimit },
+                takeIf { inclusionLimited.get() },
+                takeIf { exclusionLimited.get() },
+                takeIf { topicCountSum.get() > options.topicCountLimit },
+                takeIf { topicPartitionsSum.get() > options.topicPartitionCountLimit },
+                takeIf { migrationBytesSum.get() > options.totalMigrationBytesLimit },
             )
         )
     }

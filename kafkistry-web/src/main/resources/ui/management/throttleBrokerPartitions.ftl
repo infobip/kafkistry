@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
-<#-- @ftlvariable name="throttleBrokerTopicPartitionsSuggestion" type="com.infobip.kafkistry.service.ThrottleBrokerTopicPartitionsSuggestion" -->
+<#-- @ftlvariable name="throttleBrokerTopicPartitionsSuggestion" type="com.infobip.kafkistry.service.topic.ThrottleBrokerTopicPartitionsSuggestion" -->
 
 <html lang="en">
 <head>

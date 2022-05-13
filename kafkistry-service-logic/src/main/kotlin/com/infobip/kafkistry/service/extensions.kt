@@ -1,9 +1,6 @@
 package com.infobip.kafkistry.service
 
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.topic.*
-import com.infobip.kafkistry.service.topic.validation.rules.Placeholder
-import com.infobip.kafkistry.service.topic.validation.rules.RuleViolation
 
 fun <T, R : Any> Iterable<T>.mostFrequentElement(extractor: (T) -> R?): R? =
         this.mapNotNull(extractor)
@@ -66,32 +63,6 @@ fun Presence.withClusterIncluded(clusterRef: ClusterRef): Presence {
     }
 }
 
-
-private val RULE_VIOLATION_REGEX = Regex("%(\\w+)%")
-
-private fun String.renderMessage(placeholders: Map<String, Placeholder>): String {
-    return RULE_VIOLATION_REGEX.replace(this) { match ->
-        val key = match.groupValues[1]
-        placeholders[key]?.value.toString()
-    }
-}
-
-fun RuleViolation.renderMessage(): String = message.renderMessage(placeholders)
-fun RuleViolationIssue.renderMessage(): String = message.renderMessage(placeholders)
-
-fun Iterable<DataMigration>.merge() = DataMigration(
-        reAssignedPartitions = sumOf { it.reAssignedPartitions },
-        totalIOBytes = sumOf { it.totalIOBytes },
-        totalAddBytes = sumOf { it.totalAddBytes },
-        totalReleaseBytes = sumOf { it.totalReleaseBytes },
-        perBrokerTotalIOBytes = map { it.perBrokerTotalIOBytes }.sumPerValue(),
-        perBrokerInputBytes = map { it.perBrokerInputBytes }.sumPerValue(),
-        perBrokerOutputBytes = map { it.perBrokerOutputBytes }.sumPerValue(),
-        perBrokerReleasedBytes = map { it.perBrokerReleasedBytes }.sumPerValue(),
-        maxBrokerIOBytes = 0L
-).run {
-    copy(maxBrokerIOBytes = (perBrokerInputBytes.values + perBrokerOutputBytes.values).maxOrNull() ?: 0L)
-}
 
 fun <K> Iterable<Map<K, Long>>.sumPerValue(): Map<K, Long> = reducePerValue { v1, v2 -> v1 + v2}
 
