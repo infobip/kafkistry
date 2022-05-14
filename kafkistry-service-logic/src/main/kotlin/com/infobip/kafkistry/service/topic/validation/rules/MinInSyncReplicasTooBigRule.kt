@@ -4,6 +4,7 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.service.topic.withClusterProperty
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.service.RuleViolation
 import org.apache.kafka.common.config.TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG
 import org.springframework.stereotype.Component
 import kotlin.math.max

@@ -2,6 +2,8 @@ package com.infobip.kafkistry.service.topic.validation.rules
 
 import org.apache.kafka.common.config.TopicConfig
 import com.infobip.kafkistry.model.TopicDescription
+import com.infobip.kafkistry.service.Placeholder
+import com.infobip.kafkistry.service.RuleViolation
 import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.resources.INF_RETENTION
 import com.infobip.kafkistry.service.topic.withClusterProperty

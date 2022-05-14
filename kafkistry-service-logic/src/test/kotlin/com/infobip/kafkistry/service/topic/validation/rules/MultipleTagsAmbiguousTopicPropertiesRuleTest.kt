@@ -7,6 +7,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.Tag
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicProperties
+import com.infobip.kafkistry.service.RuleViolation
 import org.junit.Test
 
 @Suppress("PrivatePropertyName")

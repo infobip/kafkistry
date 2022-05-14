@@ -5,6 +5,7 @@ import com.infobip.kafkistry.service.newClusterInfo
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicProperties
+import com.infobip.kafkistry.service.RuleViolation
 import com.infobip.kafkistry.service.topic.configForCluster
 import org.junit.Test
 

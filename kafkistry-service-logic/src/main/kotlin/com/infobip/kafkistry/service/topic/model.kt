@@ -9,8 +9,7 @@ import com.infobip.kafkistry.service.generator.AssignmentsDisbalance
 import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.resources.TopicResourceRequiredUsages
 import com.infobip.kafkistry.service.topic.IssueCategory.*
-import com.infobip.kafkistry.service.topic.validation.rules.Placeholder
-import com.infobip.kafkistry.service.topic.validation.rules.RuleViolation
+import com.infobip.kafkistry.service.RuleViolation
 import java.io.Serializable
 
 data class TopicStatuses(
@@ -252,10 +251,7 @@ data class WrongValueAssertion(
 
 data class RuleViolationIssue(
     val type: InspectionResultType,
-    val ruleClassName: String,
-    val severity: RuleViolation.Severity,
-    val message: String,
-    val placeholders: Map<String, Placeholder> = emptyMap()
+    val violation: RuleViolation,
 )
 
 enum class IssueCategory(

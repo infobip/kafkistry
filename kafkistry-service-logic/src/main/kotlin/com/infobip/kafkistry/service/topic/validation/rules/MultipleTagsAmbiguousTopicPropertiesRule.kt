@@ -3,6 +3,7 @@ package com.infobip.kafkistry.service.topic.validation.rules
 import com.infobip.kafkistry.model.Tag
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicProperties
+import com.infobip.kafkistry.service.RuleViolation
 import org.springframework.stereotype.Component
 
 @Component

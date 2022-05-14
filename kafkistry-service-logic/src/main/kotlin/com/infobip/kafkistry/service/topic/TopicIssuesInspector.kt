@@ -291,10 +291,7 @@ class TopicIssuesInspector(
         if (ruleViolations.isNotEmpty()) {
             addResultType(CONFIG_RULE_VIOLATIONS)
             addRuleViolations(ruleViolations.map {
-                RuleViolationIssue(
-                    type = CONFIG_RULE_VIOLATIONS, ruleClassName = it.ruleClassName, severity = it.severity,
-                    message = it.message, placeholders = it.placeholders,
-                )
+                RuleViolationIssue(type = CONFIG_RULE_VIOLATIONS, violation = it,)
             })
         }
     }
@@ -317,10 +314,7 @@ class TopicIssuesInspector(
         if (currentConfigRuleViolations.isNotEmpty()) {
             addResultType(CURRENT_CONFIG_RULE_VIOLATIONS)
             addCurrentConfigRuleViolations(currentConfigRuleViolations.map {
-                RuleViolationIssue(
-                    type = CURRENT_CONFIG_RULE_VIOLATIONS, ruleClassName = it.ruleClassName, severity = it.severity,
-                    message = it.message, placeholders = it.placeholders,
-                )
+                RuleViolationIssue(type = CURRENT_CONFIG_RULE_VIOLATIONS, violation = it,)
             })
         }
     }

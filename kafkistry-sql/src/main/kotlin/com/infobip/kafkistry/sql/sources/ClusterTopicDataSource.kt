@@ -14,7 +14,7 @@ import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.topic.*
-import com.infobip.kafkistry.service.topic.validation.rules.RuleViolation
+import com.infobip.kafkistry.service.RuleViolation
 import com.infobip.kafkistry.service.topic.validation.rules.renderMessage
 import com.infobip.kafkistry.sql.*
 import org.springframework.stereotype.Component
@@ -94,8 +94,8 @@ class ClusterTopicDataSource(
                     type = ruleViolation.type
                     issueCategory = ruleViolation.type.category
                     message = ruleViolation.renderMessage()
-                    ruleClassName = ruleViolation.ruleClassName
-                    severity = ruleViolation.severity
+                    ruleClassName = ruleViolation.violation.ruleClassName
+                    severity = ruleViolation.violation.severity
                 }
             }.toList()
             val otherStatuses = topicClusterStatus.status.types

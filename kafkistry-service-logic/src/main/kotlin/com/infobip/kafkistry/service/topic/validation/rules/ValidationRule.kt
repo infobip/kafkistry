@@ -7,6 +7,9 @@ import com.infobip.kafkistry.service.topic.ConfigValueInspector
 import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.model.ClusterRef
+import com.infobip.kafkistry.service.Placeholder
+import com.infobip.kafkistry.service.RuleViolation
+import com.infobip.kafkistry.service.renderMessage
 import com.infobip.kafkistry.service.topic.RuleViolationIssue
 
 interface ValidationRule {
@@ -66,30 +69,4 @@ data class TopicDescriptionView(
     val originalDescription: TopicDescription,
 )
 
-data class RuleViolation(
-        val ruleClassName: String,
-        val severity: Severity,
-        val message: String,
-        val placeholders: Map<String, Placeholder> = emptyMap()
-) {
-    enum class Severity {
-        WARNING,
-        ERROR,
-    }
-}
-
-data class Placeholder(
-        val key: String,
-        val value: Any
-)
-
-private val RULE_VIOLATION_REGEX = Regex("%(\\w+)%")
-private fun String.renderMessage(placeholders: Map<String, Placeholder>): String {
-    return RULE_VIOLATION_REGEX.replace(this) { match ->
-        val key = match.groupValues[1]
-        placeholders[key]?.value.toString()
-    }
-}
-
-fun RuleViolation.renderMessage(): String = message.renderMessage(placeholders)
-fun RuleViolationIssue.renderMessage(): String = message.renderMessage(placeholders)
+fun RuleViolationIssue.renderMessage(): String = violation.renderMessage()

@@ -5,6 +5,7 @@ import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.service.topic.withClusterProperties
 import com.infobip.kafkistry.model.ClusterRef
+import com.infobip.kafkistry.service.RuleViolation
 import org.springframework.stereotype.Component
 
 @Component

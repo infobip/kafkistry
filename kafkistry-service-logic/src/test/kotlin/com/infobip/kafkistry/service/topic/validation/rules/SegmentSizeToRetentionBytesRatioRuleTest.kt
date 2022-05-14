@@ -3,6 +3,7 @@ package com.infobip.kafkistry.service.topic.validation.rules
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.newTopic
+import com.infobip.kafkistry.service.renderMessage
 import io.kotlintest.mock.mock
 import org.apache.kafka.common.config.TopicConfig
 import org.assertj.core.api.Assertions.assertThat

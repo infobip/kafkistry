@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service
 
-import com.infobip.kafkistry.kafka.*
+import com.infobip.kafkistry.kafka.ExistingConfig
 import com.infobip.kafkistry.model.*
 
 data class OptionalValue<V>(
@@ -28,3 +28,18 @@ data class ExistingValues(
     val users: List<KafkaUser>,
 )
 
+data class RuleViolation(
+    val ruleClassName: String,
+    val severity: Severity,
+    val message: String,
+    val placeholders: Map<String, Placeholder> = emptyMap()
+) {
+    enum class Severity {
+        MINOR, WARNING, CRITICAL, ERROR,
+    }
+}
+
+data class Placeholder(
+    val key: String,
+    val value: Any
+)
