@@ -22,7 +22,7 @@ class ClustersManagementController(
     fun showApplyThrottling(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
-        val clusterInfo = inspectApi.inspectCluster(clusterIdentifier).let { inspection ->
+        val clusterInfo = inspectApi.inspectTopicsOnCluster(clusterIdentifier).let { inspection ->
             inspection.clusterInfo ?: throw KafkistryIllegalStateException(
                     "Can't setup throttling for cluster which has state: " + inspection.clusterState
             )

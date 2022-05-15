@@ -59,7 +59,7 @@ class ConsumeRecordsController(
                 ?: //prevent injection of arbitrary javascript
                 throw IllegalArgumentException("Given recordFilter must be a valid json, got: '$readFilterJson'")
         }
-        val clusterTopics = inspectApi.inspectClusters().associate { clusterTopics ->
+        val clusterTopics = inspectApi.inspectTopicsOnClusters().associate { clusterTopics ->
             clusterTopics.cluster.identifier to (clusterTopics.statusPerTopics ?: emptyList())
                 .filter { it.status.exists ?: false }
                 .map { it.topicName }

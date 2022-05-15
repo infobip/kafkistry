@@ -65,13 +65,13 @@ class InspectApi(
         @RequestBody topicDescription: TopicDescription,
     ): TopicStatuses = inspectionService.inspectTopic(topicDescription)
 
-    @GetMapping("/clusters")
-    fun inspectClusters(): List<ClusterTopicsStatuses> = inspectionService.inspectAllClusters()
+    @GetMapping("/topics/clusters")
+    fun inspectTopicsOnClusters(): List<ClusterTopicsStatuses> = inspectionService.inspectAllClustersTopics()
 
-    @GetMapping("/cluster")
-    fun inspectCluster(
+    @GetMapping("/topics/cluster")
+    fun inspectTopicsOnCluster(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
-    ): ClusterTopicsStatuses = inspectionService.inspectCluster(clusterIdentifier)
+    ): ClusterTopicsStatuses = inspectionService.inspectClusterTopics(clusterIdentifier)
 
     @GetMapping("/unknown-topics")
     fun inspectUnknownTopics(): List<TopicStatuses> = inspectionService.inspectUnknownTopics()

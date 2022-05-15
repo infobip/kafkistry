@@ -111,7 +111,7 @@ class TopicsManagementController(
     fun showBulkVerifyReAssignments(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
-        val topicsToVerifyReAssignments = inspectApi.inspectCluster(clusterIdentifier)
+        val topicsToVerifyReAssignments = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
                 .let { inspection ->
                     inspection.statusPerTopics ?: throw KafkistryIllegalStateException(
                             "Can't show topics which have unverified assignments because cluster status is: " + inspection.clusterState
@@ -129,9 +129,9 @@ class TopicsManagementController(
     fun showBulkReBalanceTopics(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
-        val topicNames = (inspectApi.inspectCluster(clusterIdentifier).statusPerTopics
+        val topicNames = inspectApi.inspectTopicsOnCluster(clusterIdentifier).statusPerTopics
             ?.map { it.topicName }
-            ?: emptyList())
+            ?: emptyList()
         return ModelAndView("management/bulkReBalanceTopicsForm", mutableMapOf(
             "clusterIdentifier" to clusterIdentifier,
             "topicNames" to topicNames,
@@ -378,7 +378,7 @@ class TopicsManagementController(
     fun showThrottleBrokerPartitionsForm(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
-        val (clusterInfo, topics) = inspectApi.inspectCluster(clusterIdentifier)
+        val (clusterInfo, topics) = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
                 .let {
                     val clusterInfo = it.clusterInfo
                     val statusPerTopics = it.statusPerTopics
@@ -400,7 +400,7 @@ class TopicsManagementController(
             throttleBrokerTopicPartitionsSuggestion: ThrottleBrokerTopicPartitionsSuggestion
     ): ModelAndView {
         val clusterIdentifier = throttleBrokerTopicPartitionsSuggestion.throttleRequest.clusterIdentifier
-        val clusterInfo = inspectApi.inspectCluster(clusterIdentifier)
+        val clusterInfo = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
                 .let {
                     it.clusterInfo ?: throw KafkistryIllegalStateException(
                             "Can't show throttle suggestion because cluster state is: " + it.clusterState

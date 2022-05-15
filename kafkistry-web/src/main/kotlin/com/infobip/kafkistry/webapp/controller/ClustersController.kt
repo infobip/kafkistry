@@ -33,7 +33,7 @@ class ClustersController(
 
     @GetMapping
     fun showClusters(): ModelAndView {
-        val clustersTopics = inspectApi.inspectClusters()
+        val clustersTopics = inspectApi.inspectTopicsOnClusters()
         val pendingClustersRequests = clustersApi.pendingClustersRequests()
         return ModelAndView("clusters/all", mutableMapOf(
                 "clustersTopics" to clustersTopics,
@@ -83,7 +83,7 @@ class ClustersController(
     fun showCluster(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
-        val clusterTopics = inspectApi.inspectCluster(clusterIdentifier)
+        val clusterTopics = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
         val clusterState = inspectApi.clusterState(clusterIdentifier)
         val pendingClusterRequests = clustersApi.pendingClustersRequests(clusterIdentifier)
         val pendingTopicsRequests = topicsApi.pendingTopicsRequests()

@@ -87,7 +87,7 @@ class TopicsInspectionService(
     }
 
     fun listMissingTopics(clusterIdentifier: KafkaClusterIdentifier): List<TopicDescription> {
-        return inspectCluster(clusterIdentifier)
+        return inspectClusterTopics(clusterIdentifier)
                 .let {
                     it.statusPerTopics
                             ?: throw KafkistryIllegalStateException("Can't list cluster topics because cluster state is ${it.clusterState}")
@@ -96,23 +96,23 @@ class TopicsInspectionService(
                 .map { topicsRegistry.getTopic(it.topicName) }
     }
 
-    fun inspectCluster(clusterIdentifier: KafkaClusterIdentifier): ClusterTopicsStatuses {
+    fun inspectClusterTopics(clusterIdentifier: KafkaClusterIdentifier): ClusterTopicsStatuses {
         val cluster = clustersRegistry.getCluster(clusterIdentifier)
-        return inspectCluster(cluster)
+        return inspectClusterTopics(cluster)
     }
 
-    fun inspectCluster(clusterRef: ClusterRef): ClusterTopicsStatuses {
+    fun inspectClusterTopics(clusterRef: ClusterRef): ClusterTopicsStatuses {
         val cluster = clustersRegistry.getCluster(clusterRef.identifier)
-        return inspectCluster(cluster.copy(tags = clusterRef.tags))
+        return inspectClusterTopics(cluster.copy(tags = clusterRef.tags))
     }
 
-    fun inspectCluster(cluster: KafkaCluster): ClusterTopicsStatuses {
+    fun inspectClusterTopics(cluster: KafkaCluster): ClusterTopicsStatuses {
         val allTopics = loadTopics().associateBy { it.name }
         return analyzeClusterTopics(allTopics, cluster)
     }
 
     fun listTopicsForLeaderReElection(clusterIdentifier: KafkaClusterIdentifier): List<ExistingTopicInfo> {
-        return inspectCluster(clusterIdentifier)
+        return inspectClusterTopics(clusterIdentifier)
                 .let {
                     it.statusPerTopics ?: throw KafkistryIllegalStateException(
                             "Can't list cluster topics because cluster state is ${it.clusterState}"
@@ -125,7 +125,7 @@ class TopicsInspectionService(
                 }
     }
 
-    fun inspectAllClusters(): List<ClusterTopicsStatuses> {
+    fun inspectAllClustersTopics(): List<ClusterTopicsStatuses> {
         val allTopics = loadTopics().associateBy { it.name }
         return clustersRegistry.listClusters()
                 .map { analyzeClusterTopics(allTopics, it) }

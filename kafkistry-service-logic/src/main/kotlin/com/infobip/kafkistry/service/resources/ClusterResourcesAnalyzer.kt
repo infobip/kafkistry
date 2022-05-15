@@ -94,9 +94,9 @@ class ClusterResourcesAnalyzer(
     ): ContextData {
         val clusterRef = tags?.let { ClusterRef(clusterIdentifier, tags) }
         val clusterStatuses = if (clusterRef == null) {
-            topicsInspectionService.inspectCluster(clusterIdentifier)
+            topicsInspectionService.inspectClusterTopics(clusterIdentifier)
         } else {
-            topicsInspectionService.inspectCluster(clusterRef)
+            topicsInspectionService.inspectClusterTopics(clusterRef)
         }
         val topicStatuses = clusterStatuses.statusPerTopics
         val brokerIds = clusterStatuses.clusterInfo?.nodeIds

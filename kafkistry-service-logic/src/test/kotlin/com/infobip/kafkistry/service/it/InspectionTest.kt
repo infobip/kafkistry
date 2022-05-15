@@ -96,8 +96,8 @@ class InspectionTest {
         clusters.addCluster(cluster)
         val topic = newTopic()
         whenever(stateProvider.getLatestClusterState(cluster.identifier)).thenReturn(cluster.newState(topic))
-        val status = inspection.inspectCluster(cluster.identifier)
-        val statuses = inspection.inspectAllClusters()
+        val status = inspection.inspectClusterTopics(cluster.identifier)
+        val statuses = inspection.inspectAllClustersTopics()
         val unknownTopics = inspection.inspectUnknownTopics()
         assertAll {
             assertThat(status.aggStatusFlags.allOk).`as`("fully ok").isEqualTo(false)
@@ -490,8 +490,8 @@ class InspectionTest {
         vararg expectedAssertions: WrongValueAssertion
     ) {
         val expectingFullyOk = types.any { it in setOf(OK, NOT_PRESENT_AS_EXPECTED, CLUSTER_DISABLED) }
-        val clusterStatus = inspection.inspectCluster(clusterIdentifier)
-        val clusterStatuses = inspection.inspectAllClusters()
+        val clusterStatus = inspection.inspectClusterTopics(clusterIdentifier)
+        val clusterStatuses = inspection.inspectAllClustersTopics()
         val topicStatus = inspection.inspectTopic(topicName)
         val topicsStatuses = inspection.inspectAllTopics()
         val unknownTopics = inspection.inspectUnknownTopics()

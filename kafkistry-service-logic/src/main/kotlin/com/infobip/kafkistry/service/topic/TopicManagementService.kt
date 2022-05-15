@@ -267,7 +267,7 @@ class TopicManagementService(
         val cluster = clustersRegistry.getCluster(clusterIdentifier)
         val topicDescriptions = topicsRegistry.listTopics().associateBy { it.name }
 
-        val topicInspectionResults = inspectionService.inspectCluster(cluster)
+        val topicInspectionResults = inspectionService.inspectClusterTopics(cluster)
                 .let {
                     it.statusPerTopics ?: throw KafkistryIllegalStateException(
                             "Unable to perform topics re-assignments when cluster state is: " + it.clusterState

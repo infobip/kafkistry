@@ -226,7 +226,7 @@ class OperationSuggestionService(
             ?.toRegex()
             ?.let { regex -> { topic: TopicName -> !regex.containsMatchIn(topic) } }
             ?: { true }
-        val (clusterInfo, statusPerTopics) = inspectionService.inspectCluster(clusterIdentifier)
+        val (clusterInfo, statusPerTopics) = inspectionService.inspectClusterTopics(clusterIdentifier)
             .run {
                 if (statusPerTopics != null && clusterInfo != null) clusterInfo to statusPerTopics
                 else throw KafkistryIllegalStateException(
