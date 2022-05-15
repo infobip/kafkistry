@@ -190,6 +190,15 @@
                 </#if>
             </td>
         </tr>
+        <tr>
+            <th>Issues</th>
+            <td>
+                <#assign statusId = "clusterIssues">
+                <#include "../common/serverOpStatus.ftl">
+                <#assign statusId = "">
+                <div id="cluster-issues-result"></div>
+            </td>
+        </tr>
         <#if gitStorageEnabled>
             <tr>
                 <th>Pending changes</th>

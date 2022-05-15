@@ -18,6 +18,8 @@ import com.infobip.kafkistry.model.QuotaEntityID
 import com.infobip.kafkistry.service.acl.*
 import com.infobip.kafkistry.service.cluster.ClusterDryRunInspect
 import com.infobip.kafkistry.service.cluster.ClusterEditTagsInspectService
+import com.infobip.kafkistry.service.cluster.inspect.ClusterInspectIssue
+import com.infobip.kafkistry.service.cluster.inspect.ClusterIssuesInspectorService
 import com.infobip.kafkistry.service.topic.*
 import org.springframework.web.bind.annotation.*
 
@@ -35,6 +37,7 @@ class InspectApi(
     private val aclsInspectionService: AclsInspectionService,
     private val quotasInspectionService: QuotasInspectionService,
     private val clusterEditTagsInspectService: ClusterEditTagsInspectService,
+    private val clusterIssuesInspectorService: ClusterIssuesInspectorService,
 ) {
 
     @GetMapping("/topics")
@@ -156,5 +159,10 @@ class InspectApi(
     fun inspectClusterEditTagsDryRun(
         @RequestBody cluster: KafkaCluster,
     ): ClusterDryRunInspect = clusterEditTagsInspectService.inspectTagsEdit(cluster)
+
+    @GetMapping("/clusters/issues")
+    fun inspectClusterIssues(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+    ): List<ClusterInspectIssue> = clusterIssuesInspectorService.inspectClusterIssues(clusterIdentifier)
 
 }

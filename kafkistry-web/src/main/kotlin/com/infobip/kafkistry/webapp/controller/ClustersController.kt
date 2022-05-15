@@ -13,6 +13,7 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_EDIT_ON_
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INCREMENTAL_BALANCING
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INCREMENTAL_BALANCING_SUGGESTION
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT
+import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ISSUES
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_REMOVE
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_RESOURCES
 import org.springframework.stereotype.Controller
@@ -158,6 +159,17 @@ class ClustersController(
         return ModelAndView("clusters/dryRunInspect", mutableMapOf(
             "clusterIdentifier" to kafkaCluster.identifier,
             "clusterDryRunInspect" to clusterDryRunInspect,
+        ))
+    }
+
+    @GetMapping(CLUSTERS_ISSUES)
+    fun showClusterIssues(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
+    ): ModelAndView {
+        val clusterIssues = inspectApi.inspectClusterIssues(clusterIdentifier)
+        return ModelAndView("clusters/issues", mutableMapOf(
+            "clusterIdentifier" to clusterIdentifier,
+            "clusterIssues" to clusterIssues,
         ))
     }
 

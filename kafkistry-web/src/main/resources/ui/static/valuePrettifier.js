@@ -44,7 +44,11 @@ function refreshAllConfInputValues() {
 }
 
 function refreshAllConfValues() {
-    $(".conf-value").each(function () {
+    refreshAllConfValuesIn($(document));
+}
+
+function refreshAllConfValuesIn(container) {
+    container.find(".conf-value").each(function () {
         let element = $(this);
         let inTemplate = $(this).closest(".template").length > 0;
         if (!inTemplate) {
