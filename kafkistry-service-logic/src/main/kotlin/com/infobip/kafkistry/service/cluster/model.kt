@@ -1,6 +1,9 @@
 package com.infobip.kafkistry.service.cluster
 
+import com.infobip.kafkistry.kafka.ClusterInfo
 import com.infobip.kafkistry.kafka.KafkaAclRule
+import com.infobip.kafkistry.kafkastate.StateType
+import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.acl.AclInspectionResultType
@@ -9,6 +12,13 @@ import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType
 import com.infobip.kafkistry.service.resources.ClusterDiskUsage
 import com.infobip.kafkistry.service.resources.TopicClusterDiskUsage
+
+data class ClusterStatus(
+    val lastRefreshTime: Long,
+    val cluster: KafkaCluster,
+    val clusterInfo: ClusterInfo?,
+    val clusterState: StateType,
+)
 
 data class ClusterDryRunInspect(
     val errors: List<String>,

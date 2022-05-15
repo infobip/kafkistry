@@ -24,7 +24,6 @@ import org.springframework.web.servlet.ModelAndView
 @RequestMapping("\${app.http.root-path}$CLUSTERS")
 class ClustersController(
     private val clustersApi: ClustersApi,
-    private val topicsApi: TopicsApi,
     private val inspectApi: InspectApi,
     private val clusterBalancingApi: ClusterBalancingApi,
     private val resourcesAnalyzerApi: ResourceAnalyzerApi,
@@ -84,14 +83,12 @@ class ClustersController(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
         val clusterTopics = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
-        val clusterState = inspectApi.clusterState(clusterIdentifier)
+        val clusterStatus = inspectApi.inspectClusterStatus(clusterIdentifier)
         val pendingClusterRequests = clustersApi.pendingClustersRequests(clusterIdentifier)
-        val pendingTopicsRequests = topicsApi.pendingTopicsRequests()
         return ModelAndView("clusters/cluster", mutableMapOf(
                 "clusterTopics" to clusterTopics,
-                "clusterState" to clusterState,
+                "clusterStatus" to clusterStatus,
                 "pendingClusterRequests" to pendingClusterRequests,
-                "pendingTopicsRequests" to pendingTopicsRequests,
                 "brokerConfigDoc" to existingValuesApi.all().brokerConfigDoc,
         ))
     }

@@ -1,9 +1,6 @@
 package com.infobip.kafkistry.api
 
 import com.infobip.kafkistry.kafka.parseAcl
-import com.infobip.kafkistry.kafkastate.KafkaClusterState
-import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
-import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.topic.compare.ComparingRequest
 import com.infobip.kafkistry.service.topic.compare.ComparingResult
@@ -18,6 +15,8 @@ import com.infobip.kafkistry.model.QuotaEntityID
 import com.infobip.kafkistry.service.acl.*
 import com.infobip.kafkistry.service.cluster.ClusterDryRunInspect
 import com.infobip.kafkistry.service.cluster.ClusterEditTagsInspectService
+import com.infobip.kafkistry.service.cluster.ClusterStatus
+import com.infobip.kafkistry.service.cluster.ClusterStatusService
 import com.infobip.kafkistry.service.cluster.inspect.ClusterInspectIssue
 import com.infobip.kafkistry.service.cluster.inspect.ClusterIssuesInspectorService
 import com.infobip.kafkistry.service.topic.*
@@ -31,8 +30,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("\${app.http.root-path}/api/inspect")
 class InspectApi(
-    private val inspectionService: TopicsInspectionService,
-    private val kafkaStateProvider: KafkaClustersStateProvider,
+    private val clustersStatusService: ClusterStatusService,
+    private val topicsInspectionService: TopicsInspectionService,
     private val topicComparator: TopicConfigComparatorService,
     private val aclsInspectionService: AclsInspectionService,
     private val quotasInspectionService: QuotasInspectionService,
@@ -41,55 +40,50 @@ class InspectApi(
 ) {
 
     @GetMapping("/topics")
-    fun inspectTopics(): List<TopicStatuses> = inspectionService.inspectAllTopics()
+    fun inspectTopics(): List<TopicStatuses> = topicsInspectionService.inspectAllTopics()
 
     @GetMapping("/topic")
     fun inspectTopic(
         @RequestParam("topicName") topicName: TopicName
-    ): TopicStatuses = inspectionService.inspectTopic(topicName)
+    ): TopicStatuses = topicsInspectionService.inspectTopic(topicName)
 
     @GetMapping("/topic-cluster")
     fun inspectTopicOnCluster(
         @RequestParam("topicName") topicName: TopicName,
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
-    ): TopicClusterStatus = inspectionService.inspectTopicOnCluster(topicName, clusterIdentifier)
+    ): TopicClusterStatus = topicsInspectionService.inspectTopicOnCluster(topicName, clusterIdentifier)
 
     @GetMapping("/topic-needed-config-changes")
     fun inspectTopicNeededConfigChangesOnCluster(
         @RequestParam("topicName") topicName: TopicName,
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
-    ): List<ConfigValueChange> = inspectionService.topicConfigNeededChanges(topicName, clusterIdentifier)
+    ): List<ConfigValueChange> = topicsInspectionService.topicConfigNeededChanges(topicName, clusterIdentifier)
 
     @PostMapping("/topic-inspect-dry-run")
     fun inspectTopicUpdateDryRun(
         @RequestBody topicDescription: TopicDescription,
-    ): TopicStatuses = inspectionService.inspectTopic(topicDescription)
+    ): TopicStatuses = topicsInspectionService.inspectTopic(topicDescription)
 
     @GetMapping("/topics/clusters")
-    fun inspectTopicsOnClusters(): List<ClusterTopicsStatuses> = inspectionService.inspectAllClustersTopics()
+    fun inspectTopicsOnClusters(): List<ClusterTopicsStatuses> = topicsInspectionService.inspectAllClustersTopics()
 
     @GetMapping("/topics/cluster")
     fun inspectTopicsOnCluster(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
-    ): ClusterTopicsStatuses = inspectionService.inspectClusterTopics(clusterIdentifier)
+    ): ClusterTopicsStatuses = topicsInspectionService.inspectClusterTopics(clusterIdentifier)
 
     @GetMapping("/unknown-topics")
-    fun inspectUnknownTopics(): List<TopicStatuses> = inspectionService.inspectUnknownTopics()
+    fun inspectUnknownTopics(): List<TopicStatuses> = topicsInspectionService.inspectUnknownTopics()
 
     @GetMapping("/missing-topics")
     fun listMissingTopics(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
-    ): List<TopicDescription> = inspectionService.listMissingTopics(clusterIdentifier)
+    ): List<TopicDescription> = topicsInspectionService.listMissingTopics(clusterIdentifier)
 
     @GetMapping("/leader-re-election-topics")
     fun listTopicsForLeaderReElection(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
-    ): List<ExistingTopicInfo> = inspectionService.listTopicsForLeaderReElection(clusterIdentifier)
-
-    @GetMapping("/cluster-info")
-    fun clusterState(
-        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
-    ): StateData<KafkaClusterState> = kafkaStateProvider.getLatestClusterState(clusterIdentifier)
+    ): List<ExistingTopicInfo> = topicsInspectionService.listTopicsForLeaderReElection(clusterIdentifier)
 
     @PostMapping("/compare")
     fun compareTopics(
@@ -154,6 +148,14 @@ class InspectApi(
 
     @GetMapping("/quotas/unknown-entities")
     fun inspectUnknownQuotaEntities(): List<EntityQuotasInspection> = quotasInspectionService.inspectUnknownClientEntities()
+
+    @GetMapping("/cluster/status")
+    fun inspectClusterStatus(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+    ): ClusterStatus = clustersStatusService.clusterState(clusterIdentifier)
+
+    @GetMapping("/clusters/statuses")
+    fun inspectClustersStatuses(): List<ClusterStatus> = clustersStatusService.clustersState()
 
     @PostMapping("/clusters/edit-inspect")
     fun inspectClusterEditTagsDryRun(

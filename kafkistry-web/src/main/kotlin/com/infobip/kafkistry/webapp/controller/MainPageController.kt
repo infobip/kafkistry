@@ -43,7 +43,7 @@ class MainPageController(
 
     @GetMapping(CLUSTER_STATS)
     fun showClustersStats(): ModelAndView {
-        val clustersStats = inspectApi.inspectTopicsOnClusters()
+        val clustersStats = inspectApi.inspectClustersStatuses()
             .groupingBy { it.clusterState }
             .eachCount()
             .descSorted()

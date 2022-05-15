@@ -1,9 +1,8 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterTopics"  type="com.infobip.kafkistry.service.topic.ClusterTopicsStatuses" -->
-<#-- @ftlvariable name="clusterState"  type="com.infobip.kafkistry.kafkastate.StateData<com.infobip.kafkistry.kafkastate.KafkaClusterState>" -->
+<#-- @ftlvariable name="clusterStatus"  type="com.infobip.kafkistry.service.cluster.ClusterStatus" -->
 <#-- @ftlvariable name="pendingClusterRequests"  type="java.util.List<com.infobip.kafkistry.service.history.ClusterRequest>" -->
-<#-- @ftlvariable name="pendingTopicsRequests"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.history.TopicRequest>>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="brokerConfigDoc" type="java.util.Map<java.lang.String, java.lang.String>" -->
 
@@ -160,9 +159,9 @@
         <tr>
             <th>Cluster state</th>
             <td>
-                <#assign stateClass = util.clusterStatusToHtmlClass(clusterTopics.clusterState)>
+                <#assign stateClass = util.clusterStatusToHtmlClass(clusterStatus.clusterState)>
                 <div class="alert ${stateClass} mb-0" role="alert">
-                    ${clusterTopics.clusterState.name()}
+                    ${clusterStatus.clusterState}
                 </div>
             </td>
         </tr>
@@ -269,8 +268,8 @@
         </div>
 
         <div class="card-body p-0">
-            <#if clusterState.valueOrNull()??>
-                <#assign clusterInfo = clusterState.value().clusterInfo>
+            <#if clusterStatus.clusterInfo????>
+                <#assign clusterInfo = clusterStatus.clusterInfo>
                 <table class="table table-sm">
                     <tr>
                         <th>Cluster id</th>
@@ -325,7 +324,7 @@
 
 
             <#else>
-                <p><i>(nothing to show because cluster state is ${clusterTopics.clusterState.toString()})</i></p>
+                <p><i>(nothing to show because cluster state is ${clusterStatus.clusterState})</i></p>
             </#if>
         </div>
 

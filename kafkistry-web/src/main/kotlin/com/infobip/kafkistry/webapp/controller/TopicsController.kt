@@ -53,8 +53,9 @@ class TopicsController(
         val topics = inspectApi.inspectTopics()
         val unknownTopics = inspectApi.inspectUnknownTopics()
         val pendingTopicsRequests = topicsApi.pendingTopicsRequests()
+        val allTopics = (topics + unknownTopics).sortedBy { it.topicName }
         return ModelAndView("topics/all", mutableMapOf(
-                "topics" to (topics + unknownTopics),
+                "topics" to allTopics,
                 "pendingTopicsUpdates" to pendingTopicsRequests
         ))
     }
