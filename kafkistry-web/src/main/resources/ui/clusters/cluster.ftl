@@ -146,7 +146,7 @@
             </td>
         </tr>
         <tr>
-            <th>Properies profiles</th>
+            <th>Properties profiles</th>
             <td>
                 <#if clusterModel.profiles?size == 0>
                     ----
