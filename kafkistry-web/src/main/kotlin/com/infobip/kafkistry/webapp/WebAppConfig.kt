@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.webapp
 
 import freemarker.core.HTMLOutputFormat
+import freemarker.template.TemplateExceptionHandler
 import freemarker.template.Version
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
@@ -100,6 +101,7 @@ class WebAppConfig(
             configuration.incompatibleImprovements = Version("2.3.22")
             //configuration.recognizeStandardFileExtensions = true
             configuration.outputFormat = HTMLOutputFormat.INSTANCE
+            configuration.templateExceptionHandler = TemplateExceptionHandler.RETHROW_HANDLER
         }
     }
 

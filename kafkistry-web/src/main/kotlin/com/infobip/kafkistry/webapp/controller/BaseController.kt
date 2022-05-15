@@ -35,10 +35,14 @@ abstract class BaseController {
         val httpStatus = HttpStatus.resolve(response.status)
             .takeIf { it != HttpStatus.OK }
             ?: HttpStatus.INTERNAL_SERVER_ERROR
+        val servletException = request.getAttribute("javax.servlet.error.exception") as? Exception
+        val error = exception.takeUnless {
+            it.javaClass == java.lang.Exception::class.java && it.cause == null && it.message == null
+        } ?: servletException ?: exception
         val exceptionMessage = when (httpStatus) {
             HttpStatus.NOT_FOUND -> "Invalid url path: '" + request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) + "'"
             HttpStatus.FORBIDDEN -> "Access denied for '" + request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) + "'"
-            else -> exception.deepToString()
+            else -> error.deepToString()
         }
         return ModelAndView(
             if (ajaxRequest) "registryExceptionAlert" else "registryException",
