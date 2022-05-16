@@ -53,8 +53,10 @@
     </div>
 
     <div class="card-body pl-0 pr-0">
+
+    <#assign datatableId = "topics-table">
     <#include "../common/loading.ftl">
-    <table id="topics" class="table table-bordered datatable m-0" style="display: none;">
+    <table id="${datatableId}" class="table table-bordered datatable m-0" style="display: none;">
         <thead class="thead-dark">
         <tr>
             <th scope="col">Topic</th>

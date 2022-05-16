@@ -1,6 +1,5 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="clusterTopics"  type="com.infobip.kafkistry.service.topic.ClusterTopicsStatuses" -->
 <#-- @ftlvariable name="clusterStatus"  type="com.infobip.kafkistry.service.cluster.ClusterStatus" -->
 <#-- @ftlvariable name="pendingClusterRequests"  type="java.util.List<com.infobip.kafkistry.service.history.ClusterRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
@@ -8,7 +7,7 @@
 
 <html lang="en">
 
-<#assign clusterModel = clusterTopics.cluster>
+<#assign clusterModel = clusterStatus.cluster>
 <#assign clusterIdentifier = clusterModel.identifier>
 
 <head>
@@ -167,36 +166,7 @@
         </tr>
         <tr>
             <th>Last refresh</th>
-            <td class="time" data-time="${clusterTopics.lastRefreshTime?c}"></td>
-        </tr>
-        <tr>
-            <th>Aggregated topics status counts</th>
-            <td>
-                <#if clusterTopics.topicsStatusCounts??>
-                    <table class="table table-sm mb-0">
-                        <#list clusterTopics.topicsStatusCounts as statusType, count>
-                            <tr>
-                                <td class="status-filter-btn agg-count-status-type" data-status-type="${statusType}"
-                                    title="Click to filter by...">
-                                    <#include "../common/topicStatusResultBox.ftl">
-                                </td>
-                                <td style="text-align: right;">${count}</td>
-                            </tr>
-                        </#list>
-                    </table>
-                <#else>
-                    <i>(no data)</i>
-                </#if>
-            </td>
-        </tr>
-        <tr>
-            <th>Issues</th>
-            <td>
-                <#assign statusId = "clusterIssues">
-                <#include "../common/serverOpStatus.ftl">
-                <#assign statusId = "">
-                <div id="cluster-issues-result"></div>
-            </td>
+            <td class="time" data-time="${clusterStatus.lastRefreshTime?c}"></td>
         </tr>
         <#if gitStorageEnabled>
             <tr>
@@ -212,63 +182,90 @@
 
     <div class="card">
         <div class="card-header">
-            <span class="h4">Status per topic on this cluster</span>
+            <span class="h4">Cluster issues</span>
         </div>
-
-        <div class="card-body pl-0 pr-0">
-            <#include "../common/loading.ftl">
-            <table id="topics" class="table table-bordered datatable" style="display: none;">
-                <thead class="thead-dark">
-                <tr>
-                    <th>Topic name</th>
-                    <th style="width: 200px;">Topic status</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <#if clusterTopics.statusPerTopics??>
-                    <#list clusterTopics.statusPerTopics as topicStatus>
-                        <#assign topicName = topicStatus.topicName>
-                        <#assign statusTypes = util.enumListToStringList(topicStatus.status.types)>
-                        <#assign presentInRegistry = !statusTypes?seq_contains("UNKNOWN")>
-                        <tr class="topic-row table-row">
-                            <td>
-                                <a href="${appUrl.topics().showInspectTopicOnCluster(topicName, clusterIdentifier)}">
-                                    <button class="btn btn-sm btn-outline-dark"
-                                            title="Inspect this topic on this cluster...">
-                                        <#if presentInRegistry>
-                                            <span class="font-weight-bold">${topicStatus.topicName} 🔍</span>
-                                        <#else>
-                                            <span class="text-info">${topicStatus.topicName} 🔍</span>
-                                        </#if>
-                                    </button>
-                                </a>
-                            </td>
-                            <td style="width: 200px;">
-                                <#assign topicOnClusterStatus = topicStatus.status>
-                                <#include "../common/topicOnClusterStatus.ftl">
-                            </td>
-                            <td>
-                                <#assign availableActions = topicStatus.status.availableActions>
-                                <#include "../common/topicOnClusterAction.ftl">
-                            </td>
-                        </tr>
-                    </#list>
-                </#if>
-                </tbody>
-            </table>
+        <div class="card-body">
+            <#assign statusId = "clusterIssues">
+            <#include "../common/serverOpStatus.ftl">
+            <#assign statusId = "">
+            <div id="cluster-issues-result"></div>
         </div>
     </div>
+    <br/>
 
-    <br/>
-    <br/>
     <div class="card">
-        <div class="card-header">
-            <span class="h4">Actual cluster latest metadata info</span>
+        <div class="card-header collapsed" data-toggle="collapsing" data-target="#topics-card-body">
+            <span class="when-collapsed" title="expand...">▼</span>
+            <span class="when-not-collapsed" title="collapse...">△</span>
+            <span class="h4">Status per topic on this cluster</span>
+        </div>
+        <div id="topics-card-body" class="card-body collapseable p-0 pb-2">
+            <div class="m-3">
+                <#include "clusterTopicsCounts.ftl">
+            </div>
+            <hr/>
+            <#include "clusterTopicsTable.ftl">
+        </div>
+    </div>
+    <br/>
+
+    <div class="card">
+        <div class="card-header collapsed" data-toggle="collapsing" data-target="#acls-card-body">
+            <span class="when-collapsed" title="expand...">▼</span>
+            <span class="when-not-collapsed" title="collapse...">△</span>
+            <span class="h4">Status per ACLs on this cluster</span>
+        </div>
+        <div id="acls-card-body" class="card-body collapseable p-0 pb-2">
+            <div class="m-3">
+                <#include "clusterAclCounts.ftl">
+            </div>
+            <hr/>
+            <#include "clusterAclsTable.ftl">
+        </div>
+    </div>
+    <br/>
+
+    <div class="card">
+        <div class="card-header collapsed" data-toggle="collapsing" data-target="#quotas-card-body">
+            <span class="when-collapsed" title="expand...">▼</span>
+            <span class="when-not-collapsed" title="collapse...">△</span>
+            <span class="h4">Status per entity quotas on this cluster</span>
+        </div>
+        <div id="quotas-card-body" class="card-body collapseable p-0 pb-2">
+            <div class="m-3">
+                <#include "clusterQuotasCounts.ftl">
+            </div>
+            <hr/>
+            <#include "clusterQuotasTable.ftl">
+        </div>
+    </div>
+    <br/>
+
+    <div class="card">
+        <div class="card-header collapsed" data-toggle="collapsing" data-target="#consumer-groups-card-body">
+            <span class="when-collapsed" title="expand...">▼</span>
+            <span class="when-not-collapsed" title="collapse...">△</span>
+            <span class="h4">Status per consumer group on this cluster</span>
+        </div>
+        <div id="consumer-groups-card-body" class="card-body collapseable p-0 pb-2">
+            <div class="m-3">
+                <#include "clusterConsumerGroupsCounts.ftl">
+            </div>
+            <hr/>
+            <#include "clusterConsumerGroupsTable.ftl">
+        </div>
+    </div>
+    <br/>
+
+    <div class="card">
+        <div class="card-header collapsed" data-toggle="collapsing" data-target="#cluster-metadata-info-card-body">
+            <span class="when-collapsed" title="expand...">▼</span>
+            <span class="when-not-collapsed" title="collapse...">△</span>
+            <span class="h4">Cluster metadata info / broker config properties</span>
         </div>
 
-        <div class="card-body p-0">
-            <#if clusterStatus.clusterInfo????>
+        <div id="cluster-metadata-info-card-body" class="card-body collapseable p-0">
+            <#if clusterStatus.clusterInfo??>
                 <#assign clusterInfo = clusterStatus.clusterInfo>
                 <table class="table table-sm">
                     <tr>

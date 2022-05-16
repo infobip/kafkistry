@@ -38,9 +38,9 @@
             <button id="refresh-btn" class="btn btn-outline-secondary">Refresh all</button>
         </div>
     </div>
-    <div class="card-body p-0">
+    <div class="card-body p-0 pt-2 pb-2">
 
-    <table id="clusters" class="table table-bordered m-0">
+    <table id="clusters" class="table datatable table-bordered m-0">
         <thead class="thead-dark">
         <tr>
             <th>#</th>

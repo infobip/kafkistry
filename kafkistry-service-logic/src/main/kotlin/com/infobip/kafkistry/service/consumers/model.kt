@@ -12,7 +12,8 @@ data class ClusterConsumerGroups(
     val clusterIdentifier: KafkaClusterIdentifier,
     val clusterStateType: StateType,
     val lastRefreshTime: Long,
-    val consumerGroups: List<KafkaConsumerGroup>
+    val consumerGroups: List<KafkaConsumerGroup>,
+    val consumersStats: ConsumersStats,
 )
 
 data class KafkaConsumerGroup(

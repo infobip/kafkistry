@@ -10,6 +10,7 @@ import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.acl.AclLinkResolver
+import com.infobip.kafkistry.service.eachCountDescending
 import com.infobip.kafkistry.service.topic.offsets.TopicsRateProvider
 import org.springframework.stereotype.Component
 import com.infobip.kafkistry.kafkastate.ClusterConsumerGroups as ClusterConsumerGroupsState
@@ -34,11 +35,18 @@ class ConsumersInspector(
         val consumerGroups = clusterConsumerGroups
                 .allConsumerGroupIds()
                 .mapNotNull { it.inspectGroup(clusterIdentifier, clusterConsumerGroups, clusterTopicOffsets) }
+        val consumersStats = ConsumersStats(
+            clusterCounts = mapOf(clusterIdentifier to 1),
+            lagStatusCounts = consumerGroups.groupingBy { it.lag.status }.eachCountDescending(),
+            partitionAssignorCounts = consumerGroups.groupingBy { it.partitionAssignor }.eachCountDescending(),
+            consumerStatusCounts = consumerGroups.groupingBy { it.status }.eachCountDescending(),
+        )
         return ClusterConsumerGroups(
-                clusterIdentifier = clusterIdentifier,
-                clusterStateType = clusterConsumerGroups.stateType,
-                lastRefreshTime = clusterConsumerGroups.lastRefreshTime,
-                consumerGroups = consumerGroups
+            clusterIdentifier = clusterIdentifier,
+            clusterStateType = clusterConsumerGroups.stateType,
+            lastRefreshTime = clusterConsumerGroups.lastRefreshTime,
+            consumerGroups = consumerGroups,
+            consumersStats = consumersStats,
         )
     }
 

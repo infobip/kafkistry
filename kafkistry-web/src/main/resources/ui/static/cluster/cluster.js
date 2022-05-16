@@ -2,7 +2,8 @@ $(document).ready(function () {
     $("#refresh-btn").click(refreshCluster);
     $(".status-filter-btn").click(function () {
         let statusType = $(this).attr("data-status-type");
-        filterDatatableBy(statusType);
+        let dataTableId = $(this).attr("data-table-id");
+        filterDatatableBy(statusType, dataTableId);
     });
     maybeFilterDatatableByUrlHash();
     loadClusterIssues();
