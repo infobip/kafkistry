@@ -9,6 +9,7 @@ import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.service.eachCountDescending
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -100,10 +101,6 @@ class ConsumersService(
         return consumersInspector.inspectClusterConsumerGroups(clusterIdentifier)
                 .consumerGroups
                 .filter { group -> group.topicMembers.any { it.topicName == topicName } }
-    }
-
-    private fun <K> Grouping<*, K>.eachCountDescending(): Map<K, Int> {
-        return eachCount().map { it.toPair() }.sortedByDescending { it.second }.associate { it }
     }
 
     private fun KafkaConsumerGroup.toClusterConsumerGroup(

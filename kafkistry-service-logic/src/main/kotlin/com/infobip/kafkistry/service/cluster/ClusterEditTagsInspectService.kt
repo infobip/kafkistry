@@ -148,7 +148,7 @@ class ClusterEditTagsInspectService(
             .associateWith { (this[it] ?: 0) diff (countsAfter[it] ?: 0) }
             .diffSorted()
 
-    private fun <K> Map<K, CountDiff>.diffSorted(): Map<K, CountDiff> = entries
-        .sortedBy { -abs(it.value.diff) }   // descending by difference amplitude
-        .associate { it.toPair() }
+    private fun <K> Map<K, CountDiff>.diffSorted(): Map<K, CountDiff> =
+        sortedDescending { -abs(it.value.diff) } // descending by difference amplitude
+
 }

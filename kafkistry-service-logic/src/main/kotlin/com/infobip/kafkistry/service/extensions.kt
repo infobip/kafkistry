@@ -86,3 +86,11 @@ private fun String.renderMessage(placeholders: Map<String, Placeholder>): String
 }
 
 fun RuleViolation.renderMessage(): String = message.renderMessage(placeholders)
+
+fun <K> Map<K, Int>.sortedByValueDescending(): Map<K, Int> = sortedDescending { it.value }
+
+fun <K, V, C : Comparable<C>> Map<K, V>.sortedDescending(
+    by: (Map.Entry<K, V>) -> C
+): Map<K, V> = entries.sortedByDescending { by(it) }.associate { it.toPair() }
+
+fun <K> Grouping<*, K>.eachCountDescending(): Map<K, Int> = eachCount().sortedByValueDescending()

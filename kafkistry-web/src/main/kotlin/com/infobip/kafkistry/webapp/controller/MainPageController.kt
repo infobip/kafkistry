@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.api.*
+import com.infobip.kafkistry.service.eachCountDescending
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.ACLS_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.CLUSTER_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.CONSUMER_GROUPS_STATS
@@ -45,8 +46,7 @@ class MainPageController(
     fun showClustersStats(): ModelAndView {
         val clustersStats = inspectApi.inspectClustersStatuses()
             .groupingBy { it.clusterState }
-            .eachCount()
-            .descSorted()
+            .eachCountDescending()
         return ModelAndView(
             "home/clustersStats", mutableMapOf(
                 "clustersStats" to clustersStats,
@@ -61,8 +61,7 @@ class MainPageController(
             .flatMap { it.statusPerClusters }
             .flatMap { it.status.types }
             .groupingBy { it }
-            .eachCount()
-            .descSorted()
+            .eachCountDescending()
         return ModelAndView(
             "home/topicsStats", mutableMapOf(
                 "topicsStats" to topicsStats,
@@ -87,8 +86,7 @@ class MainPageController(
             .flatMap { it.clusterInspections }
             .flatMap { it.statuses }
             .groupingBy { it.statusType }
-            .eachCount()
-            .descSorted()
+            .eachCountDescending()
         return ModelAndView(
             "home/aclsStats", mutableMapOf(
                 "aclsStats" to aclsStats,
@@ -102,14 +100,12 @@ class MainPageController(
             .asSequence()
             .flatMap { it.clusterInspections }
             .groupingBy { it.statusType }
-            .eachCount()
+            .eachCountDescending()
         return ModelAndView(
             "home/quotasStats", mutableMapOf(
                 "quotasStats" to quotasStats,
             )
         )
     }
-
-    private fun <K> Map<K, Int>.descSorted(): Map<K, Int> = entries.sortedByDescending { it.value }.associate { it.toPair() }
 
 }
