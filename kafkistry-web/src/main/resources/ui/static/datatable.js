@@ -3,9 +3,13 @@ $(document).ready(function () {
 });
 
 function initDatatables() {
-    let tables = $("table.datatable");
+    initDatatablesIn($(document));
+}
+
+function initDatatablesIn(container) {
+    let tables = container.find("table.datatable");
     tables.each(function () {
-       initDatatable($(this));
+        initDatatable($(this));
     });
 }
 
@@ -39,17 +43,24 @@ function initDatatable(table) {
         }
     });
 }
+
+function urlHashSearch() {
+    if(!window.location.hash)
+        return null
+    let hash = window.location.hash.substring(1);
+    let separatorAt = hash.indexOf("|");
+    if (separatorAt === -1) {
+        return {search: hash};
+    } else {
+        let tableId = hash.substring(0, separatorAt);
+        let search = hash.substring(separatorAt + 1);
+        return {search: search, tableId: tableId};
+    }
+}
 function maybeFilterDatatableByUrlHash() {
-    if(window.location.hash) {
-        let hash = window.location.hash.substring(1);
-        let separatorAt = hash.indexOf("|");
-        if (separatorAt === -1) {
-            filterDatatableBy(hash);
-        } else {
-            let tableId = hash.substring(0, separatorAt);
-            let search = hash.substring(separatorAt + 1);
-            filterDatatableBy(search, tableId);
-        }
+    let searchOpts = urlHashSearch();
+    if (searchOpts) {
+        filterDatatableBy(searchOpts.search, searchOpts.tableId);
     }
 }
 

@@ -200,11 +200,10 @@
             <span class="h4">Status per topic on this cluster</span>
         </div>
         <div id="topics-card-body" class="card-body collapseable p-0 pb-2">
-            <div class="m-3">
-                <#include "clusterTopicsCounts.ftl">
-            </div>
-            <hr/>
-            <#include "clusterTopicsTable.ftl">
+            <#assign statusId = "clusterTopics">
+            <#include "../common/serverOpStatus.ftl">
+            <#assign statusId = "">
+            <div id="cluster-topics-result"></div>
         </div>
     </div>
     <br/>
@@ -216,11 +215,10 @@
             <span class="h4">Status per ACLs on this cluster</span>
         </div>
         <div id="acls-card-body" class="card-body collapseable p-0 pb-2">
-            <div class="m-3">
-                <#include "clusterAclCounts.ftl">
-            </div>
-            <hr/>
-            <#include "clusterAclsTable.ftl">
+            <#assign statusId = "clusterAcls">
+            <#include "../common/serverOpStatus.ftl">
+            <#assign statusId = "">
+            <div id="cluster-acls-result"></div>
         </div>
     </div>
     <br/>
@@ -232,11 +230,10 @@
             <span class="h4">Status per entity quotas on this cluster</span>
         </div>
         <div id="quotas-card-body" class="card-body collapseable p-0 pb-2">
-            <div class="m-3">
-                <#include "clusterQuotasCounts.ftl">
-            </div>
-            <hr/>
-            <#include "clusterQuotasTable.ftl">
+            <#assign statusId = "clusterQuotas">
+            <#include "../common/serverOpStatus.ftl">
+            <#assign statusId = "">
+            <div id="cluster-quotas-result"></div>
         </div>
     </div>
     <br/>
@@ -248,11 +245,10 @@
             <span class="h4">Status per consumer group on this cluster</span>
         </div>
         <div id="consumer-groups-card-body" class="card-body collapseable p-0 pb-2">
-            <div class="m-3">
-                <#include "clusterConsumerGroupsCounts.ftl">
-            </div>
-            <hr/>
-            <#include "clusterConsumerGroupsTable.ftl">
+            <#assign statusId = "clusterConsumerGroups">
+            <#include "../common/serverOpStatus.ftl">
+            <#assign statusId = "">
+            <div id="cluster-consumer-groups-result"></div>
         </div>
     </div>
     <br/>

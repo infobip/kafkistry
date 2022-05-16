@@ -10,6 +10,10 @@ class ClustersUrls(base: String) : BaseUrls() {
         const val CLUSTERS_EDIT = "/edit"
         const val CLUSTERS_EDIT_ON_BRANCH = "/edit-on-branch"
         const val CLUSTERS_INSPECT = "/inspect"
+        const val CLUSTERS_INSPECT_TOPICS = "/inspect/topics"
+        const val CLUSTERS_INSPECT_ACLS = "/inspect/acls"
+        const val CLUSTERS_INSPECT_QUOTAS = "/inspect/quotas"
+        const val CLUSTERS_INSPECT_CONSUMER_GROUPS = "/inspect/consumer-groups"
         const val CLUSTERS_REMOVE = "/remove"
         const val CLUSTERS_BALANCE = "/balance"
         const val CLUSTERS_INCREMENTAL_BALANCING = "/incremental-balancing"
@@ -24,6 +28,10 @@ class ClustersUrls(base: String) : BaseUrls() {
     private val showEditCluster = Url("$base$CLUSTERS_EDIT", listOf("clusterIdentifier"))
     private val showEditClusterOnBranch = Url("$base$CLUSTERS_EDIT_ON_BRANCH", listOf("clusterIdentifier", "branch"))
     private val showCluster = Url("$base$CLUSTERS_INSPECT", listOf("clusterIdentifier"))
+    private val showClusterTopics = Url("$base$CLUSTERS_INSPECT_TOPICS", listOf("clusterIdentifier"))
+    private val showClusterAcls = Url("$base$CLUSTERS_INSPECT_ACLS", listOf("clusterIdentifier"))
+    private val showClusterQuotas = Url("$base$CLUSTERS_INSPECT_QUOTAS", listOf("clusterIdentifier"))
+    private val showClusterConsumerGroups = Url("$base$CLUSTERS_INSPECT_CONSUMER_GROUPS", listOf("clusterIdentifier"))
     private val showRemoveCluster = Url("$base$CLUSTERS_REMOVE", listOf("clusterIdentifier"))
     private val showClusterBalance = Url("$base$CLUSTERS_BALANCE", listOf("clusterIdentifier"))
     private val showIncrementalBalancing = Url("$base$CLUSTERS_INCREMENTAL_BALANCING", listOf("clusterIdentifier"))
@@ -48,6 +56,22 @@ class ClustersUrls(base: String) : BaseUrls() {
     fun showCluster(
             clusterIdentifier: KafkaClusterIdentifier
     ) = showCluster.render("clusterIdentifier" to clusterIdentifier)
+
+    fun showClusterTopics(
+            clusterIdentifier: KafkaClusterIdentifier
+    ) = showClusterTopics.render("clusterIdentifier" to clusterIdentifier)
+
+    fun showClusterAcls(
+            clusterIdentifier: KafkaClusterIdentifier
+    ) = showClusterAcls.render("clusterIdentifier" to clusterIdentifier)
+
+    fun showClusterQuotas(
+            clusterIdentifier: KafkaClusterIdentifier
+    ) = showClusterQuotas.render("clusterIdentifier" to clusterIdentifier)
+
+    fun showClusterConsumerGroups(
+            clusterIdentifier: KafkaClusterIdentifier
+    ) = showClusterConsumerGroups.render("clusterIdentifier" to clusterIdentifier)
 
     fun showRemoveCluster(
             clusterIdentifier: KafkaClusterIdentifier

@@ -89,7 +89,7 @@
                             <tr>
                                 <td class="agg-count-status-type">
                                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                                       href="${appUrl.clusters().showCluster(clusterIdentifier)}#${statusType}">
+                                       href="${appUrl.clusters().showCluster(clusterIdentifier)}#topics-table|${statusType}">
                                         <#include "../common/topicStatusResultBox.ftl">
                                     </a>
                                 </td>
