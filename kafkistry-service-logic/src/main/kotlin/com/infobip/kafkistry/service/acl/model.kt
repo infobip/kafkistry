@@ -2,6 +2,8 @@ package com.infobip.kafkistry.service.acl
 
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.eachCountDescending
+import com.infobip.kafkistry.service.sortedByValueDescending
 
 enum class AclInspectionResultType(
         val valid: Boolean
@@ -26,7 +28,7 @@ data class AclStatus(
 
         fun from(statuses: List<AclRuleStatus>) = AclStatus(
             ok = statuses.map { it.statusType.valid }.fold(true, Boolean::and),
-            statusCounts = statuses.groupingBy { it.statusType }.eachCount()
+            statusCounts = statuses.groupingBy { it.statusType }.eachCountDescending()
         )
     }
 
@@ -35,10 +37,12 @@ data class AclStatus(
         statusCounts = (statusCounts.asSequence() + other.statusCounts.asSequence())
             .groupBy({ it.key }, { it.value })
             .mapValues { (_, counts) -> counts.sum() }
+            .sortedByValueDescending()
     )
 }
 
 fun Iterable<AclStatus>.aggregate(): AclStatus = fold(AclStatus.EMPTY_OK, AclStatus::merge)
+
 data class AclRuleStatus(
     val statusType: AclInspectionResultType,
     val rule: KafkaAclRule,

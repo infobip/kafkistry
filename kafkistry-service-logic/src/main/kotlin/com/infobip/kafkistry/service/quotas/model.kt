@@ -3,8 +3,10 @@ package com.infobip.kafkistry.service.quotas
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.repository.storage.ChangeType
 import com.infobip.kafkistry.repository.storage.CommitChange
+import com.infobip.kafkistry.service.eachCountDescending
 import com.infobip.kafkistry.service.history.Change
 import com.infobip.kafkistry.service.history.PendingRequest
+import com.infobip.kafkistry.service.sortedByValueDescending
 
 
 data class QuotasRequest(
@@ -57,7 +59,7 @@ data class QuotaStatus(
 
         fun from(statuses: List<QuotasInspection>) = QuotaStatus(
             ok = statuses.map { it.statusType }.map { it.valid }.fold(true, Boolean::and),
-            statusCounts = statuses.groupingBy { it.statusType }.eachCount()
+            statusCounts = statuses.groupingBy { it.statusType }.eachCountDescending()
         )
     }
 
@@ -66,6 +68,7 @@ data class QuotaStatus(
         statusCounts = (statusCounts.asSequence() + other.statusCounts.asSequence())
             .groupBy({ it.key }, { it.value })
             .mapValues { (_, counts) -> counts.sum() }
+            .sortedByValueDescending()
     )
 }
 
