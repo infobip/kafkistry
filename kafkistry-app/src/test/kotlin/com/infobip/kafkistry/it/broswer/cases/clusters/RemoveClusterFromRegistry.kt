@@ -38,7 +38,7 @@ abstract class RemoveClusterFromRegistry(contextSupplier: () -> Context) : UITes
         //go back to list of clusters
         browser.findElementById("nav-clusters").click()
         await {
-            browser.assertPageText().contains("no clusters in registry")
+            browser.assertPageText().contains("No data to show")
         }
 
     }

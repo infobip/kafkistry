@@ -74,6 +74,7 @@
                 <br/>
                 <span class="small font-weight-bold">Last refresh:</span><br/>
                 <span class="time small" data-time="${clusterInspection.lastRefreshTime?c}"></span>
+            </td>
             <td>
                 <#if clusterInspection.clusterInfo??>
                     <#assign clusterInfo = clusterInspection.clusterInfo>
@@ -99,17 +100,10 @@
                     </table>
                 </td>
             <#else>
-                <td colspan="2"><i>(no data)</i></td>
+                <td><i>(no data)</i></td>
             </#if>
             </tr>
         </#list>
-        <#if clustersTopics?size == 0>
-            <tr>
-                <td colspan="100">
-                    <i>(no clusters in registry)</i>
-                </td>
-            </tr>
-        </#if>
         </tbody>
     </table>
 

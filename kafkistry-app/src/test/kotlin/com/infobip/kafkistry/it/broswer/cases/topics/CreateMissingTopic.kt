@@ -117,7 +117,11 @@ abstract class CreateMissingTopic(contextSupplier: () -> Context) : UITestCase(c
         browser.findElementById("refresh-btn").click()
 
         await {
-            assertThat(browser.findElementById("topics").text).contains(
+            browser.assertPageText().contains("Status per topic")
+        }
+        browser.findElementWithText("Status per topic").scrollIntoView().click()
+        await {
+            assertThat(browser.findElementById("topics-table").text).contains(
                     "my-missing-1", "OK",
                     "my-missing-2", "OK"
             )
