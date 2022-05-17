@@ -118,7 +118,7 @@ class DiskUsageIssuesChecker(
             violation = RuleViolation(
                 ruleClassName = checkerClassName,
                 severity = severity,
-                message = "$messagePrefix usage of %USED_BYTES% is at %PERCENTAGE% of disk capacity %CAPACITY_BYTES% on " +
+                message = "$messagePrefix usage of %USED_BYTES% is at %PERCENTAGE% % of disk capacity %CAPACITY_BYTES% on " +
                         (brokerId?.let { "broker ID %BROKER%" } ?: "all brokers combined"),
                 placeholders = mapOf(
                     "USED_BYTES" to Placeholder("used.bytes", usageBytes),
