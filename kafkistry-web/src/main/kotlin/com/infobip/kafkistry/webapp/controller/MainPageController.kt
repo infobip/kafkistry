@@ -1,7 +1,12 @@
 package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.api.*
+import com.infobip.kafkistry.kafkastate.StateType
+import com.infobip.kafkistry.service.KafkistryException
+import com.infobip.kafkistry.service.RuleViolation
+import com.infobip.kafkistry.service.cluster.inspect.ClusterInspectIssue
 import com.infobip.kafkistry.service.eachCountDescending
+import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.ACLS_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.CLUSTER_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.CONSUMER_GROUPS_STATS
@@ -44,12 +49,29 @@ class MainPageController(
 
     @GetMapping(CLUSTER_STATS)
     fun showClustersStats(): ModelAndView {
-        val clustersStats = inspectApi.inspectClustersStatuses()
-            .groupingBy { it.clusterState }
+        val clustersStatuses = inspectApi.inspectClustersStatuses()
+        val clustersStats = clustersStatuses.groupingBy { it.clusterState }.eachCountDescending()
+        val issuesStats = clustersStatuses
+            .filter { it.clusterState != StateType.DISABLED }
+            .map { it.cluster.identifier }
+            .flatMap { clusterIdentifier ->
+                try {
+                    inspectApi.inspectClusterIssues(clusterIdentifier).distinctBy { it.name }
+                } catch (ex: KafkistryException) {
+                    listOf(
+                        ClusterInspectIssue(
+                            name = "INSPECT_ERROR",
+                            RuleViolation("", RuleViolation.Severity.ERROR, ex.deepToString())
+                        )
+                    )
+                }
+            }
+            .groupingBy { it.copy(violation = it.violation.copy(message = "", placeholders = emptyMap())) }
             .eachCountDescending()
         return ModelAndView(
             "home/clustersStats", mutableMapOf(
                 "clustersStats" to clustersStats,
+                "issuesStats" to issuesStats,
             )
         )
     }
