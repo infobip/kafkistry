@@ -41,9 +41,9 @@ function loadPageSegment(
                 method: "GET",
                 headers: {ajax: 'true'},
             })
-            .done(function (issues) {
+            .done(function (response) {
                 hideServerOpOnId(opProgressId);
-                resultContainer.html(issues);
+                resultContainer.html(response);
                 refreshAllConfValuesIn(resultContainer);
                 initDatatablesIn(resultContainer);
                 let tableId = resultContainer.find(".datatable").attr("id");
