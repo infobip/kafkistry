@@ -1,6 +1,10 @@
 $(document).ready(registerAllInfoTooltips);
 
 function registerAllInfoTooltips() {
+    registerAllInfoTooltipsIn($(document));
+}
+
+function registerAllInfoTooltipsIn(container) {
     $.fn.popover.Constructor.Default.whiteList.table = [];
     $.fn.popover.Constructor.Default.whiteList.tr = [];
     $.fn.popover.Constructor.Default.whiteList.td = [];
@@ -9,7 +13,7 @@ function registerAllInfoTooltips() {
     $.fn.popover.Constructor.Default.whiteList.thead = [];
 
     let infoIcons = [];
-    $(".info-icon, .info-label").each(function () {
+    container.find(".info-icon, .info-label").each(function () {
         let element = $(this);
         let inTemplate = element.closest(".template").length > 0;
         if (!inTemplate) {
