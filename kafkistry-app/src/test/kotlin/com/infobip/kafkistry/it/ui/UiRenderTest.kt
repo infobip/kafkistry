@@ -337,9 +337,9 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/clusters")
         assertThat(page.select(".cluster-row")).extracting(
-                Function<Element, String> { it.selectFirst("td:nth-child(2) a").text() },
-                Function<Element, String> { it.selectFirst("td:nth-child(2) a").attr("href") },
-                Function<Element, String> { it.selectFirst("td:nth-child(3) div.alert").text() }
+                Function { it.selectFirst("td:nth-child(1) a").text() },
+                Function { it.selectFirst("td:nth-child(1) a").attr("href") },
+                Function { it.selectFirst("td:nth-child(3) div.alert").text() }
         ).containsOnly(
                 tuple("c_1", "/kafkistry/clusters/inspect?clusterIdentifier=c_1", "VISIBLE"),
                 tuple("c_2", "/kafkistry/clusters/inspect?clusterIdentifier=c_2", "VISIBLE")
