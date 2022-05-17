@@ -40,8 +40,33 @@ function initDatatable(table) {
                 $(".loading").hide();
             }
             table.show();
-        }
+            datatableInitialized(table.attr("id"));
+        },
     });
+}
+
+let initializedTables = [];
+let initializedTablesListeners = [];
+
+function datatableInitialized(tableId) {
+    initializedTables.push(tableId);
+    let readyToExec =  initializedTablesListeners.filter(function (listener) {
+        return tableId === listener.tableId;
+    });
+    initializedTablesListeners = initializedTablesListeners.filter(function (listener) {
+        return tableId !== listener.tableId;
+    });
+    readyToExec.forEach(function (listener) {
+        listener.callback();
+    });
+}
+
+function whenDatatableInitialized(tableId, callback) {
+    if (initializedTables.indexOf(tableId) > -1) {
+        callback();
+    } else {
+        initializedTablesListeners.push({tableId: tableId, callback: callback});
+    }
 }
 
 function urlHashSearch() {
