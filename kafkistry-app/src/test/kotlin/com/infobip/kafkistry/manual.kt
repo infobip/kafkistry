@@ -75,6 +75,7 @@ fun manualMain(
                 "OWNER_GROUPS=test-owner|user",
                 "HTTP_ROOT_PATH=",
                 "GIT_COMMIT_TO_MASTER_BY_DEFAULT=true",
+                "DISABLED_CLUSTERS=local-disabled",
             ).plus(extraProperties).toTypedArray()
         )
         .initializers(
