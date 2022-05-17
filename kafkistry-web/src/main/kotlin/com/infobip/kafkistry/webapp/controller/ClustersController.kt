@@ -14,6 +14,7 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INCREMEN
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INCREMENTAL_BALANCING_SUGGESTION
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT_ACLS
+import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT_BRIEF
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT_CONSUMER_GROUPS
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT_QUOTAS
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT_TOPICS
@@ -37,10 +38,10 @@ class ClustersController(
 
     @GetMapping
     fun showClusters(): ModelAndView {
-        val clustersTopics = inspectApi.inspectTopicsOnClusters()
+        val clustersStatuses = inspectApi.inspectClustersStatuses()
         val pendingClustersRequests = clustersApi.pendingClustersRequests()
         return ModelAndView("clusters/all", mutableMapOf(
-                "clustersTopics" to clustersTopics,
+                "clustersStatuses" to clustersStatuses,
                 "pendingClustersUpdates" to pendingClustersRequests
         ))
     }
@@ -93,6 +94,25 @@ class ClustersController(
             "clusterStatus" to clusterStatus,
             "pendingClusterRequests" to pendingClusterRequests,
             "brokerConfigDoc" to existingValuesApi.all().brokerConfigDoc,
+        ))
+    }
+
+    @GetMapping(CLUSTERS_INSPECT_BRIEF)
+    fun showClusterBriefInspect(
+            @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
+    ): ModelAndView {
+        val clusterTopics = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
+        val clusterAcls = inspectApi.inspectClusterAcls(clusterIdentifier)
+        val clusterQuotas = inspectApi.inspectClusterQuotas(clusterIdentifier)
+        val clusterGroups = consumersApi.clusterConsumerGroups(clusterIdentifier)
+        val clusterIssues = inspectApi.inspectClusterIssues(clusterIdentifier)
+        return ModelAndView("clusters/clusterBriefInspect", mutableMapOf(
+            "clusterIdentifier" to clusterIdentifier,
+            "clusterTopics" to clusterTopics,
+            "clusterAcls" to clusterAcls,
+            "clusterQuotas" to clusterQuotas,
+            "clusterGroups" to clusterGroups,
+            "clusterIssues" to clusterIssues,
         ))
     }
 

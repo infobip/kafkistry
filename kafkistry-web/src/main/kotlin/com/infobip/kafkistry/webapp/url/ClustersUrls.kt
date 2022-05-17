@@ -10,6 +10,7 @@ class ClustersUrls(base: String) : BaseUrls() {
         const val CLUSTERS_EDIT = "/edit"
         const val CLUSTERS_EDIT_ON_BRANCH = "/edit-on-branch"
         const val CLUSTERS_INSPECT = "/inspect"
+        const val CLUSTERS_INSPECT_BRIEF = "/inspect/brief"
         const val CLUSTERS_INSPECT_TOPICS = "/inspect/topics"
         const val CLUSTERS_INSPECT_ACLS = "/inspect/acls"
         const val CLUSTERS_INSPECT_QUOTAS = "/inspect/quotas"
@@ -28,6 +29,7 @@ class ClustersUrls(base: String) : BaseUrls() {
     private val showEditCluster = Url("$base$CLUSTERS_EDIT", listOf("clusterIdentifier"))
     private val showEditClusterOnBranch = Url("$base$CLUSTERS_EDIT_ON_BRANCH", listOf("clusterIdentifier", "branch"))
     private val showCluster = Url("$base$CLUSTERS_INSPECT", listOf("clusterIdentifier"))
+    private val showClusterInspectBrief = Url("$base$CLUSTERS_INSPECT_BRIEF", listOf("clusterIdentifier"))
     private val showClusterTopics = Url("$base$CLUSTERS_INSPECT_TOPICS", listOf("clusterIdentifier"))
     private val showClusterAcls = Url("$base$CLUSTERS_INSPECT_ACLS", listOf("clusterIdentifier"))
     private val showClusterQuotas = Url("$base$CLUSTERS_INSPECT_QUOTAS", listOf("clusterIdentifier"))
@@ -56,6 +58,10 @@ class ClustersUrls(base: String) : BaseUrls() {
     fun showCluster(
             clusterIdentifier: KafkaClusterIdentifier
     ) = showCluster.render("clusterIdentifier" to clusterIdentifier)
+
+    fun showClusterInspectBrief(
+            clusterIdentifier: KafkaClusterIdentifier
+    ) = showClusterInspectBrief.render("clusterIdentifier" to clusterIdentifier)
 
     fun showClusterTopics(
             clusterIdentifier: KafkaClusterIdentifier
