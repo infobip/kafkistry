@@ -356,7 +356,7 @@ class UiRenderTest {
     @Test
     fun `clusterPage - c1`() {
         addAllClustersAndTopics()
-        val page = api.getPage("/clusters/inspect?clusterIdentifier=c_1")
+        val page = api.getPage("/clusters/inspect/topics?clusterIdentifier=c_1")
         page.clusterPageTopicStatusesAssertion().containsOnly(
                 tuple(topic1.name, "OK"),
                 tuple(topic2.name, "MISSING"),
@@ -369,7 +369,7 @@ class UiRenderTest {
     fun `clusterPage - c1, no topics in registry`() {
         api.addCluster(cluster1)
         api.refreshClusters()
-        val page = api.getPage("/clusters/inspect?clusterIdentifier=c_1")
+        val page = api.getPage("/clusters/inspect/topics?clusterIdentifier=c_1")
         page.clusterPageTopicStatusesAssertion().containsOnly(
                 tuple(topic1.name, "UNKNOWN"),
                 tuple(topic3.name, "UNKNOWN"),
@@ -380,7 +380,7 @@ class UiRenderTest {
     @Test
     fun `clusterPage - c2`() {
         addAllClustersAndTopics()
-        val page = api.getPage("/clusters/inspect?clusterIdentifier=c_2")
+        val page = api.getPage("/clusters/inspect/topics?clusterIdentifier=c_2")
         page.clusterPageTopicStatusesAssertion().containsOnly(
                 tuple(topic1.name, "OK"),
                 tuple(topic2.name, "MISSING"),
