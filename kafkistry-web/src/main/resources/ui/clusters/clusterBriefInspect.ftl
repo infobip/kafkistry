@@ -70,7 +70,7 @@
                 <tr>
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                           href="${clusterUrl}#topics-table|${statusType}" title="Filter topics by...">
+                           href="${clusterUrl}#topics|${statusType}" title="Filter topics by...">
                             <#assign stateClass = util.statusToHtmlClass(statusType)>
                             <#assign alerts = alerts + [stateClass]>
                             <div class="alert alert-sm ${stateClass} mb-0 small">
@@ -106,7 +106,7 @@
                 <tr>
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                           href="${clusterUrl}#acls-table|${statusType}" title="Filter ACLs by...">
+                           href="${clusterUrl}#acls|${statusType}" title="Filter ACLs by...">
                             <#assign stateClass = util.statusTypeAlertClass(statusType)>
                             <#assign alerts = alerts + [stateClass]>
                             <div class="alert alert-sm ${stateClass} mb-0 small">
@@ -142,7 +142,7 @@
                 <tr>
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                           href="${clusterUrl}#quotas-table|${statusType}" title="Filter quotas by...">
+                           href="${clusterUrl}#quotas|${statusType}" title="Filter quotas by...">
                             <#assign stateClass = util.statusTypeAlertClass(statusType)>
                             <#assign alerts = alerts + [stateClass]>
                             <div class="alert alert-sm ${stateClass} mb-0 small">
@@ -180,7 +180,7 @@
             <tr>
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${clusterUrl}#consumer-groups-table|${lagStatusType}" title="Filter consumer groups by...">
+                       href="${clusterUrl}#consumer-groups|${lagStatusType}" title="Filter consumer groups by...">
                         <#assign stateClass = consumersUtil.lagStatusAlertClass(lagStatusType)>
                         <#assign alerts = alerts + [stateClass]>
                         <div class="alert alert-sm ${stateClass} mb-0 small">
@@ -198,7 +198,7 @@
             <tr>
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${clusterUrl}#consumer-groups-table|${stateStatusType}" title="Filter consumer groups by...">
+                       href="${clusterUrl}#consumer-groups|${stateStatusType}" title="Filter consumer groups by...">
                         <#assign stateClass = consumersUtil.consumerStatusAlertClass(stateStatusType)>
                         <#assign alerts = alerts + [stateClass]>
                         <div class="alert alert-sm ${stateClass} mb-0 small">

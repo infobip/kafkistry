@@ -54,7 +54,7 @@
 
     <div class="card-body pl-0 pr-0">
 
-    <#assign datatableId = "topics-table">
+    <#assign datatableId = "topics">
     <#include "../common/loading.ftl">
     <table id="${datatableId}" class="table table-bordered datatable m-0" style="display: none;">
         <thead class="thead-dark">

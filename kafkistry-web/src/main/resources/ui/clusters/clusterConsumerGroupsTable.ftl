@@ -5,7 +5,7 @@
 <#import "../common/util.ftl" as util>
 <#import "../consumers/util.ftl" as statusUtil>
 
-<#assign datatableId = "consumer-groups-table">
+<#assign datatableId = "consumer-groups">
 <#include "../common/loading.ftl">
 
 <table id="${datatableId}" class="table table-bordered datatable" style="display: none;">

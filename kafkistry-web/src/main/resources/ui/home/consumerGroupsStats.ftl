@@ -18,7 +18,8 @@
             <tr>
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}">
+                       href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}"
+                       title="Click to filter consumer groups...">
                         <#assign stateClass = consumerUtil.alertClassFor(stateType, "consumer")>
                         <div class="alert alert-sm ${stateClass} mb-0">
                             ${stateType}
@@ -39,7 +40,8 @@
             <tr>
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}">
+                       href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}"
+                       title="Click to filter consumer groups...">
                         <#assign stateClass = consumerUtil.alertClassFor(stateType, "lag")>
                         <div class="alert alert-sm ${stateClass} mb-0">
                             ${stateType}

@@ -5,7 +5,7 @@
 <#import "../common/util.ftl" as util>
 <#import "../quotas/util.ftl" as quotaUtil>
 
-<#assign datatableId = "quotas-table">
+<#assign datatableId = "quotas">
 <#include "../common/loading.ftl">
 
 <table id="${datatableId}" class="table table-bordered datatable" style="display: none;">

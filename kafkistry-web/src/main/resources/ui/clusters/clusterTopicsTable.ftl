@@ -4,7 +4,7 @@
 
 <#import "../common/util.ftl" as util>
 
-<#assign datatableId = "topics-table">
+<#assign datatableId = "topics">
 <#include "../common/loading.ftl">
 <table id="${datatableId}" class="table table-bordered datatable" style="display: none;">
     <thead class="thead-dark">

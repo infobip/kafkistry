@@ -6,7 +6,7 @@
     <#list clusterQuotas.status.statusCounts as statusType, count>
         <tr>
             <td class="status-filter-btn agg-count-status-type" data-status-type="${statusType}"
-                title="Click to filter by..." data-table-id="quotas-table">
+                title="Click to filter by..." data-table-id="quotas">
                 <#assign stateClass = util.statusTypeAlertClass(statusType)>
                 <div class="alert alert-sm ${stateClass} mb-0">
                     ${statusType}

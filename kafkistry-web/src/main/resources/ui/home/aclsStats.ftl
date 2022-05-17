@@ -15,7 +15,7 @@
             <tr>
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${appUrl.acls().showAll()}#${stateType}">
+                       href="${appUrl.acls().showAll()}#${stateType}" title="Click to filter ACLs...">
                         <#assign stateClass = util.statusTypeAlertClass(stateType)>
                         <div class="alert alert-sm ${stateClass} mb-0">
                             ${stateType}

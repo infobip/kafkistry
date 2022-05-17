@@ -21,7 +21,7 @@
                 <#list consumersStats.consumerStatusCounts as stateType, count>
                     <tr>
                         <td class="status-filter-btn agg-count-status-type" data-status-type="${stateType}"
-                            title="Click to filter by..." data-table-id="consumer-groups-table">
+                            title="Click to filter by..." data-table-id="consumer-groups">
                             <#assign stateClass = consumerUtil.alertClassFor(stateType, "consumer")>
                             <div class="alert alert-sm ${stateClass} mb-0">
                                 ${stateType}
@@ -42,7 +42,7 @@
                 <#list consumersStats.lagStatusCounts as stateType, count>
                     <tr>
                         <td class="status-filter-btn agg-count-status-type" data-status-type="${stateType}"
-                            title="Click to filter by..." data-table-id="consumer-groups-table">
+                            title="Click to filter by..." data-table-id="consumer-groups">
                             <#assign stateClass = consumerUtil.alertClassFor(stateType, "lag")>
                             <div class="alert alert-sm ${stateClass} mb-0">
                                 ${stateType}
@@ -63,7 +63,7 @@
                 <#list consumersStats.partitionAssignorCounts as stateType, count>
                     <tr>
                         <td class="status-filter-btn agg-count-status-type" data-status-type="${stateType}"
-                            title="Click to filter by..." data-table-id="consumer-groups-table">
+                            title="Click to filter by..." data-table-id="consumer-groups">
                             <div class="alert alert-sm alert-secondary mb-0">
                                 ${stateType}
                             </div>

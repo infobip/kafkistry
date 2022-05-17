@@ -5,7 +5,7 @@
 <#import "../common/util.ftl" as util>
 <#import "../acls/util.ftl" as aclUtil>
 
-<#assign datatableId = "acls-table">
+<#assign datatableId = "acls">
 <#include "../common/loading.ftl">
 <table id="${datatableId}" class="table table-bordered datatable" style="display: none;">
     <thead class="thead-dark">

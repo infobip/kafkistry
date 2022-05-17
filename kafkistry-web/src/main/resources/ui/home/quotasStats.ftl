@@ -15,7 +15,7 @@
             <tr>
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${appUrl.quotas().showAll()}#${stateType}">
+                       href="${appUrl.quotas().showAll()}#${stateType}" title="Click to filter quotas...">
                         <#assign stateClass = util.statusTypeAlertClass(stateType)>
                         <div class="alert alert-sm ${stateClass} mb-0">
                             ${stateType}

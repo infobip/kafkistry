@@ -5,7 +5,7 @@
         <#list clusterTopics.topicsStatusCounts as statusType, count>
             <tr>
                 <td class="status-filter-btn agg-count-status-type" data-status-type="${statusType}"
-                    title="Click to filter by..." data-table-id="topics-table">
+                    title="Click to filter by..." data-table-id="topics">
                     <#include "../common/topicStatusResultBox.ftl">
                 </td>
                 <td style="text-align: right;">${count}</td>
