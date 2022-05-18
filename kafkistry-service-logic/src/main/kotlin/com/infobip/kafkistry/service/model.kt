@@ -35,7 +35,7 @@ data class RuleViolation(
     val placeholders: Map<String, Placeholder> = emptyMap()
 ) {
     enum class Severity {
-        MINOR, WARNING, CRITICAL, ERROR,
+        NONE, MINOR, WARNING, CRITICAL, ERROR,
     }
 }
 

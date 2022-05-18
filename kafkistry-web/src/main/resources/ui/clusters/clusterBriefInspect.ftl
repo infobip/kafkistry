@@ -227,6 +227,10 @@
 
 <#if fullyOk>
     <div class="alert alert-success">
-        NO ISSUES
+        NO_ISSUES
     </div>
+</#if>
+
+<#if clusterIssues?size == 0>
+    <span style="display: none;">NO_ISSUES</span> <#-- to be searchable -->
 </#if>

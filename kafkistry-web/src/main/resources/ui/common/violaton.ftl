@@ -17,6 +17,8 @@
 
 <#function severityClass severity>
     <#switch severity.name()>
+        <#case "NONE">
+            <#return "badge-success">
         <#case "MINOR">
             <#return "badge-info">
         <#case "WARNING">
