@@ -1,7 +1,11 @@
 $(document).ready(formatTimestamp);
 
 function formatTimestamp() {
-    $(".time").each(function () {
+    formatTimestampIn($(document));
+}
+
+function formatTimestampIn(container) {
+    container.find(".time").each(function () {
         let element = $(this);
         let timestamp = parseInt(element.attr("data-time"));
         let prettyTime = new Date(timestamp).toLocaleString();
@@ -14,7 +18,7 @@ function formatTimestamp() {
         }
         element.html(prettyTime + " (" + pretty.replace(" ", "&nbsp;") + ")");
     });
-    $("span[data-time-sec]").each(function () {
+    container.find("span[data-time-sec]").each(function () {
         let element = $(this);
         let timestampSec = parseInt(element.attr("data-time-sec"));
         let prettyTime = new Date(timestampSec * 1000).toLocaleString();
