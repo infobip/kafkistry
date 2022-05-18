@@ -68,10 +68,15 @@ class MainPageController(
             }
             .groupingBy { it.copy(violation = it.violation.copy(message = "", placeholders = emptyMap())) }
             .eachCountDescending()
+        val tagsCounts = clustersStatuses
+            .flatMap { it.cluster.tags }
+            .groupingBy { it }
+            .eachCountDescending()
         return ModelAndView(
             "home/clustersStats", mutableMapOf(
                 "clustersStats" to clustersStats,
                 "issuesStats" to issuesStats,
+                "tagsCounts" to tagsCounts,
             )
         )
     }

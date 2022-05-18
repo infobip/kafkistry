@@ -22,7 +22,7 @@
                         </div>
                     </a>
                 </td>
-                <td>${count}</td>
+                <td class="text-right">${count}</td>
             </tr>
         </#list>
     </table>
