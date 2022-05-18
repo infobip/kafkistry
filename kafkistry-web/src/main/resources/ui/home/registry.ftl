@@ -32,6 +32,17 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
+                    <span class="h5">Clusters</span>
+                </div>
+                <div class="card-body p-0" id="clusters-stats-container">
+                    <#assign statusId = "clusters-stats">
+                    <#include "../common/serverOpStatus.ftl">
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
                     <span class="h5">Topics</span>
                 </div>
                 <div class="card-body p-0" id="topics-stats-container">
@@ -41,16 +52,6 @@
             </div>
         </div>
         <div class="col">
-            <div class="card">
-                <div class="card-header">
-                    <span class="h5">Clusters</span>
-                </div>
-                <div class="card-body p-0" id="clusters-stats-container">
-                    <#assign statusId = "clusters-stats">
-                    <#include "../common/serverOpStatus.ftl">
-                </div>
-            </div>
-            <br/>
             <div class="card">
                 <div class="card-header">
                     <span class="h5">Consumers</span>
