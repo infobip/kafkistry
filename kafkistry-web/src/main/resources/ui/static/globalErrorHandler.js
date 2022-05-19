@@ -7,12 +7,11 @@ window.onerror = function (message, source, lineno, colno, error) {
     //fingers crossed that no one will see this
     let msg = "Uncaught error occurred\n" +
         "Message: " + message + "\n" +
-        "Source: " + source + "\n" +
-        "Line: " + lineno + "\n" +
-        "Column:" + colno + "\n" +
-        "Error: " + error + "\n" +
+        (source ? "Source: " + source + "\n" : "") +
+        (lineno || colno ? "Line: " + lineno + "\n" + "Column:" + colno + "\n" : "") +
+        (error ? "Error: " + error + "\n" : "") +
         "\n" +
-        "Please report this with steps how to reproduce";
+        "Please report this with steps how to reproduce, as well as any stack traces from browser's console log";
     let errContext = seenErrors[msg];
     let prevTime = 0;
     if (errContext) {
