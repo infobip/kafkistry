@@ -1133,5 +1133,92 @@ class RecordStructureAnalyzerTest {
     }
 
 
+    @Test
+    fun `squash dynamic keys - diversity`() {
+        with(newAnalyzer()) {
+            acceptRecord("""{"a":1}""")
+            acceptRecord("""{"b":2}""")
+            acceptRecord("""{"c":3}""")
+            structure().assertEqualsTo(
+                RecordsStructure(
+                    PayloadType.JSON,
+                    headerFields = emptyHeaders,
+                    jsonFields = listOf(
+                        RecordField(
+                            name = null,
+                            fullName = null,
+                            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            children = listOf(
+                                RecordField(
+                                    name = null,
+                                    fullName = "*",
+                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                ),
+                            )
+                        )
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `squash dynamic keys - not java identifier name`() {
+        with(newAnalyzer()) {
+            acceptRecord("""{"1":1}""")
+            acceptRecord("""{"1":2}""")
+            structure().assertEqualsTo(
+                RecordsStructure(
+                    PayloadType.JSON,
+                    headerFields = emptyHeaders,
+                    jsonFields = listOf(
+                        RecordField(
+                            name = null,
+                            fullName = null,
+                            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            children = listOf(
+                                RecordField(
+                                    name = null,
+                                    fullName = "*",
+                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                ),
+                            )
+                        )
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `dont squash dynamic keys - absent`() {
+        with(newAnalyzer()) {
+            acceptRecord("""{"a":1}""")
+            acceptRecord("""{}""")
+            structure().assertEqualsTo(
+                RecordsStructure(
+                    PayloadType.JSON,
+                    headerFields = emptyHeaders,
+                    jsonFields = listOf(
+                        RecordField(
+                            name = null,
+                            fullName = null,
+                            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            children = listOf(
+                                RecordField(
+                                    name = "a",
+                                    fullName = "a",
+                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    nullable = true,
+                                ),
+                            )
+                        )
+                    )
+                )
+            )
+        }
+    }
+
+
 }
 
