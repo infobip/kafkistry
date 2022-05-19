@@ -123,7 +123,7 @@ open class MergingContext(
     private fun String.isDynamicName(): Boolean {
         if (isBlank()) return true
         if (!get(0).isJavaIdentifierStart()) return true
-        return !all { it.isJavaIdentifierPart() }
+        return !all { it == '-' || it.isJavaIdentifierPart() }
     }
 
     private fun List<TimestampWrapper<TimestampWrappedRecordField>>.squashAsVariable(): TimestampWrapper<TimestampWrappedRecordField> {
