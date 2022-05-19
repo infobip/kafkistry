@@ -25,7 +25,7 @@ class RecordStructureAnalyzerTest {
         RecordField(
             null,
             null,
-            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+            RecordFieldType.OBJECT,
             emptyList()
         )
     )
@@ -128,14 +128,14 @@ class RecordStructureAnalyzerTest {
                 .extracting { it?.payloadType }
                 .isEqualTo(PayloadType.JSON)
             assertThat(structure?.jsonFields).hasSize(1)
-            assertThat(structure?.jsonFields?.get(0)?.type).isEqualTo(com.infobip.kafkistry.model.RecordFieldType.OBJECT)
+            assertThat(structure?.jsonFields?.get(0)?.type).isEqualTo(RecordFieldType.OBJECT)
             assertThat(structure?.jsonFields?.get(0)?.name).isNull()
             assertThat(structure?.jsonFields?.get(0)?.children)
                 .extracting(Function { it.name to it.type })
                 .containsExactlyInAnyOrder(
                     "text" to com.infobip.kafkistry.model.RecordFieldType.STRING,
-                    "number" to com.infobip.kafkistry.model.RecordFieldType.INTEGER,
-                    "subJson" to com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    "number" to RecordFieldType.INTEGER,
+                    "subJson" to RecordFieldType.OBJECT,
                     "values" to com.infobip.kafkistry.model.RecordFieldType.ARRAY,
                 )
             assertThat(structure?.jsonFields?.get(0)?.children)
@@ -152,7 +152,7 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     name = null,
                                     fullName = "subJson.subvalue[*]",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    type = RecordFieldType.INTEGER,
                                     children = null
                                 )
                             )
@@ -162,7 +162,7 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = "values[*]",
-                            type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                            type = RecordFieldType.INTEGER,
                             children = null
                         )
                     ),
@@ -183,16 +183,16 @@ class RecordStructureAnalyzerTest {
                 .extracting { it?.payloadType }
                 .isEqualTo(PayloadType.JSON)
             assertThat(structure?.jsonFields).hasSize(1)
-            assertThat(structure?.jsonFields?.get(0)?.type).isEqualTo(com.infobip.kafkistry.model.RecordFieldType.OBJECT)
+            assertThat(structure?.jsonFields?.get(0)?.type).isEqualTo(RecordFieldType.OBJECT)
             assertThat(structure?.jsonFields?.get(0)?.name).isNull()
             assertThat(structure?.jsonFields?.get(0)?.children)
                 .extracting(Function { it.name to it.type })
                 .containsExactlyInAnyOrder(
                     "text" to com.infobip.kafkistry.model.RecordFieldType.STRING,
                     "another_text" to com.infobip.kafkistry.model.RecordFieldType.STRING,
-                    "number" to com.infobip.kafkistry.model.RecordFieldType.INTEGER,
-                    "another_number" to com.infobip.kafkistry.model.RecordFieldType.INTEGER,
-                    "subJson" to com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    "number" to RecordFieldType.INTEGER,
+                    "another_number" to RecordFieldType.INTEGER,
+                    "subJson" to RecordFieldType.OBJECT,
                     "values" to com.infobip.kafkistry.model.RecordFieldType.ARRAY,
                 )
             assertThat(structure?.jsonFields?.get(0)?.children)
@@ -217,7 +217,7 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     null,
                                     "subJson.subvalue[*]",
-                                    com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    RecordFieldType.INTEGER,
                                     null
                                 ),
                             )
@@ -227,7 +227,7 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = "values[*]",
-                            type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                            type = RecordFieldType.INTEGER,
                             children = null,
                             nullable = false
                         )
@@ -246,14 +246,14 @@ class RecordStructureAnalyzerTest {
             val structure = structure()
             assertThat(structure != null)
             assertThat(structure?.jsonFields).hasSize(1)
-            assertThat(structure?.jsonFields?.get(0)?.type).isEqualTo(com.infobip.kafkistry.model.RecordFieldType.OBJECT)
+            assertThat(structure?.jsonFields?.get(0)?.type).isEqualTo(RecordFieldType.OBJECT)
             assertThat(structure?.jsonFields?.get(0)?.name).isNull()
             assertThat(structure?.jsonFields?.get(0)?.children)
                 .extracting(Function { it.name to it.type })
                 .containsExactlyInAnyOrder(
                     "text" to com.infobip.kafkistry.model.RecordFieldType.STRING,
-                    "number" to com.infobip.kafkistry.model.RecordFieldType.INTEGER,
-                    "subJson" to com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    "number" to RecordFieldType.INTEGER,
+                    "subJson" to RecordFieldType.OBJECT,
                     "values" to com.infobip.kafkistry.model.RecordFieldType.ARRAY,
                 )
             assertThat(structure?.jsonFields?.get(0)?.children)
@@ -270,7 +270,7 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     null,
                                     "subJson.subvalue[*]",
-                                    com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    RecordFieldType.INTEGER,
                                     null
                                 )
                             )
@@ -280,7 +280,7 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             null,
                             "values[*]",
-                            com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                            RecordFieldType.INTEGER,
                             null
                         )
                     ),
@@ -307,7 +307,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "arr",
@@ -317,7 +317,7 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     name = null,
                                     fullName = "arr[*]",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                    type = RecordFieldType.OBJECT,
                                     children = listOf(
                                         RecordField(
                                             name = "k",
@@ -390,12 +390,12 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "accountId",
                             fullName = "accountId",
-                            type = com.infobip.kafkistry.model.RecordFieldType.INTEGER
+                            type = RecordFieldType.INTEGER
                         ),
                         RecordField(
                             name = "action",
@@ -410,12 +410,12 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     name = null,
                                     fullName = "personModifications[*]",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                    type = RecordFieldType.OBJECT,
                                     children = listOf(
                                         RecordField(
                                             name = "id",
                                             fullName = "personModifications[*].id",
-                                            type = com.infobip.kafkistry.model.RecordFieldType.INTEGER
+                                            type = RecordFieldType.INTEGER
                                         ),
                                         RecordField(
                                             name = "firstName",
@@ -442,12 +442,12 @@ class RecordStructureAnalyzerTest {
                                                 RecordField(
                                                     name = null,
                                                     fullName = "personModifications[*].officeLocations[*]",
-                                                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                                    type = RecordFieldType.OBJECT,
                                                     children = listOf(
                                                         RecordField(
                                                             name = "id",
                                                             fullName = "personModifications[*].officeLocations[*].id",
-                                                            type = com.infobip.kafkistry.model.RecordFieldType.INTEGER
+                                                            type = RecordFieldType.INTEGER
                                                         ),
                                                         RecordField(
                                                             name = "type",
@@ -466,7 +466,7 @@ class RecordStructureAnalyzerTest {
                                         RecordField(
                                             name = "attributes",
                                             fullName = "personModifications[*].attributes",
-                                            type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                            type = RecordFieldType.OBJECT,
                                             children = listOf(
                                                 RecordField(
                                                     name = "d4dd1234-ccdd-1024-2048-112233445566",
@@ -478,7 +478,7 @@ class RecordStructureAnalyzerTest {
                                         RecordField(
                                             name = "modifiedAt",
                                             fullName = "personModifications[*].modifiedAt",
-                                            type = com.infobip.kafkistry.model.RecordFieldType.INTEGER
+                                            type = RecordFieldType.INTEGER
                                         ),
                                         RecordField(
                                             name = "modifiedFrom",
@@ -488,12 +488,12 @@ class RecordStructureAnalyzerTest {
                                         RecordField(
                                             name = "systemAttributes",
                                             fullName = "personModifications[*].systemAttributes",
-                                            type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                            type = RecordFieldType.OBJECT,
                                             children = listOf(
                                                 RecordField(
                                                     name = "lastActive",
                                                     fullName = "personModifications[*].systemAttributes.lastActive",
-                                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER
+                                                    type = RecordFieldType.INTEGER
                                                 ),
                                             ),
                                         ),
@@ -504,7 +504,7 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = "attributesMetadata",
                             fullName = "attributesMetadata",
-                            type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            type = RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = "d4dd1234-ccdd-1024-2048-112233445566",
@@ -516,12 +516,12 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = "labels",
                             fullName = "labels",
-                            type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            type = RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = "111",
                                     fullName = "labels.111",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                    type = RecordFieldType.OBJECT,
                                     children = listOf(
                                         RecordField(
                                             name = "name",
@@ -538,7 +538,7 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     name = "222",
                                     fullName = "labels.222",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                    type = RecordFieldType.OBJECT,
                                     children = listOf(
                                         RecordField(
                                             name = "name",
@@ -614,7 +614,7 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = "[*]",
-                            type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            type = RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = null,
@@ -624,7 +624,7 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     name = null,
                                     fullName = "[*].*",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    type = RecordFieldType.INTEGER,
                                 ),
                             )
                         )
@@ -669,17 +669,17 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "labels",
                             fullName = "labels",
-                            type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            type = RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = null,
                                     fullName = "labels.*",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                                    type = RecordFieldType.OBJECT,
                                     children = listOf(
                                         RecordField(
                                             name = "name",
@@ -722,7 +722,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "always",
@@ -754,7 +754,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = null,
@@ -780,7 +780,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = null,
@@ -807,7 +807,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "const",
@@ -841,7 +841,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = null,
@@ -851,7 +851,7 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = "*",
-                            type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                            type = RecordFieldType.INTEGER,
                         ),
                     )
                 )
@@ -869,7 +869,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    type = com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    type = RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             "field",
@@ -970,7 +970,7 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = null,
-                            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = "MY_HEADER",
@@ -985,7 +985,7 @@ class RecordStructureAnalyzerTest {
                                 RecordField(
                                     name = "COUNT",
                                     fullName = "COUNT",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    type = RecordFieldType.INTEGER,
                                 ),
                             )
                         )
@@ -1008,7 +1008,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "enum",
@@ -1046,7 +1046,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "name",
@@ -1079,7 +1079,7 @@ class RecordStructureAnalyzerTest {
                 RecordField(
                     name = null,
                     fullName = null,
-                    com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                    RecordFieldType.OBJECT,
                     children = listOf(
                         RecordField(
                             name = "flag",
@@ -1147,12 +1147,12 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = null,
-                            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = null,
                                     fullName = "*",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    type = RecordFieldType.INTEGER,
                                 ),
                             )
                         )
@@ -1175,12 +1175,12 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = null,
-                            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = null,
                                     fullName = "*",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    type = RecordFieldType.INTEGER,
                                 ),
                             )
                         )
@@ -1203,12 +1203,12 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = null,
-                            com.infobip.kafkistry.model.RecordFieldType.OBJECT,
+                            RecordFieldType.OBJECT,
                             children = listOf(
                                 RecordField(
                                     name = "a",
                                     fullName = "a",
-                                    type = com.infobip.kafkistry.model.RecordFieldType.INTEGER,
+                                    type = RecordFieldType.INTEGER,
                                     nullable = true,
                                 ),
                             )
