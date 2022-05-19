@@ -325,7 +325,8 @@ function htmlDecode(input) {
 function renderValues() {
     $("div.value-json[data-json]").each(function () {
         let div = $(this);
-        let object = JsonParseBigInt(htmlDecode(div.attr("data-json")));
+        let json = htmlDecode(div.attr("data-json"));
+        let object = deserializeJson(json);
         div.append($(renderjson(object)));
     });
     $("div.value-string[data-string]").each(function () {
@@ -338,6 +339,14 @@ function renderValues() {
         let base64 = htmlDecode(div.attr("data-base64"));
         div.append(pre(base64));
     });
+}
+
+function deserializeJson(json) {
+    try {
+        return JsonParseBigInt(json);
+    } catch (e) {
+        return JsonParseBigInt(json.replace(/\bNaN\b/g, '"NaN"'));
+    }
 }
 
 function pre(text) {
@@ -446,5 +455,5 @@ function parseJsonOrNull(json) {
     if (json === null) {
         return null;
     }
-    return JsonParseBigInt(json);
+    return deserializeJson(json);
 }
