@@ -65,12 +65,10 @@ class HazelcastEventPublisher(
         const val KR_EVENTS = "kafkistry-events"
         const val KR_ACK = "kafkistry-ack"
 
-        private const val COMMON_METRIC_NAME = "hazelcast_event_publisher_"
-
-        private val latencyMetricHolder = MetricHolder { prefix ->
+        private val publishLatencyMetricHolder = MetricHolder { prefix ->
             //default name: kafkistry_hazelcast_event_publisher_latencies
             Summary.build()
-                .name(prefix + COMMON_METRIC_NAME + "latencies")
+                .name(prefix + "hazelcast_event_publisher_latencies")
                 .help("Summary of latencies of hazelcast event publisher")
                 .labelNames("eventClass")
                 .ageBuckets(5)
@@ -81,23 +79,54 @@ class HazelcastEventPublisher(
                 .register()
         }
 
-        private val counterMetricHolder = MetricHolder { prefix ->
+        private val listenerLatencyMetricHolder = MetricHolder { prefix ->
+            //default name: kafkistry_hazelcast_event_listener_latencies
+            Summary.build()
+                .name(prefix + "hazelcast_event_listener_latencies")
+                .help("Summary of latencies of hazelcast event listener")
+                .labelNames("eventClass", "listenerClass")
+                .ageBuckets(5)
+                .maxAgeSeconds(TimeUnit.MINUTES.toSeconds(5))
+                .quantile(0.5, 0.05)   // Add 50th percentile (= median) with 5% tolerated error
+                .quantile(0.9, 0.01)   // Add 90th percentile with 1% tolerated error
+                .quantile(0.99, 0.001) // Add 99th percentile with 0.1% tolerated error
+                .register()
+        }
+
+        private val publishCounterMetricHolder = MetricHolder { prefix ->
             //default name: kafkistry_hazelcast_event_publisher_count_total
             Counter.build()
-                .name(prefix + COMMON_METRIC_NAME + "count_total")
+                .name(prefix + "hazelcast_event_publisher_count_total")
                 .help("Count of hazelcast event publisher published events per event type and stage [SEND, ACKNOWLEDGED, UNACKNOWLEDGED]")
                 .labelNames("eventClass", "stage")
                 .register()
         }
+
+        private val listenerCounterMetricHolder = MetricHolder { prefix ->
+            //default name: kafkistry_hazelcast_event_listener_count_total
+            Counter.build()
+                .name(prefix + "hazelcast_event_listener_count_total")
+                .help("Count of hazelcast event listener events per event type")
+                .labelNames("eventClass", "listenerClass")
+                .register()
+        }
     }
 
-    private val latencies = latencyMetricHolder.metric(promProperties)
-    private val counters = counterMetricHolder.metric(promProperties)
+    private val publishLatencies = publishLatencyMetricHolder.metric(promProperties)
+    private val publishCounters = publishCounterMetricHolder.metric(promProperties)
+
+    private val listenerLatencies = listenerLatencyMetricHolder.metric(promProperties)
+    private val listenerCounters = listenerCounterMetricHolder.metric(promProperties)
 
     init {
         listeners.forEach { listener ->
+            val listenerClassName = listener.javaClass.name
             eventTopic().addMessageListener { eventMessage ->
-                listener.acceptEvent(eventMessage.messageObject)
+                val eventClassName = eventMessage.messageObject.javaClass.name
+                listenerCounters.labels(eventClassName, listenerClassName).inc()
+                listenerLatencies.labels(eventClassName, listenerClassName).time {
+                    listener.acceptEvent(eventMessage.messageObject)
+                }
                 ackTopic().publish(eventMessage.messageObject.ackId())
             }
         }
@@ -105,8 +134,8 @@ class HazelcastEventPublisher(
 
     override fun publish(event: KafkistryEvent) {
         val eventClassName = event.javaClass.name
-        counters.labels(eventClassName, "SEND").inc()
-        val timer = latencies.labels(eventClassName).startTimer()
+        publishCounters.labels(eventClassName, "SEND").inc()
+        val timer = publishLatencies.labels(eventClassName).startTimer()
         val latch = CountDownLatch(expectedNumAck())
         val registration = ackTopic().addMessageListener { ackEvent ->
             if (ackEvent.messageObject == event.ackId()) {
@@ -117,9 +146,9 @@ class HazelcastEventPublisher(
             eventTopic().publish(event)
             val allDone = latch.await(ackTimeoutMs, TimeUnit.MILLISECONDS)
             if (allDone) {
-                counters.labels(eventClassName, "ACKNOWLEDGED").inc()
+                publishCounters.labels(eventClassName, "ACKNOWLEDGED").inc()
             } else {
-                counters.labels(eventClassName, "UNACKNOWLEDGED").inc()
+                publishCounters.labels(eventClassName, "UNACKNOWLEDGED").inc()
             }
         } finally {
             ackTopic().removeMessageListener(registration)
