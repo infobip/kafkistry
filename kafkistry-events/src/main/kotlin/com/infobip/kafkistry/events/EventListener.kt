@@ -14,13 +14,26 @@ interface EventListener<E : KafkistryEvent> {
     val log: Logger
     val eventType: KClass<E>
 
-    fun acceptEvent(event: KafkistryEvent) {
-        if (eventType.java.isAssignableFrom(event.javaClass)) {
+    fun handleEvent(event: E)
+}
+
+object EventListenerAdapter {
+
+    fun <E : KafkistryEvent> maybeInvoke(listener: EventListener<E>, event: KafkistryEvent) {
+        if (shouldInvoke(listener, event)) {
+            invoke(listener, event)
+        }
+    }
+
+    fun <E : KafkistryEvent> shouldInvoke(listener: EventListener<E>, event: KafkistryEvent): Boolean {
+        return listener.eventType.java.isAssignableFrom(event.javaClass)
+    }
+
+    fun <E : KafkistryEvent> invoke(listener: EventListener<E>, event: KafkistryEvent) {
+        return with(listener) {
             log.info("Handling event $event")
             handleEvent(eventType.cast(event))
         }
     }
-
-    fun handleEvent(event: E)
 }
 

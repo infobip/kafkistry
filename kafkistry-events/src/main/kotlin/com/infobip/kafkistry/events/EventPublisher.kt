@@ -44,7 +44,7 @@ class DefaultEventPublisher(
     override fun publish(event: KafkistryEvent) {
         listeners.forEach {
             try {
-                it.acceptEvent(event)
+                EventListenerAdapter.maybeInvoke(it, event)
             } catch (ex: Exception) {
                 //failure in one listener should not affect execution of other listeners
                 log.error("Listener ${it.javaClass.simpleName} threw an exception for event $event", ex)
@@ -122,12 +122,15 @@ class HazelcastEventPublisher(
         listeners.forEach { listener ->
             val listenerClassName = listener.javaClass.simpleName
             eventTopic().addMessageListener { eventMessage ->
-                val eventClassName = eventMessage.messageObject.javaClass.simpleName
-                listenerCounters.labels(eventClassName, listenerClassName).inc()
-                listenerLatencies.labels(eventClassName, listenerClassName).time {
-                    listener.acceptEvent(eventMessage.messageObject)
+                val event = eventMessage.messageObject
+                if (EventListenerAdapter.shouldInvoke(listener, event)) {
+                    val eventClassName = event.javaClass.simpleName
+                    listenerCounters.labels(eventClassName, listenerClassName).inc()
+                    listenerLatencies.labels(eventClassName, listenerClassName).time {
+                        EventListenerAdapter.invoke(listener, event)
+                    }
                 }
-                ackTopic().publish(eventMessage.messageObject.ackId())
+                ackTopic().publish(event.ackId())
             }
         }
     }
