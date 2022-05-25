@@ -1166,6 +1166,7 @@ class RecordStructureAnalyzerTest {
     fun `squash dynamic keys - not java identifier name`() {
         with(newAnalyzer()) {
             acceptRecord("""{"1":1}""")
+            Thread.sleep(1) //force different timestamp
             acceptRecord("""{"1":2}""")
             structure().assertEqualsTo(
                 RecordsStructure(
