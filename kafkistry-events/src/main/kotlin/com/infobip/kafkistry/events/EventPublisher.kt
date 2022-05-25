@@ -120,9 +120,9 @@ class HazelcastEventPublisher(
 
     init {
         listeners.forEach { listener ->
-            val listenerClassName = listener.javaClass.name
+            val listenerClassName = listener.javaClass.simpleName
             eventTopic().addMessageListener { eventMessage ->
-                val eventClassName = eventMessage.messageObject.javaClass.name
+                val eventClassName = eventMessage.messageObject.javaClass.simpleName
                 listenerCounters.labels(eventClassName, listenerClassName).inc()
                 listenerLatencies.labels(eventClassName, listenerClassName).time {
                     listener.acceptEvent(eventMessage.messageObject)
@@ -133,7 +133,7 @@ class HazelcastEventPublisher(
     }
 
     override fun publish(event: KafkistryEvent) {
-        val eventClassName = event.javaClass.name
+        val eventClassName = event.javaClass.simpleName
         publishCounters.labels(eventClassName, "SEND").inc()
         val timer = publishLatencies.labels(eventClassName).startTimer()
         val latch = CountDownLatch(expectedNumAck())
