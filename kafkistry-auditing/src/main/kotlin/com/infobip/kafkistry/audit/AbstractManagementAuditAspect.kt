@@ -49,7 +49,7 @@ open class AbstractManagementAuditAspect(
 
         private var value = AtomicReference<A>()
 
-        fun ProceedingJoinPoint.capture() = value.set(argClass.cast(args[index]))
+        fun ProceedingJoinPoint.capture() = value.set(argClass.doCast(args[index]))
         fun get(): A = value.get()
         fun apply(event: E) = event.argumentConsumer(get())
     }
@@ -209,4 +209,22 @@ open class AbstractManagementAuditAspect(
         }
     }
 
+}
+
+@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN", "UNCHECKED_CAST")
+private fun <T> Class<T>.doCast(value: Any?): T? {
+    if (value == null) {
+        return null
+    }
+    return when (this) {
+        Int::class.java -> (value as Integer).toInt() as T
+        Long::class.java -> (value as java.lang.Long).toLong() as T
+        Double::class.java -> (value as java.lang.Double).toDouble() as T
+        Boolean::class.java -> (value as java.lang.Boolean).booleanValue() as T
+        Byte::class.java -> (value as java.lang.Byte).toByte() as T
+        Char::class.java -> (value as Character).charValue() as T
+        Float::class.java -> (value as java.lang.Float).toFloat() as T
+        Short::class.java -> (value as java.lang.Short).toShort() as T
+        else -> cast(value)
+    }
 }
