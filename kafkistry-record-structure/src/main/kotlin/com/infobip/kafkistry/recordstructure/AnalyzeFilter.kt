@@ -7,6 +7,7 @@ import com.infobip.kafkistry.service.consume.filter.MapKeyPathElement
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.RecordFieldType
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.consume.JsonPathDef
 import com.infobip.kafkistry.utils.ClusterTopicFilter
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
@@ -24,7 +25,7 @@ class AnalyzeFilter(
     private val includedFields = properties.valueSampling.includedFields.asNonEmptyJsonPaths()
     private val excludedFields = properties.valueSampling.excludedFields.asNonEmptyJsonPaths()
 
-    private fun Set<String>.asNonEmptyJsonPaths(): JsonPaths? =
+    private fun Set<JsonPathDef>.asNonEmptyJsonPaths(): JsonPaths? =
         takeIf { it.isNotEmpty() }
         ?.map { jsonPathParser.parseJsonKeyPath(it) }
         ?.fold(JsonPaths()) { acc: JsonPaths, path: List<KeyPathElement> -> acc.apply { add(path) } }

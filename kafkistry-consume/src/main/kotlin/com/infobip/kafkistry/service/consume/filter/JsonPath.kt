@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.consume.filter
 
+import com.infobip.kafkistry.service.consume.JsonPathDef
 import org.springframework.stereotype.Component
 
 sealed class KeyPathElement
@@ -42,7 +43,7 @@ class JsonPathParser {
      * [*]foo       => List(null),Key(foo)
      * org\.foo\.Bar => Key(org.foo.Bar)
      */
-    fun parseJsonKeyPath(path: String): List<KeyPathElement> {
+    fun parseJsonKeyPath(path: JsonPathDef): List<KeyPathElement> {
         if (path.isEmpty()) {
             return emptyList()
         }

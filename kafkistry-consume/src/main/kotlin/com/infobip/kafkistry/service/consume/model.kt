@@ -44,8 +44,10 @@ data class RecordDeserialization(
     }
 }
 
+typealias JsonPathDef = String
+
 data class ValueRule(
-    val name: String,
+    val name: JsonPathDef,
     val type: FieldRuleType,
     val value: String
 )

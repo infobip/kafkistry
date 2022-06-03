@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.recordstructure
 
+import com.infobip.kafkistry.service.consume.JsonPathDef
 import com.infobip.kafkistry.utils.ClusterTopicFilterProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
@@ -41,7 +42,7 @@ class RecordAnalyzerProperties {
         @NestedConfigurationProperty
         var enabledOn = ClusterTopicFilterProperties()
 
-        var includedFields: Set<String> = emptySet()
-        var excludedFields: Set<String> = emptySet()
+        var includedFields: Set<JsonPathDef> = emptySet()
+        var excludedFields: Set<JsonPathDef> = emptySet()
     }
 }
