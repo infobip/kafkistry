@@ -9,9 +9,11 @@ class ByteArrayKafkaDeserializer : GenericKafkaDeserializer() {
 
     override fun typeName(): DeserializerType = "BYTES"
 
+    override fun isResultMaskable(): Boolean = false
+
     override fun deserialize(rawValue: ByteArray): DeserializedValue? {
         return DeserializedValue(typeName(), rawValue, rawValue, Base64.getEncoder().encodeToString(rawValue))
     }
 
-    override fun suppressableByAnything(): Boolean = true
+    override fun suppressibleByAnything(): Boolean = true
 }

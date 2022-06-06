@@ -21,6 +21,8 @@ class ConsumerOffsetDeserializer(
 
     override fun supportsKey(topic: TopicName): Boolean = topic == this.topic
 
+    override fun isResultMaskable(): Boolean = true
+
     override fun deserializeKey(
         rawValue: ByteArray, record: ConsumerRecord<ByteArray, ByteArray>
     ): DeserializedValue? = with(internalTopicsValueReader) {

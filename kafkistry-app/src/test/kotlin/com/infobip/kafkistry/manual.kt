@@ -76,6 +76,8 @@ fun manualMain(
                 "HTTP_ROOT_PATH=",
                 "GIT_COMMIT_TO_MASTER_BY_DEFAULT=true",
                 "DISABLED_CLUSTERS=local-disabled",
+                "app.masking.rules.test.target.topics.included=topic-example-4",
+                "app.masking.rules.test.value-json-paths=secret",
             ).plus(extraProperties).toTypedArray()
         )
         .initializers(
@@ -385,7 +387,12 @@ class DataStateInitializer(
                 (0..500_000)
                     .map {
                         val partition = selector.nextPartition()
-                        ProducerRecord(name, partition, "key_$it", """{"id":$it,"msg":"Dummy message $it"}""")
+                        val value = if (it % 10 != 0) {
+                            """{"id":$it,"msg":"Dummy message $it","secret":$it}"""
+                        } else {
+                            "this is not a json $it"
+                        }
+                        ProducerRecord(name, partition, "key_$it", value)
                     }
                     .map { producer.send(it) }
                     .also { producer.flush() }

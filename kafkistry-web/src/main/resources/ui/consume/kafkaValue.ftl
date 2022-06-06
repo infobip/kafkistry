@@ -15,18 +15,19 @@
         </div>
     <#else>
         <#list kafkaValue.deserializations as typeTag, deserialization>
+            <#assign tagSuffix = deserialization.masked?then(" (MASKED)", "")>
             <div class="col">
                 <#switch typeTag>
                     <#case "BYTES">
-                        <div class="record-value value-base64" data-type="${typeTag}"
+                        <div class="record-value value-base64" data-type="${typeTag}${tagSuffix}"
                              data-base64='${kafkaValue.rawBase64Bytes}'></div>
                         <#break>
                     <#case "STRING">
-                        <div class="record-value value-string" data-type="${typeTag}"
+                        <div class="record-value value-string" data-type="${typeTag}${tagSuffix}"
                              data-string='${deserialization.value}'></div>
                         <#break>
                     <#default>
-                        <div class="record-value value-json" data-type="${typeTag}"
+                        <div class="record-value value-json" data-type="${typeTag}${tagSuffix}"
                              data-json='${deserialization.asJson}'></div>
                 </#switch>
             </div>

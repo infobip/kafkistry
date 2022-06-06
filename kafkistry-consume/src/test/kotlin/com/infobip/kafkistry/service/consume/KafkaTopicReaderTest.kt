@@ -268,7 +268,9 @@ private fun String.asValue(): KafkaValue {
     val consumerRecord = ConsumerRecord(
         "---", 0,0, ByteArray(0), this.encodeToByteArray()
     )
-    val record = RecordFactoryTest.factory.creatorFor(RecordDeserialization.ANY).create(consumerRecord)
+    val record = RecordFactoryTest.factory.creatorFor(
+        "", "", RecordDeserialization.ANY
+    ).create(consumerRecord)
     return record.value
 }
 
@@ -283,7 +285,7 @@ fun KafkaRecord.toProducerRecord(): ProducerRecord<String?, ByteArray> {
     )
 }
 
-fun KafkaValue.toBytesOrNull(): ByteArray? = if (isNull) null else Base64.getDecoder().decode(rawBase64Bytes)
+fun KafkaValue.toBytesOrNull(): ByteArray? = if (isNull || isMasked) null else Base64.getDecoder().decode(rawBase64Bytes)
 
 fun KafkaValue.toBytes(): ByteArray {
     return when {

@@ -1,16 +1,12 @@
 package com.infobip.kafkistry.recordstructure
 
-import com.infobip.kafkistry.service.consume.filter.JsonPathParser
-import com.infobip.kafkistry.service.consume.filter.KeyPathElement
-import com.infobip.kafkistry.service.consume.filter.ListIndexPathElement
-import com.infobip.kafkistry.service.consume.filter.MapKeyPathElement
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.RecordFieldType
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consume.JsonPathDef
+import com.infobip.kafkistry.service.consume.filter.*
 import com.infobip.kafkistry.utils.ClusterTopicFilter
 import org.springframework.stereotype.Component
-import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class AnalyzeFilter(
@@ -25,10 +21,9 @@ class AnalyzeFilter(
     private val includedFields = properties.valueSampling.includedFields.asNonEmptyJsonPaths()
     private val excludedFields = properties.valueSampling.excludedFields.asNonEmptyJsonPaths()
 
-    private fun Set<JsonPathDef>.asNonEmptyJsonPaths(): JsonPaths? =
-        takeIf { it.isNotEmpty() }
-        ?.map { jsonPathParser.parseJsonKeyPath(it) }
-        ?.fold(JsonPaths()) { acc: JsonPaths, path: List<KeyPathElement> -> acc.apply { add(path) } }
+    private fun Set<JsonPathDef>.asNonEmptyJsonPaths(): JsonPathsTree? = this
+        .takeIf { it.isNotEmpty() }
+        ?.let { jsonPathParser.parseAsTree(it) }
 
     fun shouldAnalyze(
         clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName,
@@ -42,45 +37,14 @@ class AnalyzeFilter(
     fun shouldSampleValuesForPath(
         jsonPath: List<Pair<RecordFieldType, String?>>,
     ): Boolean {
-        if (includedFields != null && jsonPath !in includedFields) {
+        val pathParts = jsonPath.map { it.second }
+        if (includedFields != null && pathParts !in includedFields) {
             return false
         }
-        if (excludedFields != null && jsonPath in excludedFields) {
+        if (excludedFields != null && pathParts in excludedFields) {
             return false
         }
         return true
-    }
-
-    class JsonPaths {
-
-        private var leaf = false
-        private val tree = ConcurrentHashMap<KeyPathElement, JsonPaths>()
-
-        fun add(path: List<KeyPathElement>) {
-            if (path.isEmpty()) {
-                leaf = true
-                return
-            }
-            tree.computeIfAbsent(path.first()) { JsonPaths() }.add(path.subList(1, path.size))
-        }
-
-        operator fun contains(jsonPath: List<Pair<RecordFieldType, String?>>): Boolean {
-            if (jsonPath.isEmpty()) {
-                return leaf
-            }
-            val keyCandidates = jsonPath.first().let { (_, name) ->
-                listOfNotNull(
-                    name?.let { MapKeyPathElement(it) },
-                    MapKeyPathElement(null),
-                    ListIndexPathElement(null)
-                )
-            }
-            val subPath = jsonPath.subList(1, jsonPath.size)
-            return keyCandidates.any { key ->
-                val subTree = tree[key] ?: return@any false
-                subPath in subTree
-            }
-        }
     }
 
 }

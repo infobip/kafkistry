@@ -12,6 +12,8 @@ class StringKafkaDeserializer : GenericKafkaDeserializer() {
 
     override fun typeName(): DeserializerType = "STRING"
 
+    override fun isResultMaskable(): Boolean = false
+
     override fun deserialize(rawValue: ByteArray): DeserializedValue? {
         return try {
             val string = String(rawValue, charset = StandardCharsets.UTF_8)

@@ -78,6 +78,7 @@ enum class WaitStrategy {
 data class KafkaValue(
     val isNull: Boolean = false,
     val isEmpty: Boolean = false,
+    val isMasked: Boolean = false,
     val rawBase64Bytes: String?,
     val deserializations: Map<DeserializerType, DeserializedValue>,
 ) {
@@ -92,6 +93,7 @@ data class DeserializedValue(
     val value: Any,
     val asFilterable: Any,
     val asJson: String,
+    val isMasked: Boolean = false,
 )
 
 data class KafkaRecord(

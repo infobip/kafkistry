@@ -13,7 +13,11 @@ sealed class KeyPathElement
  */
 data class MapKeyPathElement(
         val keyName: String?
-) : KeyPathElement()
+) : KeyPathElement() {
+    companion object {
+        val ALL = MapKeyPathElement(null)
+    }
+}
 
 /**
  * example values:
@@ -22,7 +26,11 @@ data class MapKeyPathElement(
  */
 data class ListIndexPathElement(
         val index: Int?
-) : KeyPathElement()
+) : KeyPathElement() {
+    companion object {
+        val ALL = ListIndexPathElement(null)
+    }
+}
 
 @Component
 class JsonPathParser {
@@ -53,8 +61,8 @@ class JsonPathParser {
                 .map { it.replace("\\.", ".") }
                 .map {
                     when (it) {
-                        "[*]" -> ListIndexPathElement(null)
-                        "*" -> MapKeyPathElement(null)
+                        "[*]" -> ListIndexPathElement.ALL
+                        "*" -> MapKeyPathElement.ALL
                         in indexedListPattern -> it.substring(1 until (it.length - 1))
                                 .toInt()
                                 .let { index -> ListIndexPathElement(index) }

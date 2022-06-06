@@ -7,13 +7,26 @@ import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.service.consume.deserialize.*
 import com.infobip.kafkistry.service.consume.interntopics.InternalTopicsValueReader
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.KafkistryPermissionException
+import com.infobip.kafkistry.service.consume.filter.JsonPathParser
+import com.infobip.kafkistry.service.consume.masking.RecordMaskerFactory
+import com.infobip.kafkistry.service.consume.masking.RecordMaskingRuleProvider
+import com.infobip.kafkistry.service.consume.masking.TopicMaskingSpec
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.whenever
+import io.kotlintest.mock.mock
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.util.*
 import org.apache.kafka.common.header.internals.RecordHeader as KafkaRecordHeader
 
 class RecordFactoryTest {
 
     companion object {
+        val maskingProvider = mock<RecordMaskingRuleProvider>().also {
+            whenever(it.maskingSpecFor(any(), any())).thenReturn(emptyList())
+        }
         val factory = RecordFactory(
             availableDeserializers = listOf(
                 IntKafkaDeserializer(),
@@ -25,9 +38,10 @@ class RecordFactoryTest {
                 JsonKafkaDeserializer(),
                 ConsumerOffsetDeserializer(InternalTopicsValueReader()),
                 TransactionStateDeserializer(InternalTopicsValueReader()),
-            )
+            ),
+            recordMaskerFactory = RecordMaskerFactory(listOf(maskingProvider), JsonPathParser()),
         )
-        val creator = factory.creatorFor(RecordDeserialization.ANY)
+        val creator = factory.creatorFor("", "", RecordDeserialization.ANY)
     }
 
     @Test
@@ -92,6 +106,61 @@ class RecordFactoryTest {
     fun `test detect int or float`() {
         val record = creator.create(record(binValue = byteArrayOf(0x00, 0x00, 0x00, 0x1C)))
         assertThat(record.value.deserializations).containsOnlyKeys("INT", "FLOAT")
+    }
+
+    @Nested
+    inner class MaskingValueTest {
+
+        private val stringDsr = RecordDeserialization(keyType = null, valueType = "STRING", headersType = null)
+
+        private fun maskingCreator(
+            deserialization: RecordDeserialization = RecordDeserialization.ANY
+        ): RecordFactory.Creator {
+            whenever(maskingProvider.maskingSpecFor("t", "c")).thenReturn(
+                listOf(
+                    TopicMaskingSpec(
+                        valuePathDefs = setOf("secret"), keyPathDefs = emptySet(), headerPathDefs = emptyMap(),
+                    )
+                )
+            )
+            return factory.creatorFor("t", "c", deserialization)
+        }
+
+        @Test
+        fun `masking json value field`() {
+            val record = maskingCreator().create(record(value = """{"id":1122,"secret":"plaintext"}"""))
+            assertThat(record.value.isMasked).isTrue
+            assertThat(record.value.deserializations["JSON"]?.asJson).isEqualTo("""{"id":1122,"secret":"***MASKED***"}""")
+            assertThat(record.value.deserializations["JSON"]?.asFilterable).isEqualTo(
+                mapOf("id" to 1122, "secret" to "***MASKED***")
+            )
+            assertThat(record.value.deserializations["STRING"]).isNull()
+            assertThat(record.value.rawBase64Bytes).isNull()
+        }
+
+        @Test
+        fun `masking json value field - string deserialization`() {
+            assertThrows<KafkistryPermissionException> {
+                maskingCreator(stringDsr).create(record(value = """{"id":1122,"secret":"plaintext"}"""))
+            }
+        }
+
+        @Test
+        fun `masking non-json value field`() {
+            val record = maskingCreator().create(record(value = "this is not a json"))
+            assertThat(record.value.isMasked).isFalse
+            assertThat(record.value.deserializations["JSON"]).isNull()
+            assertThat(record.value.deserializations["STRING"]?.asFilterable).isEqualTo("this is not a json")
+            assertThat(record.value.rawBase64Bytes).isNotNull
+        }
+
+        @Test
+        fun `masking non-json value field - string deserialization`() {
+            assertThrows<KafkistryPermissionException> {
+                maskingCreator(stringDsr).create(record(value = "this is not a json"))
+            }
+        }
+
     }
 
     private fun record(

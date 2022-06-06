@@ -12,6 +12,7 @@ import com.infobip.kafkistry.kafka.ClientFactory
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.connectionDefinition
 import com.infobip.kafkistry.model.KafkaCluster
+import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryConsumeException
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -38,7 +39,7 @@ class KafkaTopicReader(
             .use {
                 it.setup(topicName, readConfig)
                 try {
-                    it.readMessages(topicName, readConfig)
+                    it.readMessages(topicName, cluster.identifier, readConfig)
                 } catch (ex: OffsetOutOfRangeException) {
                     it.translateInvalidOffsetException(ex)
                 }
@@ -57,8 +58,6 @@ class KafkaTopicReader(
             ))
         }
     }
-
-
 
     private fun createConsumer(
         cluster: KafkaCluster, username: String, readConfig: ReadConfig
@@ -136,9 +135,9 @@ class KafkaTopicReader(
      * Function reads at most `readConfig.numRecords` records starting from already assigned offsets for consumer group.
      */
     private fun KafkaConsumer<ByteArray, ByteArray>.readMessages(
-        topicName: TopicName, readConfig: ReadConfig
+        topicName: TopicName, clusterIdentifier: KafkaClusterIdentifier, readConfig: ReadConfig
     ): KafkaRecordsResult {
-        val recordCreator = recordFactory.creatorFor(readConfig.recordDeserialization)
+        val recordCreator = recordFactory.creatorFor(topicName, clusterIdentifier, readConfig.recordDeserialization)
         val readMonitor = ReadMonitor.ofConfig(readConfig)
         val poolDuration = Duration.ofMillis(consumeProperties.poolInterval())
         val initialPositions = assignment().sortedBy { it.partition() }.associate { it.partition() to position(it) }

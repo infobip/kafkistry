@@ -840,6 +840,26 @@ prevent memory exhaustion.
 When reading from topic a new `KafkaConsumer` will be created which will consumer with randomly generated 
 consumer group ID, and it will not perform commits while consuming.
 
+### Record masking
+
+Topic's records usually contain user sensitive data which shouldn't be visible even to developers.
+This feature allows specification which fields in which topics on which kafka clusters are sensitive.
+When topic is being consumed by Kafkistry, all sensitive values will be replaced with dummy `***MASKED***` value.
+
+Rules for masking can be defined via following configuration properties:
+
+| Property | Default  | Description |
+|----------|----------|-------------|
+| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_ | From which clusters to apply masking of topic records. See [filtering options](#filter-options) |
+| `app.masking.rules.<my-rule-name>.target.topics.<...filter options...>`   | _all_ | From which topics to apply masking of topic records. See [filtering options](#filter-options) |
+| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_ | From which clusters to apply masking of topic records. See [filtering options](#filter-options) |
+| `app.masking.rules.<my-rule-name>.value-json-paths`                 | _none_ | Comma-separated list of json path field in record's deserialized value to apply masking replacement |
+| `app.masking.rules.<my-rule-name>.key-json-paths`                   | _none_ | Comma-separated list of json path field in record's deserialized key to apply masking replacement |
+| `app.masking.rules.<my-rule-name>.headers-json-paths.<header-name>` | _none_ | Comma-separated list of json path field in record's deserialized header to apply masking replacement |
+
+Rules for masking can be obtained by supplying custom implementation of
+[RecordTimestampExtractor](kafkistry-consume/src/main/kotlin/com/infobip/kafkistry/service/consume/masking/RecordMaskingRuleProvider.kt)
+as spring bean.
 
 
 ## Oldest record age sampling/analysis

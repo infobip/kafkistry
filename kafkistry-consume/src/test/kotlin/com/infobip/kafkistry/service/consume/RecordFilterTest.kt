@@ -431,7 +431,7 @@ class RecordFilterTest {
             headers: Map<String, String> = emptyMap(),
             value: String = ""
     ): KafkaRecord {
-        return recordFactory.creatorFor(RecordDeserialization.ANY).create(ConsumerRecord(
+        return recordFactory.creatorFor("t", "c", RecordDeserialization.ANY).create(ConsumerRecord(
                 "",
                 0,
                 0,
