@@ -65,6 +65,11 @@ pre.renderjson {
     color: #122512;
 }
 
+.renderjson .masked {
+    color: #de2323;
+    font-weight: bold;
+}
+
 .value-base64 .renderjson, .renderjson .value-base64{
     color: #1e1aaf;
 }

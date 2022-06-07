@@ -245,11 +245,15 @@ function generateNewUrl(formData) {
 }
 
 function expandAll() {
-    $(".headers-collapsed").hide();
-    $(".headers-expanded").show();
+    expandAllIn($(document));
+}
+
+function expandAllIn(container) {
+    container.find(".headers-collapsed").hide();
+    container.find(".headers-expanded").show();
     let numElements = 0;
     while (true) {
-        let elements = $("a.disclosure:contains('⊕')");
+        let elements = container.find("a.disclosure:contains('⊕')");
         if (elements.length > numElements) {
             elements.click();
             numElements = elements.length;
@@ -260,9 +264,13 @@ function expandAll() {
 }
 
 function collapseAll() {
-    $("a.disclosure:contains('⊖')").click();
-    $(".headers-collapsed").show();
-    $(".headers-expanded").hide();
+    collapseAllIn($(document));
+}
+
+function collapseAllIn(container) {
+    container.find("a.disclosure:contains('⊖')").click();
+    container.find(".headers-collapsed").show();
+    container.find(".headers-expanded").hide();
 }
 
 function headersExpand() {
@@ -328,7 +336,20 @@ function renderValues() {
         let json = htmlDecode(div.attr("data-json"));
         let object = deserializeJson(json);
         div.append($(renderjson(object)));
+        div.hide();
+        expandAllIn(div);
+        div.find("span.string").get()
+            .filter(function (elem) {
+                console.log("text: ["+$(elem).text()+"]");
+                return $(elem).text() === '"***MASKED***"';
+            })
+            .forEach(function (elem) {
+                $(elem).removeClass("string").addClass("masked").attr("title", "sensitive data");
+            });
+        collapseAllIn(div);
+        div.show();
     });
+
     $("div.value-string[data-string]").each(function () {
         let div = $(this);
         let string = htmlDecode(div.attr("data-string"));
