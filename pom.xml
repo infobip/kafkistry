@@ -297,6 +297,9 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
+                            <excludes>
+                                <exclude>**/*.asc</exclude>
+                            </excludes>
                             <skip>${maven-gpg-plugin.skip}</skip>
                         </configuration>
                     </execution>
