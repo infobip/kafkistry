@@ -39,9 +39,9 @@ Once container starts open [http://localhost:8080](http://localhost:8080) and lo
 From there you can add kafka cluster to be tracked and check features.
 
 
-## Build (without tests)
+## Build (without tests and GPG signing)
 ```
-mvn clean compile package -DskipTests
+mvn clean compile package -DskipTests -Dgpg-sign-skip=true
 ```
 
 ## Test

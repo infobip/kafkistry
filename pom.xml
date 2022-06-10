@@ -42,7 +42,7 @@
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <dokka-maven-plugin.version>1.6.21</dokka-maven-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
-        <maven-gpg-plugin.skip>true</maven-gpg-plugin.skip>
+        <gpg-sign-skip>false</gpg-sign-skip>
         <docker.skip-build>true</docker.skip-build>
         <docker.from-image>openjdk:18-jdk</docker.from-image>
         <docker.to-image>infobip/kafkistry:${project.version}</docker.to-image>
@@ -300,7 +300,7 @@
                             <excludes>
                                 <exclude>**/*.asc</exclude>
                             </excludes>
-                            <skip>${maven-gpg-plugin.skip}</skip>
+                            <skip>${gpg-sign-skip}</skip>
                         </configuration>
                     </execution>
                 </executions>
