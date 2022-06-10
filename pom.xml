@@ -278,7 +278,7 @@
                 <version>${dokka-maven-plugin.version}</version>
                 <executions>
                     <execution>
-                        <phase>pre-site</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>javadocJar</goal>
                         </goals>
