@@ -47,16 +47,21 @@ class ConfigValueInspector {
         return if (expectedValue == null) {
             inspectRegistryUndefinedValue(clusterConfig, nameKey, actualValue)
         } else {
-            inspectRegistryExpectedValue(expectedValue, actualValue)
+            val expectingClusterDefault = isValueSameAsExpectedByCluster(nameKey, expectedValue, clusterConfig)
+            inspectRegistryExpectedValue(expectedValue, actualValue, expectingClusterDefault)
         }
     }
 
-    private fun inspectRegistryExpectedValue(expectedValue: String, actualValue: ConfigValue): ValueInspection {
+    private fun inspectRegistryExpectedValue(
+        expectedValue: String,
+        actualValue: ConfigValue,
+        expectingClusterDefault: Boolean,
+    ): ValueInspection {
         //since value is defined in registry explicitly, actual value need to be same as it
         return if (expectedValue == actualValue.value) {
-            ValueInspection(true, actualValue.value, expectedValue, false)
+            ValueInspection(true, actualValue.value, expectedValue, expectingClusterDefault)
         } else {
-            ValueInspection(false, actualValue.value, expectedValue, false)
+            ValueInspection(false, actualValue.value, expectedValue, expectingClusterDefault)
         }
     }
 

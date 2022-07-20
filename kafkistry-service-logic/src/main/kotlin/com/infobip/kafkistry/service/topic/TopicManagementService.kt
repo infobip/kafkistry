@@ -122,7 +122,10 @@ class TopicManagementService(
         )
         finalConfigToSet.forEach { (key, value) ->
             registrySpecificConfig[key]?.also { registryValue ->
-                if (registryValue != value) {
+                val expectingClusterDefault = inspectionResult.configEntryStatuses?.get(key)
+                    ?.expectingClusterDefault ?: false
+                val clusterDefault = value == null && expectingClusterDefault
+                if (registryValue != value && !clusterDefault) {
                     throw KafkistryIllegalStateException(
                         "Topic '$topicName' on cluster '$clusterIdentifier', has different config " +
                                 " key='$key' with expected value='$registryValue' " +
