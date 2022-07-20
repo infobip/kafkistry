@@ -40,7 +40,7 @@ class LagInspection(
         if (lag == null || percentage == null) {
             return LagStatus.UNKNOWN
         }
-        if (percentage >= 100.0) {
+        if (percentage > 100.0) {
             val oneRecordIn15MinRate = 1.0 / TimeUnit.MINUTES.toSeconds(15)
             val lowRateStagnation = memberAssigned && lag < lagProperties.partitionTxnLagTolerateAmount &&
                     partitionMsgRate != null && partitionMsgRate < oneRecordIn15MinRate
