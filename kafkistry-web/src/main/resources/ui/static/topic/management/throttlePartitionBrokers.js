@@ -102,9 +102,9 @@ async function applyTopicsThrottle(topicsThrottles) {
 }
 
 
-function setBrokerThrottle(clusterIdentifier, brokerId, throttle, errorCallback) {
+async function setBrokerThrottle(clusterIdentifier, brokerId, throttle, errorCallback) {
     console.log("Setting throttle for broker " + brokerId + ", throttle: " + JSON.stringify(throttle));
-    $
+    return await $
         .ajax("api/clusters-management/throttle/" + brokerId + "?clusterIdentifier=" + encodeURI(clusterIdentifier), {
             method: "POST",
             contentType: "application/json; charset=utf-8",
@@ -119,9 +119,9 @@ function setBrokerThrottle(clusterIdentifier, brokerId, throttle, errorCallback)
         });
 }
 
-function setTopicThrottle(clusterIdentifier, topic, topicConfig, errorCallback) {
+async function setTopicThrottle(clusterIdentifier, topic, topicConfig, errorCallback) {
     console.log("Setting throttle for topic " + topic + ", throttle: " + JSON.stringify(topicConfig));
-    $
+    return await $
         .ajax("api/management/set-topic-config"
             + "?clusterIdentifier=" + encodeURI(clusterIdentifier)
             + "&topicName=" + encodeURI(topic), {
