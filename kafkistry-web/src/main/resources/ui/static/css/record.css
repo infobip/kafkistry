@@ -95,9 +95,8 @@ pre.renderjson {
     font-weight: bold;
 }
 
-.record-value:before {
+.kafka-value-gutter {
     display: block;
-    content: attr(data-type);
     position: absolute;
     font-size: 0.7em;
     font-weight: 700;

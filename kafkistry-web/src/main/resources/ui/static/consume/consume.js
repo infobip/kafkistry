@@ -41,6 +41,7 @@ $(document).ready(function () {
     topicInput.change(adjustTopicChange);
     offsetTypeInput.change(adjustDatePicker);
     setupInspectTopicButton();
+    $(document).on("click", ".kafka-value-copy-btn", null, copyKafkaValueToClipboard);
 });
 
 let allClusterTopics = {};
@@ -340,7 +341,6 @@ function renderValues() {
         expandAllIn(div);
         div.find("span.string").get()
             .filter(function (elem) {
-                console.log("text: ["+$(elem).text()+"]");
                 return $(elem).text() === '"***MASKED***"';
             })
             .forEach(function (elem) {
@@ -478,3 +478,20 @@ function parseJsonOrNull(json) {
     }
     return deserializeJson(json);
 }
+
+function copyKafkaValueToClipboard() {
+    let gutter = $(this).closest(".kafka-value-gutter");
+    let copyInput = gutter.find("input[name=kafkaCopyValue]");
+    copyInput.select();
+    navigator.clipboard.writeText(copyInput.val()).then(function() {
+        console.log("copied: '"+copyInput.val()+"'");
+        gutter.attr("title", "Copied!");
+        gutter.tooltip('show');
+        setTimeout(function () {
+            gutter.tooltip('dispose');
+        }, 2000);
+    }, function() {
+        alert("failed to copy");
+    });
+}
+

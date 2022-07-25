@@ -16,20 +16,32 @@
     <#else>
         <#list kafkaValue.deserializations as typeTag, deserialization>
             <#assign tagSuffix = deserialization.masked?then(" (MASKED)", "")>
+            <#assign typeGutter = "${typeTag}${tagSuffix}">
             <div class="col">
+                <#assign copyValue = "">
                 <#switch typeTag>
                     <#case "BYTES">
                         <div class="record-value value-base64" data-type="${typeTag}${tagSuffix}"
                              data-base64='${kafkaValue.rawBase64Bytes}'></div>
+                        <#assign copyValue = kafkaValue.rawBase64Bytes>
                         <#break>
                     <#case "STRING">
                         <div class="record-value value-string" data-type="${typeTag}${tagSuffix}"
                              data-string='${deserialization.value}'></div>
+                        <#assign copyValue = deserialization.value>
                         <#break>
                     <#default>
                         <div class="record-value value-json" data-type="${typeTag}${tagSuffix}"
                              data-json='${deserialization.asJson}'></div>
+                        <#assign copyValue = deserialization.asJson>
                 </#switch>
+                <div class="kafka-value-gutter">
+                    <span>${typeTag}${tagSuffix}</span>
+                    <div class="btn btn-xsmall btn-secondary kafka-value-copy-btn" title="Copy to clipboard">
+                        &nbsp;⧉&nbsp;
+                    </div>
+                    <input name="kafkaCopyValue" type="text" value="${copyValue}" style="display: none;" title="copy input">
+                </div>
             </div>
         </#list>
     </#if>
