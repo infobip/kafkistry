@@ -480,18 +480,33 @@ function parseJsonOrNull(json) {
 }
 
 function copyKafkaValueToClipboard() {
-    let gutter = $(this).closest(".kafka-value-gutter");
+    let copyBtn = $(this);
+    let gutter = copyBtn.closest(".kafka-value-gutter");
     let copyInput = gutter.find("input[name=kafkaCopyValue]");
-    copyInput.select();
-    navigator.clipboard.writeText(copyInput.val()).then(function() {
-        console.log("copied: '"+copyInput.val()+"'");
-        gutter.attr("title", "Copied!");
-        gutter.tooltip('show');
-        setTimeout(function () {
-            gutter.tooltip('dispose');
-        }, 2000);
-    }, function() {
-        alert("failed to copy");
-    });
+    if (navigator.clipboard !== undefined) {
+        navigator.clipboard.writeText(copyInput.val()).then(function() {
+            showCopiedTooltip(copyBtn, copyInput);
+        }, function() {
+            alert("failed to copy");
+        });
+    } else {
+        console.log("Copy to clipboard using legacy document.execCommand('copy')");
+        copyInput.show();
+        copyInput.select();
+        document.execCommand('copy');
+        copyInput.hide();
+        showCopiedTooltip(copyBtn, copyInput);
+    }
+}
+
+function showCopiedTooltip(copyBtn, copyInput) {
+    console.log("copied: '"+copyInput.val()+"'");
+    let originalTitle = copyBtn.attr("title");
+    copyBtn.attr("title", "Copied!");
+    copyBtn.tooltip('show');
+    setTimeout(function () {
+        copyBtn.tooltip('dispose');
+        copyBtn.attr("title", originalTitle);
+    }, 2000);
 }
 
