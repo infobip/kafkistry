@@ -59,6 +59,11 @@ class InspectApi(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
     ): List<ConfigValueChange> = topicsInspectionService.topicConfigNeededChanges(topicName, clusterIdentifier)
 
+    @GetMapping("/topics-needed-config-changes")
+    fun inspectTopicsNeededConfigChangesOnCluster(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+    ): Map<TopicName, List<ConfigValueChange>> = topicsInspectionService.inspectTopicsConfigsNeededChanges(clusterIdentifier)
+
     @PostMapping("/topic-inspect-dry-run")
     fun inspectTopicUpdateDryRun(
         @RequestBody topicDescription: TopicDescription,

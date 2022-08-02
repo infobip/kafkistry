@@ -12,6 +12,7 @@ import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATE
+import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING_ON_CLUSTERS
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_RE_BALANCE
@@ -197,6 +198,18 @@ class TopicsManagementController(
                 "topicName" to topicName,
                 "cluster" to cluster,
                 "configChanges" to configChanges
+        ))
+    }
+
+    @GetMapping(TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES)
+    fun showBulkConfigUpdates(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
+    ): ModelAndView {
+        val cluster = clustersApi.getCluster(clusterIdentifier)
+        val topicsConfigChanges = inspectApi.inspectTopicsNeededConfigChangesOnCluster(clusterIdentifier)
+        return ModelAndView("management/bulkTopicsConfigsUpdates", mutableMapOf(
+            "topicsConfigChanges" to topicsConfigChanges,
+            "cluster" to cluster
         ))
     }
 

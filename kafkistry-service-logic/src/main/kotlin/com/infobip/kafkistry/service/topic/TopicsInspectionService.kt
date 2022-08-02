@@ -1,6 +1,8 @@
 package com.infobip.kafkistry.service.topic
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafka.ExistingConfig
+import com.infobip.kafkistry.kafka.KafkaExistingTopic
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafkastate.KafkaClusterState
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
@@ -195,13 +197,39 @@ class TopicsInspectionService(
         val existingTopic = clusterData.topics
                 .firstOrNull { it.name == topicName }
                 ?: throw KafkistryIllegalStateException("Could not found topic '$topicName' on cluster '$clusterIdentifier'")
+        return computeTopicConfigNeededChanges(clusterData.clusterInfo.config, expectedConfig, existingTopic)
+    }
+
+    fun inspectTopicsConfigsNeededChanges(
+        clusterIdentifier: KafkaClusterIdentifier,
+    ): Map<TopicName, List<ConfigValueChange>> {
+        val clusterRef = clustersRegistry.getCluster(clusterIdentifier).ref()
+        val clusterData = kafkaClustersStateProvider.getLatestClusterStateValue(clusterIdentifier)
+        val existingTopics = clusterData.topics.associateBy { it.name }
+        val topicDescriptions = topicsRegistry.listTopics()
+        return topicDescriptions.mapNotNull { topic ->
+            existingTopics[topic.name]
+                ?.let { existingTopic ->
+                    val expectedConfig = topic.configForCluster(clusterRef)
+                    computeTopicConfigNeededChanges(clusterData.clusterInfo.config, expectedConfig, existingTopic)
+                }
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { topic.name to it }
+        }.toMap()
+    }
+
+    private fun computeTopicConfigNeededChanges(
+        clusterConfig: ExistingConfig,
+        expectedConfig: TopicConfigMap,
+        existingTopic: KafkaExistingTopic,
+    ): List<ConfigValueChange> {
         val allConfigKeys = expectedConfig.keys + existingTopic.config.keys
         return allConfigKeys.mapNotNull {
             configValueInspector.requiredConfigValueChange(
-                    nameKey = it,
-                    actualValue = existingTopic.config[it] ?: return@mapNotNull null,
-                    expectedValue = expectedConfig[it],
-                    clusterConfig = clusterData.clusterInfo.config
+                nameKey = it,
+                actualValue = existingTopic.config[it] ?: return@mapNotNull null,
+                expectedValue = expectedConfig[it],
+                clusterConfig = clusterConfig,
             )
         }
     }

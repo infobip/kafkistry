@@ -22,6 +22,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
         const val TOPICS_MANAGEMENT_BULK_CREATE_MISSING = "/bulk-create-missing-topics"
         const val TOPICS_MANAGEMENT_BULK_CREATE_MISSING_ON_CLUSTERS = "/bulk-create-missing-topic-on-clusters"
         const val TOPICS_MANAGEMENT_BULK_RE_ELECT_REPLICA_LEADERS = "/bulk-re-elect-replica-leaders"
+        const val TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES = "/bulk-topics-config-updates"
         const val TOPICS_MANAGEMENT_BULK_VERIFY_RE_ASSIGNMENTS = "/bulk-verify-re-assignments"
         const val TOPICS_MANAGEMENT_BULK_RE_BALANCE_FORM = "/bulk-re-balance-topics-form"
         const val TOPICS_MANAGEMENT_BULK_RE_BALANCE = "/bulk-re-balance-topics"
@@ -72,6 +73,9 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
     private val showBulkReElectReplicaLeaders = Url(
         "$base$TOPICS_MANAGEMENT_BULK_RE_ELECT_REPLICA_LEADERS", listOf("clusterIdentifier")
     )
+    private val showBulkConfigUpdates = Url(
+        "$base$TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES", listOf("clusterIdentifier")
+    )
     private val showBulkVerifyReAssignments = Url(
         "$base$TOPICS_MANAGEMENT_BULK_VERIFY_RE_ASSIGNMENTS", listOf("clusterIdentifier")
     )
@@ -116,6 +120,10 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
     fun showBulkReElectReplicaLeaders(
             clusterIdentifier: KafkaClusterIdentifier
     ) = showBulkReElectReplicaLeaders.render("clusterIdentifier" to clusterIdentifier)
+
+    fun showBulkConfigUpdates(
+            clusterIdentifier: KafkaClusterIdentifier
+    ) = showBulkConfigUpdates.render("clusterIdentifier" to clusterIdentifier)
 
     fun showBulkVerifyReAssignments(
             clusterIdentifier: KafkaClusterIdentifier

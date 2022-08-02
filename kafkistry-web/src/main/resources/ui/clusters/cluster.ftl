@@ -70,6 +70,10 @@
             Topic<small>(s)</small> action...
         </button>
         <div class="dropdown-menu open">
+            <a href="${appUrl.topicsManagement().showBulkConfigUpdates(clusterIdentifier)}"
+               class="dropdown-item text-info">
+                Update topics wrong configs...
+            </a>
             <a href="${appUrl.topicsManagement().showBulkReElectReplicaLeaders(clusterIdentifier)}"
                class="dropdown-item text-info">
                 Re-elect topics leaders...
