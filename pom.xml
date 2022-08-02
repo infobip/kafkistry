@@ -6,6 +6,32 @@
     <packaging>pom</packaging>
     <version>0.0.5-SNAPSHOT</version>
 
+    <name>Kafkistry</name>
+    <description>
+        Registry service for Apache Kafka which keeps track of topics, consumer-groups, acls, quotas and their configuration/state/metadata across multiple kafka-clusters.
+        It allows performing administrative operations such as inspecting/creating/deleting/re-configuring topics/consumer-groups.
+        It also provides various analytical tools such as: SQL querying metadata; viewing topic records; analyzing json record structures; re-balancing cluster tools; etc.
+    </description>
+    <url>https://github.com/infobip/kafkistry</url>
+    <organization>
+        <name>Infobip, Ltd.</name>
+        <url>https://infobip.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Antonio Tomac</name>
+            <email>antonio.tomac@infobip.com</email>
+            <organization>Infobip, Ltd.</organization>
+            <organizationUrl>https://infobip.com</organizationUrl>
+        </developer>
+    </developers>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
