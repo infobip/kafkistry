@@ -84,7 +84,7 @@
                 <div class="input-group-append">
                     <#assign defaultTopicSelectOrder = "TOP">
                     <select name="topicSelectOrder" class="form-control" data-style="alert-secondary" title="Topics select order">
-                        <#assign topicSelectOrders = enums["com.infobip.kafkistry.service.BulkReAssignmentOptions$TopicSelectOrder"]>
+                        <#assign topicSelectOrders = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicSelectOrder"]>
                         <#list topicSelectOrders as topicSelectOrder, enum>
                             <#assign selected = topicSelectOrder == defaultTopicSelectOrder>
                             <option value="${topicSelectOrder}" <#if selected>selected</#if>>${topicSelectOrder} BY</option>
@@ -93,7 +93,7 @@
                 </div>
                 <#assign defaultTopicBy = "MIGRATION_BYTES">
                 <select name="topicBy" class="form-control" title="Topics select by">
-                    <#assign topicByTypes = enums["com.infobip.kafkistry.service.BulkReAssignmentOptions$TopicBy"]>
+                    <#assign topicByTypes = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicBy"]>
                     <#list topicByTypes as topicBy, enum>
                         <#assign selected = topicBy == defaultTopicBy>
                         <option <#if selected>selected</#if>>${topicBy}</option>
@@ -107,7 +107,7 @@
             <div class="col">
                 <#assign defaultReBalanceMode = "REPLICAS_THEN_LEADERS">
                 <select name="reBalanceMode" class="form-control" title="Re-balance mode">
-                    <#assign reBalanceModes = enums["com.infobip.kafkistry.service.ReBalanceMode"]>
+                    <#assign reBalanceModes = enums["com.infobip.kafkistry.service.topic.ReBalanceMode"]>
                     <#list reBalanceModes as reBalanceMode, enum>
                         <#assign selected = reBalanceMode == defaultReBalanceMode>
                         <option <#if selected>selected</#if>>${reBalanceMode}</option>
