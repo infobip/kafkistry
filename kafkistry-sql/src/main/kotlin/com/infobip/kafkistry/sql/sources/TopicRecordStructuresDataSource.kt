@@ -11,6 +11,7 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.sql.SqlDataSource
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import java.util.Base64
 import javax.persistence.*
 import com.infobip.kafkistry.model.RecordsStructure as RecordsStructureModel
 import com.infobip.kafkistry.model.RecordField as RecordFieldModel
@@ -48,6 +49,7 @@ class TopicRecordStructuresDataSource(
             payloadType = recordsStructure.payloadType
             nullable = recordsStructure.nullable
             jsonFields = recordsStructure.jsonFields?.flatMap { mapRecordField(it) }
+            headerFields = recordsStructure.headerFields?.flatMap { mapRecordField(it) }
         }
     }
 
@@ -59,7 +61,12 @@ class TopicRecordStructuresDataSource(
             nullable = field.nullable
             highCardinality = field.value?.highCardinality
             tooBig = field.value?.tooBig
-            valueSet = field.value?.valueSet?.takeIf { it.isNotEmpty() }?.joinToString(",")
+            valueSet = field.value?.valueSet?.takeIf { it.isNotEmpty() }?.joinToString(",") {
+                when (it) {
+                    is ByteArray -> Base64.getEncoder().encodeToString(it)
+                    else -> it.toString()
+                }
+            }
         }
         val children: List<RecordField> = field.children
             ?.flatMap { mapRecordField(it) }
@@ -85,6 +92,10 @@ class RecordsStructure {
     @ElementCollection
     @JoinTable(name = "RecordStructures_RecordJsonFields")
     var jsonFields: List<RecordField>? = null
+
+    @ElementCollection
+    @JoinTable(name = "RecordStructures_RecordHeaderFields")
+    var headerFields: List<RecordField>? = null
 
 }
 
