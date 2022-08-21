@@ -239,7 +239,7 @@
                 <#assign countDiff = stateTypeCountDiff.quantity>
                 <tr>
                     <td>
-                        <#assign stateClass = util.statusToHtmlClass(stateType)>
+                        <#assign stateClass = util.levelToHtmlClass(stateType.level)>
                         <div class="alert alert-sm ${stateClass} mb-0">
                             ${stateType.name}
                         </div>

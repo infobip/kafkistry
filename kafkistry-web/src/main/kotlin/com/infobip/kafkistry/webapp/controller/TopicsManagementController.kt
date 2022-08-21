@@ -9,7 +9,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.*
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.HAS_UNVERIFIED_REASSIGNMENTS
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.HAS_UNVERIFIED_REASSIGNMENTS
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATE
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES

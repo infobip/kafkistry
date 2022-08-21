@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="statusFlags" type="com.infobip.kafkistry.service.topic.StatusFlags" -->
 <#-- @ftlvariable name="clusterStatusFlags" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.StatusFlags>" -->
-<#-- @ftlvariable name="allTopicStatusTypes" type="java.util.List<com.infobip.kafkistry.service.topic.InspectionResultType>" -->
-<#-- @ftlvariable name="nonOkTopicStatusTypes" type="java.util.List<com.infobip.kafkistry.service.topic.InspectionResultType>" -->
+<#-- @ftlvariable name="allTopicStatusTypes" type="java.util.List<com.infobip.kafkistry.service.topic.TopicInspectionResultType>" -->
+<#-- @ftlvariable name="nonOkTopicStatusTypes" type="java.util.List<com.infobip.kafkistry.service.topic.TopicInspectionResultType>" -->
 
 <#import "infoIcon.ftl" as info>
 <#import "util.ftl" as util>

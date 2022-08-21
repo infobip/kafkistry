@@ -40,11 +40,6 @@
     </#switch>
 </#function>
 
-<#function statusToHtmlClass statusType>
-<#-- @ftlvariable name="statusType"  type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
-    <#return levelToHtmlClass(statusType.level)>
-</#function>
-
 <#function clusterStatusToHtmlClass stateType>
 <#-- @ftlvariable name="stateType"  type="com.infobip.kafkistry.kafkastate.StateType" -->
     <#switch stateType.name()>

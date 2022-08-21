@@ -6,7 +6,7 @@ import com.infobip.kafkistry.api.InspectApi
 import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.topic.InspectionResultType
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.topic.compare.ComparedValue
 import com.infobip.kafkistry.service.topic.compare.ComparingRequest
@@ -40,7 +40,7 @@ class CompareController(
                 val presence = topicsRegistry.findTopic(topicName)?.presence
                 if (presence == null) {
                     inspectApi.inspectTopic(topicName).statusPerClusters
-                        .filter { InspectionResultType.UNKNOWN in it.status.types }
+                        .filter { TopicInspectionResultType.UNKNOWN in it.status.types }
                         .map { it.clusterIdentifier }
                 } else {
                     clustersApi.listClusters()

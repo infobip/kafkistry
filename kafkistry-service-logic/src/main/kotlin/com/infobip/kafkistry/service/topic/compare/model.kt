@@ -2,7 +2,7 @@ package com.infobip.kafkistry.service.topic.compare
 
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.topic.InspectionResultType
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType
 
 data class ComparingSubject(
     val topicName: TopicName?,
@@ -43,8 +43,8 @@ data class ComparedValue(
 }
 
 data class TopicInspectionStatusTypes(
-    val sourceTypes: List<InspectionResultType>,
-    val targetsTypes: List<List<InspectionResultType>>
+    val sourceTypes: List<TopicInspectionResultType>,
+    val targetsTypes: List<List<TopicInspectionResultType>>
 )
 
 enum class PropertyStatus {

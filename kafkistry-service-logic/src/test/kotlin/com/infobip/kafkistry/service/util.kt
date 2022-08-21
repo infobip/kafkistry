@@ -11,12 +11,11 @@ import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.repository.storage.git.GitRepository
-import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.topic.*
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_CONFIG
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_PARTITION_COUNT
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_REPLICATION_FACTOR
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_CONFIG
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_PARTITION_COUNT
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_REPLICATION_FACTOR
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -220,7 +219,7 @@ private val defaultValues = mapOf(
         "segment.index.bytes" to "10485760"
 )
 
-private fun String.toIssueType(): InspectionResultType = when (this) {
+private fun String.toIssueType(): TopicInspectionResultType = when (this) {
     "replication-factor" -> WRONG_REPLICATION_FACTOR
     "partition-count" -> WRONG_PARTITION_COUNT
     else -> WRONG_CONFIG

@@ -94,7 +94,7 @@ class TopicsInspectionService(
                     it.statusPerTopics
                             ?: throw KafkistryIllegalStateException("Can't list cluster topics because cluster state is ${it.clusterState}")
                 }
-                .filter { InspectionResultType.MISSING in it.status.types }
+                .filter { TopicInspectionResultType.MISSING in it.status.types }
                 .map { topicsRegistry.getTopic(it.topicName) }
     }
 
@@ -120,7 +120,7 @@ class TopicsInspectionService(
                             "Can't list cluster topics because cluster state is ${it.clusterState}"
                     )
                 }
-                .filter { InspectionResultType.NEEDS_LEADER_ELECTION in it.status.types }
+                .filter { TopicInspectionResultType.NEEDS_LEADER_ELECTION in it.status.types }
                 .map {
                     it.existingTopicInfo ?: throw KafkistryIllegalStateException(
                             "Can't read topic's '${it.topicName}' info because its state is: ${it.status.types}")
@@ -445,7 +445,7 @@ class TopicsInspectionService(
     ): TopicStatuses {
         val statusPerClusters = clusterRefs
             .map { doInspectTopicOnCluster(topicName, topicDescription, it) }
-            .sortedBy { if (InspectionResultType.CLUSTER_DISABLED in it.status.types) 1 else 0 }
+            .sortedBy { if (TopicInspectionResultType.CLUSTER_DISABLED in it.status.types) 1 else 0 }
             .sortedBy {
                 val clusterRef = ClusterRef(it.clusterIdentifier, it.clusterTags)
                 val needToExist = topicDescription?.presence?.needToBeOnCluster(clusterRef) == true

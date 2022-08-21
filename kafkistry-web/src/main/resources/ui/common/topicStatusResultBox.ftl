@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="statusType" type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
+<#-- @ftlvariable name="statusType" type="com.infobip.kafkistry.service.topic.TopicInspectionResultType" -->
 <#-- @ftlvariable name="asStatusFlag" type="java.lang.Boolean" -->
 
 <#import "util.ftl" as util>
@@ -7,7 +7,7 @@
 
 <#assign isStatusFlag = asStatusFlag!false>
 
-<div class="text-nowrap alert <#if isStatusFlag>status-flag</#if> ${util.statusToHtmlClass(statusType)} mb-0" role="alert">
+<div class="text-nowrap alert <#if isStatusFlag>status-flag</#if> ${util.levelToHtmlClass(statusType.level)} mb-0" role="alert">
     ${statusType.name}
     <#if !isStatusFlag && (doc.topicStatus[statusType.name])??>
         <#assign tooltip>

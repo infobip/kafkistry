@@ -83,7 +83,7 @@
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                            href="${clusterUrl}#topics|${statusType.name}" title="Filter topics by...">
-                            <#assign stateClass = util.statusToHtmlClass(statusType)>
+                            <#assign stateClass = util.levelToHtmlClass(statusType.level)>
                             <#assign alerts = alerts + [stateClass]>
                             <div class="alert alert-sm ${stateClass} mb-0 small">
                                 ${statusType.name}

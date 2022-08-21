@@ -13,18 +13,18 @@ import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.topic.*
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CLUSTER_DISABLED
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CLUSTER_UNREACHABLE
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CURRENT_CONFIG_RULE_VIOLATIONS
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.MISSING
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.OK
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.UNEXPECTED
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.UNKNOWN
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_CONFIG
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_PARTITION_COUNT
-import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_REPLICATION_FACTOR
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_DISABLED
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CURRENT_CONFIG_RULE_VIOLATIONS
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNKNOWN
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_CONFIG
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_PARTITION_COUNT
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_REPLICATION_FACTOR
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -490,14 +490,14 @@ class InspectionTest {
     private fun assertTopicState(
         topicName: TopicName,
         clusterIdentifier: KafkaClusterIdentifier,
-        type: InspectionResultType,
+        type: TopicInspectionResultType,
         vararg expectedAssertions: WrongValueAssertion
     ) = assertTopicState(topicName, clusterIdentifier, listOf(type), *expectedAssertions)
 
     private fun assertTopicState(
         topicName: TopicName,
         clusterIdentifier: KafkaClusterIdentifier,
-        types: List<InspectionResultType>,
+        types: List<TopicInspectionResultType>,
         vararg expectedAssertions: WrongValueAssertion
     ) {
         val expectingFullyOk = types.any { it in setOf(OK, NOT_PRESENT_AS_EXPECTED, CLUSTER_DISABLED) }

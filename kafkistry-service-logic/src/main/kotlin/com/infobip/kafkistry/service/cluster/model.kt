@@ -8,7 +8,7 @@ import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.NamedTypeQuantity
 import com.infobip.kafkistry.service.acl.AclInspectionResultType
-import com.infobip.kafkistry.service.topic.InspectionResultType
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType
 import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType
 import com.infobip.kafkistry.service.resources.ClusterDiskUsage
@@ -40,7 +40,7 @@ data class CountDiff(
 infix fun Int.diff(after: Int) = CountDiff(this, after, after - this)
 
 data class TopicsDryRunDiff(
-    val statusCounts: List<NamedTypeQuantity<InspectionResultType, CountDiff>>,
+    val statusCounts: List<NamedTypeQuantity<TopicInspectionResultType, CountDiff>>,
     val topicsToCreate: List<TopicName>,
     val topicsToDelete: List<TopicName>,
     val topicsToReconfigure: List<TopicName>,
