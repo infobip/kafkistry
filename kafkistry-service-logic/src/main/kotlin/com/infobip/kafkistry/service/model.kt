@@ -6,6 +6,7 @@ import com.infobip.kafkistry.model.*
 interface NamedType {
     val name: String
     val level: StatusLevel
+    val valid: Boolean
 }
 
 data class NamedTypeQuantity<T : NamedType, Q>(
@@ -22,6 +23,40 @@ enum class StatusLevel {
     ERROR,
     CRITICAL,
 }
+
+interface SubjectStatus<T : NamedType> {
+    val ok: Boolean
+    val statusCounts: List<NamedTypeQuantity<T, Int>>
+
+    companion object {
+        fun <T : NamedType, S : SubjectStatus<T>> from(
+            statuses: List<T>,
+            constructor: (ok: Boolean, statusCounts: List<NamedTypeQuantity<T, Int>>) -> S
+        ): S = constructor(
+            statuses.map { it.valid }.fold(true, Boolean::and),
+            statuses.groupingBy { it }
+                .eachCountDescending()
+                .map { NamedTypeQuantity(it.key, it.value) }
+        )
+    }
+}
+
+fun <T : NamedType, S : SubjectStatus<T>> S.merge(
+    other: S,
+    constructor: (ok: Boolean, statusCounts: List<NamedTypeQuantity<T, Int>>) -> S
+): S = constructor(
+    ok && other.ok,
+    (statusCounts.asSequence() + other.statusCounts.asSequence())
+        .groupBy({ it.type }, { it.quantity })
+        .mapValues { (_, counts) -> counts.sum() }
+        .sortedByValueDescending()
+        .map { NamedTypeQuantity(it.key, it.value) }
+)
+
+fun <T : NamedType, S : SubjectStatus<T>> Iterable<S>.aggregateStatusTypes(
+    empty: S,
+    constructor: (ok: Boolean, statusCounts: List<NamedTypeQuantity<T, Int>>) -> S
+): S = fold(empty) { s1,s2-> s1.merge(s2, constructor) }
 
 data class OptionalValue<V>(
     val value: V?,

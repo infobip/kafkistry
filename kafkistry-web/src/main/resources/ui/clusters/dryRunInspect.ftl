@@ -322,12 +322,14 @@
                 <th>Diff</th>
             </tr>
             </thead>
-            <#list clusterDryRunInspect.quotasDiff.statusCounts as stateType, countDiff>
+            <#list clusterDryRunInspect.quotasDiff.statusCounts as stateTypeCountDiff>
+                <#assign stateType = stateTypeCountDiff.type>
+                <#assign countDiff = stateTypeCountDiff.quantity>
                 <tr>
                     <td>
-                        <#assign stateClass = util.statusTypeAlertClass(stateType)>
+                        <#assign stateClass = util.levelToHtmlClass(stateType.level)>
                         <div class="alert alert-sm ${stateClass} mb-0">
-                            ${stateType}
+                            ${stateType.name}
                         </div>
                     </td>
                     <td>${countDiff.before}</td>

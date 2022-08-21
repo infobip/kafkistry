@@ -279,38 +279,6 @@
     </span>
 </#macro>
 
-<#-- TODO reomove -->
-<#function statusTypeAlertClass type>
-    <#switch type.name()>
-        <#case "OK">
-            <#return "alert-success">
-            <#break>
-        <#case "MISSING">
-        <#case "UNEXPECTED">
-        <#case "UNKNOWN">
-        <#case "CLUSTER_UNREACHABLE">
-        <#case "SECURITY_DISABLED">
-        <#case "WRONG_VALUE">
-            <#return "alert-danger">
-        <#case "CLUSTER_DISABLED">
-        <#case "NOT_PRESENT_AS_EXPECTED">
-            <#return "alert-secondary">
-            <#break>
-        <#case "UNAVAILABLE">
-            <#return "alert-warning">
-            <#break>
-        <#default>
-            <#return "">
-    </#switch>
-</#function>
-
-<#-- TODO remove -->
-<#macro statusAlert type>
-    <div role="alert" class="alert alert-inline alert-sm ${statusTypeAlertClass(type)} mb-0">
-        ${type}
-    </div>
-</#macro>
-
 <#macro namedTypeStatusAlert type>
 <#-- @ftlvariable name="type" type="com.infobip.kafkistry.service.NamedType" -->
     <div role="alert" class="alert alert-inline alert-sm ${levelToHtmlClass(type.level)} mb-0">

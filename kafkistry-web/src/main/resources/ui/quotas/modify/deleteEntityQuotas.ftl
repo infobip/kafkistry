@@ -28,7 +28,7 @@
     <#include "../../common/updateForm.ftl">
     <br/>
 
-    <button id="delete-btn" data-entity-id="${entityQuotas.entity.asID()?html}" class="btn btn-danger btn-sm">
+    <button id="delete-btn" data-entity-id="${entityQuotas.entity.asID()}" class="btn btn-danger btn-sm">
         Delete entity quotas
     </button>
     <#include "../../common/cancelBtn.ftl">

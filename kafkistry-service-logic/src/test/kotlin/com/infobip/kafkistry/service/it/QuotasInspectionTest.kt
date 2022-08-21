@@ -12,14 +12,19 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.PresenceType.EXCLUDED_CLUSTERS
 import com.infobip.kafkistry.model.PresenceType.INCLUDED_CLUSTERS
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.KafkistryIllegalStateException
-import com.infobip.kafkistry.service.UpdateContext
-import com.infobip.kafkistry.service.newCluster
-import com.infobip.kafkistry.service.newQuota
 import com.infobip.kafkistry.service.quotas.*
 import com.infobip.kafkistry.service.quotas.AvailableQuotasOperation.*
-import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.*
 import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.service.*
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.CLUSTER_DISABLED
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNAVAILABLE
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNKNOWN
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.WRONG_VALUE
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -322,7 +327,7 @@ class QuotasInspectionTest {
                     entity = QuotaEntity.user("u1"),
                     quotaDescription = e1_q,
                     clusterInspections = listOf(r_c1_e1, r_c2_e1, r_c3_e1),
-                    status = QuotaStatus(ok = true, mapOf(OK to 2, NOT_PRESENT_AS_EXPECTED to 1)),
+                    status = QuotaStatus(ok = true, listOf(OK has 2, NOT_PRESENT_AS_EXPECTED has 1)),
                     availableOperations = emptyList(),
                     affectedPrincipals = emptyMap(),
                 ),
@@ -330,7 +335,7 @@ class QuotasInspectionTest {
                     entity = QuotaEntity.user("u2"),
                     quotaDescription = e2_q,
                     clusterInspections = listOf(r_c1_e2, r_c2_e2, r_c3_e2),
-                    status = QuotaStatus(ok = false, mapOf(WRONG_VALUE to 1, MISSING to 1, UNEXPECTED to 1)),
+                    status = QuotaStatus(ok = false, listOf(WRONG_VALUE has 1, MISSING has 1, UNEXPECTED has 1)),
                     availableOperations = listOf(
                         CREATE_MISSING_QUOTAS, DELETE_UNWANTED_QUOTAS, ALTER_WRONG_QUOTAS, EDIT_CLIENT_QUOTAS,
                     ),
@@ -345,7 +350,7 @@ class QuotasInspectionTest {
                     entity = QuotaEntity.user("u3"),
                     quotaDescription = null,
                     clusterInspections = listOf(r_c1_e3, r_c2_e3, r_c3_e3),
-                    status = QuotaStatus(ok = false, mapOf(UNKNOWN to 2, UNAVAILABLE to 1)),
+                    status = QuotaStatus(ok = false, listOf(UNKNOWN has 2, UNAVAILABLE has 1)),
                     availableOperations = listOf(DELETE_UNWANTED_QUOTAS, IMPORT_CLIENT_QUOTAS),
                     affectedPrincipals = emptyMap(),
                 )
@@ -356,21 +361,21 @@ class QuotasInspectionTest {
         assertThat(c1_result).isEqualTo(
             ClusterQuotasInspection(
                 clusterIdentifier = "c_1",
-                status = QuotaStatus(ok = false, mapOf(OK to 1, WRONG_VALUE to 1, UNKNOWN to 1)),
+                status = QuotaStatus(ok = false, listOf(OK has 1, WRONG_VALUE has 1, UNKNOWN has 1)),
                 entityInspections = listOf(r_c1_e1, r_c1_e2, r_c1_e3),
             )
         )
         assertThat(c2_result).isEqualTo(
             ClusterQuotasInspection(
                 clusterIdentifier = "c_2",
-                status = QuotaStatus(ok = false, mapOf(NOT_PRESENT_AS_EXPECTED to 1, MISSING to 1, UNKNOWN to 1)),
+                status = QuotaStatus(ok = false, listOf(NOT_PRESENT_AS_EXPECTED has 1, MISSING has 1, UNKNOWN has 1)),
                 entityInspections = listOf(r_c2_e1, r_c2_e2, r_c2_e3),
             )
         )
         assertThat(c3_result).isEqualTo(
             ClusterQuotasInspection(
                 clusterIdentifier = "c_3",
-                status = QuotaStatus(ok = false, mapOf(OK to 1, UNEXPECTED to 1)),
+                status = QuotaStatus(ok = false, listOf(OK has 1, UNEXPECTED has 1)),
                 entityInspections = listOf(r_c3_e1, r_c3_e2),
             )
         )
@@ -436,5 +441,7 @@ class QuotasInspectionTest {
             )
         )
     }
+
+    private infix fun QuotasInspectionResultType.has(count: Int) = NamedTypeQuantity(this, count)
 
 }

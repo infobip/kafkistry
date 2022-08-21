@@ -8,7 +8,7 @@ import com.infobip.kafkistry.service.StatusLevel.*
 data class AclInspectionResultType(
     override val name: String,
     override val level: StatusLevel,
-    val valid: Boolean,
+    override val valid: Boolean,
 ) : NamedType {
     companion object {
         val OK = AclInspectionResultType("OK", SUCCESS, true)
@@ -24,31 +24,21 @@ data class AclInspectionResultType(
 }
 
 data class AclStatus(
-    val ok: Boolean,
-    val statusCounts: List<NamedTypeQuantity<AclInspectionResultType, Int>>,
-) {
+    override val ok: Boolean,
+    override val statusCounts: List<NamedTypeQuantity<AclInspectionResultType, Int>>,
+) : SubjectStatus<AclInspectionResultType>{
     companion object {
         val EMPTY_OK = AclStatus(true, emptyList())
 
-        fun from(statuses: List<AclRuleStatus>) = AclStatus(
-            ok = statuses.map { it.statusType.valid }.fold(true, Boolean::and),
-            statusCounts = statuses.groupingBy { it.statusType }
-                .eachCountDescending()
-                .map { NamedTypeQuantity(it.key, it.value) }
-        )
+        fun from(statuses: List<AclRuleStatus>) = SubjectStatus.from(statuses.map { it.statusType }) { ok, counts ->
+            AclStatus(ok, counts)
+        }
     }
-
-    infix fun merge(other: AclStatus) = AclStatus(
-        ok = ok && other.ok,
-        statusCounts = (statusCounts.asSequence() + other.statusCounts.asSequence())
-            .groupBy({ it.type }, { it.quantity })
-            .mapValues { (_, counts) -> counts.sum() }
-            .sortedByValueDescending()
-            .map { NamedTypeQuantity(it.key, it.value) }
-    )
 }
 
-fun Iterable<AclStatus>.aggregate(): AclStatus = fold(AclStatus.EMPTY_OK, AclStatus::merge)
+fun Iterable<AclStatus>.aggregate(): AclStatus = aggregateStatusTypes(AclStatus.EMPTY_OK) { ok, counts ->
+    AclStatus(ok, counts)
+}
 
 data class AclRuleStatus(
     val statusType: AclInspectionResultType,

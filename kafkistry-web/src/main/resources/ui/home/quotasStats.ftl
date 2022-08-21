@@ -15,10 +15,10 @@
             <tr>
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${appUrl.quotas().showAll()}#${stateType}" title="Click to filter quotas...">
-                        <#assign stateClass = util.statusTypeAlertClass(stateType)>
+                       href="${appUrl.quotas().showAll()}#${stateType.name}" title="Click to filter quotas...">
+                        <#assign stateClass = util.levelToHtmlClass(stateType.level)>
                         <div class="alert alert-sm ${stateClass} mb-0">
-                            ${stateType}
+                            ${stateType.name}
                         </div>
                     </a>
                 </td>

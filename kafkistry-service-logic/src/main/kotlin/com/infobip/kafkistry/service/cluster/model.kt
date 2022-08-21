@@ -55,7 +55,7 @@ data class AclsDryRunDiff(
 )
 
 data class QuotasDryRunDiff(
-    val statusCounts: Map<QuotasInspectionResultType, CountDiff>,
+    val statusCounts: List<NamedTypeQuantity<QuotasInspectionResultType, CountDiff>>,
     val quotasToCreate: List<QuotaEntity>,
     val quotasToDelete: List<QuotaEntity>,
     val quotasToReconfigure: List<QuotaEntity>,

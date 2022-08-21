@@ -273,6 +273,9 @@ data class InspectionResultType(
     override val level: StatusLevel,
     val category: IssueCategory,
 ) : NamedType {
+
+    override val valid: Boolean get() = category.ok
+
     companion object {
         /**
          * Everything is ok with specific topic on specific cluster

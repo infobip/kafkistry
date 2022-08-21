@@ -3,11 +3,10 @@ package com.infobip.kafkistry.service.quotas
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.repository.storage.ChangeType
 import com.infobip.kafkistry.repository.storage.CommitChange
-import com.infobip.kafkistry.service.eachCountDescending
+import com.infobip.kafkistry.service.*
+import com.infobip.kafkistry.service.StatusLevel.*
 import com.infobip.kafkistry.service.history.Change
 import com.infobip.kafkistry.service.history.PendingRequest
-import com.infobip.kafkistry.service.sortedByValueDescending
-
 
 data class QuotasRequest(
     override val branch: String,
@@ -28,18 +27,22 @@ data class QuotasChange(
 ) : Change
 
 
-enum class QuotasInspectionResultType(
-    val valid: Boolean
-) {
-    OK(true),
-    MISSING(false),
-    UNEXPECTED(false),
-    NOT_PRESENT_AS_EXPECTED(true),
-    UNKNOWN(false),
-    WRONG_VALUE(false),
-    CLUSTER_DISABLED(true),
-    CLUSTER_UNREACHABLE(false),
-    UNAVAILABLE(false),
+data class QuotasInspectionResultType(
+    override val name: String,
+    override val level: StatusLevel,
+    override val valid: Boolean,
+) : NamedType {
+    companion object {
+        val OK = QuotasInspectionResultType("OK", SUCCESS, true)
+        val MISSING = QuotasInspectionResultType("MISSING", ERROR, false)
+        val UNEXPECTED =  QuotasInspectionResultType("UNEXPECTED", ERROR, false)
+        val NOT_PRESENT_AS_EXPECTED = QuotasInspectionResultType("NOT_PRESENT_AS_EXPECTED", IGNORE, true)
+        val UNKNOWN = QuotasInspectionResultType("UNKNOWN", WARNING, false)
+        val WRONG_VALUE = QuotasInspectionResultType("WRONG_VALUE", ERROR, false)
+        val CLUSTER_DISABLED = QuotasInspectionResultType("CLUSTER_DISABLED", IGNORE, true)
+        val CLUSTER_UNREACHABLE = QuotasInspectionResultType("CLUSTER_UNREACHABLE", ERROR, false)
+        val UNAVAILABLE = QuotasInspectionResultType("UNAVAILABLE", IGNORE, false)
+    }
 }
 
 enum class AvailableQuotasOperation {
@@ -51,25 +54,17 @@ enum class AvailableQuotasOperation {
 }
 
 data class QuotaStatus(
-    val ok: Boolean,
-    val statusCounts: Map<QuotasInspectionResultType, Int>
-) {
+    override val ok: Boolean,
+    override val statusCounts: List<NamedTypeQuantity<QuotasInspectionResultType, Int>>
+) : SubjectStatus<QuotasInspectionResultType> {
     companion object {
-        val EMPTY_OK = QuotaStatus(true, emptyMap())
+        val EMPTY_OK = QuotaStatus(true, emptyList())
 
-        fun from(statuses: List<QuotasInspection>) = QuotaStatus(
-            ok = statuses.map { it.statusType }.map { it.valid }.fold(true, Boolean::and),
-            statusCounts = statuses.groupingBy { it.statusType }.eachCountDescending()
-        )
+        fun from(statuses: List<QuotasInspection>) = SubjectStatus.from(statuses.map { it.statusType }) { ok, statusCounts ->
+            QuotaStatus(ok, statusCounts)
+        }
+
     }
-
-    infix fun merge(other: QuotaStatus) = QuotaStatus(
-        ok = ok && other.ok,
-        statusCounts = (statusCounts.asSequence() + other.statusCounts.asSequence())
-            .groupBy({ it.key }, { it.value })
-            .mapValues { (_, counts) -> counts.sum() }
-            .sortedByValueDescending()
-    )
 }
 
 data class QuotasInspection(

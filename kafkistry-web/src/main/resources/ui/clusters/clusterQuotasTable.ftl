@@ -38,7 +38,7 @@
                 <@quotaUtil.quotaValue inspection=inspection source="expectedQuota" name="requestPercentage" suffix="%"/>
             </td>
             <td>
-                <@util.statusAlert type = inspection.statusType/>
+                <@util.namedTypeStatusAlert type = inspection.statusType/>
             </td>
             <td>
 

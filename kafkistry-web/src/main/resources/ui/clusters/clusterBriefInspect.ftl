@@ -18,10 +18,20 @@
     <#if alertClasses?size == 0>
         <#return "">
     </#if>
-    <#assign alertSeverities = {"alert-info": 0, "alert-secondary": 1, "alert-success": 2, "alert-warning": 3, "alert-danger": 4, "bg-danger": 5}>
+    <#assign alertSeverities = {
+    "alert-info": 0,
+    "alert-secondary": 1,
+    "alert-primary": 2,
+    "alert-success": 3,
+    "alert-warning": 4,
+    "alert-danger": 5,
+    "bg-danger": 6
+    }>
     <#assign worst = alertClasses[0]>
     <#list alertClasses as alertClass>
-        <#if alertSeverities[alertClass] gt alertSeverities[worst]>
+        <#assign severtyScore = (alertSeverities[alertClass])!-1>
+        <#assign worstSevertyScore = (alertSeverities[worst])!-1>
+        <#if severtyScore gt worstSevertyScore>
             <#assign worst = alertClass>
         </#if>
     </#list>
@@ -142,15 +152,17 @@
     <#assign alerts = []>
     <#assign quotasCountsTooltip>
         <table class="table table-sm table-borderless">
-            <#list clusterQuotas.status.statusCounts as statusType, count>
+            <#list clusterQuotas.status.statusCounts as statusTypeCount>
+                <#assign statusType = statusTypeCount.type>
+                <#assign count = statusTypeCount.quantity>
                 <tr>
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                           href="${clusterUrl}#quotas|${statusType}" title="Filter quotas by...">
-                            <#assign stateClass = util.statusTypeAlertClass(statusType)>
+                           href="${clusterUrl}#quotas|${statusType.name}" title="Filter quotas by...">
+                            <#assign stateClass = util.levelToHtmlClass(statusType.level)>
                             <#assign alerts = alerts + [stateClass]>
                             <div class="alert alert-sm ${stateClass} mb-0 small">
-                                ${statusType}
+                                ${statusType.name}
                             </div>
                         </a>
                     </td>

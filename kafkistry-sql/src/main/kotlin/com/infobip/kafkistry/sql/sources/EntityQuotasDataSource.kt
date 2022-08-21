@@ -8,7 +8,6 @@ import com.infobip.kafkistry.service.quotas.EntityQuotasInspection
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType
 import com.infobip.kafkistry.service.quotas.QuotasInspectionService
 import com.infobip.kafkistry.sql.SqlDataSource
-import com.infobip.kafkistry.model.*
 import org.springframework.stereotype.Component
 import java.io.Serializable
 import javax.persistence.*
@@ -44,11 +43,12 @@ class EntityQuotasDataSource(
                 }
                 user = entityQuotasInspection.entity.user ?: "<all>"
                 clientId = entityQuotasInspection.entity.clientId ?: "<all>"
-                statusType = clusterInspection.statusType
+                statusType = clusterInspection.statusType.name
                 exist = when (clusterInspection.statusType) {
                     QuotasInspectionResultType.OK, QuotasInspectionResultType.UNEXPECTED, QuotasInspectionResultType.UNKNOWN -> true
                     QuotasInspectionResultType.MISSING, QuotasInspectionResultType.NOT_PRESENT_AS_EXPECTED, QuotasInspectionResultType.UNAVAILABLE, QuotasInspectionResultType.WRONG_VALUE -> false
                     QuotasInspectionResultType.CLUSTER_DISABLED, QuotasInspectionResultType.CLUSTER_UNREACHABLE -> null
+                    else -> null
                 }
                 shouldExist = shouldExistMap?.get(clusterInspection.clusterIdentifier) ?: false
                 affectedPrincipals = clusterInspection.affectedPrincipals
@@ -92,8 +92,7 @@ class EntityQuota {
     @Column(nullable = false)
     var shouldExist: Boolean? = null
 
-    @Enumerated(EnumType.STRING)
-    lateinit var statusType: QuotasInspectionResultType
+    lateinit var statusType: String
 
     var expectedProducerByteRate: Long? = null
     var actualProducerByteRate: Long? = null

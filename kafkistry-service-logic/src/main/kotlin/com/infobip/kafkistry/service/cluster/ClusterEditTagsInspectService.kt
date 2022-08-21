@@ -143,10 +143,6 @@ class ClusterEditTagsInspectService(
         }
     }
 
-    private infix fun <E> Map<E, Int>.diff(countsAfter: Map<E, Int>): Map<E, CountDiff> =
-        (this.keys + countsAfter.keys)
-            .associateWith { (this[it] ?: 0) diff (countsAfter[it] ?: 0) }
-            .diffSorted()
     private infix fun <E : NamedType> List<NamedTypeQuantity<E, Int>>.diff(
         countsAfter: List<NamedTypeQuantity<E, Int>>
     ): List<NamedTypeQuantity<E, CountDiff>> {

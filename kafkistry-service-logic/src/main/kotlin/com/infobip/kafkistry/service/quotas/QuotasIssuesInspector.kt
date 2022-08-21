@@ -8,7 +8,15 @@ import com.infobip.kafkistry.model.QuotaDescription
 import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.QuotaProperties
 import com.infobip.kafkistry.service.acl.AclLinkResolver
-import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.*
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.CLUSTER_DISABLED
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNAVAILABLE
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNKNOWN
+import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.WRONG_VALUE
 import org.springframework.stereotype.Component
 import kotlin.math.abs
 

@@ -144,9 +144,9 @@
                             <a href="${appUrl.clusters().showCluster(inspection.clusterIdentifier)}">${inspection.clusterIdentifier}</a>
                         </td>
                         <td>
-                            <@util.statusAlert type = inspection.statusType/>
+                            <@util.namedTypeStatusAlert type = inspection.statusType/>
                         </td>
-                        <#assign hasWrongValue = inspection.statusType.name() == "WRONG_VALUE">
+                        <#assign hasWrongValue = inspection.statusType.name == "WRONG_VALUE">
                         <#assign producerByteRateMismatched = hasWrongValue && !inspection.valuesInspection.producerByteRateOk>
                         <#assign consumerByteRateMismatched = hasWrongValue && !inspection.valuesInspection.consumerByteRateOk>
                         <#assign requestPercentageMismatched = hasWrongValue && !inspection.valuesInspection.requestPercentageOk>

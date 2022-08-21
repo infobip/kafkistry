@@ -75,8 +75,8 @@
                             <@util.ok ok = entityStatus.status.ok/>
                         </td>
                         <td>
-                            <#list entityStatus.status.statusCounts as status, count>
-                                <@util.statusAlert type = status/>
+                            <#list entityStatus.status.statusCounts as statusCount>
+                                <@util.namedTypeStatusAlert type = statusCount.type/>
                             </#list>
                         </td>
                     </tr>
