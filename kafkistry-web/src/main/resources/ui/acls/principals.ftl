@@ -82,8 +82,8 @@
                                 </#if>
                             </td>
                             <td>
-                                <#list principalStatus.status.statusCounts as status, count>
-                                    <@util.statusAlert type = status/>
+                                <#list principalStatus.status.statusCounts as statusCount>
+                                    <@util.namedTypeStatusAlert type = statusCount.type/>
                                 </#list>
                             </td>
                         </tr>

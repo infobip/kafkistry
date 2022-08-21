@@ -34,8 +34,8 @@
             <td colspan="3"><a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a></td>
             <td><@util.ok ok = clusterStatuses.status.ok/></td>
             <td>
-                <#list clusterStatuses.status.statusCounts as status, count>
-                    <@util.statusAlert type = status/>
+                <#list clusterStatuses.status.statusCounts as statusCount>
+                    <@util.namedTypeStatusAlert type = statusCount.type/>
                 </#list>
             </td>
             <td>
@@ -73,7 +73,7 @@
                 <td><@aclUtil.resource resource = rule.resource/></td>
                 <td><@aclUtil.operation type = rule.operation.type/></td>
                 <td><@aclUtil.policy policy = rule.operation.policy/></td>
-                <td><@util.statusAlert type = ruleStatus.statusType/></td>
+                <td><@util.namedTypeStatusAlert type = ruleStatus.statusType/></td>
                 <td>
                     <#if ruleStatus.availableOperations?size == 0>
                         ----

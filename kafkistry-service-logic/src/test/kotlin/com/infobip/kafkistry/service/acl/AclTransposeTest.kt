@@ -6,7 +6,11 @@ import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.Presence
 import com.infobip.kafkistry.model.PresenceType
 import com.infobip.kafkistry.model.PrincipalAclRules
-import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
+import com.infobip.kafkistry.service.NamedTypeQuantity
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
 import com.infobip.kafkistry.service.acl.AvailableAclOperation.*
 import org.junit.Test
 
@@ -42,7 +46,7 @@ class AclTransposeTest {
         val rulesOnCluster1 = PrincipalAclsClusterInspection(
                 principal = "P",
                 clusterIdentifier = "c_1",
-                status = AclStatus(true, mapOf(OK to 2)),
+                status = AclStatus(true, listOf(OK has 2)),
                 statuses = listOf(rule1_c1, rule2_c1),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -50,7 +54,7 @@ class AclTransposeTest {
         val rulesOnCluster2 = PrincipalAclsClusterInspection(
                 principal = "P",
                 clusterIdentifier = "c_2",
-                status = AclStatus(false, mapOf(OK to 1, MISSING to 1, UNKNOWN to 1)),
+                status = AclStatus(false, listOf(OK has 1, MISSING has 1, UNKNOWN has 1)),
                 statuses = listOf(rule1_c2, rule2_c2, rule3_c2),
                 availableOperations = listOf(CREATE_MISSING_ACLS, DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyList(),
@@ -58,7 +62,7 @@ class AclTransposeTest {
         val rulesOnCluster3 = PrincipalAclsClusterInspection(
                 principal = "P",
                 clusterIdentifier = "c_3",
-                status = AclStatus(true, mapOf(OK to 1, NOT_PRESENT_AS_EXPECTED to 1)),
+                status = AclStatus(true, listOf(OK has 1, NOT_PRESENT_AS_EXPECTED has 1)),
                 statuses = listOf(rule1_c3, rule2_c3),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -68,7 +72,7 @@ class AclTransposeTest {
                 principal = "P",
                 principalAcls = pAcls,
                 clusterInspections = listOf(rulesOnCluster1, rulesOnCluster2, rulesOnCluster3),
-                status = AclStatus(false, mapOf(OK to 4, MISSING to 1, UNKNOWN to 1, NOT_PRESENT_AS_EXPECTED to 1)),
+                status = AclStatus(false, listOf(OK has 4, MISSING has 1, UNKNOWN has 1, NOT_PRESENT_AS_EXPECTED has 1)),
                 availableOperations = listOf(CREATE_MISSING_ACLS, DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyMap(),
         )
@@ -79,7 +83,7 @@ class AclTransposeTest {
         assertThat(clustersPerRule.statuses[0]).isEqualTo(
             AclRuleClustersInspection(
                 aclRule = rule1,
-                status = AclStatus(true, mapOf(OK to 2, NOT_PRESENT_AS_EXPECTED to 1)),
+                status = AclStatus(true, listOf(OK has 2, NOT_PRESENT_AS_EXPECTED has 1)),
                 clusterStatuses = mapOf(
                         "c_1" to rule1_c1,
                         "c_2" to rule1_c2,
@@ -91,7 +95,7 @@ class AclTransposeTest {
         assertThat(clustersPerRule.statuses[1]).isEqualTo(
             AclRuleClustersInspection(
                 aclRule = rule2,
-                status = AclStatus(false, mapOf(OK to 2, MISSING to 1)),
+                status = AclStatus(false, listOf(OK has 2, MISSING has 1)),
                 clusterStatuses = mapOf(
                         "c_1" to rule2_c1,
                         "c_2" to rule2_c2,
@@ -103,7 +107,7 @@ class AclTransposeTest {
         assertThat(clustersPerRule.statuses[2]).isEqualTo(
             AclRuleClustersInspection(
                 aclRule = rule3,
-                status = AclStatus(false, mapOf(UNKNOWN to 1)),
+                status = AclStatus(false, listOf(UNKNOWN has 1)),
                 clusterStatuses = mapOf(
                         "c_2" to rule3_c2
                 ),
@@ -111,7 +115,7 @@ class AclTransposeTest {
         )
         )
         assertThat(clustersPerRule.status).isEqualTo(
-                AclStatus(false, mapOf(OK to 4, MISSING to 1, UNKNOWN to 1, NOT_PRESENT_AS_EXPECTED to 1))
+                AclStatus(false, listOf(OK has 4, NOT_PRESENT_AS_EXPECTED has 1, MISSING has 1, UNKNOWN has 1))
         )
 
     }
@@ -119,4 +123,5 @@ class AclTransposeTest {
     private fun KafkaAclRule.withStatus(statusType: AclInspectionResultType) = AclRuleStatus(
             statusType, this, emptyList(), emptyList(), statusType.availableOperations(true)
     )
+    private infix fun AclInspectionResultType.has(count: Int) = NamedTypeQuantity(this, count) 
 }

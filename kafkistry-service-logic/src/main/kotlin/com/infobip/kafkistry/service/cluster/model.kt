@@ -49,7 +49,7 @@ data class TopicsDryRunDiff(
 )
 
 data class AclsDryRunDiff(
-    val statusCounts: Map<AclInspectionResultType, CountDiff>,
+    val statusCounts: List<NamedTypeQuantity<AclInspectionResultType, CountDiff>>,
     val aclsToCreate: List<KafkaAclRule>,
     val aclsToDelete: List<KafkaAclRule>,
 )

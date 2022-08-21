@@ -8,9 +8,11 @@ import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalId
-import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.KafkistryIntegrityException
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import org.springframework.stereotype.Service
 

@@ -2,42 +2,49 @@ package com.infobip.kafkistry.service.acl
 
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.eachCountDescending
-import com.infobip.kafkistry.service.sortedByValueDescending
+import com.infobip.kafkistry.service.*
+import com.infobip.kafkistry.service.StatusLevel.*
 
-enum class AclInspectionResultType(
-        val valid: Boolean
-) {
-    OK(true),
-    MISSING(false),
-    UNEXPECTED(false),
-    NOT_PRESENT_AS_EXPECTED(true),
-    UNKNOWN(false),
-    CLUSTER_DISABLED(true),
-    CLUSTER_UNREACHABLE(false),
-    SECURITY_DISABLED(false),
-    UNAVAILABLE(false)
+data class AclInspectionResultType(
+    override val name: String,
+    override val level: StatusLevel,
+    val valid: Boolean,
+) : NamedType {
+    companion object {
+        val OK = AclInspectionResultType("OK", SUCCESS, true)
+        val MISSING = AclInspectionResultType("MISSING", ERROR, false)
+        val UNEXPECTED =  AclInspectionResultType("UNEXPECTED", ERROR, false)
+        val NOT_PRESENT_AS_EXPECTED = AclInspectionResultType("NOT_PRESENT_AS_EXPECTED", IGNORE, true)
+        val UNKNOWN = AclInspectionResultType("UNKNOWN", WARNING, false)
+        val CLUSTER_DISABLED = AclInspectionResultType("CLUSTER_DISABLED", IGNORE, true)
+        val CLUSTER_UNREACHABLE = AclInspectionResultType("CLUSTER_UNREACHABLE", ERROR, false)
+        val SECURITY_DISABLED = AclInspectionResultType("SECURITY_DISABLED", WARNING, false)
+        val UNAVAILABLE = AclInspectionResultType("UNAVAILABLE", IGNORE, false)
+    }
 }
 
 data class AclStatus(
-        val ok: Boolean,
-        val statusCounts: Map<AclInspectionResultType, Int>
+    val ok: Boolean,
+    val statusCounts: List<NamedTypeQuantity<AclInspectionResultType, Int>>,
 ) {
     companion object {
-        val EMPTY_OK = AclStatus(true, emptyMap())
+        val EMPTY_OK = AclStatus(true, emptyList())
 
         fun from(statuses: List<AclRuleStatus>) = AclStatus(
             ok = statuses.map { it.statusType.valid }.fold(true, Boolean::and),
-            statusCounts = statuses.groupingBy { it.statusType }.eachCountDescending()
+            statusCounts = statuses.groupingBy { it.statusType }
+                .eachCountDescending()
+                .map { NamedTypeQuantity(it.key, it.value) }
         )
     }
 
     infix fun merge(other: AclStatus) = AclStatus(
         ok = ok && other.ok,
         statusCounts = (statusCounts.asSequence() + other.statusCounts.asSequence())
-            .groupBy({ it.key }, { it.value })
+            .groupBy({ it.type }, { it.quantity })
             .mapValues { (_, counts) -> counts.sum() }
             .sortedByValueDescending()
+            .map { NamedTypeQuantity(it.key, it.value) }
     )
 }
 

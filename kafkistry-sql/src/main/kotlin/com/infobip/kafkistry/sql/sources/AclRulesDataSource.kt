@@ -50,11 +50,12 @@ class AclRulesDataSource(
                     principal = principalAclsInspection.principal
                     cluster = clusterInspection.clusterIdentifier
                     acl = aclRuleStatus.rule.toAcl()
-                    status = aclRuleStatus.statusType
+                    status = aclRuleStatus.statusType.name
                     exist = when (aclRuleStatus.statusType) {
                         AclInspectionResultType.OK, AclInspectionResultType.UNEXPECTED, AclInspectionResultType.UNKNOWN -> true
                         AclInspectionResultType.MISSING, AclInspectionResultType.NOT_PRESENT_AS_EXPECTED, AclInspectionResultType.SECURITY_DISABLED, AclInspectionResultType.UNAVAILABLE -> false
                         AclInspectionResultType.CLUSTER_DISABLED, AclInspectionResultType.CLUSTER_UNREACHABLE -> null
+                        else -> null
                     }
                     shouldExist = shouldExistMap
                         ?.get(aclRuleStatus.rule)
@@ -89,8 +90,7 @@ class Acl {
     lateinit var cluster: KafkaClusterIdentifier
     lateinit var acl: AclRule
 
-    @Enumerated(EnumType.STRING)
-    lateinit var status: AclInspectionResultType
+    lateinit var status: String
 
     var exist: Boolean? = null
     var shouldExist: Boolean? = null

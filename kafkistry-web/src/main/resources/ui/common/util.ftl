@@ -18,9 +18,9 @@
     <#return result>
 </#function>
 
-<#function statusToHtmlClass statusType>
-<#-- @ftlvariable name="statusType"  type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
-    <#switch statusType.level>
+<#function levelToHtmlClass level>
+<#-- @ftlvariable name="level"  type="com.infobip.kafkistry.service.StatusLevel" -->
+    <#switch level>
         <#case "SUCCESS">
             <#return "alert-success">
         <#case "IMPORTANT">
@@ -38,6 +38,11 @@
         <#default >
             <#return "">
     </#switch>
+</#function>
+
+<#function statusToHtmlClass statusType>
+<#-- @ftlvariable name="statusType"  type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
+    <#return levelToHtmlClass(statusType.level)>
 </#function>
 
 <#function clusterStatusToHtmlClass stateType>
@@ -274,6 +279,7 @@
     </span>
 </#macro>
 
+<#-- TODO reomove -->
 <#function statusTypeAlertClass type>
     <#switch type.name()>
         <#case "OK">
@@ -298,9 +304,17 @@
     </#switch>
 </#function>
 
+<#-- TODO remove -->
 <#macro statusAlert type>
     <div role="alert" class="alert alert-inline alert-sm ${statusTypeAlertClass(type)} mb-0">
         ${type}
+    </div>
+</#macro>
+
+<#macro namedTypeStatusAlert type>
+<#-- @ftlvariable name="type" type="com.infobip.kafkistry.service.NamedType" -->
+    <div role="alert" class="alert alert-inline alert-sm ${levelToHtmlClass(type.level)} mb-0">
+        ${type.name}
     </div>
 </#macro>
 

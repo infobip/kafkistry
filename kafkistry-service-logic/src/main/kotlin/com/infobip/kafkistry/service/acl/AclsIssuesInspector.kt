@@ -7,7 +7,15 @@ import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.kafkastate.StateType.DISABLED
 import com.infobip.kafkistry.kafkastate.StateType.VISIBLE
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.SECURITY_DISABLED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNAVAILABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
 import org.springframework.stereotype.Component
 
 @Component
@@ -155,28 +163,28 @@ class AclsIssuesInspector(
     }
 
     private fun statusWhen(exists: Boolean, shouldExist: Boolean) =
-            if (exists) {
-                if (shouldExist) OK
-                else UNEXPECTED
-            } else {
-                if (shouldExist) MISSING
-                else NOT_PRESENT_AS_EXPECTED
-            }
+        if (exists) {
+            if (shouldExist) OK
+            else UNEXPECTED
+        } else {
+            if (shouldExist) MISSING
+            else NOT_PRESENT_AS_EXPECTED
+        }
 
     private fun emptyInspection(
         principal: PrincipalId,
         clusterIdentifier: KafkaClusterIdentifier,
         clusterStateType: StateType
     ) = PrincipalAclsClusterInspection(
-            principal = principal,
-            clusterIdentifier = clusterIdentifier,
-            statuses = emptyList(),
-            status = AclStatus(
-                    ok = clusterStateType == VISIBLE,
-                    statusCounts = emptyMap()
-            ),
-            availableOperations = emptyList(),
-            affectingQuotaEntities = aclLinkResolver.findPrincipalAffectingQuotas(principal, clusterIdentifier),
+        principal = principal,
+        clusterIdentifier = clusterIdentifier,
+        statuses = emptyList(),
+        status = AclStatus(
+            ok = clusterStateType == VISIBLE,
+            statusCounts = emptyList(),
+        ),
+        availableOperations = emptyList(),
+        affectingQuotaEntities = aclLinkResolver.findPrincipalAffectingQuotas(principal, clusterIdentifier),
     )
 
     private fun Iterable<KafkaAclRule>.asUnknownRules(

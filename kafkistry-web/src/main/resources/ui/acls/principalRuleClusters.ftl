@@ -45,8 +45,8 @@
             <td><@aclUtil.policy policy = rule.operation.policy/></td>
             <td><@util.ok ok = ruleStatuses.status.ok/></td>
             <td>
-                <#list ruleStatuses.status.statusCounts as status, count>
-                    <@util.statusAlert type = status/>
+                <#list ruleStatuses.status.statusCounts as statusCount>
+                    <@util.namedTypeStatusAlert type = statusCount.type/>
                 </#list>
             </td>
         </tr>
@@ -79,7 +79,7 @@
                         />
                     </#list>
                 </td>
-                <td><@util.statusAlert type = clusterStatus.statusType/></td>
+                <td><@util.namedTypeStatusAlert type = clusterStatus.statusType/></td>
             </tr>
         </#list>
     </#list>

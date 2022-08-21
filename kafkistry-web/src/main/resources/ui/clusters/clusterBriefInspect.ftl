@@ -104,15 +104,17 @@
     <#assign alerts = []>
     <#assign aclsCountsTooltip>
         <table class="table table-sm table-borderless">
-            <#list clusterAcls.status.statusCounts as statusType, count>
+            <#list clusterAcls.status.statusCounts as statusTypeCount>
+                <#assign statusType = statusTypeCount.type>
+                <#assign count = statusTypeCount.quantity>
                 <tr>
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                           href="${clusterUrl}#acls|${statusType}" title="Filter ACLs by...">
-                            <#assign stateClass = util.statusTypeAlertClass(statusType)>
+                           href="${clusterUrl}#acls|${statusType.name}" title="Filter ACLs by...">
+                            <#assign stateClass = util.levelToHtmlClass(statusType.level)>
                             <#assign alerts = alerts + [stateClass]>
                             <div class="alert alert-sm ${stateClass} mb-0 small">
-                                ${statusType}
+                                ${statusType.name}
                             </div>
                         </a>
                     </td>

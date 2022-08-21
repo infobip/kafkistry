@@ -5,6 +5,15 @@ import com.infobip.kafkistry.model.AclRule
 import com.infobip.kafkistry.model.Presence
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.SECURITY_DISABLED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNAVAILABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
 
 fun AclRule.toKafkaAclRule(principal: PrincipalId) = KafkaAclRule(
     principal = principal,
@@ -69,4 +78,5 @@ fun AclInspectionResultType.availableOperations(
             AvailableAclOperation.IMPORT_PRINCIPAL
         }
     )
+    else -> emptyList()
 }

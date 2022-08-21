@@ -110,6 +110,7 @@ class MainPageController(
     fun showAclsStats(): ModelAndView {
         val aclsStats = inspectApi.inspectAllPrincipals()
             .asSequence()
+            .plus(inspectApi.inspectUnknownPrincipals().asSequence())
             .flatMap { it.clusterInspections }
             .flatMap { it.statuses }
             .groupingBy { it.statusType }

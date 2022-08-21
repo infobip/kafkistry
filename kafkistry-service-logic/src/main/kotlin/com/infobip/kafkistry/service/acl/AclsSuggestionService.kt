@@ -6,7 +6,15 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.acl.AclInspectionResultType.*
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.SECURITY_DISABLED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNAVAILABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import org.springframework.stereotype.Service
 
@@ -72,6 +80,7 @@ class AclsSuggestionService(
                                     CLUSTER_UNREACHABLE -> throw KafkistryIllegalStateException(
                                             "Can't suggest acls of principal '$principal', cluster is unreachable: '$clusterIdentifier'"
                                     )
+                                    else -> true
                                 }
                             }
                             .map { it.rule to clusterInspection.clusterIdentifier }
