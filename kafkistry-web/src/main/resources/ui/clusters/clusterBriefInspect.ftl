@@ -66,15 +66,17 @@
     <#assign alerts = []>
     <#assign topicsCountsTooltip>
         <table class="table table-sm table-borderless">
-            <#list clusterTopics.topicsStatusCounts as statusType, count>
+            <#list clusterTopics.topicsStatusCounts as statusTypeCount>
+                <#assign statusType = statusTypeCount.type>
+                <#assign count = statusTypeCount.quantity>
                 <tr>
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                           href="${clusterUrl}#topics|${statusType}" title="Filter topics by...">
+                           href="${clusterUrl}#topics|${statusType.name}" title="Filter topics by...">
                             <#assign stateClass = util.statusToHtmlClass(statusType)>
                             <#assign alerts = alerts + [stateClass]>
                             <div class="alert alert-sm ${stateClass} mb-0 small">
-                                ${statusType}
+                                ${statusType.name}
                             </div>
                         </a>
                     </td>

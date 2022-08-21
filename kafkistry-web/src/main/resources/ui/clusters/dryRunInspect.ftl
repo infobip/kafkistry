@@ -234,12 +234,14 @@
                 <th>Diff</th>
             </tr>
             </thead>
-            <#list topicsDiff.statusCounts as stateType, countDiff>
+            <#list topicsDiff.statusCounts as stateTypeCountDiff>
+                <#assign stateType = stateTypeCountDiff.type>
+                <#assign countDiff = stateTypeCountDiff.quantity>
                 <tr>
                     <td>
                         <#assign stateClass = util.statusToHtmlClass(stateType)>
                         <div class="alert alert-sm ${stateClass} mb-0">
-                            ${stateType}
+                            ${stateType.name}
                         </div>
                     </td>
                     <td>${countDiff.before}</td>

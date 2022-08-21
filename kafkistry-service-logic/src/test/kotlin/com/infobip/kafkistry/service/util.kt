@@ -14,6 +14,9 @@ import com.infobip.kafkistry.repository.storage.git.GitRepository
 import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.topic.*
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_CONFIG
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_PARTITION_COUNT
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_REPLICATION_FACTOR
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 

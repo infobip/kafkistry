@@ -8,10 +8,10 @@
 <#assign isStatusFlag = asStatusFlag!false>
 
 <div class="text-nowrap alert <#if isStatusFlag>status-flag</#if> ${util.statusToHtmlClass(statusType)} mb-0" role="alert">
-    ${statusType.toString()}
-    <#if !isStatusFlag && (doc.topicStatus[statusType.name()])??>
+    ${statusType.name}
+    <#if !isStatusFlag && (doc.topicStatus[statusType.name])??>
         <#assign tooltip>
-            ${doc.topicStatus[statusType.name()]}<br/>
+            ${doc.topicStatus[statusType.name]}<br/>
             <span>
                 <strong>Issue category:</strong> <span class='text-info'>${statusType.category.name()}</span>
             </span>

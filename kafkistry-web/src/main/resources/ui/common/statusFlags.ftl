@@ -9,7 +9,7 @@
 
 <div style="display: none;">
     <#list allTopicStatusTypes![] as statusType>
-        ${statusType}
+        ${statusType.name}
     </#list>
 </div>
 

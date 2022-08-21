@@ -3,6 +3,15 @@ package com.infobip.kafkistry.service
 import com.infobip.kafkistry.kafka.ExistingConfig
 import com.infobip.kafkistry.model.*
 
+interface NamedType {
+    val name: String
+}
+
+data class NamedTypeQuantity<T : NamedType, Q>(
+    val type: T,
+    val quantity: Q,
+)
+
 data class OptionalValue<V>(
     val value: V?,
     val absentReason: String?

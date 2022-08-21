@@ -162,7 +162,7 @@ class TopicsInspectionService(
             )
             ClusterTopicStatus(topicName, inspectionResult.status, inspectionResult.existingTopicInfo)
         }
-        val topicsStatusCounts = statusPerTopics.statusTypeCounts { it.status }
+        val topicsStatusCounts = statusPerTopics.statusTypeCounts { it.status.types }
         val statusFlags = statusPerTopics.map { it.status.flags }.aggregate()
         return ClusterTopicsStatuses(
                 latestClusterState.lastRefreshTime, cluster,
@@ -457,21 +457,19 @@ class TopicsInspectionService(
     private fun topicStatuses(
         topicName: TopicName, topicDescription: TopicDescription?, statusPerClusters: List<TopicClusterStatus>,
     ): TopicStatuses {
-        val topicsStatusCounts = statusPerClusters.statusTypeCounts { it.status }
+        val topicsStatusCounts = statusPerClusters.statusTypeCounts { it.status.types }
         val statusFlags = statusPerClusters.map { it.status.flags }.aggregate()
         val availableActions = statusPerClusters.flatMap { it.status.availableActions }.distinct()
         return TopicStatuses(topicName, topicDescription, statusFlags, statusPerClusters, topicsStatusCounts, availableActions)
     }
 
-    private fun <T> List<T>.statusTypeCounts(
-            statusExtract: (T) -> TopicOnClusterInspectionResult
-    ): Map<InspectionResultType, Int> = asSequence()
-            .map(statusExtract)
-            .flatMap { it.types.asSequence() }
+    private fun <T, N : NamedType> List<T>.statusTypeCounts(
+            statusExtract: (T) -> Collection<N>
+    ): List<NamedTypeQuantity<N, Int>> = asSequence()
+            .flatMap(statusExtract)
             .groupingBy { it }
             .eachCount()
-            .map { it.toPair() }
-            .sortedByDescending { it.second }
-            .toMap()
+            .map { NamedTypeQuantity(it.key, it.value) }
+            .sortedByDescending { it.quantity }
 
 }

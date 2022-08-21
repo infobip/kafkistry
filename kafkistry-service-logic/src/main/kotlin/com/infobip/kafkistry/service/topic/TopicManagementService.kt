@@ -12,6 +12,14 @@ import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.InspectionResultType.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.UNKNOWN
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_CONFIG
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_PARTITION_COUNT
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_REPLICATION_FACTOR
 import com.infobip.kafkistry.service.topic.validation.rules.renderMessage
 import org.springframework.stereotype.Service
 

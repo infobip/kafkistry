@@ -43,7 +43,7 @@
         <tr>
             <th>Topic</th>
             <td>
-                <#assign statusTypes = util_.enumListToStringList(topicStatus.status.types)>
+                <#assign statusTypes = util_.namedTypeListToStringList(topicStatus.status.types)>
                 <#assign presentInRegistry = !statusTypes?seq_contains("UNKNOWN")>
                 <#if presentInRegistry>
                     <a href="${appUrl.topics().showTopic(topicName)}">${topicName}</a>
@@ -383,7 +383,7 @@
         <br/>
         <#assign affectingAcls = topicStatus.status.affectingAclRules>
         <#include "../acls/affectingAcls.ftl">
-
+///////
         <br/>
         <#include "partitionStats.ftl">
 

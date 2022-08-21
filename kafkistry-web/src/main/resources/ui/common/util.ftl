@@ -9,9 +9,18 @@
     <#return result>
 </#function>
 
+<#function namedTypeListToStringList namedTypesList>
+<#-- @ftlvariable name="namedTypesList" type="java.util.List<? extends com.infobip.kafkistry.service.NamedType>" -->
+    <#assign result = []>
+    <#list namedTypesList as namedType>
+        <#assign result = result + [namedType.name]>
+    </#list>
+    <#return result>
+</#function>
+
 <#function statusToHtmlClass statusType>
 <#-- @ftlvariable name="statusType"  type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
-    <#switch statusType.name()>
+    <#switch statusType.name>
         <#case "CLUSTER_UNREACHABLE">
         <#case "MISSING">
         <#case "UNEXPECTED">

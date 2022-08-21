@@ -13,6 +13,27 @@ import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.resources.RequiredResourcesInspector
 import com.infobip.kafkistry.service.resources.TopicResourceRequiredUsages
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CLUSTER_DISABLED
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.CURRENT_CONFIG_RULE_VIOLATIONS
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.HAS_OUT_OF_SYNC_REPLICAS
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.HAS_REPLICATION_THROTTLING
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.HAS_UNVERIFIED_REASSIGNMENTS
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.INTERNAL
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.MISSING
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.NEEDS_LEADER_ELECTION
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.OK
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.PARTITION_LEADERS_DISBALANCE
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.PARTITION_REPLICAS_DISBALANCE
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.UNAVAILABLE
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.UNEXPECTED
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.UNKNOWN
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_CONFIG
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_PARTITION_COUNT
+import com.infobip.kafkistry.service.topic.InspectionResultType.Companion.WRONG_REPLICATION_FACTOR
 import com.infobip.kafkistry.service.topic.validation.TopicConfigurationValidator
 import com.infobip.kafkistry.service.topic.validation.rules.ClusterMetadata
 import org.springframework.stereotype.Component
@@ -67,15 +88,16 @@ class TopicIssuesInspector(
             val resourceRequiredUsages = inspectRequiredResourcesUsage(topicDescription, clusterRef, clusterInfo)
             checkAffectingAclRules(topicName, clusterRef.identifier)
             TopicClusterStatus(
-                    status = prepareAndBuild(),
-                    lastRefreshTime = latestClusterState.lastRefreshTime,
-                    clusterIdentifier = clusterRef.identifier,
-                    clusterTags = clusterRef.tags,
-                    existingTopicInfo = existingTopicInfo,
-                    configEntryStatuses = configEntryStatuses,
-                    resourceRequiredUsages = resourceRequiredUsages,
-                    currentTopicReplicaInfos = currentTopicReplicaInfos,
-                    currentReAssignments = partitionReAssignments,
+                status = prepareAndBuild(),
+                lastRefreshTime = latestClusterState.lastRefreshTime,
+                clusterIdentifier = clusterRef.identifier,
+                clusterTags = clusterRef.tags,
+                existingTopicInfo = existingTopicInfo,
+                configEntryStatuses = configEntryStatuses,
+                resourceRequiredUsages = resourceRequiredUsages,
+                currentTopicReplicaInfos = currentTopicReplicaInfos,
+                currentReAssignments = partitionReAssignments,
+                externInfo = emptyMap(),
             )
         }
     }

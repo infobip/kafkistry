@@ -18,7 +18,7 @@
     <#if clusterTopics.statusPerTopics??>
         <#list clusterTopics.statusPerTopics as topicStatus>
             <#assign topicName = topicStatus.topicName>
-            <#assign statusTypes = util.enumListToStringList(topicStatus.status.types)>
+            <#assign statusTypes = util.namedTypeListToStringList(topicStatus.status.types)>
             <#assign presentInRegistry = !statusTypes?seq_contains("UNKNOWN")>
             <tr class="topic-row table-row">
                 <td>

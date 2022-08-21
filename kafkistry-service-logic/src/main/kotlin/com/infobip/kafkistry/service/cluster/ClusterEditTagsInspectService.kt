@@ -143,10 +143,20 @@ class ClusterEditTagsInspectService(
         }
     }
 
-    private infix fun <E: Enum<E>> Map<E, Int>.diff(countsAfter: Map<E, Int>): Map<E, CountDiff> =
+    private infix fun <E> Map<E, Int>.diff(countsAfter: Map<E, Int>): Map<E, CountDiff> =
         (this.keys + countsAfter.keys)
             .associateWith { (this[it] ?: 0) diff (countsAfter[it] ?: 0) }
             .diffSorted()
+    private infix fun <E : NamedType> List<NamedTypeQuantity<E, Int>>.diff(
+        countsAfter: List<NamedTypeQuantity<E, Int>>
+    ): List<NamedTypeQuantity<E, CountDiff>> {
+        val beforeMap = this.associate { it.type to it.quantity }
+        val afterMap = countsAfter.associate { it.type to it.quantity }
+        return (beforeMap.keys + afterMap.keys)
+            .associateWith { (beforeMap[it] ?: 0) diff (afterMap[it] ?: 0) }
+            .diffSorted()
+            .map { NamedTypeQuantity(it.key, it.value) }
+    }
 
     private fun <K> Map<K, CountDiff>.diffSorted(): Map<K, CountDiff> =
         sortedDescending { -abs(it.value.diff) } // descending by difference amplitude

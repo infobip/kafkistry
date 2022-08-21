@@ -74,7 +74,7 @@ class ClusterTopicDataSource(
             shouldExist = topicDescription?.presence?.needToBeOnCluster(clusterRef) ?: false
             val wrongValueStatuses = topicClusterStatus.status.wrongValues?.map { wrongValue ->
                 TopicOnClusterStatus().apply {
-                    type = wrongValue.type
+                    type = wrongValue.type.name
                     issueCategory = wrongValue.type.category
                     expected = wrongValue.expected
                     expectedDefault = wrongValue.expectedDefault
@@ -91,7 +91,7 @@ class ClusterTopicDataSource(
                 topicClusterStatus.status.currentConfigRuleViolations?.also { yieldAll(it) }
             }.map { ruleViolation ->
                 TopicOnClusterStatus().apply {
-                    type = ruleViolation.type
+                    type = ruleViolation.type.name
                     issueCategory = ruleViolation.type.category
                     message = ruleViolation.renderMessage()
                     ruleClassName = ruleViolation.violation.ruleClassName
@@ -99,10 +99,10 @@ class ClusterTopicDataSource(
                 }
             }.toList()
             val otherStatuses = topicClusterStatus.status.types
-                .filter { type -> wrongValueStatuses.all { it.type != type } && ruleViolations.all { it.type != type } }
+                .filter { type -> wrongValueStatuses.all { it.type != type.name } && ruleViolations.all { it.type != type.name } }
                 .map {
                     TopicOnClusterStatus().apply {
-                        type = it
+                        type = it.name
                         issueCategory = it.category
                     }
                 }
@@ -268,8 +268,8 @@ class Topic {
 @Embeddable
 class TopicOnClusterStatus {
 
-    @Enumerated(EnumType.STRING)
-    lateinit var type: InspectionResultType
+    //name of InspectionResultType
+    lateinit var type: String
 
     @Enumerated(EnumType.STRING)
     lateinit var issueCategory: IssueCategory
