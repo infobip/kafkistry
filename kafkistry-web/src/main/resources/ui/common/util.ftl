@@ -20,35 +20,24 @@
 
 <#function statusToHtmlClass statusType>
 <#-- @ftlvariable name="statusType"  type="com.infobip.kafkistry.service.topic.InspectionResultType" -->
-    <#switch statusType.name>
-        <#case "CLUSTER_UNREACHABLE">
-        <#case "MISSING">
-        <#case "UNEXPECTED">
-        <#case "WRONG_PARTITION_COUNT">
-        <#case "WRONG_REPLICATION_FACTOR">
-        <#case "WRONG_CONFIG">
-            <#return "alert-danger">
-        <#case "OK">
+    <#switch statusType.level>
+        <#case "SUCCESS">
             <#return "alert-success">
-        <#case "NOT_PRESENT_AS_EXPECTED">
-        <#case "CLUSTER_DISABLED">
+        <#case "IMPORTANT">
+            <#return "alert-primary">
+        <#case "IGNORE">
             <#return "alert-secondary">
-        <#case "UNKNOWN">
-        <#case "CONFIG_RULE_VIOLATIONS">
-        <#case "CURRENT_CONFIG_RULE_VIOLATIONS">
-        <#case "PARTITION_REPLICAS_DISBALANCE">
-        <#case "PARTITION_LEADERS_DISBALANCE">
-        <#case "HAS_UNVERIFIED_REASSIGNMENTS">
-        <#case "HAS_REPLICATION_THROTTLING">
-        <#case "RE_ASSIGNMENT_IN_PROGRESS">
-        <#case "NEEDS_LEADER_ELECTION">
-        <#case "HAS_OUT_OF_SYNC_REPLICAS">
-        <#case "UNAVAILABLE">
-            <#return "alert-warning">
-        <#case "INTERNAL">
+        <#case "INFO">
             <#return "alert-info">
+        <#case "WARNING">
+            <#return "alert-warning">
+        <#case "ERROR">
+            <#return "alert-danger">
+        <#case "CRITICAL">
+            <#return "bg-danger">
+        <#default >
+            <#return "">
     </#switch>
-    <#return "">
 </#function>
 
 <#function clusterStatusToHtmlClass stateType>

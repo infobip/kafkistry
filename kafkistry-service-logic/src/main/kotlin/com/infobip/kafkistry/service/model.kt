@@ -5,12 +5,23 @@ import com.infobip.kafkistry.model.*
 
 interface NamedType {
     val name: String
+    val level: StatusLevel
 }
 
 data class NamedTypeQuantity<T : NamedType, Q>(
     val type: T,
     val quantity: Q,
 )
+
+enum class StatusLevel {
+    SUCCESS,
+    IMPORTANT,
+    IGNORE,
+    INFO,
+    WARNING,
+    ERROR,
+    CRITICAL,
+}
 
 data class OptionalValue<V>(
     val value: V?,
