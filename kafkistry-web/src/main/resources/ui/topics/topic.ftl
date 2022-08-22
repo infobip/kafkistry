@@ -174,7 +174,7 @@
                         </button>
                     </a>
                 </td>
-                <td style="width: 200px;">
+                <td>
                     <#assign topicOnClusterStatus = clusterStatus.status>
                     <#include "../common/topicOnClusterStatus.ftl">
                 </td>

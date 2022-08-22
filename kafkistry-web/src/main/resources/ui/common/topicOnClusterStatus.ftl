@@ -13,10 +13,11 @@
 
 <#list topicOnClusterStatus.types as statusType>
     <#if !(detailedStatuses?seq_contains(statusType))>
+        <#assign alertInline = true>
         <#include "topicStatusResultBox.ftl">
-        <#if !(statusType?is_last)><br/></#if>
     </#if>
 </#list>
+<#assign alertInline = false>
 <#if topicOnClusterStatus.wrongValues??>
     <#list topicOnClusterStatus.wrongValues as wrongValue>
         <#if wrongValue?is_first><br/></#if>
