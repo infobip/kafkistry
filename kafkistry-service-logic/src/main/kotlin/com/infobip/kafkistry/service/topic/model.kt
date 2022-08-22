@@ -54,7 +54,7 @@ data class TopicClusterStatus(
     val resourceRequiredUsages: OptionalValue<TopicResourceRequiredUsages>,
     val currentTopicReplicaInfos: TopicReplicaInfos?,
     val currentReAssignments: Map<Partition, TopicPartitionReAssignment>,
-    val externInfo: Map<String, Any>,
+    val externInspectInfo: Map<String, Any>,
 ) {
     companion object {
         fun unavailable() = TopicClusterStatus(
@@ -69,7 +69,7 @@ data class TopicClusterStatus(
             resourceRequiredUsages = OptionalValue.absent("unavailable"),
             currentTopicReplicaInfos = null,
             currentReAssignments = emptyMap(),
-            externInfo = emptyMap(),
+            externInspectInfo = emptyMap(),
         )
     }
 }
@@ -133,6 +133,8 @@ data class TopicOnClusterInspectionResult(
         fun types() = types.toList()
 
         fun exists(exists: Boolean): Builder = this.also { this.exists = exists }
+
+        fun addOkResultType(): Builder = this.also { types.add(0, TopicInspectionResultType.OK) }
 
         fun addResultType(resultType: TopicInspectionResultType): Builder = this.also {
             types.add(resultType)

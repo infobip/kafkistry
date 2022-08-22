@@ -13,6 +13,7 @@
 <#-- @ftlvariable name="partitionReAssignments" type="java.util.Map<Partition, com.infobip.kafkistry.kafka.TopicPartitionReAssignment>" -->
 <#-- @ftlvariable name="topicResources" type="com.infobip.kafkistry.service.resources.TopicDiskUsage" -->
 <#-- @ftlvariable name="kStreamsInvolvement" type="com.infobip.kafkistry.service.kafkastreams.TopicKStreamsInvolvement" -->
+<#-- @ftlvariable name="inspectExtensionProperties" type="com.infobip.kafkistry.webapp.TopicInspectExtensionProperties" -->
 
 <html lang="en">
 
@@ -21,6 +22,9 @@
     <script src="static/topic/management/verifyReAssignments.js?ver=${lastCommit}"></script>
     <script src="static/topic/management/runPreferredReplicaElection.js?ver=${lastCommit}"></script>
     <script src="static/topic/management/cancelReAssignments.js?ver=${lastCommit}"></script>
+    <#if inspectExtensionProperties.jsName??>
+        <script src="static/topic/${inspectExtensionProperties.jsName}.js?ver=${lastCommit}"></script>
+    </#if>
     <title>Kafkistry: Topic on cluster insect</title>
     <meta name="current-nav" content="nav-topics"/>
 </head>
@@ -383,7 +387,12 @@
         <br/>
         <#assign affectingAcls = topicStatus.status.affectingAclRules>
         <#include "../acls/affectingAcls.ftl">
-///////
+
+        <#if inspectExtensionProperties.templateName??>
+            <#assign nameTemplate = '<#include "${inspectExtensionProperties.templateName}.ftl">'?interpret>
+            <@nameTemplate/>
+        </#if>
+
         <br/>
         <#include "partitionStats.ftl">
 

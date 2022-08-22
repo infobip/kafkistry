@@ -28,6 +28,7 @@ import io.kotlintest.mock.mock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import java.util.*
 
 internal class ClusterResourcesAnalyzerTest {
 
@@ -48,6 +49,7 @@ internal class ClusterResourcesAnalyzerTest {
             PartitionsReplicasAssignor(),
             RequiredResourcesInspector(),
             AclLinkResolver(mock()),
+            Optional.empty(),
         ),
         partitionsReplicasAssignor = PartitionsReplicasAssignor(),
         configValueInspector = ConfigValueInspector(),

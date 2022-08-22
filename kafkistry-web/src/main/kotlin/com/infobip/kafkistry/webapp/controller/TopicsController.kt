@@ -7,6 +7,7 @@ import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryIntegrityException
 import com.infobip.kafkistry.service.topic.toAssignmentsInfo
+import com.infobip.kafkistry.webapp.TopicInspectExtensionProperties
 import com.infobip.kafkistry.webapp.WizardTopicNameProperties
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS_CLONE_ADD_NEW
@@ -40,6 +41,7 @@ class TopicsController(
     private val consumersApi: ConsumersApi,
     private val topicOffsetsApi: TopicOffsetsApi,
     private val wizardTopicNameProperties: WizardTopicNameProperties,
+    private val topicInspectExtensionProperties: TopicInspectExtensionProperties,
     private val topicReplicasApi: TopicReplicasApi,
     private val topicPartitionsReAssignmentsApi: TopicPartitionsReAssignmentsApi,
     private val topicOldestRecordAgeApiOpt: Optional<TopicOldestRecordAgeApi>,
@@ -208,22 +210,23 @@ class TopicsController(
         }
         val kStreamsInvolvement = kStreamAppsApi.topicKStreamApps(topicName, clusterIdentifier)
         return ModelAndView("topics/inspect", mutableMapOf(
-                "topicName" to topicName,
-                "clusterIdentifier" to clusterIdentifier,
-                "topicStatus" to topicStatus,
-                "expectedTopicInfo" to expectedTopicInfo,
-                "wrongPartitionValues" to wrongPartitionValues,
-                "clusterInfo" to clusterInfo,
-                "assignmentStatus" to assignmentStatus,
-                "topicConsumerGroups" to topicConsumerGroups,
-                "topicOffsets" to topicOffsets,
-                "topicReplicas" to topicReplicas,
-                "partitionReAssignments" to partitionReAssignments,
-                "oldestRecordAgesDisabled" to oldestRecordAgesDisabled,
-                "oldestRecordAges" to oldestRecordAges,
-                "topicResources" to topicResources,
-                "kStreamsInvolvement" to kStreamsInvolvement,
-                "topicConfigDoc" to existingValuesApi.all().topicConfigDoc,
+            "topicName" to topicName,
+            "clusterIdentifier" to clusterIdentifier,
+            "topicStatus" to topicStatus,
+            "expectedTopicInfo" to expectedTopicInfo,
+            "wrongPartitionValues" to wrongPartitionValues,
+            "clusterInfo" to clusterInfo,
+            "assignmentStatus" to assignmentStatus,
+            "topicConsumerGroups" to topicConsumerGroups,
+            "topicOffsets" to topicOffsets,
+            "topicReplicas" to topicReplicas,
+            "partitionReAssignments" to partitionReAssignments,
+            "oldestRecordAgesDisabled" to oldestRecordAgesDisabled,
+            "oldestRecordAges" to oldestRecordAges,
+            "topicResources" to topicResources,
+            "kStreamsInvolvement" to kStreamsInvolvement,
+            "topicConfigDoc" to existingValuesApi.all().topicConfigDoc,
+            "inspectExtensionProperties" to topicInspectExtensionProperties,
         ))
     }
 

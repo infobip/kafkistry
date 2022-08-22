@@ -23,7 +23,6 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.I
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.MISSING
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.NEEDS_LEADER_ELECTION
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
-import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.OK
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_LEADERS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
@@ -36,6 +35,7 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.W
 import com.infobip.kafkistry.service.topic.validation.TopicConfigurationValidator
 import com.infobip.kafkistry.service.topic.validation.rules.ClusterMetadata
 import org.springframework.stereotype.Component
+import java.util.Optional
 
 @Component
 class TopicIssuesInspector(
@@ -43,7 +43,8 @@ class TopicIssuesInspector(
     private val configurationValidator: TopicConfigurationValidator,
     private val partitionsReplicasAssignor: PartitionsReplicasAssignor,
     private val resourceUsagesInspector: RequiredResourcesInspector,
-    private val aclLinkResolver: AclLinkResolver
+    private val aclLinkResolver: AclLinkResolver,
+    private val externalInspectors: Optional<List<TopicExternalInspector>>,
 ) {
 
     fun inspectTopicDataOnClusterData(
@@ -86,6 +87,7 @@ class TopicIssuesInspector(
             }
             val resourceRequiredUsages = inspectRequiredResourcesUsage(topicDescription, clusterRef, clusterInfo)
             checkAffectingAclRules(topicName, clusterRef.identifier)
+            val externInfo = checkExternalInspectors(topicName, clusterRef)
             TopicClusterStatus(
                 status = prepareAndBuild(),
                 lastRefreshTime = latestClusterState.lastRefreshTime,
@@ -96,7 +98,7 @@ class TopicIssuesInspector(
                 resourceRequiredUsages = resourceRequiredUsages,
                 currentTopicReplicaInfos = currentTopicReplicaInfos,
                 currentReAssignments = partitionReAssignments,
-                externInfo = emptyMap(),
+                externInspectInfo = externInfo,
             )
         }
     }
@@ -407,9 +409,32 @@ class TopicIssuesInspector(
         affectingAclRules(aclRules)
     }
 
+    private fun TopicOnClusterInspectionResult.Builder.checkExternalInspectors(
+        topicName: TopicName, clusterRef: ClusterRef,
+    ): Map<String, Any> {
+        val externInfo = mutableMapOf<String, Any>()
+        externalInspectors.ifPresent { inspectors ->
+            inspectors.forEach {
+                it.inspectTopic(topicName, clusterRef, object : TopicExternalInspectCallback {
+
+                    override fun addStatusType(statusType: TopicInspectionResultType) {
+                        addResultType(statusType)
+                    }
+
+                    override fun setExternalInfo(info: Any) {
+                        externInfo[it.name] = info
+                    }
+                })
+            }
+        }
+        return externInfo
+    }
+
     private fun TopicOnClusterInspectionResult.Builder.prepareAndBuild(): TopicOnClusterInspectionResult {
-        if (types().isEmpty()) {
-            addResultType(OK)
+        with(types()) {
+            if (isEmpty() || all { it.category == IssueCategory.NONE && it.level != StatusLevel.IGNORE }) {
+                addOkResultType()
+            }
         }
         val availableActions = types()
                 .map { type ->
