@@ -45,6 +45,7 @@ function loadPageSegment(
                 hideServerOpOnId(opProgressId);
                 resultContainer.html(response);
                 refreshAllConfValuesIn(resultContainer);
+                registerAllInfoTooltipsIn(resultContainer);
                 initDatatablesIn(resultContainer);
                 let tableId = resultContainer.find(".datatable").attr("id");
                 doneSegments.push(tableId);
