@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 
 val EMPTY = TopicInspectionResultType(
     name = "EMPTY",
-    level = StatusLevel.IGNORE,
+    level = StatusLevel.WARNING,
     category = IssueCategory.NONE,
     doc = "Topic has no data in any partition",
 )
