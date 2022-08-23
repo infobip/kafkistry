@@ -274,6 +274,7 @@ data class TopicInspectionResultType(
     override val name: String,
     override val level: StatusLevel,
     val category: IssueCategory,
+    override val doc: String,
 ) : NamedType {
 
     override val valid: Boolean get() = category.ok
@@ -282,113 +283,171 @@ data class TopicInspectionResultType(
         /**
          * Everything is ok with specific topic on specific cluster
          */
-        val OK =  TopicInspectionResultType("OK", SUCCESS, NONE)
+        val OK =  TopicInspectionResultType(
+            "OK", SUCCESS, NONE, NamedTypeDoc.OK,
+        )
 
         /**
          * Internal topic of kafka
          */
-        val INTERNAL =  TopicInspectionResultType("INTERNAL", INFO, NONE)
+        val INTERNAL =  TopicInspectionResultType(
+            "INTERNAL", INFO, NONE, "Internal topic of kafka itself used for persistent storage of state",
+        )
 
         /**
          * Topic does not exist on cluster, and it is expected because it's configured not to be present on specific cluster
          */
-        val NOT_PRESENT_AS_EXPECTED =  TopicInspectionResultType("NOT_PRESENT_AS_EXPECTED", IGNORE, NONE)
+        val NOT_PRESENT_AS_EXPECTED =  TopicInspectionResultType(
+            "NOT_PRESENT_AS_EXPECTED", IGNORE, NONE, NamedTypeDoc.NOT_PRESENT_AS_EXPECTED,
+        )
 
         /**
          * Currently cluster is unreachable, can't conclude what is an actual status of topic on this cluster
          */
-        val CLUSTER_UNREACHABLE =  TopicInspectionResultType("CLUSTER_UNREACHABLE", CRITICAL, VISIBILITY)
+        val CLUSTER_UNREACHABLE =  TopicInspectionResultType(
+            "CLUSTER_UNREACHABLE", CRITICAL, VISIBILITY, NamedTypeDoc.CLUSTER_UNREACHABLE,
+        )
 
         /**
          * Cluster is disabled by configuration, can't conclude what is an actual status of topic on this cluster
          */
-        val CLUSTER_DISABLED =  TopicInspectionResultType("CLUSTER_DISABLED", IGNORE, NONE)
+        val CLUSTER_DISABLED =  TopicInspectionResultType(
+            "CLUSTER_DISABLED", IGNORE, NONE, NamedTypeDoc.CLUSTER_DISABLED,
+        )
 
         /**
          * Topic is configured to exist on cluster, but it does not
          */
-        val MISSING =  TopicInspectionResultType("MISSING", ERROR, CONFIGURATION_MISMATCH)
+        val MISSING =  TopicInspectionResultType(
+            "MISSING", ERROR, CONFIGURATION_MISMATCH, NamedTypeDoc.MISSING,
+        )
 
         /**
          * Topic is configured not to be present on cluster but actually it does exist
          */
-        val UNEXPECTED =  TopicInspectionResultType("UNEXPECTED", ERROR, CONFIGURATION_MISMATCH)
+        val UNEXPECTED =  TopicInspectionResultType(
+            "UNEXPECTED", ERROR, CONFIGURATION_MISMATCH, NamedTypeDoc.UNEXPECTED,
+        )
 
         /**
          * Topic exist on cluster, but it is not present in registry's repository of topic configurations
          */
-        val UNKNOWN =  TopicInspectionResultType("UNKNOWN", WARNING, CONFIGURATION_MISMATCH)
+        val UNKNOWN =  TopicInspectionResultType(
+            "UNKNOWN", WARNING, CONFIGURATION_MISMATCH, NamedTypeDoc.UNKNOWN,
+        )
 
         /**
          * Actual partition count on cluster differs from configured partition count for this cluster
          */
-        val WRONG_PARTITION_COUNT =  TopicInspectionResultType("WRONG_PARTITION_COUNT", ERROR, CONFIGURATION_MISMATCH)
+        val WRONG_PARTITION_COUNT =  TopicInspectionResultType(
+            "WRONG_PARTITION_COUNT", ERROR, CONFIGURATION_MISMATCH,
+            "Configured partition count differs from actual partition count on existing topic",
+        )
 
         /**
          * Actual number of partition replicas differs from configured replication factor for this cluster
          */
-        val WRONG_REPLICATION_FACTOR =  TopicInspectionResultType("WRONG_REPLICATION_FACTOR", ERROR, CONFIGURATION_MISMATCH)
+        val WRONG_REPLICATION_FACTOR =  TopicInspectionResultType(
+            "WRONG_REPLICATION_FACTOR", ERROR, CONFIGURATION_MISMATCH,
+            "Configured replication factor differs from actual partition count on existing topic",
+        )
 
         /**
          * There are non-default configuration values on actual cluster topic which differ from configured
          * non-default config values for this specific cluster
          */
-        val WRONG_CONFIG =  TopicInspectionResultType("WRONG_CONFIG", ERROR, CONFIGURATION_MISMATCH)
+        val WRONG_CONFIG =  TopicInspectionResultType(
+            "WRONG_CONFIG", ERROR, CONFIGURATION_MISMATCH,
+            "Some configuration value(s) do not match expected value(s)",
+        )
 
         /**
          * Wanted configuration for cluster violate some validation rules
          * @see com.infobip.kafkistry.service.RuleViolation
          */
-        val CONFIG_RULE_VIOLATIONS =  TopicInspectionResultType("CONFIG_RULE_VIOLATIONS", WARNING, RULE_CHECK_VIOLATION)
+        val CONFIG_RULE_VIOLATIONS =  TopicInspectionResultType(
+            "CONFIG_RULE_VIOLATIONS", WARNING, RULE_CHECK_VIOLATION,
+            "Kafkistry has some set of rules for checking bad configuration combinations. " +
+                    "This warning shows that topic configuration in registry violates some of thore rules",
+        )
 
         /**
          * Actual topic's on cluster configuration for cluster violate some validation rules
          * @see com.infobip.kafkistry.service.RuleViolation
          */
-        val CURRENT_CONFIG_RULE_VIOLATIONS =  TopicInspectionResultType("CURRENT_CONFIG_RULE_VIOLATIONS", WARNING, RULE_CHECK_VIOLATION)
+        val CURRENT_CONFIG_RULE_VIOLATIONS =  TopicInspectionResultType(
+            "CURRENT_CONFIG_RULE_VIOLATIONS", WARNING, RULE_CHECK_VIOLATION,
+            "Kafkistry has some set of rules for checking bad configuration combinations. " +
+                    "This warning shows that 'current' topic on cluster violates some of thore rules",
+        )
 
         /**
          * Actual topic on cluster has un-even distribution of replicas per brokers in cluster
          */
-        val PARTITION_REPLICAS_DISBALANCE =  TopicInspectionResultType("PARTITION_REPLICAS_DISBALANCE", WARNING, RUNTIME_ISSUE)
+        val PARTITION_REPLICAS_DISBALANCE =  TopicInspectionResultType(
+            "PARTITION_REPLICAS_DISBALANCE", WARNING, RUNTIME_ISSUE,
+            "Actual topic assignment has un-even number of partition replicas across broker nodes in cluster",
+        )
 
         /**
          * Actual topic on cluster has un-even distribution of leader replicas per brokers in cluster
          */
-        val PARTITION_LEADERS_DISBALANCE =  TopicInspectionResultType("PARTITION_LEADERS_DISBALANCE", WARNING, RUNTIME_ISSUE)
+        val PARTITION_LEADERS_DISBALANCE =  TopicInspectionResultType(
+            "PARTITION_LEADERS_DISBALANCE", WARNING, RUNTIME_ISSUE,
+            "Actual topic assignment has un-even number of partition leader replicas across broker nodes in cluster",
+        )
 
         /**
          * It means that it is that there has been re-assignment that is completed and not yet
          * verified manually by executing verify action
          */
-        val HAS_UNVERIFIED_REASSIGNMENTS =  TopicInspectionResultType("HAS_UNVERIFIED_REASSIGNMENTS", WARNING, RUNTIME_ISSUE)
+        val HAS_UNVERIFIED_REASSIGNMENTS =  TopicInspectionResultType(
+            "HAS_UNVERIFIED_REASSIGNMENTS", WARNING, RUNTIME_ISSUE,
+            "It means that there has been re-assignment which is completed and not yet verified manually by executing verify action which clears throttle",
+        )
 
         /**
          * Topic is configured to throttle leader-follower replication rate for some partition-broker pairs
          */
-        val HAS_REPLICATION_THROTTLING =  TopicInspectionResultType("HAS_REPLICATION_THROTTLING", WARNING, RUNTIME_ISSUE)
+        val HAS_REPLICATION_THROTTLING =  TopicInspectionResultType(
+            "HAS_REPLICATION_THROTTLING", WARNING, RUNTIME_ISSUE,
+            "Topic is configured to throttle leader-follower replication rate for some partition-broker pairs",
+        )
 
         /**
          * Topic currently has partitions with replica re-assignments in progress
          */
-        val RE_ASSIGNMENT_IN_PROGRESS =  TopicInspectionResultType("RE_ASSIGNMENT_IN_PROGRESS", INFO, RUNTIME_ISSUE)
+        val RE_ASSIGNMENT_IN_PROGRESS =  TopicInspectionResultType(
+            "RE_ASSIGNMENT_IN_PROGRESS", INFO, RUNTIME_ISSUE,
+            "Topic currently has partitions with replica re-assignments in progress",
+        )
 
         /**
          * Topic has some preferred leaders which are not leaders and has some leaders which are not preferred leaders
          */
-        val NEEDS_LEADER_ELECTION =  TopicInspectionResultType("NEEDS_LEADER_ELECTION", WARNING, RUNTIME_ISSUE)
+        val NEEDS_LEADER_ELECTION =  TopicInspectionResultType(
+            "NEEDS_LEADER_ELECTION", WARNING, RUNTIME_ISSUE,
+            "Topic has some preferred leaders which are not leaders and has some leaders which are not preferred leaders",
+        )
 
         /**
          * Some partition replicas are out of sync with leader. It can be caused by runtime issues like network issues,
          * increased traffic, cluster node issues, etc. and it is expected when there is re-assignment in progress which
          * involves migration of some replicas
          */
-        val HAS_OUT_OF_SYNC_REPLICAS =  TopicInspectionResultType("HAS_OUT_OF_SYNC_REPLICAS", WARNING, RUNTIME_ISSUE)
+        val HAS_OUT_OF_SYNC_REPLICAS =  TopicInspectionResultType(
+            "HAS_OUT_OF_SYNC_REPLICAS", WARNING, RUNTIME_ISSUE,
+            "Some partition replicas are out of sync with leader. " +
+                    "It can be caused by runtime issues like network issues, increased traffic, cluster node issues, etc... " +
+                    "and it is expected when there is re-assignment in progress which involves migration of some replicas",
+        )
 
         /**
          * Requested topic inspection does not exist in registry at all, nor it does not exist on cluster as unknown
          */
-        val UNAVAILABLE =  TopicInspectionResultType("UNAVAILABLE", IGNORE, INVALID_REQUEST)
+        val UNAVAILABLE =  TopicInspectionResultType(
+            "UNAVAILABLE", IGNORE, INVALID_REQUEST, NamedTypeDoc.UNAVAILABLE,
+        )
     }
 
 }

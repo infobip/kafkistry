@@ -30,30 +30,6 @@ there are no in-progress re-assignments on cluster, throttle rate will be remove
 perform after preferred leader re-balance.">
 <#assign showTopicInspectionBtn = "Open topic inspection page to see actual configuration and assignments table.">
 
-<#assign topicStatus = {
-"OK": "Everything is ok",
-"INTERNAL": "Internal topic of kafka itself used for persistent storage of state",
-"NOT_PRESENT_AS_EXPECTED": "Topic is configured not to exist on this cluster and it actually does not exist",
-"MISSING": "Topic should exist on kafka cluster but it is not found",
-"UNKNOWN": "Topic exist on kafka cluster but not in kafkistry",
-"CLUSTER_UNREACHABLE": "Last attempt to collect metadata from cluster was not successfull",
-"CLUSTER_DISABLED": "Specific cluster is disabled by configuration and it is not atempted to read data from it",
-"UNEXPECTED": "Topic is configured not to exist on cluster but actually it does exist",
-"CONFIG_RULE_VIOLATIONS": "Kafkistry has some set of rules for checking bad configuration combinations. This warning shows that topic configuration in registry violates some of thore rules",
-"CURRENT_CONFIG_RULE_VIOLATIONS": "Kafkistry has some set of rules for checking bad configuration combinations. This warning shows that 'current' topic on cluster violates some of thore rules",
-"WRONG_PARTITION_COUNT": "Configured partition count differs from actual partition count on existing topic",
-"WRONG_REPLICATION_FACTOR": "Configured replication factor differs from actual partition count on existing topic",
-"WRONG_CONFIG": "Some configuration value(s) do not match expected value(s)",
-"PARTITION_REPLICAS_DISBALANCE": "Actual topic assignment has un-even number of partition replicas across broker nodes in cluster",
-"PARTITION_LEADERS_DISBALANCE": "Actual topic assignment has un-even number of partition leader replicas across broker nodes in cluster",
-"HAS_UNVERIFIED_REASSIGNMENTS": "It means that there has been re-assignment which is completed and not yet verified manually by executing verify action which clears throttle",
-"HAS_REPLICATION_THROTTLING": "Topic is configured to throttle leader-follower replication rate for some partition-broker pairs",
-"RE_ASSIGNMENT_IN_PROGRESS": "Topic currently has partitions with replica re-assignments in progress",
-"NEEDS_LEADER_ELECTION": "Topic has some preferred leaders which are not leaders and has some leaders which are not preferred leaders",
-"HAS_OUT_OF_SYNC_REPLICAS": "Some partition replicas are out of sync with leader. It can be caused by runtime issues like network issues, increased traffic, cluster node issues, etc.. and it is expected when there is re-assignment in progress which involves migration of some replicas",
-"UNAVAILABLE": "Requested combination of (topic, cluster) is not available, meaning that topic does not exist in registry nor it does not exist as UNKNOWN on specified cluster"
-}>
-
 <#assign updateInputMsg = "This can be used descriptive update reason which will be inserted into commit message">
 
 <#assign allClustersPresenceOption = "Expected to exist on 'all' clusters listed in registry, when the new cluster is added, it's also expected that it should exist on it.">

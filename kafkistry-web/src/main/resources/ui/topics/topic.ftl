@@ -169,7 +169,7 @@
             <tr class="per-cluster-status-row">
                 <td>
                     <a href="${appUrl.topics().showInspectTopicOnCluster(topicName, clusterStatus.clusterIdentifier)}">
-                        <button class="btn btn-sm btn-outline-dark" title="Inspect this topic on this cluster...">
+                        <button class="btn btn-sm btn-outline-dark text-nowrap" title="Inspect this topic on this cluster...">
                             ${clusterStatus.clusterIdentifier} 🔍
                         </button>
                     </a>

@@ -9,17 +9,18 @@ data class AclInspectionResultType(
     override val name: String,
     override val level: StatusLevel,
     override val valid: Boolean,
+    override val doc: String,
 ) : NamedType {
     companion object {
-        val OK = AclInspectionResultType("OK", SUCCESS, true)
-        val MISSING = AclInspectionResultType("MISSING", ERROR, false)
-        val UNEXPECTED =  AclInspectionResultType("UNEXPECTED", ERROR, false)
-        val NOT_PRESENT_AS_EXPECTED = AclInspectionResultType("NOT_PRESENT_AS_EXPECTED", IGNORE, true)
-        val UNKNOWN = AclInspectionResultType("UNKNOWN", WARNING, false)
-        val CLUSTER_DISABLED = AclInspectionResultType("CLUSTER_DISABLED", IGNORE, true)
-        val CLUSTER_UNREACHABLE = AclInspectionResultType("CLUSTER_UNREACHABLE", ERROR, false)
-        val SECURITY_DISABLED = AclInspectionResultType("SECURITY_DISABLED", WARNING, false)
-        val UNAVAILABLE = AclInspectionResultType("UNAVAILABLE", IGNORE, false)
+        val OK = AclInspectionResultType("OK", SUCCESS, true, NamedTypeDoc.OK)
+        val MISSING = AclInspectionResultType("MISSING", ERROR, false, NamedTypeDoc.MISSING)
+        val UNEXPECTED =  AclInspectionResultType("UNEXPECTED", ERROR, false, NamedTypeDoc.UNEXPECTED)
+        val NOT_PRESENT_AS_EXPECTED = AclInspectionResultType("NOT_PRESENT_AS_EXPECTED", IGNORE, true, NamedTypeDoc.NOT_PRESENT_AS_EXPECTED)
+        val UNKNOWN = AclInspectionResultType("UNKNOWN", WARNING, false, NamedTypeDoc.UNKNOWN)
+        val CLUSTER_DISABLED = AclInspectionResultType("CLUSTER_DISABLED", IGNORE, true, NamedTypeDoc.CLUSTER_DISABLED)
+        val CLUSTER_UNREACHABLE = AclInspectionResultType("CLUSTER_UNREACHABLE", ERROR, false, NamedTypeDoc.CLUSTER_UNREACHABLE)
+        val SECURITY_DISABLED = AclInspectionResultType("SECURITY_DISABLED", WARNING, false, "Can't get ACLs fro kafka due to security/authorizer being disabled")
+        val UNAVAILABLE = AclInspectionResultType("UNAVAILABLE", IGNORE, false,  NamedTypeDoc.UNAVAILABLE)
     }
 }
 

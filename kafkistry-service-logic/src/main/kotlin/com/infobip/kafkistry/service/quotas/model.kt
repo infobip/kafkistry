@@ -31,17 +31,18 @@ data class QuotasInspectionResultType(
     override val name: String,
     override val level: StatusLevel,
     override val valid: Boolean,
+    override val doc: String,
 ) : NamedType {
     companion object {
-        val OK = QuotasInspectionResultType("OK", SUCCESS, true)
-        val MISSING = QuotasInspectionResultType("MISSING", ERROR, false)
-        val UNEXPECTED =  QuotasInspectionResultType("UNEXPECTED", ERROR, false)
-        val NOT_PRESENT_AS_EXPECTED = QuotasInspectionResultType("NOT_PRESENT_AS_EXPECTED", IGNORE, true)
-        val UNKNOWN = QuotasInspectionResultType("UNKNOWN", WARNING, false)
-        val WRONG_VALUE = QuotasInspectionResultType("WRONG_VALUE", ERROR, false)
-        val CLUSTER_DISABLED = QuotasInspectionResultType("CLUSTER_DISABLED", IGNORE, true)
-        val CLUSTER_UNREACHABLE = QuotasInspectionResultType("CLUSTER_UNREACHABLE", ERROR, false)
-        val UNAVAILABLE = QuotasInspectionResultType("UNAVAILABLE", IGNORE, false)
+        val OK = QuotasInspectionResultType("OK", SUCCESS, true, NamedTypeDoc.OK)
+        val MISSING = QuotasInspectionResultType("MISSING", ERROR, false, NamedTypeDoc.MISSING)
+        val UNEXPECTED =  QuotasInspectionResultType("UNEXPECTED", ERROR, false, NamedTypeDoc.UNEXPECTED)
+        val NOT_PRESENT_AS_EXPECTED = QuotasInspectionResultType("NOT_PRESENT_AS_EXPECTED", IGNORE, true, NamedTypeDoc.NOT_PRESENT_AS_EXPECTED)
+        val UNKNOWN = QuotasInspectionResultType("UNKNOWN", WARNING, false, NamedTypeDoc.UNKNOWN)
+        val WRONG_VALUE = QuotasInspectionResultType("WRONG_VALUE", ERROR, false, "Values for quotas differ from expected")
+        val CLUSTER_DISABLED = QuotasInspectionResultType("CLUSTER_DISABLED", IGNORE, true, NamedTypeDoc.CLUSTER_DISABLED)
+        val CLUSTER_UNREACHABLE = QuotasInspectionResultType("CLUSTER_UNREACHABLE", ERROR, false, NamedTypeDoc.CLUSTER_UNREACHABLE)
+        val UNAVAILABLE = QuotasInspectionResultType("UNAVAILABLE", IGNORE, false, NamedTypeDoc.UNAVAILABLE)
     }
 }
 

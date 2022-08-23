@@ -7,6 +7,17 @@ interface NamedType {
     val name: String
     val level: StatusLevel
     val valid: Boolean
+    val doc: String
+}
+object NamedTypeDoc {
+    const val OK = "Everything is as expected"
+    const val MISSING = "It should exist on kafka cluster but it is not found"
+    const val UNEXPECTED =  "Is exists on kafka cluster but not in kafkistry"
+    const val NOT_PRESENT_AS_EXPECTED = "It's configured not to exist on this cluster and it actually does not exist"
+    const val UNKNOWN = "It exist on kafka cluster but not in kafkistry"
+    const val CLUSTER_DISABLED = "Specific cluster is disabled by configuration and it is not attempted to read data from it"
+    const val CLUSTER_UNREACHABLE = "Last attempt to collect metadata from cluster was not successful"
+    const val UNAVAILABLE = "Requested combination of this resource + cluster is not available, meaning that it does not exist in registry nor it does not exist as UNKNOWN on specified cluster"
 }
 
 data class NamedTypeQuantity<T : NamedType, Q>(

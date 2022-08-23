@@ -274,10 +274,22 @@
     </span>
 </#macro>
 
-<#macro namedTypeStatusAlert type>
+<#macro namedTypeStatusAlert type isStatusFlag=false>
 <#-- @ftlvariable name="type" type="com.infobip.kafkistry.service.NamedType" -->
-    <div role="alert" class="alert alert-inline alert-sm ${levelToHtmlClass(type.level)} mb-0">
+    <#import "infoIcon.ftl" as infoForAlert>
+    <div role="alert" class="alert alert-inline alert-sm ${levelToHtmlClass(type.level)} mb-1">
         ${type.name}
+        <#if !isStatusFlag>
+            <#assign tooltip>
+                <#if type.valid>
+                    <span class='badge badge-success'>VALID</span>
+                <#else>
+                    <span class='badge badge-danger'>INVALID</span>
+                </#if>
+                ${type.doc}
+            </#assign>
+            <@infoForAlert.icon tooltip=tooltip/>
+        </#if>
     </div>
 </#macro>
 
