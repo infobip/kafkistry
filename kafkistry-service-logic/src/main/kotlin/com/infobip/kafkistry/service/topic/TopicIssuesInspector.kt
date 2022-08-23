@@ -432,7 +432,7 @@ class TopicIssuesInspector(
 
     private fun TopicOnClusterInspectionResult.Builder.prepareAndBuild(): TopicOnClusterInspectionResult {
         with(types()) {
-            if (isEmpty() || all { it.category == IssueCategory.NONE && it.level != StatusLevel.IGNORE }) {
+            if (isEmpty() || all { it.valid && (it != NOT_PRESENT_AS_EXPECTED && it != CLUSTER_DISABLED) }) {
                 addOkResultType()
             }
         }

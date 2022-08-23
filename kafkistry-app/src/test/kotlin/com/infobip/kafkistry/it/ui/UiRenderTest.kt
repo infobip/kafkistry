@@ -31,7 +31,6 @@ import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Test
@@ -173,7 +172,7 @@ class UiRenderTest {
         api.refreshClusters()
     }
 
-    private fun String.firstWord() = split(' ')[0]
+    private fun String.wordsSet() = Regex("\\w+").findAll(this).map { it.value }.toSet()
 
     @Before
     fun clearRepos() {
@@ -254,9 +253,9 @@ class UiRenderTest {
 
     private fun Document.topicPageClusterStatusesAssertion(): AbstractListAssert<*, MutableList<out Tuple>, Tuple, ObjectAssert<Tuple>> {
         return assertThat(select(".per-cluster-status-row")).extracting(
-                Function<Element, String> { it.selectFirst("td:nth-child(1)").text().removeSuffix(" \uD83D\uDD0D") },   //remove magnifier symbol
-                Function<Element, String> { it.selectFirst("td:nth-child(1) a").attr("href") },
-                Function<Element, String> { it.selectFirst("td:nth-child(2) div.alert").text().firstWord() }
+                Function { it.selectFirst("td:nth-child(1)").text().removeSuffix(" \uD83D\uDD0D") },   //remove magnifier symbol
+                Function { it.selectFirst("td:nth-child(1) a").attr("href") },
+                Function { it.select("td:nth-child(2) div.alert").text().wordsSet() }
         )
     }
 
@@ -272,8 +271,8 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/topics/inspect?topicName=topic_expected_missing")
         page.topicPageClusterStatusesAssertion().containsOnly(
-                tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_expected_missing&clusterIdentifier=c_1", "OK"),
-                tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_expected_missing&clusterIdentifier=c_2", "NOT_PRESENT_AS_EXPECTED")
+                tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_expected_missing&clusterIdentifier=c_1", setOf("OK", "EMPTY")),
+                tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_expected_missing&clusterIdentifier=c_2", setOf("NOT_PRESENT_AS_EXPECTED"))
         )
     }
 
@@ -282,8 +281,8 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/topics/inspect?topicName=topic_missing")
         page.topicPageClusterStatusesAssertion().containsOnly(
-                tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_missing&clusterIdentifier=c_1", "MISSING"),
-                tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_missing&clusterIdentifier=c_2", "MISSING")
+            tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_missing&clusterIdentifier=c_1", setOf("MISSING")),
+            tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_missing&clusterIdentifier=c_2", setOf("MISSING"))
         )
     }
 
@@ -292,8 +291,8 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/topics/inspect?topicName=topic_wrong_config")
         page.topicPageClusterStatusesAssertion().containsOnly(
-                tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_1", "WRONG_CONFIG"),
-                tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_2", "OK")
+            tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_1", setOf("WRONG_CONFIG", "EMPTY")),
+            tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_2",  setOf("OK", "EMPTY"))
         )
     }
 
@@ -304,8 +303,8 @@ class UiRenderTest {
         api.refreshClusters()
         val page = api.getPage("/topics/inspect?topicName=topic_wrong_config")
         page.topicPageClusterStatusesAssertion().containsOnly(
-                tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_1", "UNKNOWN"),
-                tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_2", "UNKNOWN")
+                tuple("c_1", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_1", setOf("UNKNOWN", "EMPTY")),
+                tuple("c_2", "/kafkistry/topics/cluster-inspect?topicName=topic_wrong_config&clusterIdentifier=c_2", setOf("UNKNOWN", "EMPTY"))
         )
     }
 
@@ -348,8 +347,8 @@ class UiRenderTest {
 
     private fun Document.clusterPageTopicStatusesAssertion(): AbstractListAssert<*, MutableList<out Tuple>, Tuple, ObjectAssert<Tuple>> {
         return assertThat(select(".topic-row")).extracting(
-                Function<Element, String> { it.select("td:nth-child(1)").text().removeSuffix(" \uD83D\uDD0D") },   //remove magnifier symbol
-                Function<Element, String> { it.select("td:nth-child(2) div.alert").text().firstWord() }
+                Function { it.select("td:nth-child(1)").text().removeSuffix(" \uD83D\uDD0D") },   //remove magnifier symbol
+                Function { it.select("td:nth-child(2) div.alert").text().wordsSet() }
         )
     }
 
@@ -358,10 +357,10 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/clusters/inspect/topics?clusterIdentifier=c_1")
         page.clusterPageTopicStatusesAssertion().containsOnly(
-                tuple(topic1.name, "OK"),
-                tuple(topic2.name, "MISSING"),
-                tuple(topic3.name, "OK"),
-                tuple(topic4.name, "WRONG_CONFIG")
+            tuple(topic1.name, setOf("OK", "EMPTY")),
+            tuple(topic2.name, setOf("MISSING")),
+            tuple(topic3.name, setOf("OK", "EMPTY")),
+            tuple(topic4.name, setOf("WRONG_CONFIG", "EMPTY")),
         )
     }
 
@@ -371,9 +370,9 @@ class UiRenderTest {
         api.refreshClusters()
         val page = api.getPage("/clusters/inspect/topics?clusterIdentifier=c_1")
         page.clusterPageTopicStatusesAssertion().containsOnly(
-                tuple(topic1.name, "UNKNOWN"),
-                tuple(topic3.name, "UNKNOWN"),
-                tuple(topic4.name, "UNKNOWN")
+            tuple(topic1.name, setOf("UNKNOWN", "EMPTY")),
+            tuple(topic3.name, setOf("UNKNOWN", "EMPTY")),
+            tuple(topic4.name, setOf("UNKNOWN", "EMPTY"))
         )
     }
 
@@ -382,10 +381,10 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/clusters/inspect/topics?clusterIdentifier=c_2")
         page.clusterPageTopicStatusesAssertion().containsOnly(
-                tuple(topic1.name, "OK"),
-                tuple(topic2.name, "MISSING"),
-                tuple(topic3.name, "NOT_PRESENT_AS_EXPECTED"),
-                tuple(topic4.name, "OK")
+            tuple(topic1.name, setOf("OK", "EMPTY")),
+            tuple(topic2.name, setOf("MISSING")),
+            tuple(topic3.name, setOf("NOT_PRESENT_AS_EXPECTED")),
+            tuple(topic4.name, setOf("OK", "EMPTY"))
         )
     }
 
