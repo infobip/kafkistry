@@ -85,7 +85,7 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
         await {
             browser.navigate().refresh()
             await {
-                browser.assertPageText().contains("Topic status on cluster\n" + "OK")
+                browser.assertPageText().contains("Topic status on cluster OK")
             }
         }
 

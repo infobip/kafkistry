@@ -117,7 +117,7 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
                 browser.assertPageText().contains("Topic my-rebalance-1")
             }
             browser.findElementWithText("Topic status on cluster").scrollIntoView()
-            browser.assertPageText().contains("Topic status on cluster\n" + "OK")
+            browser.assertPageText().contains("Topic status on cluster OK")
         }
     }
 }
