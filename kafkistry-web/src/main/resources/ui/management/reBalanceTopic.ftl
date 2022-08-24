@@ -5,7 +5,7 @@
 <#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus" -->
 <#-- @ftlvariable name="reBalanceSuggestion" type="com.infobip.kafkistry.service.topic.ReBalanceSuggestion" -->
 <#-- @ftlvariable name="reBalanceMode" type="com.infobip.kafkistry.service.topic.ReBalanceMode" -->
-<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
+<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.kafkastate.TopicReplicaInfos" -->
 
 <html lang="en">
 <head>

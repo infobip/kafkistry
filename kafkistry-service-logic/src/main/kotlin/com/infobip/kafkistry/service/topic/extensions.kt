@@ -1,11 +1,11 @@
 package com.infobip.kafkistry.service.topic
 
 import com.infobip.kafkistry.kafka.*
+import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionLoad
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.sumPerValue
 
 fun TopicDescription.propertiesForCluster(cluster: ClusterRef): TopicProperties =

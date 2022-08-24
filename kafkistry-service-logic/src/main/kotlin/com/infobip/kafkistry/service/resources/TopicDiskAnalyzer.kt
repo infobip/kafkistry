@@ -3,6 +3,7 @@ package com.infobip.kafkistry.service.resources
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
+import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
@@ -12,7 +13,6 @@ import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
-import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import org.apache.kafka.common.config.TopicConfig
 import org.springframework.stereotype.Component

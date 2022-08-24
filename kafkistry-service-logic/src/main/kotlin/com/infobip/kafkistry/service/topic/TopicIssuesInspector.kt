@@ -4,12 +4,12 @@ import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaClusterState
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.kafkastate.StateType
+import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.topic.AvailableAction.*
 import com.infobip.kafkistry.service.acl.AclLinkResolver
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.resources.RequiredResourcesInspector
 import com.infobip.kafkistry.service.resources.TopicResourceRequiredUsages
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_DISABLED

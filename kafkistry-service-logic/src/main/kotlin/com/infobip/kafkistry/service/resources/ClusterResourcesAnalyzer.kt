@@ -117,7 +117,7 @@ class ClusterResourcesAnalyzer(
                 }
                 .map { it.topicName }
         } else {
-            replicaDirs.replicas.map { it.topic }.distinct()
+            replicaDirs.replicas.keys.distinct()
         }
         val topicsDisks = topicNames.associateWith { topicName ->
             try {

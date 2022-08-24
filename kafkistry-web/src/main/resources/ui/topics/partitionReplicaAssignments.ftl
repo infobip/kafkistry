@@ -8,7 +8,7 @@
 <#-- @ftlvariable name="partitionChange"  type="com.infobip.kafkistry.service.topic.PartitionPropertyChange" -->
 
 <#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus" -->
-<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
+<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.kafkastate.TopicReplicaInfos" -->
 <#-- @ftlvariable name="partitionReAssignments" type="java.util.Map<Partition, com.infobip.kafkistry.kafka.TopicPartitionReAssignment>" -->
 
 <#function getReplicaAssignment partitionAssignments brokerId>

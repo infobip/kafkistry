@@ -2,12 +2,12 @@ package com.infobip.kafkistry.service.topic
 
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.StateType
+import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.StatusLevel.*
 import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.AssignmentsDisbalance
-import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.resources.TopicResourceRequiredUsages
 import com.infobip.kafkistry.service.topic.IssueCategory.*
 import java.io.Serializable

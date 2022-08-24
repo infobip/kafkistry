@@ -3,12 +3,11 @@ package com.infobip.kafkistry.service.topic
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaClusterState
 import com.infobip.kafkistry.kafkastate.StateData
+import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicReference
 
 class TopicInspectCtx(
     val topicName: TopicName,

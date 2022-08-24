@@ -2,7 +2,7 @@
 <#-- @ftlvariable name="clusterIdentifier"  type="java.lang.String" -->
 <#-- @ftlvariable name="topicStatus"  type="com.infobip.kafkistry.service.topic.TopicClusterStatus" -->
 <#-- @ftlvariable name="topicOffsets" type="com.infobip.kafkistry.service.topic.offsets.TopicOffsets" -->
-<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
+<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.kafkastate.TopicReplicaInfos" -->
 <!-- @ftlvariable name="oldestRecordAgesDisabled" type="java.lang.Boolean" -->
 <!-- @ftlvariable name="oldestRecordAges" type="java.util.Map<java.lang.Integer, java.lang.Long>" -->
 <#-- @ftlvariable name="topicStatus"  type="com.infobip.kafkistry.service.topic.TopicClusterStatus" -->

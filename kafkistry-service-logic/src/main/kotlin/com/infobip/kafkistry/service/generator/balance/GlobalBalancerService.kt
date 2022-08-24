@@ -7,6 +7,7 @@ import com.infobip.kafkistry.kafka.toPartitionReplicasMap
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
 import com.infobip.kafkistry.kafkastate.KafkaTopicReAssignmentsProvider
+import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.DataMigration
@@ -17,7 +18,6 @@ import com.infobip.kafkistry.service.topic.merge
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsets
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
-import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import org.springframework.stereotype.Service
 
 @Service

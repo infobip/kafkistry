@@ -82,12 +82,10 @@
                     <td><span class="text-primary text-monospace small">[undefined]</span></td>
                 </#if>
                 <td>
-                    <#assign statusFlags = topic.aggStatusFlags>
-                    <#assign clusterStatusFlags = util.clusterStatusFlags(topic.statusPerClusters)>
                     <#assign allTopicStatusTypes = util.allTopicStatusTypes(topic.statusPerClusters)>
-                    <#assign nonOkTopicStatusTypes = util.nonOkTopicStatusTypes(topic.statusPerClusters)>
-                    <#assign asStatusFlag = true>
-                    <#include "../common/statusFlags.ftl">
+                    <#list allTopicStatusTypes as statusType>
+                        <@util.namedTypeStatusAlert type = statusType isStatusFlag=true/>
+                    </#list>
                 </td>
             </tr>
         </#list>

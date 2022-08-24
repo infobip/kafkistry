@@ -3,7 +3,7 @@
 <#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
 <#-- @ftlvariable name="topicName" type="java.lang.String" -->
 <#-- @ftlvariable name="existingAssignments" type="java.util.Map<java.lang.Integer, java.util.List<java.lang.Integer>>" -->
-<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
+<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.kafkastate.TopicReplicaInfos" -->
 
 <html lang="en">
 <head>

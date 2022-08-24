@@ -4,6 +4,7 @@ package com.infobip.kafkistry.sql.sources
 
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.Partition
+import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
@@ -12,7 +13,6 @@ import com.infobip.kafkistry.service.topic.offsets.TopicOffsets
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
-import com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos
 import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.RuleViolation
 import com.infobip.kafkistry.service.topic.validation.rules.renderMessage

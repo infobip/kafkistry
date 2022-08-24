@@ -36,11 +36,9 @@ class TopicUnderprovisionedRetentionInspector(
         if (retentionBytes == -1L || retentionMs == -1L) {
             return
         }
+        val replicaInfos = ctx.currentTopicReplicaInfos ?: return
         val oldestRecordAges = ctx.cache {
             oldestRecordAgeService.topicOldestRecordAges(clusterRef.identifier, topicName)
-        } ?: return
-        val replicaInfos = ctx.cache {
-            replicaDirsService.topicReplicaInfos(clusterRef.identifier, topicName)
         } ?: return
 
         fun partitionUnderprovisionedPercent(

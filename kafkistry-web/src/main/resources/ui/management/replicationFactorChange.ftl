@@ -4,7 +4,7 @@
 <#-- @ftlvariable name="topicName" type="java.lang.String" -->
 <#-- @ftlvariable name="replicationFactorChange" type="com.infobip.kafkistry.service.topic.PartitionPropertyChange" -->
 <#-- @ftlvariable name="assignmentStatus" type="com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus" -->
-<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
+<#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.kafkastate.TopicReplicaInfos" -->
 
 <html lang="en">
 

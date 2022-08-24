@@ -60,8 +60,14 @@ data class ClusterTopicOffsets(
         val topicsOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>
 )
 
+data class TopicReplicaInfos(
+    val topic: TopicName,
+    val partitionBrokerReplicas: Map<Partition, Map<BrokerId, TopicPartitionReplica>>,
+    val brokerPartitionReplicas: Map<BrokerId, Map<Partition, TopicPartitionReplica>>
+)
+
 data class ReplicaDirs(
-        val replicas: List<TopicPartitionReplica>
+        val replicas: Map<TopicName, TopicReplicaInfos>
 )
 
 data class OldestRecordsAges(
