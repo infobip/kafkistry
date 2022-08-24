@@ -55,157 +55,137 @@ class TopicIssuesInspector(
         partitionReAssignments: Map<Partition, TopicPartitionReAssignment>,
         clusterRef: ClusterRef,
         latestClusterState: StateData<KafkaClusterState>
-    ): TopicClusterStatus {
-        val clusterInfo = latestClusterState.valueOrNull()?.clusterInfo
+    ): TopicClusterStatus = inspectTopicDataOnClusterData(
+        TopicInspectCtx(
+            topicName, clusterRef, latestClusterState, topicDescription, existingTopic,
+            currentTopicReplicaInfos, partitionReAssignments,
+        )
+    )
+
+    fun inspectTopicDataOnClusterData(ctx: TopicInspectCtx): TopicClusterStatus {
         return with(TopicOnClusterInspectionResult.Builder()) {
-            checkExists(latestClusterState, existingTopic)
-            checkClusterVisibility(latestClusterState)
-            checkTopicUnknown(topicDescription, existingTopic)
-            checkTopicUnavailable(latestClusterState, topicDescription, existingTopic)
-            if (topicDescription != null) {
-                inspectRegistryTopic(
-                    topicDescription, clusterRef, clusterInfo,
-                    existingTopic, currentTopicReplicaInfos, partitionReAssignments, latestClusterState,
-                )
-            }
-            val configEntryStatuses = if (topicDescription != null && clusterInfo != null && existingTopic != null) {
-                val expectedConfig = topicDescription.configForCluster(clusterRef)
-                existingTopic.config.mapValues { (key, value) ->
-                    configValueInspector.checkConfigProperty(key, value, expectedConfig[key], clusterInfo.config)
-                }
-            } else {
-                null
-            }
-            if (clusterInfo != null && existingTopic != null) {
-                checkTopicInternal(existingTopic)
-                checkExitingTopicDisbalance(existingTopic, clusterInfo, currentTopicReplicaInfos)
-            }
-            val existingTopicInfo = if (existingTopic != null && clusterInfo != null) {
-                existingTopic.toTopicInfo(clusterInfo.nodeIds, currentTopicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor)
-            } else {
-                null
-            }
-            val resourceRequiredUsages = inspectRequiredResourcesUsage(topicDescription, clusterRef, clusterInfo)
-            checkAffectingAclRules(topicName, clusterRef.identifier)
-            val externInfo = checkExternalInspectors(topicName, clusterRef)
+            checkExists(ctx)
+            checkClusterVisibility(ctx)
+            checkTopicUnknown(ctx)
+            checkTopicUnavailable(ctx)
+            inspectRegistryTopic(ctx)
+            val configEntryStatuses = ctx.computeConfigEntryStatuses()
+            checkTopicInternal(ctx)
+            checkExitingTopicDisbalance(ctx)
+            val existingTopicInfo = ctx.cache { computeExistingTopicInfo() }
+            val resourceRequiredUsages = ctx.inspectRequiredResourcesUsage()
+            checkAffectingAclRules(ctx)
+            val externInfo = checkExternalInspectors(ctx)
             TopicClusterStatus(
                 status = prepareAndBuild(),
-                lastRefreshTime = latestClusterState.lastRefreshTime,
-                clusterIdentifier = clusterRef.identifier,
-                clusterTags = clusterRef.tags,
+                lastRefreshTime = ctx.latestClusterState.lastRefreshTime,
+                clusterIdentifier = ctx.clusterRef.identifier,
+                clusterTags = ctx.clusterRef.tags,
                 existingTopicInfo = existingTopicInfo,
                 configEntryStatuses = configEntryStatuses,
                 resourceRequiredUsages = resourceRequiredUsages,
-                currentTopicReplicaInfos = currentTopicReplicaInfos,
-                currentReAssignments = partitionReAssignments,
+                currentTopicReplicaInfos = ctx.currentTopicReplicaInfos,
+                currentReAssignments = ctx.partitionReAssignments,
                 externInspectInfo = externInfo,
             )
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.inspectRegistryTopic(
-        topicDescription: TopicDescription,
-        clusterRef: ClusterRef,
-        clusterInfo: ClusterInfo?,
-        existingTopic: KafkaExistingTopic?,
-        currentTopicReplicaInfos: TopicReplicaInfos?,
-        partitionReAssignments: Map<Partition, TopicPartitionReAssignment>,
-        latestClusterState: StateData<KafkaClusterState>,
-    ) {
-        val topicName = topicDescription.name
-        val expectedProperties = topicDescription.propertiesForCluster(clusterRef)
-        val expectedConfig = topicDescription.configForCluster(clusterRef)
-        val needToBeOnCluster = topicDescription.presence.needToBeOnCluster(clusterRef)
-        checkValidationRules(topicName, needToBeOnCluster, expectedProperties, expectedConfig, clusterRef, clusterInfo, topicDescription)
-        if (clusterInfo != null) {
-            checkPresence(topicDescription.presence, clusterRef, latestClusterState, existingTopic)
+    private fun TopicInspectCtx.computeConfigEntryStatuses(): Map<String, ValueInspection>? =
+        if (topicDescription != null && clusterInfo != null && existingTopic != null) {
+            val expectedConfig = topicDescription.configForCluster(clusterRef)
+            existingTopic.config.mapValues { (key, value) ->
+                configValueInspector.checkConfigProperty(key, value, expectedConfig[key], clusterInfo.config)
+            }
+        } else {
+            null
         }
-        if (clusterInfo != null && existingTopic != null) {
-            checkPartitionCount(expectedProperties, existingTopic)
-            checkReplicationFactor(expectedProperties, existingTopic, partitionReAssignments)
-            checkConfigValues(expectedConfig, existingTopic, clusterInfo)
-            checkExitingTopicValidationRules(topicName, existingTopic, clusterRef, clusterInfo, topicDescription, currentTopicReplicaInfos, partitionReAssignments)
-            checkPreferredReplicaLeaders(existingTopic)
-            checkOutOfSyncReplicas(existingTopic)
-            checkReAssignment(existingTopic, partitionReAssignments)
+
+    private fun TopicOnClusterInspectionResult.Builder.inspectRegistryTopic(ctx: TopicInspectCtx) {
+        if (ctx.topicDescription == null) {
+            return
+        }
+        val expectedProperties = ctx.topicDescription.propertiesForCluster(ctx.clusterRef)
+        val expectedConfig = ctx.topicDescription.configForCluster(ctx.clusterRef)
+        val needToBeOnCluster = ctx.topicDescription.presence.needToBeOnCluster(ctx.clusterRef)
+        checkValidationRules(needToBeOnCluster, expectedProperties, expectedConfig, ctx)
+        checkPresence(ctx.topicDescription.presence, ctx)
+        if (ctx.clusterInfo != null && ctx.existingTopic != null) {
+            checkPartitionCount(expectedProperties, ctx.existingTopic)
+            checkReplicationFactor(expectedProperties, ctx.existingTopic, ctx.partitionReAssignments)
+            checkConfigValues(expectedConfig, ctx.existingTopic, ctx.clusterInfo)
+            checkExitingTopicValidationRules(ctx)
+            checkPreferredReplicaLeaders(ctx.existingTopic)
+            checkOutOfSyncReplicas(ctx.existingTopic)
+            checkReAssignment(ctx.existingTopic, ctx.partitionReAssignments)
         }
     }
 
-    private fun inspectRequiredResourcesUsage(
-        topicDescription: TopicDescription?,
-        clusterRef: ClusterRef,
-        clusterInfo: ClusterInfo?
-    ): OptionalValue<TopicResourceRequiredUsages> = if (topicDescription?.presence?.needToBeOnCluster(clusterRef) == true) {
-        try {
-            topicDescription.resourceRequirements
-                ?.let {
-                    resourceUsagesInspector.inspectTopicResources(
-                        topicDescription.propertiesForCluster(clusterRef), it, clusterRef, clusterInfo
-                    )
-                }
-                ?.let { OptionalValue.of(it) }
-                ?: OptionalValue.absent("missing 'resourceRequirements' in topic description")
-        } catch (ex: Exception) {
-            OptionalValue.absent(ex.toString())
-        }
+    private fun TopicInspectCtx.computeExistingTopicInfo(): ExistingTopicInfo? = if (existingTopic != null && clusterInfo != null) {
+        existingTopic.toTopicInfo(
+            clusterInfo.nodeIds, currentTopicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor,
+        )
     } else {
-        OptionalValue.absent("not needed on cluster")
+        null
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkExists(
-            latestClusterState: StateData<KafkaClusterState>, existingTopic: KafkaExistingTopic?
-    ) {
-        if (latestClusterState.stateType == StateType.VISIBLE) {
-            exists(existingTopic != null)
+    private fun TopicInspectCtx.inspectRequiredResourcesUsage(): OptionalValue<TopicResourceRequiredUsages> =
+        if (topicDescription?.presence?.needToBeOnCluster(clusterRef) == true) {
+            try {
+                topicDescription.resourceRequirements
+                    ?.let {
+                        resourceUsagesInspector.inspectTopicResources(
+                            topicDescription.propertiesForCluster(clusterRef), it, clusterRef, clusterInfo
+                        )
+                    }
+                    ?.let { OptionalValue.of(it) }
+                    ?: OptionalValue.absent("missing 'resourceRequirements' in topic description")
+            } catch (ex: Exception) {
+                OptionalValue.absent(ex.toString())
+            }
+        } else {
+            OptionalValue.absent("not needed on cluster")
+        }
+
+    private fun TopicOnClusterInspectionResult.Builder.checkExists(ctx: TopicInspectCtx) {
+        if (ctx.latestClusterState.stateType == StateType.VISIBLE) {
+            exists(ctx.existingTopic != null)
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkClusterVisibility(
-            latestClusterState: StateData<KafkaClusterState>
-    ) {
-        when (latestClusterState.stateType) {
+    private fun TopicOnClusterInspectionResult.Builder.checkClusterVisibility(ctx: TopicInspectCtx) {
+        when (ctx.latestClusterState.stateType) {
             StateType.VISIBLE -> Unit
             StateType.DISABLED -> addResultType(CLUSTER_DISABLED)
             else -> addResultType(CLUSTER_UNREACHABLE)
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkTopicUnknown(
-            topicDescription: TopicDescription?, existingTopic: KafkaExistingTopic?
-    ) {
-        if (topicDescription == null && existingTopic != null) {
+    private fun TopicOnClusterInspectionResult.Builder.checkTopicUnknown(ctx: TopicInspectCtx) {
+        if (ctx.topicDescription == null && ctx.existingTopic != null) {
             addResultType(UNKNOWN)
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkTopicInternal(
-            existingTopic: KafkaExistingTopic
-    ) {
+    private fun TopicOnClusterInspectionResult.Builder.checkTopicInternal(ctx: TopicInspectCtx) {
+        val existingTopic = ctx.existingTopic ?: return
         if (existingTopic.internal) {
             addResultType(INTERNAL)
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkTopicUnavailable(
-        latestClusterState: StateData<KafkaClusterState>,
-        topicDescription: TopicDescription?,
-        existingTopic: KafkaExistingTopic?
-    ) {
-        if (latestClusterState.stateType == StateType.VISIBLE && topicDescription == null && existingTopic == null) {
+    private fun TopicOnClusterInspectionResult.Builder.checkTopicUnavailable(ctx: TopicInspectCtx) {
+        if (ctx.latestClusterState.stateType == StateType.VISIBLE && ctx.topicDescription == null && ctx.existingTopic == null) {
             addResultType(UNAVAILABLE)
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkPresence(
-        presence: Presence, clusterRef: ClusterRef,
-        latestClusterState: StateData<KafkaClusterState>,
-        existingTopic: KafkaExistingTopic?
-    ) {
-        if (latestClusterState.stateType == StateType.DISABLED) {
+    private fun TopicOnClusterInspectionResult.Builder.checkPresence(presence: Presence, ctx: TopicInspectCtx) {
+        if (ctx.latestClusterState.stateType == StateType.DISABLED || ctx.clusterInfo == null) {
             return
         }
-        val needToBeOnCluster = presence.needToBeOnCluster(clusterRef)
-        if (existingTopic == null) {
+        val needToBeOnCluster = presence.needToBeOnCluster(ctx.clusterRef)
+        if (ctx.existingTopic == null) {
             //topic does not exist on cluster
             if (needToBeOnCluster) {
                 addResultType(MISSING)
@@ -227,15 +207,15 @@ class TopicIssuesInspector(
         val partitionCount = existingTopic.partitionsAssignments.size
         if (expectedProperties.partitionCount != partitionCount) {
             addResultType(WRONG_PARTITION_COUNT)
-                    .addWrongValue(
-                            WrongValueAssertion(
-                                    type = WRONG_PARTITION_COUNT,
-                                    key = "partition-count",
-                                    expectedDefault = false,
-                                    expected = expectedProperties.partitionCount,
-                                    actual = partitionCount
-                            )
-                    )
+            addWrongValue(
+                WrongValueAssertion(
+                    type = WRONG_PARTITION_COUNT,
+                    key = "partition-count",
+                    expectedDefault = false,
+                    expected = expectedProperties.partitionCount,
+                    actual = partitionCount
+                )
+            )
         }
     }
 
@@ -245,23 +225,23 @@ class TopicIssuesInspector(
             partitionReAssignments: Map<Partition, TopicPartitionReAssignment>
     ) {
         existingTopic.partitionsAssignments
-                .filter { it.resolveReplicationFactor(partitionReAssignments) != expectedProperties.replicationFactor }
-                .groupBy { it.replicasAssignments.size }
-                .map { (numReplicas, partitions) ->
-                    WrongValueAssertion(
-                            type = WRONG_REPLICATION_FACTOR,
-                            key = "replication-factor",
-                            expectedDefault = false,
-                            expected = expectedProperties.replicationFactor,
-                            actual = numReplicas,
-                            message = "Replicas count for partitions ${partitions.map { it.partition }} is $numReplicas"
-                    )
-                }
-                .takeIf { it.isNotEmpty() }
-                ?.let {
-                    addResultType(WRONG_REPLICATION_FACTOR)
-                    addWrongValues(it)
-                }
+            .filter { it.resolveReplicationFactor(partitionReAssignments) != expectedProperties.replicationFactor }
+            .groupBy { it.replicasAssignments.size }
+            .map { (numReplicas, partitions) ->
+                WrongValueAssertion(
+                    type = WRONG_REPLICATION_FACTOR,
+                    key = "replication-factor",
+                    expectedDefault = false,
+                    expected = expectedProperties.replicationFactor,
+                    actual = numReplicas,
+                    message = "Replicas count for partitions ${partitions.map { it.partition }} is $numReplicas"
+                )
+            }
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                addResultType(WRONG_REPLICATION_FACTOR)
+                addWrongValues(it)
+            }
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkConfigValues(
@@ -269,47 +249,47 @@ class TopicIssuesInspector(
     ) {
         val clusterServerConfig = clusterInfo.config
         existingTopic.config
-                .map { ValuesTuple(it.key, it.value, expectedConfig[it.key]) }
-                .map {
-                    it to configValueInspector.checkConfigProperty(
-                            it.key, it.actualValue, it.expectedValue, clusterServerConfig
-                    )
-                }
-                .filter { (_, valueInspection) -> !valueInspection.valid }
-                .map { (tuple, valueInspection) ->
-                    WrongValueAssertion(
-                            type = WRONG_CONFIG,
-                            key = tuple.key,
-                            expectedDefault = valueInspection.expectingClusterDefault,
-                            expected = valueInspection.expectedValue,
-                            actual = tuple.actualValue.value,
-                    )
-                }
-                .takeIf { it.isNotEmpty() }
-                ?.let {
-                    addResultType(WRONG_CONFIG)
-                    addWrongValues(it)
-                }
+            .map { ValuesTuple(it.key, it.value, expectedConfig[it.key]) }
+            .map {
+                it to configValueInspector.checkConfigProperty(
+                    it.key, it.actualValue, it.expectedValue, clusterServerConfig
+                )
+            }
+            .filter { (_, valueInspection) -> !valueInspection.valid }
+            .map { (tuple, valueInspection) ->
+                WrongValueAssertion(
+                    type = WRONG_CONFIG,
+                    key = tuple.key,
+                    expectedDefault = valueInspection.expectingClusterDefault,
+                    expected = valueInspection.expectedValue,
+                    actual = tuple.actualValue.value,
+                )
+            }
+            .takeIf { it.isNotEmpty() }
+            ?.let {
+                addResultType(WRONG_CONFIG)
+                addWrongValues(it)
+            }
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkValidationRules(
-        topicName: TopicName,
         needToBePresentOnCluster: Boolean,
         expectedProperties: TopicProperties,
         expectedConfig: TopicConfigMap,
-        clusterRef: ClusterRef,
-        clusterInfo: ClusterInfo?,
-        topicDescription: TopicDescription
+        ctx: TopicInspectCtx,
     ) {
-        val clusterDefaults = clusterInfo?.config?.let { clusterConfig ->
+        if (ctx.topicDescription == null) {
+            return
+        }
+        val clusterDefaults = ctx.clusterInfo?.config?.let { clusterConfig ->
             TOPIC_CONFIG_PROPERTIES.associateWith {
                 configValueInspector.clusterDefaultValue(clusterConfig, it)?.value
             }
         }.orEmpty()
         val topicEffectiveConfig = clusterDefaults + expectedConfig
-        val clusterMetadata = ClusterMetadata(clusterRef, clusterInfo)
+        val clusterMetadata = ClusterMetadata(ctx.clusterRef, ctx.clusterInfo)
         val ruleViolations = configurationValidator.checkRules(
-                topicName, needToBePresentOnCluster, expectedProperties, topicEffectiveConfig, clusterMetadata, topicDescription
+            ctx.topicName, needToBePresentOnCluster, expectedProperties, topicEffectiveConfig, clusterMetadata, ctx.topicDescription
         )
         if (ruleViolations.isNotEmpty()) {
             addResultType(CONFIG_RULE_VIOLATIONS)
@@ -319,20 +299,15 @@ class TopicIssuesInspector(
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkExitingTopicValidationRules(
-        topicName: TopicName,
-        existingTopic: KafkaExistingTopic,
-        clusterRef: ClusterRef,
-        clusterInfo: ClusterInfo,
-        topicDescription: TopicDescription,
-        currentTopicReplicaInfos: TopicReplicaInfos?,
-        partitionReAssignments: Map<Partition, TopicPartitionReAssignment>
-    ) {
-        val clusterMetadata = ClusterMetadata(clusterRef, clusterInfo)
-        val existingTopicInfo = existingTopic.toTopicInfo(clusterInfo.nodeIds, currentTopicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor)
+    private fun TopicOnClusterInspectionResult.Builder.checkExitingTopicValidationRules(ctx: TopicInspectCtx) {
+        if (ctx.topicDescription == null) {
+            return
+        }
+        val existingTopicInfo = ctx.cache { computeExistingTopicInfo() } ?: return
+        val clusterMetadata = ClusterMetadata(ctx.clusterRef, ctx.clusterInfo)
         val existingTopicConfig = existingTopicInfo.config.mapValues { it.value.value }
         val currentConfigRuleViolations = configurationValidator.checkRules(
-                topicName, true, existingTopicInfo.properties, existingTopicConfig, clusterMetadata, topicDescription
+            ctx.topicName, true, existingTopicInfo.properties, existingTopicConfig, clusterMetadata, ctx.topicDescription
         )
         if (currentConfigRuleViolations.isNotEmpty()) {
             addResultType(CURRENT_CONFIG_RULE_VIOLATIONS)
@@ -342,14 +317,15 @@ class TopicIssuesInspector(
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkExitingTopicDisbalance(
-            existingTopic: KafkaExistingTopic, clusterInfo: ClusterInfo, currentTopicReplicaInfos: TopicReplicaInfos?
-    ) {
-        val currentAssignments = existingTopic.currentAssignments()
+    private fun TopicOnClusterInspectionResult.Builder.checkExitingTopicDisbalance(ctx: TopicInspectCtx) {
+        if (ctx.clusterInfo == null || ctx.existingTopic == null) {
+            return
+        }
+        val currentAssignments = ctx.existingTopic.currentAssignments()
         val disbalance = partitionsReplicasAssignor.assignmentsDisbalance(
-                existingAssignments = currentAssignments,
-                allBrokers = clusterInfo.nodeIds,
-                existingPartitionLoads = currentAssignments.partitionLoads(currentTopicReplicaInfos)
+            existingAssignments = currentAssignments,
+            allBrokers = ctx.clusterInfo.nodeIds,
+            existingPartitionLoads = currentAssignments.partitionLoads(ctx.currentTopicReplicaInfos)
         )
         if (disbalance.replicasDisbalance > 0) {
             addResultType(PARTITION_REPLICAS_DISBALANCE)
@@ -379,43 +355,42 @@ class TopicIssuesInspector(
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkPreferredReplicaLeaders(
-            existingTopic: KafkaExistingTopic
+        existingTopic: KafkaExistingTopic
     ) {
         val needsLeaderElection = existingTopic.partitionsAssignments
-                .partitionsToReElectLeader()
-                .isNotEmpty()
+            .partitionsToReElectLeader()
+            .isNotEmpty()
         if (needsLeaderElection) {
             addResultType(NEEDS_LEADER_ELECTION)
         }
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkOutOfSyncReplicas(
-            existingTopic: KafkaExistingTopic
+        existingTopic: KafkaExistingTopic
     ) {
         val hasOutOfSyncReplicas = existingTopic.partitionsAssignments.asSequence()
-                .map { it.replicasAssignments }
-                .flatten()
-                .any { !it.inSyncReplica }
+            .map { it.replicasAssignments }
+            .flatten()
+            .any { !it.inSyncReplica }
         if (hasOutOfSyncReplicas) {
             addResultType(HAS_OUT_OF_SYNC_REPLICAS)
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkAffectingAclRules(
-            topicName: TopicName,
-            clusterIdentifier: KafkaClusterIdentifier
-    ) {
-        val aclRules = aclLinkResolver.findTopicAffectingAclRules(topicName, clusterIdentifier)
+    private fun TopicOnClusterInspectionResult.Builder.checkAffectingAclRules(ctx: TopicInspectCtx) {
+        val aclRules = ctx.cache {
+            aclLinkResolver.findTopicAffectingAclRules(topicName, clusterRef.identifier)
+        }
         affectingAclRules(aclRules)
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkExternalInspectors(
-        topicName: TopicName, clusterRef: ClusterRef,
+        ctx: TopicInspectCtx,
     ): Map<String, Any> {
         val externInfo = mutableMapOf<String, Any>()
         externalInspectors.ifPresent { inspectors ->
             inspectors.forEach {
-                it.inspectTopic(topicName, clusterRef, object : TopicExternalInspectCallback {
+                it.inspectTopic(ctx, object : TopicExternalInspectCallback {
 
                     override fun addStatusType(statusType: TopicInspectionResultType) {
                         addResultType(statusType)

@@ -1,12 +1,7 @@
 package com.infobip.kafkistry.service.topic.inspectors
 
-import com.infobip.kafkistry.model.ClusterRef
-import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.StatusLevel
-import com.infobip.kafkistry.service.topic.IssueCategory
-import com.infobip.kafkistry.service.topic.TopicExternalInspectCallback
-import com.infobip.kafkistry.service.topic.TopicExternalInspector
-import com.infobip.kafkistry.service.topic.TopicInspectionResultType
+import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import org.springframework.stereotype.Component
 
@@ -23,12 +18,13 @@ class TopicEmptyInspector(
 ) : TopicExternalInspector {
 
     override fun inspectTopic(
-        topicName: TopicName,
-        clusterRef: ClusterRef,
+        ctx: TopicInspectCtx,
         outputCallback: TopicExternalInspectCallback
     ) {
-        val empty = topicOffsetsService.topicOffsets(clusterRef.identifier, topicName)?.empty
+        val topicOffsets = ctx.cache { topicOffsetsService.topicOffsets(clusterRef.identifier, topicName) }
             ?: return
-        if (empty) outputCallback.addStatusType(EMPTY)
+        if (topicOffsets.empty) {
+            outputCallback.addStatusType(EMPTY)
+        }
     }
 }

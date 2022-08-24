@@ -16,7 +16,7 @@ interface TopicExternalInspector {
 
     val name: String get() = javaClass.name
 
-    fun inspectTopic(topicName: TopicName, clusterRef: ClusterRef, outputCallback: TopicExternalInspectCallback)
+    fun inspectTopic(ctx: TopicInspectCtx, outputCallback: TopicExternalInspectCallback)
 }
 
 interface TopicExternalInspectCallback {

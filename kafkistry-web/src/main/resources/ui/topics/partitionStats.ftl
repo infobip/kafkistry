@@ -5,6 +5,7 @@
 <#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.service.replicadirs.TopicReplicaInfos" -->
 <!-- @ftlvariable name="oldestRecordAgesDisabled" type="java.lang.Boolean" -->
 <!-- @ftlvariable name="oldestRecordAges" type="java.util.Map<java.lang.Integer, java.lang.Long>" -->
+<#-- @ftlvariable name="topicStatus"  type="com.infobip.kafkistry.service.topic.TopicClusterStatus" -->
 
 <#import "../common/util.ftl" as _util>
 <#import "../common/infoIcon.ftl" as _info_>
@@ -36,6 +37,8 @@
             </tr>
             </thead>
             <#assign partitions = (topicOffsets.partitionsOffsets?keys)!(topicReplicas.partitionBrokerReplicas?keys)!(oldestRecordAges?keys)![]>
+            <#assign lowPartitions = topicStatus.externInspectInfo["com.infobip.kafkistry.service.topic.inspectors.TopicUnderprovisionedRetentionInspector"]>
+            <#-- @ftlvariable name="lowPartitions" type="java.util.Map<java.lang.Integer, java.lang.Integer>" -->
             <#list partitions?sort as partition>
                 <tr>
                     <th>${partition?c}</th>
@@ -95,11 +98,12 @@
                     </#if>
                     <#if (oldestRecordAges?api.get(partition))??>
                         <#assign ageMs = oldestRecordAges?api.get(partition)>
-                        <td>
+                        <#assign underprovisioned = (lowPartitions?api.get(partition))??>
+                        <td class="<#if underprovisioned>value-mismatch</#if>">
                             <span>${_util.prettyDuration(ageMs / 1000)}</span>
                         </td>
                         <#if retentionMs gt 0>
-                            <td>
+                            <td class="<#if underprovisioned>value-mismatch</#if>">
                                 ${_util.prettyNumber(100*ageMs/retentionMs)} %
                             </td>
                         <#else>

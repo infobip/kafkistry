@@ -10,7 +10,7 @@ import com.infobip.kafkistry.service.sumPerValue
 
 fun TopicDescription.propertiesForCluster(cluster: ClusterRef): TopicProperties =
     perClusterProperties[cluster.identifier]
-        ?: cluster.tags.mapNotNull { perTagProperties[it] }.firstOrNull()
+        ?: cluster.tags.firstNotNullOfOrNull { perTagProperties[it] }
         ?: properties
 
 fun TopicDescription.configForCluster(cluster: ClusterRef): TopicConfigMap {
@@ -116,9 +116,9 @@ fun KafkaExistingTopic.toTopicInfo(
     name = name,
     properties = TopicProperties(
         partitionCount = partitionsAssignments.size,
-        replicationFactor = partitionsAssignments.map {
+        replicationFactor = partitionsAssignments.maxOfOrNull {
             it.resolveReplicationFactor(partitionReAssignments)
-        }.maxOrNull() ?: 0  //max in case there are currently different number of replicas per partition
+        } ?: 0  //max in case there are currently different number of replicas per partition
     ),
     config = config,
     partitionsAssignments = partitionsAssignments,
@@ -131,10 +131,10 @@ fun KafkaExistingTopic.toTopicInfo(
 
 fun PartitionAssignments.resolveReplicationFactor(partitionReAssignments: Map<Partition, TopicPartitionReAssignment>): Int {
     return partitionReAssignments[partition]
-            ?.let { reAssignment ->
-                reAssignment.allReplicas.size - reAssignment.removingReplicas.size
-            }
-            ?: replicasAssignments.size
+        ?.let { reAssignment ->
+            reAssignment.allReplicas.size - reAssignment.removingReplicas.size
+        }
+        ?: replicasAssignments.size
 }
 
 fun PartitionAssignments.needsReElection() = replicasAssignments.any { it.leader xor it.preferredLeader }
