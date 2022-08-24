@@ -37,7 +37,7 @@
             </tr>
             </thead>
             <#assign partitions = (topicOffsets.partitionsOffsets?keys)!(topicReplicas.partitionBrokerReplicas?keys)!(oldestRecordAges?keys)![]>
-            <#assign lowPartitions = topicStatus.externInspectInfo["com.infobip.kafkistry.service.topic.inspectors.TopicUnderprovisionedRetentionInspector"]>
+            <#assign lowPartitions = (topicStatus.externInspectInfo["com.infobip.kafkistry.service.topic.inspectors.TopicUnderprovisionedRetentionInspector"])!{}>
             <#-- @ftlvariable name="lowPartitions" type="java.util.Map<java.lang.Integer, java.lang.Integer>" -->
             <#list partitions?sort as partition>
                 <tr>
