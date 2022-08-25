@@ -109,3 +109,9 @@ data class Placeholder(
     val key: String,
     val value: Any
 )
+
+data class NamedTypeCauseDescription<T : NamedType>(
+    val type: T,
+    val message: String,
+    val placeholders: Map<String, Placeholder> = emptyMap(),
+)

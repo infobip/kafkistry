@@ -86,6 +86,7 @@ private fun String.renderMessage(placeholders: Map<String, Placeholder>): String
 }
 
 fun RuleViolation.renderMessage(): String = message.renderMessage(placeholders)
+fun NamedTypeCauseDescription<*>.renderMessage(): String = message.renderMessage(placeholders)
 
 fun <K> Map<K, Int>.sortedByValueDescending(): Map<K, Int> = sortedDescending { it.value }
 

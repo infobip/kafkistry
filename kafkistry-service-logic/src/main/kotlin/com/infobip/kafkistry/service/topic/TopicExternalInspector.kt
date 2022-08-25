@@ -2,6 +2,7 @@ package com.infobip.kafkistry.service.topic
 
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.NamedTypeCauseDescription
 
 /**
  * Allows for custom topic inspection to be performed.
@@ -22,6 +23,8 @@ interface TopicExternalInspector {
 interface TopicExternalInspectCallback {
 
     fun addStatusType(statusType: TopicInspectionResultType)
+
+    fun addDescribedStatusType(statusTypeDescripton: NamedTypeCauseDescription<TopicInspectionResultType>)
 
     fun setExternalInfo(info: Any)
 }

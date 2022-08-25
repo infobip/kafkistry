@@ -10,6 +10,9 @@
 <#list (topicOnClusterStatus.currentConfigRuleViolations)![] as ruleViolation>
     <#assign detailedStatuses = detailedStatuses + [ruleViolation.type]>
 </#list>
+<#list topicOnClusterStatus.typeDescriptions as typeDescription>
+    <#assign detailedStatuses = detailedStatuses + [typeDescription.type]>
+</#list>
 
 <#list topicOnClusterStatus.types as statusType>
     <#if !(detailedStatuses?seq_contains(statusType))>
@@ -54,7 +57,6 @@
 <#if topicOnClusterStatus.ruleViolations??>
     <#list topicOnClusterStatus.ruleViolations as ruleViolation>
         <#assign statusType = ruleViolation.type><#include "topicStatusResultBox.ftl">
-        <br/>
         <@violatonUtil.interpretMessage violation=ruleViolation.violation/>
         <hr/>
     </#list>
@@ -62,8 +64,14 @@
 <#if topicOnClusterStatus.currentConfigRuleViolations??>
     <#list topicOnClusterStatus.currentConfigRuleViolations as ruleViolation>
         <#assign statusType = ruleViolation.type><#include "topicStatusResultBox.ftl">
-        <br/>
         <@violatonUtil.interpretMessage violation=ruleViolation.violation/>
+        <hr/>
+    </#list>
+</#if>
+<#if topicOnClusterStatus.typeDescriptions?size gt 0>
+    <#list topicOnClusterStatus.typeDescriptions as typeDescription>
+        <#assign statusType = typeDescription.type><#include "topicStatusResultBox.ftl">
+        <@violatonUtil.richMessage message=typeDescription.message placeholders=typeDescription.placeholders/>
         <hr/>
     </#list>
 </#if>

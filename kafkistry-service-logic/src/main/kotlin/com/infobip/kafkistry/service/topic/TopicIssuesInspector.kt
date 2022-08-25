@@ -396,6 +396,11 @@ class TopicIssuesInspector(
                         addResultType(statusType)
                     }
 
+                    override fun addDescribedStatusType(statusTypeDescripton: NamedTypeCauseDescription<TopicInspectionResultType>) {
+                        addResultType(statusTypeDescripton.type)
+                        addTypeDescription(statusTypeDescripton)
+                    }
+
                     override fun setExternalInfo(info: Any) {
                         externInfo[it.name] = info
                     }

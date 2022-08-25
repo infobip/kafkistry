@@ -118,8 +118,9 @@ data class TopicOnClusterInspectionResult(
     val wrongValues: List<WrongValueAssertion>? = null,
     val ruleViolations: List<RuleViolationIssue>? = null,
     val currentConfigRuleViolations: List<RuleViolationIssue>? = null,
+    val typeDescriptions: List<NamedTypeCauseDescription<TopicInspectionResultType>>,
     val availableActions: List<AvailableAction>,
-    val affectingAclRules: List<KafkaAclRule>
+    val affectingAclRules: List<KafkaAclRule>,
 ) {
     data class Builder(
         private var types: MutableList<TopicInspectionResultType> = mutableListOf(),
@@ -127,6 +128,7 @@ data class TopicOnClusterInspectionResult(
         private var wrongValues: MutableList<WrongValueAssertion>? = null,
         private var ruleViolations: MutableList<RuleViolationIssue>? = null,
         private var currentConfigRuleViolations: MutableList<RuleViolationIssue>? = null,
+        private var typeDescriptions: MutableList<NamedTypeCauseDescription<TopicInspectionResultType>>? = null,
         private var availableActions: List<AvailableAction> = emptyList(),
         private var affectingAclRules: List<KafkaAclRule> = emptyList()
     ) {
@@ -160,6 +162,12 @@ data class TopicOnClusterInspectionResult(
             }
         }
 
+        fun addTypeDescription(typeDescription: NamedTypeCauseDescription<TopicInspectionResultType>): Builder = this.also {
+            this.typeDescriptions = (this.typeDescriptions ?: mutableListOf()).also {
+                it.add(typeDescription)
+            }
+        }
+
         fun availableActions(availableActions: List<AvailableAction>): Builder = this.also {
             this.availableActions = availableActions
         }
@@ -182,6 +190,7 @@ data class TopicOnClusterInspectionResult(
             wrongValues = wrongValues?.toList(),
             ruleViolations = ruleViolations?.toList(),
             currentConfigRuleViolations = currentConfigRuleViolations?.toList(),
+            typeDescriptions = typeDescriptions?.toList().orEmpty(),
             availableActions = availableActions,
             affectingAclRules = affectingAclRules
         )

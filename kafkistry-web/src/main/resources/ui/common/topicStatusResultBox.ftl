@@ -17,6 +17,7 @@
     <#if !isStatusFlag>
         <#assign tooltip>
             ${statusType.doc}
+            <br/>
             <span>
                 <strong>Issue category:</strong> <span class='text-info'>${statusType.category.name()}</span>
             </span>
