@@ -98,7 +98,10 @@
                     </#if>
                     <#if (oldestRecordAges?api.get(partition))??>
                         <#assign ageMs = oldestRecordAges?api.get(partition)>
-                        <#assign underprovisioned = (lowPartitions?api.get(partition))??>
+                        <#assign underprovisioned = false>
+                        <#if lowPartitions?size gt 0>
+                            <#assign underprovisioned = (lowPartitions?api.get(partition))??>
+                        </#if>
                         <td class="<#if underprovisioned>value-mismatch</#if>">
                             <span>${_util.prettyDuration(ageMs / 1000)}</span>
                         </td>
