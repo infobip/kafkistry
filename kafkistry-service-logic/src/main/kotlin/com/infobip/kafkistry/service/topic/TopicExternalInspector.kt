@@ -1,7 +1,5 @@
 package com.infobip.kafkistry.service.topic
 
-import com.infobip.kafkistry.model.ClusterRef
-import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.NamedTypeCauseDescription
 
 /**
@@ -24,7 +22,7 @@ interface TopicExternalInspectCallback {
 
     fun addStatusType(statusType: TopicInspectionResultType)
 
-    fun addDescribedStatusType(statusTypeDescripton: NamedTypeCauseDescription<TopicInspectionResultType>)
+    fun addDescribedStatusType(statusTypeDescription: NamedTypeCauseDescription<TopicInspectionResultType>)
 
     fun setExternalInfo(info: Any)
 }

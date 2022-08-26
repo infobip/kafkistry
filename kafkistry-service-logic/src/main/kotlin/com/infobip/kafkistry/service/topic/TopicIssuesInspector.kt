@@ -34,8 +34,15 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.W
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_REPLICATION_FACTOR
 import com.infobip.kafkistry.service.topic.validation.TopicConfigurationValidator
 import com.infobip.kafkistry.service.topic.validation.rules.ClusterMetadata
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
-import java.util.Optional
+
+@Component
+@ConfigurationProperties("app.topic-inspect")
+class TopicInspectorProperties {
+    var disabledInspectors = mutableListOf<Class<in TopicExternalInspector>>()
+    var enabledInspectors = mutableListOf<Class<in TopicExternalInspector>>()
+}
 
 @Component
 class TopicIssuesInspector(
@@ -44,8 +51,13 @@ class TopicIssuesInspector(
     private val partitionsReplicasAssignor: PartitionsReplicasAssignor,
     private val resourceUsagesInspector: RequiredResourcesInspector,
     private val aclLinkResolver: AclLinkResolver,
-    private val externalInspectors: Optional<List<TopicExternalInspector>>,
+    externalInspectors: List<TopicExternalInspector>,
+    properties: TopicInspectorProperties,
 ) {
+
+    private val inspectors = externalInspectors
+        .filterEnabled(properties.enabledInspectors)
+        .filterDisabled(properties.disabledInspectors)
 
     fun inspectTopicDataOnClusterData(
         topicName: TopicName,
@@ -388,24 +400,22 @@ class TopicIssuesInspector(
         ctx: TopicInspectCtx,
     ): Map<String, Any> {
         val externInfo = mutableMapOf<String, Any>()
-        externalInspectors.ifPresent { inspectors ->
-            inspectors.forEach {
-                it.inspectTopic(ctx, object : TopicExternalInspectCallback {
+        inspectors.forEach {
+            it.inspectTopic(ctx, object : TopicExternalInspectCallback {
 
-                    override fun addStatusType(statusType: TopicInspectionResultType) {
-                        addResultType(statusType)
-                    }
+                override fun addStatusType(statusType: TopicInspectionResultType) {
+                    addResultType(statusType)
+                }
 
-                    override fun addDescribedStatusType(statusTypeDescripton: NamedTypeCauseDescription<TopicInspectionResultType>) {
-                        addResultType(statusTypeDescripton.type)
-                        addTypeDescription(statusTypeDescripton)
-                    }
+                override fun addDescribedStatusType(statusTypeDescription: NamedTypeCauseDescription<TopicInspectionResultType>) {
+                    addResultType(statusTypeDescription.type)
+                    addTypeDescription(statusTypeDescription)
+                }
 
-                    override fun setExternalInfo(info: Any) {
-                        externInfo[it.name] = info
-                    }
-                })
-            }
+                override fun setExternalInfo(info: Any) {
+                    externInfo[it.name] = info
+                }
+            })
         }
         return externInfo
     }

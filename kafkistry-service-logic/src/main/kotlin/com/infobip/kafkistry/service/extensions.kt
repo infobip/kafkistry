@@ -95,3 +95,13 @@ fun <K, V, C : Comparable<C>> Map<K, V>.sortedDescending(
 ): Map<K, V> = entries.sortedByDescending { by(it) }.associate { it.toPair() }
 
 fun <K> Grouping<*, K>.eachCountDescending(): Map<K, Int> = eachCount().sortedByValueDescending()
+
+fun <T : Any> List<T>.filterEnabled(enabled: List<Class<in T>>): List<T> {
+    if (enabled.isEmpty()) return this
+    return filter { it.javaClass in enabled }
+}
+
+fun <T : Any> List<T>.filterDisabled(disabled: List<Class<in T>>): List<T> {
+    if (disabled.isEmpty()) return this
+    return filter { it.javaClass !in disabled }
+}

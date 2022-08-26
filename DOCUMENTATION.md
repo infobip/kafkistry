@@ -56,12 +56,12 @@
 Repository represents source of truth for expected/wanted topics, ACLs and Entity-quotas.
 It contains following entity types:
 
-| Entity             | Breakdown                | Description   
-|--------------------|--------------------------|-----------------------------------------------------------------------|
-| **Kafka clusters** | File per kafka cluster   | Kafkistry will use those to know which clusters to connect to    |
-| **Topics**         | One file per topic name  | Configuration of topic with possible overrides per specific clusters  |
-| **ACLs**           | One file per principal   | List of expected ACLs for principal                                   |
-| **Quota entities** | One file per user/client | Amount of operational quotas for clients and users connecting to kafka|
+| Entity             | Breakdown                | Description                                                            |
+|--------------------|--------------------------|------------------------------------------------------------------------|
+| **Kafka clusters** | File per kafka cluster   | Kafkistry will use those to know which clusters to connect to          |
+| **Topics**         | One file per topic name  | Configuration of topic with possible overrides per specific clusters   |
+| **ACLs**           | One file per principal   | List of expected ACLs for principal                                    |
+| **Quota entities** | One file per user/client | Amount of operational quotas for clients and users connecting to kafka |
 
 Default repository's storage implementation is GIT repository containing `*.yaml` files.
 
@@ -144,21 +144,21 @@ Example use case:
 
 Properties:
 
-| Property | Description |
-|----------|-------------|
-| `GIT_REMOTE_SSH_URI` | URI of remote git dir to clone/use. For example `ssh://kr-user@git-host:1234/my-kafkistry-repo.git`. It can be omitted, in this case Kafkistry will simply initialize empty repository without remote, and commits won't be pushed anywhere. |
-| `LOCAL_GIT_DIR` | Path to directory where will Kafkistry clone/init git repository |
-| `GIT_MAIN_BRANCH` | Default value: `master` |
-| `GIT_SSH_PASSWORD` | Password to use to authenticate `kr-user` as ssh client. Can be omitted if private key s used. |
-| `SSH_PRIVATE_KEY` | Literal value of ssh private key. Example how to generate keypair: `ssh-keygen -t rsa -C "my kafkistry key" -m PEM`, add public key to your git repo server |
-| `SSH_PRIVATE_KEY_PATH` | Path to private key file, alternative to `SSH_PRIVATE_KEY` |
-| `SSH_PRIVATE_KEY_PASS` | Passphrase for given private key, can be omitted if private key has a passphrase |
-| `GIT_TIMEOUT_SEC` | Timeout for git remote calls (push/pull). Default `30` sec |
-| `GIT_REFRESH_INTERVAL_SEC` | Git periodic fetch polling interval. Default `30` sec |
-| `app.repository.git.strict-ssh-host-key-checking` | Default `false` (ssh would fail if current host never connected to remote and having no saved fingerprint of remote host) |
-| `GIT_BROWSE_BRANCH_BASE_URL` | Optional. Used for UI generating links for external git repository browsing for showing branch. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/compare/commits?sourceBranch=` |
-| `GIT_BROWSE_COMMIT_BASE_URL` | Optional. Used for UI generating links for external gir repository browsing for showing commit. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/commits/` |
-| `GIT_COMMIT_TO_MASTER_BY_DEFAULT` | Should Kafkistry commit directly to main/master branch. Default `false` |
+| Property                                          | Description                                                                                                                                                                                                                                  |
+|---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `GIT_REMOTE_SSH_URI`                              | URI of remote git dir to clone/use. For example `ssh://kr-user@git-host:1234/my-kafkistry-repo.git`. It can be omitted, in this case Kafkistry will simply initialize empty repository without remote, and commits won't be pushed anywhere. |
+| `LOCAL_GIT_DIR`                                   | Path to directory where will Kafkistry clone/init git repository                                                                                                                                                                             |
+| `GIT_MAIN_BRANCH`                                 | Default value: `master`                                                                                                                                                                                                                      |
+| `GIT_SSH_PASSWORD`                                | Password to use to authenticate `kr-user` as ssh client. Can be omitted if private key s used.                                                                                                                                               |
+| `SSH_PRIVATE_KEY`                                 | Literal value of ssh private key. Example how to generate keypair: `ssh-keygen -t rsa -C "my kafkistry key" -m PEM`, add public key to your git repo server                                                                                  |
+| `SSH_PRIVATE_KEY_PATH`                            | Path to private key file, alternative to `SSH_PRIVATE_KEY`                                                                                                                                                                                   |
+| `SSH_PRIVATE_KEY_PASS`                            | Passphrase for given private key, can be omitted if private key has a passphrase                                                                                                                                                             |
+| `GIT_TIMEOUT_SEC`                                 | Timeout for git remote calls (push/pull). Default `30` sec                                                                                                                                                                                   |
+| `GIT_REFRESH_INTERVAL_SEC`                        | Git periodic fetch polling interval. Default `30` sec                                                                                                                                                                                        |
+| `app.repository.git.strict-ssh-host-key-checking` | Default `false` (ssh would fail if current host never connected to remote and having no saved fingerprint of remote host)                                                                                                                    |
+| `GIT_BROWSE_BRANCH_BASE_URL`                      | Optional. Used for UI generating links for external git repository browsing for showing branch. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/compare/commits?sourceBranch=`                                        |
+| `GIT_BROWSE_COMMIT_BASE_URL`                      | Optional. Used for UI generating links for external gir repository browsing for showing commit. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/commits/`                                                             |
+| `GIT_COMMIT_TO_MASTER_BY_DEFAULT`                 | Should Kafkistry commit directly to main/master branch. Default `false`                                                                                                                                                                      |
 
 
 
@@ -178,11 +178,11 @@ with name prefixed by `APP_KAFKA_PROPERTIES_*`.
 
 Few examples:
 
-| AdminClient property      | Environment variable name to pass by       |
-| ------------------------- | ------------------------------------------ |
-| `ssl.truststore.location` | `APP_KAFKA_PROPERTIES_SSL_TRUSTSTORE_LOCATION` |
-| `sasl.mechanism`          | `APP_KAFKA_PROPERTIES_SASL_MECHANISM`          |
-| `sasl.jaas.config`        | `APP_KAFKA_PROPERTIES_SASL_JAAS_CONFIG`        |
+| AdminClient property      | Environment variable name to pass by                |
+|---------------------------|-----------------------------------------------------|
+| `ssl.truststore.location` | `AP<br/>P_KAFKA_PROPERTIES_SSL_TRUSTSTORE_LOCATION` |
+| `sasl.mechanism`          | `APP_KAFKA_PROPERTIES_SASL_MECHANISM`               |
+| `sasl.jaas.config`        | `APP_KAFKA_PROPERTIES_SASL_JAAS_CONFIG`             |
 
 Any defined property like that will be used by Kafkistry to connect to all kafka clusters.
 
@@ -194,12 +194,12 @@ following pattern: `KAFKA_PROFILES_<PROFILE-NAME>.PROPERTIES_<KAFKA_PROPERTY>`
 
 Few examples:
 
-| Profile | AdminClient property   | Environment variable name to pass by             |
-| ------- | ---------------------- | ------------------------------------------------ |
-| `foo`   | `sasl.mechanism`       | `APP_KAFKA_PROFILES_FOO_PROPERTIES_SASL_MECHANISM`   |
-| `foo`   | `sasl.jaas.config`     | `APP_KAFKA_PROFILES_FOO_PROPERTIES_SASL_JAAS_CONFIG` |
-| `bar`   | `sasl.mechanism`       | `APP_KAFKA_PROFILES_BAR_PROPERTIES_SASL_MECHANISM`   |
-| `bar`   | `sasl.jaas.config`     | `APP_KAFKA_PROFILES_BAR_PROPERTIES_SASL_JAAS_CONFIG` |
+| Profile | AdminClient property | Environment variable name to pass by                 |
+|---------|----------------------|------------------------------------------------------|
+| `foo`   | `sasl.mechanism`     | `APP_KAFKA_PROFILES_FOO_PROPERTIES_SASL_MECHANISM`   |
+| `foo`   | `sasl.jaas.config`   | `APP_KAFKA_PROFILES_FOO_PROPERTIES_SASL_JAAS_CONFIG` |
+| `bar`   | `sasl.mechanism`     | `APP_KAFKA_PROFILES_BAR_PROPERTIES_SASL_MECHANISM`   |
+| `bar`   | `sasl.jaas.config`   | `APP_KAFKA_PROFILES_BAR_PROPERTIES_SASL_JAAS_CONFIG` |
 
 **NOTE**: those kafka properties profiles have nothing to do with Spring framework's profiles
 
@@ -231,10 +231,10 @@ Kafkistry will start to periodically scrape metadata from it.
 Every interaction with kafka could be treated as _read_ or _write_ operation.
 You can define different timeout for each of those.
 
-| Property                 | Default         | How much will Kafkistry wait for AdminClient's `Future` to complete |
-|--------------------------|-----------------|------|
+| Property                 | Default         | How much will Kafkistry wait for AdminClient's `Future` to complete                                      |
+|--------------------------|-----------------|----------------------------------------------------------------------------------------------------------|
 | `KAFKA_READ_TIMEOUT_MS`  | `15000` (15sec) | Applies to API calls which have read semantics, i.e. don't actively change state (mostly DESCRIBE calls) | 
-| `KAFKA_WRITE_TIMEOUT_MS` | `120000` (2min) | Applies to API calls which have write semantics, i.e. CREATING/DELETING/ALTERING/... operations | 
+| `KAFKA_WRITE_TIMEOUT_MS` | `120000` (2min) | Applies to API calls which have write semantics, i.e. CREATING/DELETING/ALTERING/... operations          | 
 
 ### Kafkistry's permissions on Kafka cluster
 
@@ -263,11 +263,11 @@ Things to know is adding Kafkistry in `super.users` sounds too scary:
 There are tests for all interactions that Kafkistry does with kafka cluster.
 
 | Kafka Version     | Compatibility          | Need connect to ZK for some operations |
-|-------------------|------------------------|-----|
-| v > `2.8`         | full?  _(not out yet)_ | no  |
-| `2.6` ≤ v ≤ `2.8` | full                   | no  |
-| `2.1` ≤ v < `2.6` | full                   | yes |
-| `1.0` ≤ v < `2.1` | partial _(not tested)_ | yes |
+|-------------------|------------------------|----------------------------------------|
+| v > `2.8`         | full?  _(not out yet)_ | no                                     |
+| `2.6` ≤ v ≤ `2.8` | full                   | no                                     |
+| `2.1` ≤ v < `2.6` | full                   | yes                                    |
+| `1.0` ≤ v < `2.1` | partial _(not tested)_ | yes                                    |
 
 Kafkistry determines major/minor version of kafka by looking at controller's `inter.broker.protocol.version` config property.
 This may not reflect an actual build version of broker, but it will mean actual version is greater or equal.
@@ -291,12 +291,12 @@ Scraping is broken to several **job** types, for example:
  - `client_quotas` - to describe client quotas
  - ...
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `CLUSTER_POOL_INTERVAL` | `10000` (ms) | How often to scrape metadata (topics, consumer groups, ACLs, ...) |
-| `CLUSTER_POOL_RECORD_SAMPLING_INTERVAL` | `120000` (ms)  _(2min)_ | How often to read oldest and/or newest messages from every topic-partition |
-| `CLUSTER_POOL_CONCURRENCY` | `6` | Limit for one type of **job** (e.g. topic_offsets fetching) for how many clusters to process concurrently |
-| `CLUSTER_POOL_CONCURRENCY_PER_CLUSTER` | `30` | How many client's (admin+consumer) to have opened toward one cluster |
+| Property                                | Default                 | Description                                                                                               |
+|-----------------------------------------|-------------------------|-----------------------------------------------------------------------------------------------------------|
+| `CLUSTER_POOL_INTERVAL`                 | `10000` (ms)            | How often to scrape metadata (topics, consumer groups, ACLs, ...)                                         |
+| `CLUSTER_POOL_RECORD_SAMPLING_INTERVAL` | `120000` (ms)  _(2min)_ | How often to read oldest and/or newest messages from every topic-partition                                |
+| `CLUSTER_POOL_CONCURRENCY`              | `6`                     | Limit for one type of **job** (e.g. topic_offsets fetching) for how many clusters to process concurrently |
+| `CLUSTER_POOL_CONCURRENCY_PER_CLUSTER`  | `30`                    | How many client's (admin+consumer) to have opened toward one cluster                                      |
 
 
 
@@ -325,20 +325,20 @@ Example below shows that `KR-PRRD` can reach `KFK-P1` and `KFK-P2`, but can't `K
 ```
 So, it's better to simply disable particular clusters when you know they are unreachable.
 
-| Property            | Description |
-|---------------------|-------------|
-| `ENABLED_CLUSTERS`  | Comma separated list of cluster identifiers to allow attempt to connect to |
+| Property            | Description                                                                  |
+|---------------------|------------------------------------------------------------------------------|
+| `ENABLED_CLUSTERS`  | Comma separated list of cluster identifiers to allow attempt to connect to   |
 | `DISABLED_CLUSTERS` | Comma separated list of cluster identifiers to prevent attempt to connect to |
 
 
 
 ## Customizing web app
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `HTTP_PORT` | `8080` | Which port should web server listen on. No need to change if running in docker with port mapping. |
-| `HTTP_ROOT_PATH` | `/kafkistry` | This is basically _prefix_ for all http urls paths. Useful if Kafkistry is deployed behind http proxy which will be using url path for routing. **NOTE**: must not end with `/` but can be empty. |
-| `HTTP_REQUESTS_LOGGING_ENABLED` | `false` | Should each HTTP request to Kafkistry be logged, see [filter](kafkistry-web/src/main/kotlin/com/infobip/kafkistry/webapp/RequestLoggingFilterConfig.kt) |
+| Property                        | Default      | Description                                                                                                                                                                                       |
+|---------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `HTTP_PORT`                     | `8080`       | Which port should web server listen on. No need to change if running in docker with port mapping.                                                                                                 |
+| `HTTP_ROOT_PATH`                | `/kafkistry` | This is basically _prefix_ for all http urls paths. Useful if Kafkistry is deployed behind http proxy which will be using url path for routing. **NOTE**: must not end with `/` but can be empty. |
+| `HTTP_REQUESTS_LOGGING_ENABLED` | `false`      | Should each HTTP request to Kafkistry be logged, see [filter](kafkistry-web/src/main/kotlin/com/infobip/kafkistry/webapp/RequestLoggingFilterConfig.kt)                                           |
 
 
 
@@ -430,12 +430,12 @@ Steadily growing lag means that consumer can't keep up with producer's rate.
 
 Available configuration properties
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `app.metrics.consumer-lag.enabled` | `true` | Enable/disable exporting lag metric at all |
-| `app.metrics.consumer-lag.enabled-on.clusters.<...filter options...>`        | _all_ | For which clusters to include consumer lag metric. See [filtering options](#filter-options)  |
-| `app.metrics.consumer-lag.enabled-on.topics.<...filter options...>`          | _all_ | For which topics to include consumer lag metric. See [filtering options](#filter-options)  |
-| `app.metrics.consumer-lag.enabled-on.consumer-groups.<...filter options...>` | _all_ | For which consumer groups to include consumer lag metric. See [filtering options](#filter-options)  |
+| Property                                                                     | Default | Description                                                                                        |
+|------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------------------|
+| `app.metrics.consumer-lag.enabled`                                           | `true`  | Enable/disable exporting lag metric at all                                                         |
+| `app.metrics.consumer-lag.enabled-on.clusters.<...filter options...>`        | _all_   | For which clusters to include consumer lag metric. See [filtering options](#filter-options)        |
+| `app.metrics.consumer-lag.enabled-on.topics.<...filter options...>`          | _all_   | For which topics to include consumer lag metric. See [filtering options](#filter-options)          |
+| `app.metrics.consumer-lag.enabled-on.consumer-groups.<...filter options...>` | _all_   | For which consumer groups to include consumer lag metric. See [filtering options](#filter-options) |
 
 #### Why using Kafkistry metric for lag if `KafkaConsumer.metrics()` already has metric for lag?
 
@@ -486,11 +486,11 @@ Both of those have the following labels:
 
 Available configuration properties
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `app.metrics.topic-offsets.enabled` | `true` | Enable/disable exporting topic partition offsets metric at all |
-| `app.metrics.topic-offsets.enabled-on.clusters.<...filter options...>` | _all_ | For which clusters to include topic offsets metric. See [filtering options](#filter-options)  |
-| `app.metrics.topic-offsets.enabled-on.topics.<...filter options...>`   | _all_ | For which topics to include topic offsets metric. See [filtering options](#filter-options)  |
+| Property                                                               | Default | Description                                                                                  |
+|------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------------|
+| `app.metrics.topic-offsets.enabled`                                    | `true`  | Enable/disable exporting topic partition offsets metric at all                               |
+| `app.metrics.topic-offsets.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include topic offsets metric. See [filtering options](#filter-options) |
+| `app.metrics.topic-offsets.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include topic offsets metric. See [filtering options](#filter-options)   |
 
 Use cases:
  - rate of increase of `kafkistry_topic_end_offset` directly corresponds to produce rate
@@ -534,11 +534,11 @@ Different regime cases:
 
 Available configuration properties
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `app.metrics.topic-retention.enabled` | `true` | Enable/disable exporting topic partition retention metric at all |
-| `app.metrics.topic-retention.enabled-on.clusters.<...filter options...>` | _all_ | For which clusters to include retention metric. See [filtering options](#filter-options)  |
-| `app.metrics.topic-retention.enabled-on.topics.<...filter options...>`   | _all_ | For which topics to include retention metric. See [filtering options](#filter-options)  |
+| Property                                                                 | Default | Description                                                                              |
+|--------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------|
+| `app.metrics.topic-retention.enabled`                                    | `true`  | Enable/disable exporting topic partition retention metric at all                         |
+| `app.metrics.topic-retention.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include retention metric. See [filtering options](#filter-options) |
+| `app.metrics.topic-retention.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include retention metric. See [filtering options](#filter-options)   |
 
 
 
@@ -677,9 +677,9 @@ Options to pass in the owner groups.
 
 In larger organizations you may want to restrict who can manage which consumer group.
 
-| Property                                    | Default | Description |
-|---------------------------------------------|---------|-------------|
-| `app.security.consumer-groups.only-admin`   | `false` | When `true` then only ADMIN users are able to delete consumer groups, reset offsets regardless of non-admin user actually being owner of particular consumer group |
+| Property                                    | Default | Description                                                                                                                                                                                                                                                                                |
+|---------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.security.consumer-groups.only-admin`   | `false` | When `true` then only ADMIN users are able to delete consumer groups, reset offsets regardless of non-admin user actually being owner of particular consumer group                                                                                                                         |
 | `ALLOW_ACCESS_TO_CONSUMER_GROUPS_NO_OWNERS` | `false` | In case when there are no ACL-s affecting particular consumer group, then Kafkistry can't resolve which principal and therefore which `owner` owns access to consumer group. When this property is `false` then non-admin users wont be permitted to make changes on such consumer groups. |
 
 Implementation class for above listed properties is [ConsumerAlterPermissionAuthorizer](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/consumers/ConsumerAlterPermissionAuthorizer.kt)
@@ -735,12 +735,12 @@ In order to make it work Kafkistry nodes must somehow know about each other to c
 
 Options to configure hazelcast:
 
-| Property                        | Default       | Description |
-|---------------------------------|---------------|-------------|
-| `HAZELCAST_PORT`                | `5701`        | Port on which Kafkistry embedded hazelcast will listen on. Make sure to add it in port mapping if running inside docker. |
-| `HAZELCAST_ADVERTIZED_IP`       | _none_        | This is an IP address which will be advertised, it's important that each Kafkistry node can reach each other Kafkistry node by this IP and port | 
+| Property                        | Default       | Description                                                                                                                                             |
+|---------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `HAZELCAST_PORT`                | `5701`        | Port on which Kafkistry embedded hazelcast will listen on. Make sure to add it in port mapping if running inside docker.                                |
+| `HAZELCAST_ADVERTIZED_IP`       | _none_        | This is an IP address which will be advertised, it's important that each Kafkistry node can reach each other Kafkistry node by this IP and port         | 
 | `HAZELCAST_DISCOVERY_TYPE`      | `MULTICAST`   | Configure how should Kafkistry nodes discover each other. Available options: `NONE`, `CUSTOM_IMPLEMENTATION`, `LOCALHOST_IP`, `MULTICAST`, `STATIC_IPS` |
-| `HAZELCAST_PUBLISH_ACK_TIMEOUT` | `6000` (6sec) | How much time should one Kafkistry instance wait for others acknowledging that they received and handled published event |
+| `HAZELCAST_PUBLISH_ACK_TIMEOUT` | `6000` (6sec) | How much time should one Kafkistry instance wait for others acknowledging that they received and handled published event                                |
 
 Discovery types:
  - `NONE` - don't join to hazelcast cluster
@@ -764,9 +764,9 @@ There is possibility to define thresholds for specific expected message rate ont
 
 Options to default partition count for new topics:
 
-| Property                      | Default | Description |
-|-------------------------------|---------|-------------|
-| `WIZARD_DEFAULT_PARTITIONS`   | `1`     | Default number of partitions to propose when rate is lower than lowest threshold defined in `WIZARD_PARTITION_THRESHOLDS` |
+| Property                      | Default                                      | Description                                                                                                                                                                    |
+|-------------------------------|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `WIZARD_DEFAULT_PARTITIONS`   | `1`                                          | Default number of partitions to propose when rate is lower than lowest threshold defined in `WIZARD_PARTITION_THRESHOLDS`                                                      |
 | `WIZARD_PARTITION_THRESHOLDS` | `{"default":{"100":10,"2000":30,"5000":60}}` | This is JSON representation of data class [ThresholdsConfig](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/wizard/TopicWizardConfigGenerator.kt) | 
 
 ### Concrete example
@@ -813,11 +813,11 @@ can be exposed as spring `@Bean` alongside with custom UI form to enter custom a
 
 Options for customizing topic name UI inputs:
 
-| Property  | Default | Description | Requirement |
-|-----------|---------|-------------|-------------|
-| `app.topic-wizard.topic-name.template-name` | `defaultWizardTopicName` _([implementation](kafkistry-web/src/main/resources/ui/topics/defaultWizardTopicName.ftl))_  | UI component (html) for input attributes for topic name generator (default implementation only asks for `name`) | Must be classpath resource located in `ui/topics/` |
-| `app.topic-wizard.topic-name.js-name`       | `defaultWizardTopicName` _([implementation](kafkistry-web/src/main/resources/ui/static/topic/defaultWizardTopicName.js))_  | UI component (js) for extracting needed custom attributes from UI to be used for `TopicNameGenerator` | Must be classpath resource located in `ui/static/topic/` |
-| `app.topic-wizard.topic-name.name-label`    | `Check topic name` | Not important for logic, but makes more sense to define something like `Generated topic name` when custom generator is used | _none_ |
+| Property                                    | Default                                                                                                                   | Description                                                                                                                 | Requirement                                              |
+|---------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|
+| `app.topic-wizard.topic-name.template-name` | `defaultWizardTopicName` _([implementation](kafkistry-web/src/main/resources/ui/topics/defaultWizardTopicName.ftl))_      | UI component (html) for input attributes for topic name generator (default implementation only asks for `name`)             | Must be classpath resource located in `ui/topics/`       |
+| `app.topic-wizard.topic-name.js-name`       | `defaultWizardTopicName` _([implementation](kafkistry-web/src/main/resources/ui/static/topic/defaultWizardTopicName.js))_ | UI component (js) for extracting needed custom attributes from UI to be used for `TopicNameGenerator`                       | Must be classpath resource located in `ui/static/topic/` |
+| `app.topic-wizard.topic-name.name-label`    | `Check topic name`                                                                                                        | Not important for logic, but makes more sense to define something like `Generated topic name` when custom generator is used | _none_                                                   |
 
 
 
@@ -829,13 +829,13 @@ This feature is mainly intended for developer's debugging content in topics.
 Since the result of consuming is translated as single HTTP-request's response, there are few limits to setup to
 prevent memory exhaustion.
 
-| Property                  | Default         | Description     |
-|---------------------------|-----------------|-----------------|
-| `CONSUE_ENABLED`          | `true`          | Enable/disable ability to consume records |
-| `CONSUME_MAX_RECORDS`     | `5000`          | Maximum number of records to return in UI |
+| Property                  | Default         | Description                                                          |
+|---------------------------|-----------------|----------------------------------------------------------------------|
+| `CONSUE_ENABLED`          | `true`          | Enable/disable ability to consume records                            |
+| `CONSUME_MAX_RECORDS`     | `5000`          | Maximum number of records to return in UI                            |
 | `CONSUME_MAX_WAIT_MS`     | `120000` (2min) | Maximum wait time before responding to user that here are no records |
-| `CONSUME_POOL_BATCH_SIZE` | `2000`          | Will be used for consumer `max.poll.records` property |
-| `CONSUME_POOL_INTERVAL`   | `1000` (1sec)   | Will be used as argument for `KafkaConsumer.pool(timeout)`|
+| `CONSUME_POOL_BATCH_SIZE` | `2000`          | Will be used for consumer `max.poll.records` property                |
+| `CONSUME_POOL_INTERVAL`   | `1000` (1sec)   | Will be used as argument for `KafkaConsumer.pool(timeout)`           |
 
 When reading from topic a new `KafkaConsumer` will be created which will consumer with randomly generated 
 consumer group ID, and it will not perform commits while consuming.
@@ -848,14 +848,14 @@ When topic is being consumed by Kafkistry, all sensitive values will be replaced
 
 Rules for masking can be defined via following configuration properties:
 
-| Property | Default  | Description |
-|----------|----------|-------------|
-| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_ | From which clusters to apply masking of topic records. See [filtering options](#filter-options) |
-| `app.masking.rules.<my-rule-name>.target.topics.<...filter options...>`   | _all_ | From which topics to apply masking of topic records. See [filtering options](#filter-options) |
-| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_ | From which clusters to apply masking of topic records. See [filtering options](#filter-options) |
-| `app.masking.rules.<my-rule-name>.value-json-paths`                 | _none_ | Comma-separated list of json path field in record's deserialized value to apply masking replacement |
-| `app.masking.rules.<my-rule-name>.key-json-paths`                   | _none_ | Comma-separated list of json path field in record's deserialized key to apply masking replacement |
-| `app.masking.rules.<my-rule-name>.headers-json-paths.<header-name>` | _none_ | Comma-separated list of json path field in record's deserialized header to apply masking replacement |
+| Property                                                                  | Default | Description                                                                                          |
+|---------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------|
+| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_   | From which clusters to apply masking of topic records. See [filtering options](#filter-options)      |
+| `app.masking.rules.<my-rule-name>.target.topics.<...filter options...>`   | _all_   | From which topics to apply masking of topic records. See [filtering options](#filter-options)        |
+| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_   | From which clusters to apply masking of topic records. See [filtering options](#filter-options)      |
+| `app.masking.rules.<my-rule-name>.value-json-paths`                       | _none_  | Comma-separated list of json path field in record's deserialized value to apply masking replacement  |
+| `app.masking.rules.<my-rule-name>.key-json-paths`                         | _none_  | Comma-separated list of json path field in record's deserialized key to apply masking replacement    |
+| `app.masking.rules.<my-rule-name>.headers-json-paths.<header-name>`       | _none_  | Comma-separated list of json path field in record's deserialized header to apply masking replacement |
 
 Rules for masking can be obtained by supplying custom implementation of
 [RecordTimestampExtractor](kafkistry-consume/src/main/kotlin/com/infobip/kafkistry/service/consume/masking/RecordMaskingRuleProvider.kt)
@@ -869,13 +869,13 @@ This information gives insight what is the _"effective time retention"_ in cases
 low `retention.bytes` and high throughput, which might cause effective retention to be much 
 less than `retention.ms`.
 
-| Property                    | Default | Description     |
-|-----------------------------|---------|-----------------|
-| `OLDEST_RECORD_AGE_ENABLED` | `true`  | Enable/disable sampling of oldest (lowest offset) record timestamp |
-| `app.oldest-record-age.included-clusters` | _none_ | Comma-separated list of cluster identifiers, consume records only from those clusters |
-| `app.oldest-record-age.excluded-clusters` | _none_ | Comma-separated list of cluster identifiers,  do not consume records from those topics |
-| `app.oldest-record-age.included-topics` | _none_ | Comma-separated list of topic names, consume records only from those topics |
-| `app.oldest-record-age.excluded-topics` | _none_ | Comma-separated list of topic names, do not consume records from those topics |
+| Property                                  | Default | Description                                                                            |
+|-------------------------------------------|---------|----------------------------------------------------------------------------------------|
+| `OLDEST_RECORD_AGE_ENABLED`               | `true`  | Enable/disable sampling of oldest (lowest offset) record timestamp                     |
+| `app.oldest-record-age.included-clusters` | _none_  | Comma-separated list of cluster identifiers, consume records only from those clusters  |
+| `app.oldest-record-age.excluded-clusters` | _none_  | Comma-separated list of cluster identifiers,  do not consume records from those topics |
+| `app.oldest-record-age.included-topics`   | _none_  | Comma-separated list of topic names, consume records only from those topics            |
+| `app.oldest-record-age.excluded-topics`   | _none_  | Comma-separated list of topic names, do not consume records from those topics          |
 
 Default implementation for extraction of timestamp from `ConsumerRecord` simply uses `ConsumerRecord.timestamp()` method.
 This behaviour can be changed by supplying custom implementation of 
@@ -897,26 +897,26 @@ topic should have same or similar structure.
 
 Options to configure analyzer.
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `RECORD_ANALYZER_ENABLED` | `true` | |
-| `RECORD_ANALYZER_STORAGE_DIR` | `kafkistry/record-analyzer-data` | Path to directory where Kafkistry will persist analyzed data on disk |
-| `RECORD_ANALYZER_TRIM_TIME_WINDOW` | `259200000` (3days) | Width of time window. (If some field in JSON hadn't been seen for more than this time it will be removed from index) |
-| `RECORD_ANALYZER_CONCURRENCY` | `1` | How many threads should handle analysis |
-| `RECORD_ANALYZER_MAX_QUEUE_SIZE` | `20000` | Actual sampling is performed by different thread than analysing thread. This is max size of in-memory queue for records being sampled and waiting for analysis |
-| `RECORD_ANALYZER_TRIM_AND_DUMP_RATE` | `120000` (2min) | How often to evict old fields from tree structure and to persist whole index on disk |
-| `RECORD_ANALYZER_VALUE_SAMPLING_ENABLED` | `true` | Should values of json field be analysed, `false` means that only value type is indexed |
-| `RECORD_ANALYZER_VALUES_MAX_CARDINALITY` | `25` | Threshold for how many different values are considered to be high-cardinality |
-| `app.record-analyzer.enabled-on.clusters.<...filter options...>` | _all_ | From which clusters to perform analysis of topic records. See [filtering options](#filter-options) |
-| `app.record-analyzer.enabled-on.topics.<...filter options...>`   | _all_ | From which topics to perform analysis of topic records. See [filtering options](#filter-options) |
-| `app.record-analyzer.value-sampling.enabled` | `true` | Weather or not to sample values of analyzer records. |
-| `app.record-analyzer.value-sampling.max-number-abs` | `1000000` | In case of numeric field having magnitude bigger than this value will cause to mark it as too-big |
-| `app.record-analyzer.value-sampling.max-string-length` | `50` | In case of string field having length more than this value will cause to mark it as too-big |
-| `app.record-analyzer.value-sampling.max-cardinality` | `25` | In case of sampling sees more different values, particular field will be marked as high-cardinality field |
-| `app.record-analyzer.value-sampling.enabled-on.clusters.<...filter options...>` | _all_ | From which clusters to sample values of topic records. See [filtering options](#filter-options) |
-| `app.record-analyzer.value-sampling.enabled-on.topics.<...filter options...>`   | _all_ | From which topics to sample values of topic records. See [filtering options](#filter-options) |
-| `app.record-analyzer.value-sampling.included-fields` | _none_ | Comma-separated list of json path field, sample values only from json fields of this whitelist |
-| `app.record-analyzer.value-sampling.excluded-fields` | _none_ | Comma-separated list of json path field, do not sample values from json fields of this blacklist |
+| Property                                                                        | Default                          | Description                                                                                                                                                    |
+|---------------------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `RECORD_ANALYZER_ENABLED`                                                       | `true`                           |                                                                                                                                                                |
+| `RECORD_ANALYZER_STORAGE_DIR`                                                   | `kafkistry/record-analyzer-data` | Path to directory where Kafkistry will persist analyzed data on disk                                                                                           |
+| `RECORD_ANALYZER_TRIM_TIME_WINDOW`                                              | `259200000` (3days)              | Width of time window. (If some field in JSON hadn't been seen for more than this time it will be removed from index)                                           |
+| `RECORD_ANALYZER_CONCURRENCY`                                                   | `1`                              | How many threads should handle analysis                                                                                                                        |
+| `RECORD_ANALYZER_MAX_QUEUE_SIZE`                                                | `20000`                          | Actual sampling is performed by different thread than analysing thread. This is max size of in-memory queue for records being sampled and waiting for analysis |
+| `RECORD_ANALYZER_TRIM_AND_DUMP_RATE`                                            | `120000` (2min)                  | How often to evict old fields from tree structure and to persist whole index on disk                                                                           |
+| `RECORD_ANALYZER_VALUE_SAMPLING_ENABLED`                                        | `true`                           | Should values of json field be analysed, `false` means that only value type is indexed                                                                         |
+| `RECORD_ANALYZER_VALUES_MAX_CARDINALITY`                                        | `25`                             | Threshold for how many different values are considered to be high-cardinality                                                                                  |
+| `app.record-analyzer.enabled-on.clusters.<...filter options...>`                | _all_                            | From which clusters to perform analysis of topic records. See [filtering options](#filter-options)                                                             |
+| `app.record-analyzer.enabled-on.topics.<...filter options...>`                  | _all_                            | From which topics to perform analysis of topic records. See [filtering options](#filter-options)                                                               |
+| `app.record-analyzer.value-sampling.enabled`                                    | `true`                           | Weather or not to sample values of analyzer records.                                                                                                           |
+| `app.record-analyzer.value-sampling.max-number-abs`                             | `1000000`                        | In case of numeric field having magnitude bigger than this value will cause to mark it as too-big                                                              |
+| `app.record-analyzer.value-sampling.max-string-length`                          | `50`                             | In case of string field having length more than this value will cause to mark it as too-big                                                                    |
+| `app.record-analyzer.value-sampling.max-cardinality`                            | `25`                             | In case of sampling sees more different values, particular field will be marked as high-cardinality field                                                      |
+| `app.record-analyzer.value-sampling.enabled-on.clusters.<...filter options...>` | _all_                            | From which clusters to sample values of topic records. See [filtering options](#filter-options)                                                                |
+| `app.record-analyzer.value-sampling.enabled-on.topics.<...filter options...>`   | _all_                            | From which topics to sample values of topic records. See [filtering options](#filter-options)                                                                  |
+| `app.record-analyzer.value-sampling.included-fields`                            | _none_                           | Comma-separated list of json path field, sample values only from json fields of this whitelist                                                                 |
+| `app.record-analyzer.value-sampling.excluded-fields`                            | _none_                           | Comma-separated list of json path field, do not sample values from json fields of this blacklist                                                               |
 
 
 
@@ -1028,11 +1028,11 @@ It works by:
  - topics consumed by that consumer group are marked as _inputTopics_ of KStream app
  - topics having name `<consumerGroup/kStreamAppId>-KSTREAM-*` are marked as _internalTopics_ of KStream app
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `app.kstream.detection.enabled-on.clusters.<...filter options...>`        | _all_ | On which clusters to detect KStreams. See [filtering options](#filter-options)  |
-| `app.kstream.detection.enabled-on.consumer-groups.<...filter options...>` | _all_ | For which consumer groups to detect KStreams. See [filtering options](#filter-options)  |
-| `app.kstream.detection.enabled-on.topics.<...filter options...>`          | _all_ | Which topics to include in KStreams detection. See [filtering options](#filter-options)  |
+| Property                                                                  | Default | Description                                                                             |
+|---------------------------------------------------------------------------|---------|-----------------------------------------------------------------------------------------|
+| `app.kstream.detection.enabled-on.clusters.<...filter options...>`        | _all_   | On which clusters to detect KStreams. See [filtering options](#filter-options)          |
+| `app.kstream.detection.enabled-on.consumer-groups.<...filter options...>` | _all_   | For which consumer groups to detect KStreams. See [filtering options](#filter-options)  |
+| `app.kstream.detection.enabled-on.topics.<...filter options...>`          | _all_   | Which topics to include in KStreams detection. See [filtering options](#filter-options) |
 
 
 
@@ -1041,7 +1041,52 @@ It works by:
 Kafkistry inspects various aspects of a topic on specific cluster.
 Main aspects are existence of topic where it's expected to exist, does it have expected configuration, etc...
 
-Secondary aspects are various (and custom pluggable) implementations of [ValidationRule](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/validation/rules/ValidationRule.kt).
+### Extra topic inspectors
+
+Topic inspection can be enriched with custom implementations of
+[TopicExternalInspector](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/TopicExternalInspector.kt).
+
+All built-in [extra inspectors](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/inspectors) are enabled by default.
+Particular inspectors can be enabled or disabled using properties:
+- `app.topic-inspect.enabled-inspectors`
+- `app.topic-inspect.disabled-inspectors`
+  
+where value is list of fully qualified class names to enable/disable.
+
+Example:
+```yaml
+app.topic-inspection:
+  enabled-inspectors:
+    - com.infobip.kafkistry.service.topic.inspectors.TopicEmptyInspector
+    - com.infobip.kafkistry.service.topic.inspectors.TopicUnderprovisionedRetentionInspector
+```
+
+#### Configurable built-in topic inspectors
+
+- [TopicUnderprovisionedRetentionInspector](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/inspectors/TopicUnderprovisionedRetentionInspector.kt)
+   - Check if topic has partitions such that configured `retention.bytes` is too low so that oldest messages are deleted before reaching `retention.ms`
+   - When this happens it usually means traffic rate is high so that topic doesn't have time based retention of `retention.ms` as one might expect
+   -
+     | Property                                                                            | Default | Description                                                                                                                                  |
+     |-------------------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------------|
+     | `app.topic-inspection.underprovisioned-retention.min-oldness-ratio-to-retention-ms` | `0.8`   | Trigger this status when oldest record in partition is younger than 80% of topic's `retention.ms`                                            |
+     | `app.topic-inspection.underprovisioned-retention.required-ratio-to-retention-bytes` | `0.8`   | Prevent this status from triggering unless partition is "loaded" with data; i.e. partition size is at least 80% of topic's `retention.bytes` |
+   
+- [TopicOverprovisionedRetentionInspector](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/inspectors/TopicOverprovisionedRetentionInspector.kt)
+   - Check if topic has partitions such that configured `retention.bytes` is mush bigger than actual size of partition because messages are being deleted before by `retention.ms`
+   - When this happens it usually means traffic rate is low
+   -
+     | Property                                                                           | Default             | Description                                                                                                                                                        |
+     |------------------------------------------------------------------------------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+     | `app.topic-inspection.overprovisioned-retention.min-used-ratio-to-retention-bytes` | `0.2`               | Trigger this status when partition size is 20% or less than topic's `retention.bytes`                                                                              |
+     | `app.topic-inspection.overprovisioned-retention.required-ratio-to-retention-ms`    | `0.8`               | Prevent this status from triggering unless messages are being deleted by time retention; i.e. oldest record being at old at least as 80% of topic's `retention.ms` |
+     | `app.topic-inspection.overprovisioned-retention.ignore-below-retention-bytes`      | `10485760` _(10MB)_ | Don't trigger for small topics; i.e. having `retention.bytes` less than 10MB                                                                                       |
+   
+
+
+### Topic rule violations
+
+Secondary aspects of topic inspection are various (and custom pluggable) implementations of [ValidationRule](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/validation/rules/ValidationRule.kt).
 Any rule that raises violation will be shown as `CONFIG_RULE_VIOLATION`.
 
 All built-in [validation rules](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/validation/rules) are enabled by default.
@@ -1059,11 +1104,11 @@ app.topic-validation:
     - com.infobip.kafkistry.service.validation.rules.SizeRetentionEnoughToCoverRequiredRule
 ```
 
-### Configurable validation rules
+#### Configurable validation rules
 
 - [SegmentSizeToRetentionBytesRatioRule](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/validation/rules/SegmentSizeToRetentionBytesRatioRule.kt)
   - Verifies that topic's segment size is not too big nor too small comparing to retention size
-  - | Property  | Default | Description | 
+  - | Property  | Default | Description |
     |-----------|---------|-------------|
     | `app.topic-validation.segment-size-rule.max-ratio-to-retention-bytes` | `0.5` | Raises violation if topic's `segmment.bytes` > `0.5 * retention.bytes` |
     | `app.topic-validation.segment-size-rule.min-ratio-to-retention-bytes` | `0.02` | Raises violation if topic's `segmment.bytes` < `0.02 * retention.bytes` |
@@ -1072,7 +1117,7 @@ app.topic-validation:
   - In most cases, when using KStreams there is requirement that joining topics have the same partition count so called co-partitioning.
   - This rule exists to warn before proceeding to change partition count of one of topics involved in specific KStream application
   - This rule might raise false positive violation in cases when co-partitioning is not requirement. In such cases this rule can be disabled for particular topic, or whole rule can be disabled.
-  - | Property  | Default | Description | 
+  - | Property  | Default | Description |
     |-----------|---------|-------------|
     | `app.topic-validation.kstream-partition-count.enabled-on.clusters.<include/exclude>` | _all_ | On which clusters to check KStream's topics partition count for co-partition match, see [options](#filter-options) |
     | `app.topic-validation.kstream-partition-count.enabled-on.topics.<include/exclude>` | _all_ | For which topics to check KStream's topics partition count for co-partition match, see [options](#filter-options) |
@@ -1093,12 +1138,12 @@ SQL feature uses `SQLite` which requires local disk storage.
 
 Properties to configure:
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `SQL_ENABLED` | `true` | |
-| `SQLITE_DB_DIR` | `kafkistry/sqlite` | Path to directory where SQLite should store its DB. Can be absolute path or relative to working dir |
-| `SQL_AUTO_CREATE_DIR` | `true` | If `true` and specified directory `SQLITE_DB_DIR` doesn't exist, Kafkistry will attempt to create it before using |
-| `SQL_CLICKHOUSE_OPEN_SECURITY` | `false` | Is endpoint for accessing SQL rest API (ClickhouseDB-like API) accessible anonymously (without session and without authentication) |
+| Property                       | Default            | Description                                                                                                                        |
+|--------------------------------|--------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| `SQL_ENABLED`                  | `true`             |                                                                                                                                    |
+| `SQLITE_DB_DIR`                | `kafkistry/sqlite` | Path to directory where SQLite should store its DB. Can be absolute path or relative to working dir                                |
+| `SQL_AUTO_CREATE_DIR`          | `true`             | If `true` and specified directory `SQLITE_DB_DIR` doesn't exist, Kafkistry will attempt to create it before using                  |
+| `SQL_CLICKHOUSE_OPEN_SECURITY` | `false`            | Is endpoint for accessing SQL rest API (ClickhouseDB-like API) accessible anonymously (without session and without authentication) |
 
 ### ClickhouseDB-like REST API
 
@@ -1144,14 +1189,14 @@ repository or on some action on kafka cluster.
 
 Properties to set:
 
-| Property                 | Default | Description |
-|--------------------------|---------|-------------|
-| `SLACK_ENABLED`          | `false` | |
-| `SLACK_CHANNEL_ID`       | _none_  | ID of slack channel to send notifications into |
-| `SLACK_SECRET_TOKEN`     | _none_  | Secret token to allow Kafkistry to authenticate on Slack's API, you'll need create slack bot application for your Slack workspace  | 
-| `SLACK_PROXY_HOST`       | _none_  | Optional property. Use it if your Kafkistry deployment does not have access to public internet and must go through SOCKS proxy to be able to access Slack' API |
-| `SLACK_PROXY_PORT`       | _none_  | Optional property. _read description for SLACK_PROXY_HOST_ |
-| `SLACK_LINK_BASE_HOST`   | _none_  | User accessible base url for Kafkistry UI. Needed to generate message URL(s) properly. Example value: `https://my-kafka-proxy.local` |
+| Property                 | Default | Description                                                                                                                                                                            |
+|--------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `SLACK_ENABLED`          | `false` |                                                                                                                                                                                        |
+| `SLACK_CHANNEL_ID`       | _none_  | ID of slack channel to send notifications into                                                                                                                                         |
+| `SLACK_SECRET_TOKEN`     | _none_  | Secret token to allow Kafkistry to authenticate on Slack's API, you'll need create slack bot application for your Slack workspace                                                      | 
+| `SLACK_PROXY_HOST`       | _none_  | Optional property. Use it if your Kafkistry deployment does not have access to public internet and must go through SOCKS proxy to be able to access Slack' API                         |
+| `SLACK_PROXY_PORT`       | _none_  | Optional property. _read description for SLACK_PROXY_HOST_                                                                                                                             |
+| `SLACK_LINK_BASE_HOST`   | _none_  | User accessible base url for Kafkistry UI. Needed to generate message URL(s) properly. Example value: `https://my-kafka-proxy.local`                                                   |
 | `SLACK_ENVIRONMENT_NAME` | `n/a`   | Optional property. Useful if you have different Kafkistry(s) deployed in different environments and when message appears in slack channel to be abe to distinguish where it came from. |
 
 
@@ -1164,7 +1209,7 @@ to jira that you use.
 This is more UI sugar than real integration where jira would be aware of Kafkistry.
 
 | Property        | Example                         |
-|-----------------|---------------------------------| 
+|-----------------|---------------------------------|
 | `JIRA_BASE_URL` | `https://your-jira.com/browse/` |
 
 When having JIRA_BASE_URL, Kafkistry UI will inject links to JIRA
@@ -1178,16 +1223,16 @@ When having JIRA_BASE_URL, Kafkistry UI will inject links to JIRA
 
 ## Miscellaneous UI settings
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `CUSTOM_JS_SCRIPTS_CSV` | _empty_ | Comma separated list of script files to be included into each UI view page (html) |
-| `app.ui.caching` | `true` | Enables caching of static UI resources to speed up pages load, useful to set to `false` for development purposes. |
-| `app.ui.image.dir-path` | `default` | Classpath directory which contain image files. Must be on classpath located in `ui/static/img/` |
-| `app.ui.image.icon` | `icon.png` _([resource](kafkistry-web/src/main/resources/ui/static/img/default/icon.png))_| Browser tab icon image filename to be used in UI. Must be located in `ui/static/img/${app.ui.image.dir-path}/` |
-| `app.ui.image.logo` | `logo.png` _([resource](kafkistry-web/src/main/resources/ui/static/img/default/logo.png))_| Logo image filename to be used in UI. Must be located in `ui/static/img/${app.ui.image.dir-path}/` |
-| `app.ui.image.banner` | `banner.png` _([resource](kafkistry-web/src/main/resources/ui/static/img/default/banner.png))_| Homepage banner image filename to be used in UI. Must be located in `ui/static/img/${app.ui.image.dir-path}/` |
-| `app.hostname.value` | _(empty/none)_ | Name of hostname to be shown in UI as `Served by: <hostname>` | 
-| `app.hostname.property` | _(empty/none)_ | Name of system property or environment variable to resolve hostname from, to be shown in UI as `Served by: <hostname>` | 
+| Property                | Default                                                                                        | Description                                                                                                            |
+|-------------------------|------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `CUSTOM_JS_SCRIPTS_CSV` | _empty_                                                                                        | Comma separated list of script files to be included into each UI view page (html)                                      |
+| `app.ui.caching`        | `true`                                                                                         | Enables caching of static UI resources to speed up pages load, useful to set to `false` for development purposes.      |
+| `app.ui.image.dir-path` | `default`                                                                                      | Classpath directory which contain image files. Must be on classpath located in `ui/static/img/`                        |
+| `app.ui.image.icon`     | `icon.png` _([resource](kafkistry-web/src/main/resources/ui/static/img/default/icon.png))_     | Browser tab icon image filename to be used in UI. Must be located in `ui/static/img/${app.ui.image.dir-path}/`         |
+| `app.ui.image.logo`     | `logo.png` _([resource](kafkistry-web/src/main/resources/ui/static/img/default/logo.png))_     | Logo image filename to be used in UI. Must be located in `ui/static/img/${app.ui.image.dir-path}/`                     |
+| `app.ui.image.banner`   | `banner.png` _([resource](kafkistry-web/src/main/resources/ui/static/img/default/banner.png))_ | Homepage banner image filename to be used in UI. Must be located in `ui/static/img/${app.ui.image.dir-path}/`          |
+| `app.hostname.value`    | _(empty/none)_                                                                                 | Name of hostname to be shown in UI as `Served by: <hostname>`                                                          | 
+| `app.hostname.property` | _(empty/none)_                                                                                 | Name of system property or environment variable to resolve hostname from, to be shown in UI as `Served by: <hostname>` | 
 
 
 ## Writing custom plugins
