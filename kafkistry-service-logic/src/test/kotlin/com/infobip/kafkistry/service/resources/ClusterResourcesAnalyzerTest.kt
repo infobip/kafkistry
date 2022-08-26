@@ -15,10 +15,7 @@ import com.infobip.kafkistry.service.newState
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.toOkPartitionAssignments
-import com.infobip.kafkistry.service.topic.ConfigValueInspector
-import com.infobip.kafkistry.service.topic.TopicIssuesInspector
-import com.infobip.kafkistry.service.topic.TopicsInspectionService
-import com.infobip.kafkistry.service.topic.TopicsRegistryService
+import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.topic.validation.TopicConfigurationValidator
 import com.infobip.kafkistry.service.topic.validation.TopicValidationProperties
 import com.nhaarman.mockitokotlin2.any
@@ -49,7 +46,8 @@ internal class ClusterResourcesAnalyzerTest {
             PartitionsReplicasAssignor(),
             RequiredResourcesInspector(),
             AclLinkResolver(mock()),
-            Optional.empty(),
+            emptyList(),
+            TopicInspectorProperties(),
         ),
         partitionsReplicasAssignor = PartitionsReplicasAssignor(),
         configValueInspector = ConfigValueInspector(),
