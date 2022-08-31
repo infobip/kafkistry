@@ -29,9 +29,9 @@ See complete [documentation](DOCUMENTATION.md) for configurable properties and p
 
 To run Kafkistry locally with minimal setup:
 ```bash
-docker run -p 8080:8080 --hostname "kr.local" infobip/kafkistry:latest
-    --USERS_PASSWORDS="foo|bar|Admy|Adminsky|admin@kafkistry.local|ADMIN|" 
-    --OWNER_GROUPS="Test_Group|foo" 
+docker run -p 8080:8080 --hostname "kr.local" infobip/kafkistry:latest \
+    --USERS_PASSWORDS="foo|bar|Admy|Adminsky|admin@kafkistry.local|ADMIN|" \
+    --OWNER_GROUPS="Test_Group|foo" \
     --GIT_COMMIT_TO_MASTER_BY_DEFAULT=true  
 ```
 Once container starts open [http://localhost:8080](http://localhost:8080) and login with username: `foo` password: `bar`.
