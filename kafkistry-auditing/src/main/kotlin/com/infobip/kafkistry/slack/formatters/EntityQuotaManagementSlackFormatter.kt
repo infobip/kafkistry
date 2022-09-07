@@ -32,8 +32,8 @@ class EntityQuotaManagementSlackFormatter : AuditEventSlackFormatter<EntityQuota
             SectionBlock.builder()
                 .fields(
                     listOfNotNull(
-                        statusBefore?.let { "Status before:\n`$it`".asMarkdown() },
-                        statusAfter?.let { "Status after:\n`$it`".asMarkdown() },
+                        statusBefore?.let { "Status before:\n`${it.name}`".asMarkdown() },
+                        statusAfter?.let { "Status after:\n`${it.name}`".asMarkdown() },
                         event.quotaBefore?.let { "Quota before:\n${it.format()}".asMarkdown() },
                         event.quotaAfter?.let { "Quota after:\n${it.format()}".asMarkdown() },
                     )

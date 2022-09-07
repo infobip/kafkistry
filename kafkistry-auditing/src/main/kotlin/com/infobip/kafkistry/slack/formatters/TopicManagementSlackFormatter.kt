@@ -27,8 +27,8 @@ class TopicManagementSlackFormatter : AuditEventSlackFormatter<TopicManagementAu
         val statusBefore = event.kafkaTopicBefore
         val statusAfter = event.kafkaTopicAfter
         val fields = listOfNotNull(
-            statusBefore?.let { "Status before:\n`${it.types}`".asMarkdown() },
-            statusAfter?.let { "Status after:\n`${it.types}`".asMarkdown() },
+            statusBefore?.let { "Status before:\n`${statusBefore.types.map { it.name }}`".asMarkdown() },
+            statusAfter?.let { "Status after:\n`${statusAfter.types.map { it.name }}`".asMarkdown() },
         )
         return if (fields.isNotEmpty()) {
             listOf(DividerBlock(), SectionBlock.builder().fields(fields).build())

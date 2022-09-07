@@ -36,7 +36,7 @@ class PrincipalAclsManagementSlackFormatter : AuditEventSlackFormatter<Principal
             val result = StringBuilder()
             result.append("OK: ").append(if (ok) "`yes`" else "`no`").append("\n")
             statusCounts.forEach { (status, count) ->
-                result.append("`$status`: $count\n")
+                result.append("`${status.name}`: $count\n")
             }
             return result.toString()
         }
