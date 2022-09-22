@@ -57,7 +57,7 @@
     <#assign partitionChange = replicationFactorChange>
     <#include "../topics/partitionReplicaAssignments.ftl">
 
-    <#switch replicationFactorChange.type.name()>
+    <#switch replicationFactorChange.type>
         <#case "IMPOSSIBLE">
             <div class="alert alert-danger">
                 <strong>WARNING</strong>: Partition change is not possible, reason: ${replicationFactorChange.impossibleReason}

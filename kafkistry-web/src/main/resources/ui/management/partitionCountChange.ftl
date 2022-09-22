@@ -56,7 +56,7 @@
     <#assign partitionChange = partitionCountChange>
     <#include "../topics/partitionReplicaAssignments.ftl">
 
-    <#switch partitionCountChange.type.name()>
+    <#switch partitionCountChange.type>
         <#case "IMPOSSIBLE">
             <div class="alert alert-danger">
                 <strong>WARNING</strong>: Partition change is not possible, reason: ${partitionCountChange.impossibleReason}

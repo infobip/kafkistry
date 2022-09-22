@@ -43,7 +43,7 @@
 
         <br/>
 
-        <#switch topicRequest.type.name()>
+        <#switch topicRequest.type>
             <#case "ADD">
                 <button id="import-btn" class="btn btn-primary btn-sm">Edit pending import to registry</button>
                 <#break>
@@ -56,7 +56,8 @@
                 </div>
                 <#break>
             <#default>
-                <strong>Cant perform change</strong>
+                <strong>Can't perform change</strong>
+                <br/>Having change type: ${topicRequest.type}
                 <#break>
         </#switch>
     </#if>

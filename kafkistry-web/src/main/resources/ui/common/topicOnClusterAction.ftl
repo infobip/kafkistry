@@ -7,7 +7,7 @@
 <#import "infoIcon.ftl" as info>
 
 <#list availableActions as action>
-    <#switch action.name()>
+    <#switch action>
         <#case "CREATE_TOPIC">
             <#assign url = appUrl.topicsManagement().showCreateMissingTopic(topicName, clusterIdentifier)>
             <#assign btnText>

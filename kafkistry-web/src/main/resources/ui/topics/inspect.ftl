@@ -195,14 +195,14 @@
                                     <#assign messagesRate = requirements.messagesRateOverrides[clusterIdentifier]>
                                 </#if>
                                 ${messagesRate.amount}
-                                <#switch messagesRate.factor.name()>
+                                <#switch messagesRate.factor>
                                     <#case "ONE"><#break>
                                     <#case "K">thousand<#break>
                                     <#case "M">million<#break>
                                     <#case "G">billion<#break>
                                 </#switch>
                                 messages /
-                                <#switch messagesRate.unit.name()>
+                                <#switch messagesRate.unit>
                                     <#case "MSG_PER_DAY">day<#break>
                                     <#case "MSG_PER_HOUR">hour<#break>
                                     <#case "MSG_PER_MINUTE">min<#break>

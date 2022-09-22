@@ -12,7 +12,7 @@
     <#assign value = (comparedValue.value)!'---'>
     <#assign cellStyle = "">
     <#assign statusClass = "">
-    <#switch comparedValue.status.name()>
+    <#switch comparedValue.status>
         <#case "NOT_PRESENT">
             <#assign statusClass = "text-secondary">
             <#break>

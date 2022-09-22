@@ -29,7 +29,7 @@
 </#macro>
 
 <#function severityClass severity>
-    <#switch severity.name()>
+    <#switch severity>
         <#case "NONE">
             <#return "badge-success">
         <#case "MINOR">

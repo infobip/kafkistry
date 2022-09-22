@@ -42,7 +42,7 @@
 
 <#function clusterStatusToHtmlClass stateType>
 <#-- @ftlvariable name="stateType"  type="com.infobip.kafkistry.kafkastate.StateType" -->
-    <#switch stateType.name()>
+    <#switch stateType>
         <#case "VISIBLE">
             <#return "alert-success">
         <#case "DISABLED">
@@ -217,7 +217,7 @@
 
 <#function changeTypeClass changeType>
 <#-- @ftlvariable name="changeType"  type="com.infobip.kafkistry.repository.storage.ChangeType" -->
-    <#switch changeType.name()>
+    <#switch changeType>
         <#case "ADD">
             <#return "badge-success">
         <#case "DELETE">
@@ -230,7 +230,7 @@
 
 <#function presenceTypeClass presenceType>
 <#-- @ftlvariable name="presenceType"  type="com.infobip.kafkistry.model.PresenceType" -->
-    <#switch presenceType.name()>
+    <#switch presenceType>
         <#case "ALL_CLUSTERS">
             <#return "alert-primary">
         <#case "INCLUDED_CLUSTERS">

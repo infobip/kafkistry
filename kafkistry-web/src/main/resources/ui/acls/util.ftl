@@ -13,7 +13,7 @@
 
 <#macro policy policy>
 <#-- @ftlvariable name="policy" type="com.infobip.kafkistry.model.AclOperation.Policy" -->
-    <#switch policy.name()>
+    <#switch policy>
         <#case "ALLOW">
             <span class="badge badge-success">ALLOW</span>
             <#break>
@@ -27,7 +27,7 @@
 
 <#function operationBtnClass operation>
 <#-- @ftlvariable name="operation" type="com.infobip.kafkistry.service.acl.AvailableAclOperation" -->
-    <#switch operation.name()>
+    <#switch operation>
         <#case "CREATE_MISSING_ACLS">
             <#return "btn-outline-info">
         <#case "DELETE_UNWANTED_ACLS">
@@ -55,7 +55,7 @@ Level:
     <#assign url = "">
     <#assign btnClass = operationBtnClass(operation)>
     <#assign btnText = "---">
-    <#switch operation.name()>
+    <#switch operation>
         <#case "CREATE_MISSING_ACLS">
             <#if rule != "">
                 <#assign btnText = "Create rule...">

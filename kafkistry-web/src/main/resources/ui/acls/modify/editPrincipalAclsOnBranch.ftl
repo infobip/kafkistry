@@ -39,7 +39,7 @@
 
         <br/>
 
-        <#switch aclsRequest.type.name()>
+        <#switch aclsRequest.type>
             <#case "ADD">
                 <button id="create-btn" class="btn btn-primary btn-sm">Edit pending import to registry</button>
                 <#break>
@@ -52,7 +52,8 @@
                 </div>
                 <#break>
             <#default>
-                <strong>Cant perform change</strong>
+                <strong>Can't perform change</strong>
+                <br/>Having status: ${aclsRequest.type.name()}
                 <#break>
         </#switch>
     </#if>

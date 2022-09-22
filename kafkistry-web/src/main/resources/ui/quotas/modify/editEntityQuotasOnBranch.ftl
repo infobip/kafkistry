@@ -35,7 +35,7 @@
 
         <br/>
 
-        <#switch entityQuotaRequest.type.name()>
+        <#switch entityQuotaRequest.type>
             <#case "ADD">
                 <button id="create-btn" class="btn btn-primary btn-sm">Edit pending import to registry</button>
                 <#break>

@@ -42,7 +42,7 @@
 
         <br/>
 
-        <#switch clusterRequest.type.name()>
+        <#switch clusterRequest.type>
             <#case "ADD">
                 <button id="add-cluster-btn" class="btn btn-primary btn-sm">Edit pending import to registry</button>
                 <#break>
@@ -56,6 +56,7 @@
                 <#break>
             <#default>
                 <strong>Cant perform change</strong>
+                <br/>Having change type: ${clusterRequest.type}
                 <#break>
         </#switch>
     </#if>

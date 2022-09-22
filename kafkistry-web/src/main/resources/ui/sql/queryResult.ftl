@@ -9,7 +9,7 @@
     <#else>
         <#assign valueStr = "${value?no_esc?markup_string}">
     </#if>
-    <#switch type.name()>
+    <#switch type>
         <#case "TOPIC">
             <#return appUrl.topics().showTopic(valueStr)>
         <#case "CLUSTER">
