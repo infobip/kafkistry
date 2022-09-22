@@ -63,7 +63,9 @@ data class ClusterTopicOffsets(
 data class TopicReplicaInfos(
     val topic: TopicName,
     val partitionBrokerReplicas: Map<Partition, Map<BrokerId, TopicPartitionReplica>>,
-    val brokerPartitionReplicas: Map<BrokerId, Map<Partition, TopicPartitionReplica>>
+    val brokerPartitionReplicas: Map<BrokerId, Map<Partition, TopicPartitionReplica>>,
+    val brokerTotalSizes: Map<BrokerId, Long>,
+    val totalSizeBytes: Long,
 )
 
 data class ReplicaDirs(

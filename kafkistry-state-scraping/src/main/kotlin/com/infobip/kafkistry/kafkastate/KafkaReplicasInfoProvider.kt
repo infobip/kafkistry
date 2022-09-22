@@ -51,8 +51,15 @@ fun List<TopicPartitionReplica>.toTopicReplicasInfos(topicName: TopicName): Topi
         .mapValues { (_, replicas) ->
             replicas.associateBy { it.brokerId }
         }
+    val brokerTotalSizes = this
+        .groupBy { it.brokerId }
+        .mapValues { (_, replicas) ->
+            replicas.sumOf { it.sizeBytes }
+        }
     return TopicReplicaInfos(
         topic = topicName,
+        totalSizeBytes = this.sumOf { it.sizeBytes },
+        brokerTotalSizes = brokerTotalSizes,
         partitionBrokerReplicas = partitionBrokerReplicas,
         brokerPartitionReplicas = brokerPartitionReplicas
     )

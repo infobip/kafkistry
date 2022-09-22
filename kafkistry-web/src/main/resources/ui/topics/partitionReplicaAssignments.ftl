@@ -84,6 +84,18 @@
                             </th>
                         </#list>
                     </tr>
+                    <tr class="thead-light">
+                        <th class="text-center">
+                            ALL<br/>
+                            ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
+                        </th>
+                        <#list clusterInfo.nodeIds as brokerId>
+                            <th class="text-center">
+                                <#assign brokerTotalBytes = (topicReplicas.brokerTotalSizes?api.get(brokerId))!0>
+                                ${_util.prettyDataSize(brokerTotalBytes)}
+                            </th>
+                        </#list>
+                    </tr>
                     </thead>
                     <#list assignmentStatus.partitions as partition>
                         <tbody class="<#if tinyMode>small</#if>">
