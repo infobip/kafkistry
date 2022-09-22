@@ -11,7 +11,10 @@
 
 <style>
     .non-default {
-        background-color: #a5a5a5;
+        background-color: #ccc;
+    }
+    .non-default .conf-value {
+        font-weight: bold;
     }
 </style>
 
