@@ -13,7 +13,7 @@
             </div>
         <#else>
             <div class="alert alert-info">
-                Total topic size in all partitions: ~<strong>${toUtil.prettyNumber(topicOffsets.size)}</strong>
+                Total messages in all partitions: ~<strong>${toUtil.prettyNumber(topicOffsets.size)}</strong>
                 <#include "numMessagesEstimateDoc.ftl">
             </div>
         </#if>
