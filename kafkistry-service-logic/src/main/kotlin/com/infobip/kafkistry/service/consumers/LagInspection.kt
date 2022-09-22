@@ -17,18 +17,24 @@ class LagInspection(
             partitionMsgRate: Double?,
             memberAssigned: Boolean,
     ): Lag {
-        val (lagAmount, lagPercentage) = if (partitionOffset != null && memberOffset != null) {
-            val lag = (partitionOffset.end - memberOffset).coerceAtLeast(0)
+        fun computeLag(): Pair<Long?, Double?> {
+            if (partitionOffset == null) {
+                return null to null  // no offsets of partition -> don't know anything
+            }
             val partitionSize = partitionOffset.end - partitionOffset.begin
+            if (memberOffset == null) {
+                // consumer never committed -> it's either no lag or unknown
+                return if (partitionSize == 0L) 0L to 0.0 else null to null
+            }
+            val lag = (partitionOffset.end - memberOffset).coerceAtLeast(0)
             val lagPercentage = if (partitionSize == 0L) {
                 if (lag == 0L) 0.0 else Double.POSITIVE_INFINITY
             } else {
                 100.0 * lag.toDouble() / partitionSize.toDouble()
             }
-            lag to lagPercentage
-        } else {
-            null to null
+            return lag to lagPercentage
         }
+        val (lagAmount, lagPercentage) = computeLag()
         return Lag(
             amount = lagAmount,
             percentage = lagPercentage,
