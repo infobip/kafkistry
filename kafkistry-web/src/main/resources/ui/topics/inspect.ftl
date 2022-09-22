@@ -508,15 +508,24 @@
         </div>
         <br/>
 
-        <a class="btn btn-outline-info btn-sm" href="${appUrl.topicsManagement().showCustomReAssignmentInput(topicName, clusterIdentifier)}">
-            Specify custom assignments...
-        </a>
-        <br/>
-        <br/>
+        <div class="form-row">
+            <div class="col-">
+                <a class="btn btn-outline-info btn-sm" href="${appUrl.topicsManagement().showCustomReAssignmentInput(topicName, clusterIdentifier)}">
+                    Specify custom assignments...
+                </a>
+            </div>
+            <div class="col-">
+                <a class="btn btn-outline-info btn-sm" href="${appUrl.topicsManagement().showTopicConfigSet(topicName, clusterIdentifier)}">
+                    Set config...
+                </a>
+            </div>
+            <div class="col-">
+                <a class="btn btn-outline-danger btn-sm" href="${appUrl.topicsManagement().showDeleteTopicOnCluster(topicName, clusterInfo.identifier)}">
+                    Force delete...
+                </a>
+            </div>
+        </div>
 
-        <a class="btn btn-outline-info btn-sm" href="${appUrl.topicsManagement().showTopicConfigSet(topicName, clusterIdentifier)}">
-            Set config...
-        </a>
         <br/>
         <br/>
     <#else>

@@ -60,6 +60,9 @@
         <#case "IMPOSSIBLE">
             <div class="alert alert-danger">
                 <strong>WARNING</strong>: Partition change is not possible, reason: ${partitionCountChange.impossibleReason}
+                <br/>
+                <#assign url = appUrl.topicsManagement().showDeleteTopicOnCluster(topicName, clusterInfo.identifier)>
+                <a href="${url}"><button class="text-nowrap btn btn-outline-danger btn-sm m-1">Force delete topic on kafka...</button></a>
             </div>
             <#break>
         <#case "NOTHING">
