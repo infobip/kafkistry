@@ -94,77 +94,7 @@
     </table>
 
     <#if topicOffsets??>
-        <div class="card">
-            <div class="card-header">
-                <span class="h4">Messages stats</span>
-            </div>
-            <div class="card-body p-1">
-                <#if topicOffsets.empty>
-                    <div class="alert alert-warning">
-                        Topic is empty
-                    </div>
-                <#else>
-                    <div class="alert alert-info">
-                        Total topic size in all partitions: ~<strong>${util_.prettyNumber(topicOffsets.size)}</strong>
-                        <#include "numMessagesEstimateDoc.ftl">
-                    </div>
-                </#if>
-                <#if topicOffsets.messagesRate??>
-                    <#assign rate = topicOffsets.messagesRate>
-                    <table class="table table-sm" style="table-layout: fixed;">
-                        <thead class="">
-                        <tr>
-                            <th colspan="10" class="alert-secondary text-center">Avg msg/sec rate in last</th>
-                        </tr>
-                        <tr>
-                            <th>15sec</th>
-                            <th>1min</th>
-                            <th>5min</th>
-                            <th>15min</th>
-                            <th>30min</th>
-                            <th>1h</th>
-                            <th>2h</th>
-                            <th>6h</th>
-                            <th>12h</th>
-                            <th>24h</th>
-                        </tr>
-                        </thead>
-                        <tr>
-                            <td>
-                                <#if rate.last15Sec??>~${util_.prettyNumber(rate.last15Sec)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.lastMin??>~${util_.prettyNumber(rate.lastMin)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.last5Min??>~${util_.prettyNumber(rate.last5Min)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.last15Min??>~${util_.prettyNumber(rate.last15Min)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.last30Min??>~${util_.prettyNumber(rate.last30Min)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.lastH??>~${util_.prettyNumber(rate.lastH)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.last2H??>~${util_.prettyNumber(rate.last2H)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.last6H??>~${util_.prettyNumber(rate.last6H)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.last12H??>~${util_.prettyNumber(rate.last12H)}<#else>N/A</#if>
-                            </td>
-                            <td>
-                                <#if rate.last24H??>~${util_.prettyNumber(rate.last24H)}<#else>N/A</#if>
-                            </td>
-                        </tr>
-                    </table>
-                </#if>
-            </div>
-        </div>
+        <#include "topicOffsetsStatus.ftl">
     </#if>
 
     <br/>

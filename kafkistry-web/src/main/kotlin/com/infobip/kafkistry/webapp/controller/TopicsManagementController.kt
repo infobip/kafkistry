@@ -45,6 +45,8 @@ class TopicsManagementController(
         private val clustersApi: ClustersApi,
         private val topicsApi: TopicsApi,
         private val inspectApi: InspectApi,
+        private val consumersApi: ConsumersApi,
+        private val topicOffsetsApi: TopicOffsetsApi,
         private val suggestionApi: SuggestionApi,
         private val topicReplicasApi: TopicReplicasApi,
         private val existingValuesApi: ExistingValuesApi,
@@ -181,9 +183,13 @@ class TopicsManagementController(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
         val clusterInfo = clustersApi.getCluster(clusterIdentifier)
+        val topicConsumerGroups = consumersApi.clusterTopicConsumers(clusterIdentifier, topicName)
+        val topicOffsets = topicOffsetsApi.getTopicOffsets(topicName, clusterIdentifier)
         return ModelAndView("management/clusterTopicDeletion", mutableMapOf(
-                "topicName" to topicName,
-                "clusterInfo" to clusterInfo
+            "topicName" to topicName,
+            "clusterInfo" to clusterInfo,
+            "topicConsumerGroups" to topicConsumerGroups,
+            "topicOffsets" to topicOffsets,
         ))
     }
 

@@ -62,10 +62,12 @@ abstract class IncreaseTopicPartitionCount(contextSupplier: () -> Context) : UIT
         await {
             browser.assertPageText().contains("Topic: my-partitions-1")
         }
-        browser.navigate().refresh()
         await {
-            browser.assertPageText().contains("Topic: my-partitions-1")
+            browser.navigate().refresh()
+            await(timeoutSecs = 1) {
+                browser.assertPageText().contains("Topic: my-partitions-1")
+            }
+            browser.assertPageText().contains("ALL OK", "OK")
         }
-        browser.assertPageText().contains("ALL OK", "OK")
     }
 }

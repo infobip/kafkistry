@@ -52,7 +52,7 @@ abstract class DeleteUnknownTopic(contextSupplier: () -> Context) : UITestCase(c
         }
 
         //try delete without confirming sanity check
-        browser.findElementById("delete-topic-btn").click()
+        browser.findElementById("delete-topic-btn").scrollIntoView().click()
         await {
             browser.assertPageText().contains("You did not confirm deletion by entering DELETE correctly")
         }
