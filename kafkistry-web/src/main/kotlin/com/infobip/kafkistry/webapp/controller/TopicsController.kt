@@ -6,6 +6,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryIntegrityException
+import com.infobip.kafkistry.service.KafkistryValidationException
 import com.infobip.kafkistry.service.topic.toAssignmentsInfo
 import com.infobip.kafkistry.webapp.TopicInspectExtensionProperties
 import com.infobip.kafkistry.webapp.WizardTopicNameProperties
@@ -204,7 +205,11 @@ class TopicsController(
             }
         }
         val topicResources = if (clusterInfo != null && clusterEnabledFilter.enabled(clusterIdentifier)) {
-            resourceAnalyzerApi.getTopicStatusOnCluster(clusterIdentifier, topicName)
+            try {
+                resourceAnalyzerApi.getTopicStatusOnCluster(clusterIdentifier, topicName)
+            } catch (ex: KafkistryValidationException) {
+                null //RF > num brokers
+            }
         } else {
             null
         }
