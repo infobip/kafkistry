@@ -90,6 +90,6 @@ class LagInspectionTest {
     @Test
     fun `test - no lag even if no commit when empty`() {
         val lag = inspect(50_000..50_000, null)
-        assertThat(lag).isEqualTo(Lag(0, 0.0, LagStatus.NO_LAG))
+        assertThat(lag).isEqualTo(Lag(null, null, LagStatus.NO_LAG))
     }
 }

@@ -17,14 +17,14 @@ class LagInspection(
             partitionMsgRate: Double?,
             memberAssigned: Boolean,
     ): Lag {
-        fun computeLag(): Pair<Long?, Double?> {
+        fun computeLag(): Triple<Long?, Double?, Long?> {
             if (partitionOffset == null) {
-                return null to null  // no offsets of partition -> don't know anything
+                return Triple(null, null, null)  // no offsets of partition -> don't know anything
             }
             val partitionSize = partitionOffset.end - partitionOffset.begin
             if (memberOffset == null) {
                 // consumer never committed -> it's either no lag or unknown
-                return if (partitionSize == 0L) 0L to 0.0 else null to null
+                return Triple(null, null, partitionSize)
             }
             val lag = (partitionOffset.end - memberOffset).coerceAtLeast(0)
             val lagPercentage = if (partitionSize == 0L) {
@@ -32,19 +32,22 @@ class LagInspection(
             } else {
                 100.0 * lag.toDouble() / partitionSize.toDouble()
             }
-            return lag to lagPercentage
+            return Triple(lag, lagPercentage, partitionSize)
         }
-        val (lagAmount, lagPercentage) = computeLag()
+        val (lagAmount, lagPercentage, partitionSize) = computeLag()
         return Lag(
             amount = lagAmount,
             percentage = lagPercentage,
-            status = lagStatus(lagAmount, lagPercentage, partitionMsgRate, memberAssigned)
+            status = lagStatus(lagAmount, lagPercentage, partitionSize, partitionMsgRate, memberAssigned)
         )
     }
 
-    private fun lagStatus(lag: Long?, percentage: Double?, partitionMsgRate: Double?, memberAssigned: Boolean): LagStatus {
+    private fun lagStatus(
+        lag: Long?, percentage: Double?, partitionSize: Long?,
+        partitionMsgRate: Double?, memberAssigned: Boolean,
+    ): LagStatus {
         if (lag == null || percentage == null) {
-            return LagStatus.UNKNOWN
+            return if (partitionSize == 0L) LagStatus.NO_LAG else LagStatus.UNKNOWN
         }
         if (percentage > 100.0) {
             val oneRecordIn15MinRate = 1.0 / TimeUnit.MINUTES.toSeconds(15)
