@@ -163,6 +163,7 @@ class MultipleTagsAmbiguousTopicConfigRuleTest {
                 config = emptyMap(),
                 presentOnCluster = true,
                 originalDescription = topic,
+                existingTopicInfo = null,
             ),
             clusterMetadata = ClusterMetadata(
                 clusterRef, newClusterInfo(identifier = clusterRef.identifier)
@@ -180,6 +181,7 @@ class MultipleTagsAmbiguousTopicConfigRuleTest {
             clusterMetadata = ClusterMetadata(
                 clusterRef, newClusterInfo(identifier = clusterRef.identifier)
             ),
+            existingTopicInfo = null,
         )
     }
 

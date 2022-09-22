@@ -6,6 +6,7 @@ import com.infobip.kafkistry.service.topic.validation.rules.ValidationRule
 import com.infobip.kafkistry.service.RuleViolation
 import com.infobip.kafkistry.service.filterDisabled
 import com.infobip.kafkistry.service.filterEnabled
+import com.infobip.kafkistry.service.topic.ExistingTopicInfo
 import com.infobip.kafkistry.service.topic.validation.rules.TopicDescriptionView
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
@@ -31,7 +32,8 @@ class TopicConfigurationValidator(
         topicName: TopicName, presentOnCluster: Boolean,
         properties: TopicProperties, config: TopicConfigMap,
         clusterMetadata: ClusterMetadata,
-        topicDescription: TopicDescription
+        topicDescription: TopicDescription,
+        existingTopicInfo: ExistingTopicInfo?,
     ): List<RuleViolation> {
         val topicDescriptionView = TopicDescriptionView(
             name = topicName,
@@ -39,15 +41,16 @@ class TopicConfigurationValidator(
             config = config,
             presentOnCluster = presentOnCluster,
             originalDescription = topicDescription,
+            existingTopicInfo = existingTopicInfo,
         )
         return rules.mapNotNull { it.check(topicDescriptionView, clusterMetadata) }
     }
 
-    fun fixConfigViolations(topicDescription: TopicDescription, clusters: List<ClusterMetadata>): TopicDescription {
+    fun fixConfigViolations(topicDescription: TopicDescription, clusters: List<Pair<ClusterMetadata, ExistingTopicInfo?>>): TopicDescription {
         var resultTopicDescription = topicDescription
-        for (clusterMetadata in clusters) {
+        for ((clusterMetadata, existingTopicInfo) in clusters) {
             for (rule in rules) {
-                resultTopicDescription = rule.fixConfig(resultTopicDescription, clusterMetadata)
+                resultTopicDescription = rule.fixConfig(resultTopicDescription, clusterMetadata, existingTopicInfo)
             }
         }
         return resultTopicDescription

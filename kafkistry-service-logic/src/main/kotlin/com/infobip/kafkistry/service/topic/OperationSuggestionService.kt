@@ -439,7 +439,7 @@ class OperationSuggestionService(
             .filter { (_, clusterState) -> clusterState.stateType == StateType.VISIBLE }
             .mapNotNull { (topicStatus, clusterState) ->
                 clusterState.valueOrNull()?.clusterInfo?.let {
-                    ClusterMetadata(ref = ClusterRef(it.identifier, topicStatus.clusterTags), info = it)
+                    ClusterMetadata(ref = ClusterRef(it.identifier, topicStatus.clusterTags), info = it) to topicStatus.existingTopicInfo
                 }
             }
         val fixedTopicDescription = rulesValidator.fixConfigViolations(topicDescription, affectedClusters)

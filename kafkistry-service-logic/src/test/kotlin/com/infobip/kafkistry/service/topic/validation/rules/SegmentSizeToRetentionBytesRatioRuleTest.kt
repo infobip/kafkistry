@@ -32,6 +32,7 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
         ),
         presentOnCluster = true,
         originalDescription = newTopic("irrelevant"),
+        existingTopicInfo = null,
     )
 
     private fun newTopicDescription(

@@ -301,7 +301,8 @@ class TopicIssuesInspector(
         val topicEffectiveConfig = clusterDefaults + expectedConfig
         val clusterMetadata = ClusterMetadata(ctx.clusterRef, ctx.clusterInfo)
         val ruleViolations = configurationValidator.checkRules(
-            ctx.topicName, needToBePresentOnCluster, expectedProperties, topicEffectiveConfig, clusterMetadata, ctx.topicDescription
+            ctx.topicName, needToBePresentOnCluster, expectedProperties, topicEffectiveConfig, clusterMetadata,
+            ctx.topicDescription, ctx.cache { computeExistingTopicInfo() },
         )
         if (ruleViolations.isNotEmpty()) {
             addResultType(CONFIG_RULE_VIOLATIONS)
@@ -319,12 +320,13 @@ class TopicIssuesInspector(
         val clusterMetadata = ClusterMetadata(ctx.clusterRef, ctx.clusterInfo)
         val existingTopicConfig = existingTopicInfo.config.mapValues { it.value.value }
         val currentConfigRuleViolations = configurationValidator.checkRules(
-            ctx.topicName, true, existingTopicInfo.properties, existingTopicConfig, clusterMetadata, ctx.topicDescription
+            ctx.topicName, true, existingTopicInfo.properties, existingTopicConfig, clusterMetadata,
+            ctx.topicDescription, ctx.cache { computeExistingTopicInfo() },
         )
         if (currentConfigRuleViolations.isNotEmpty()) {
             addResultType(CURRENT_CONFIG_RULE_VIOLATIONS)
             addCurrentConfigRuleViolations(currentConfigRuleViolations.map {
-                RuleViolationIssue(type = CURRENT_CONFIG_RULE_VIOLATIONS, violation = it,)
+                RuleViolationIssue(type = CURRENT_CONFIG_RULE_VIOLATIONS, violation = it)
             })
         }
     }

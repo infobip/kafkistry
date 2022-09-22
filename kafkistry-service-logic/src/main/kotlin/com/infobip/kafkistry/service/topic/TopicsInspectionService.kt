@@ -252,7 +252,8 @@ class TopicsInspectionService(
 
         val partitionCountChange = when (partitions) {
             NEEDS_TO_REDUCE -> PartitionPropertyChange.impossible(
-                "Partition count can't be reduced from ${actualProperties.partitionCount} to ${expectedProperties.partitionCount}",
+                "Partition count can't be reduced from ${actualProperties.partitionCount} to ${expectedProperties.partitionCount}, " +
+                        "only deletion of topic and re-creation can be done",
                 existingTopic.partitionsAssignments
             )
             IS_AS_EXPECTED -> PartitionPropertyChange.noNeed(existingTopic.partitionsAssignments)

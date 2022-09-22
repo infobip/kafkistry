@@ -73,7 +73,8 @@ class MinInSyncReplicasTooBigRuleTest {
                 clusterMetadata = ClusterMetadata(
                     ref = clusterRef,
                     info = newClusterInfo()
-                )
+                ),
+                existingTopicInfo = null,
         )
         val fixedMinInsyncReplicas = fixedTopicDescription.configForCluster(clusterRef)["min.insync.replicas"]
         assertThat(fixedMinInsyncReplicas).isEqualTo("$expectedFixedMinInsyncReplicas")
@@ -92,7 +93,8 @@ class MinInSyncReplicasTooBigRuleTest {
                                 it
                             }
                         },
-                        originalDescription = newTopic()
+                        originalDescription = newTopic(),
+                        existingTopicInfo = null,
                 ),
                 clusterMetadata = ClusterMetadata(ref = ClusterRef("irrelevant", emptyList()), info = null)
         )

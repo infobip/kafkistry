@@ -94,7 +94,8 @@ class MultipleTagsAmbiguousTopicPropertiesRuleTest {
                 newTopic(
                     properties = globalProperties,
                     perTagProperties = tagProperties,
-                )
+                ),
+                existingTopicInfo = null,
             ),
             clusterMetadata = ClusterMetadata(
                 clusterRef, newClusterInfo(identifier = clusterRef.identifier)
@@ -116,6 +117,7 @@ class MultipleTagsAmbiguousTopicPropertiesRuleTest {
             clusterMetadata = ClusterMetadata(
                 clusterRef, newClusterInfo(identifier = clusterRef.identifier)
             ),
+            existingTopicInfo = null,
         )
     }
 
