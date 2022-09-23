@@ -52,20 +52,36 @@
             <span class="h4">Generated topic partition broker throttled replicas</span>
         </div>
         <div class="card-body">
-            <#list throttleBrokerTopicPartitionsSuggestion.topicThrottleConfigs as topic, throttleConfigs>
-                <div class="topic-throttle" data-topic="${topic}">
-                    <#assign topicUrl = appUrl.topics().showInspectTopicOnCluster(topic, clusterInfo.identifier)>
-                    <p><strong>Topic:</strong> <a href="${topicUrl}">${topic}</a></p>
-                    <ul>
-                        <#list throttleConfigs as configKey, configValue>
-                            <li class="config-entry" data-configKey="${configKey}" data-configValue="${configValue}">
-                                ${configKey}: ${configValue}
-                            </li>
-                        </#list>
-                    </ul>
-                    <#assign statusId = "topic-${topic}">
-                    <#include "../common/serverOpStatus.ftl">
-                </div>
+            <#list throttleBrokerTopicPartitionsSuggestion.throttleRequest.topicNames as topic>
+                <#assign topicUrl = appUrl.topics().showInspectTopicOnCluster(topic, clusterInfo.identifier)>
+                <#if (throttleBrokerTopicPartitionsSuggestion.topicThrottleConfigs[topic])??>
+                    <#assign throttleConfigs = throttleBrokerTopicPartitionsSuggestion.topicThrottleConfigs[topic]>
+                    <div class="topic-throttle" data-topic="${topic}">
+                        <p><strong>Topic:</strong> <a href="${topicUrl}">${topic}</a></p>
+                        <ul>
+                            <#list throttleConfigs as configKey, configValue>
+                                <li class="config-entry" data-configKey="${configKey}" data-configValue="${configValue}">
+                                    ${configKey}: ${configValue}
+                                </li>
+                            </#list>
+                        </ul>
+                        <#assign statusId = "topic-${topic}">
+                        <#include "../common/serverOpStatus.ftl">
+                    </div>
+                <#else>
+                    <div class="no-topic-throttle" data-topic="${topic}">
+                        <p><strong>Topic:</strong> <a href="${topicUrl}">${topic}</a></p>
+                        <div class="alert alert-secondary">
+                            Nothing to throttle
+                            <#assign noThrotteTooltip>
+                                Topic's partition assignments are assigned in a such way that when throttling
+                                broker ids [${throttleBrokerTopicPartitionsSuggestion.throttleRequest.brokerIds?join(", ")}] results
+                                in no combination leader-follower to be affected. Therefore, nothing needs to be throttled at this topic level.
+                            </#assign>
+                            <@info.icon tooltip=noThrotteTooltip/>
+                        </div>
+                    </div>
+                </#if>
                 <#if !topic?is_last>
                     <hr/>
                 </#if>
@@ -172,6 +188,12 @@
                        href="${appUrl.clusters().showCluster(clusterInfo.identifier)}">
                         Back to cluster
                     </a>
+                    or
+                    <a href="${appUrl.topicsManagement().showBulkVerifyReAssignments(clusterInfo.identifier)}"
+                       class="btn btn-sm btn-outline-info">
+                        Remove throttle...
+                    </a>
+                    once it's not needed anymore
                 </div>
             </div>
         </div>

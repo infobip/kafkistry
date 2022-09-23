@@ -398,18 +398,22 @@ class TopicsManagementController(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
         val (clusterInfo, topics) = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
-                .let {
-                    val clusterInfo = it.clusterInfo
-                    val statusPerTopics = it.statusPerTopics
-                    if (clusterInfo == null || statusPerTopics == null) {
-                        throw KafkistryIllegalStateException("Can't get cluster info and topics because cluster state is: " + it.clusterState)
-                    }
-                    clusterInfo to statusPerTopics.filter { topicStatus -> topicStatus.existingTopicInfo != null }
+            .let {
+                val clusterInfo = it.clusterInfo
+                val statusPerTopics = it.statusPerTopics
+                if (clusterInfo == null || statusPerTopics == null) {
+                    throw KafkistryIllegalStateException("Can't get cluster info and topics because cluster state is: " + it.clusterState)
                 }
+                clusterInfo to statusPerTopics.filter { topicStatus -> topicStatus.existingTopicInfo != null }
+            }
+        val topicsOffsets = topicOffsetsApi.getTopicsOffsets(clusterIdentifier)
+        val topicsReplicas = topicReplicasApi.getClusterTopicsReplicas(clusterIdentifier)
         return ModelAndView("management/throttleBrokerPartitionsForm", mutableMapOf(
-                "clusterIdentifier" to clusterIdentifier,
-                "clusterInfo" to clusterInfo,
-                "topics" to topics
+            "clusterIdentifier" to clusterIdentifier,
+            "clusterInfo" to clusterInfo,
+            "topics" to topics,
+            "topicsOffsets"  to topicsOffsets,
+            "topicsReplicas" to topicsReplicas,
         ))
     }
 

@@ -22,7 +22,12 @@ data class TopicMessagesRate(
     val last6H: Double?,
     val last12H: Double?,
     val last24H: Double?,
-)
+) {
+    fun longestRangeRate(): Double? {
+        return listOfNotNull(last24H, last12H, last6H, last2H, lastH, last30Min, last15Min, last5Min, lastMin, last15Sec)
+            .firstOrNull()
+    }
+}
 
 data class PartitionRate(
     val upTo15MinRate: Double?,

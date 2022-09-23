@@ -80,7 +80,7 @@
             </a>
             <a href="${appUrl.topicsManagement().showBulkVerifyReAssignments(clusterIdentifier)}"
                class="dropdown-item text-info">
-                Verify re-assignments...
+                Verify assignments/remove throttle...
             </a>
             <a href="${appUrl.topicsManagement().showBulkReBalanceTopicsForm(clusterIdentifier)}"
                class="dropdown-item text-info">
@@ -101,7 +101,7 @@
             </a>
             <a href="${appUrl.topicsManagement().showThrottleBrokerPartitionsForm(clusterIdentifier)}"
                class="dropdown-item text-dark">
-                Throttle specific broker(s)...
+                Throttle specific broker(s)/topic(s)...
             </a>
         </div>
     </div>

@@ -2,6 +2,8 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
 <#-- @ftlvariable name="topics" type="java.util.List<com.infobip.kafkistry.service.topic.ClusterTopicStatus>" -->
+<#-- @ftlvariable name="topicsReplicas" type="java.util.Map<java.lang.String, com.infobip.kafkistry.kafkastate.TopicReplicaInfos>" -->
+<#-- @ftlvariable name="topicsOffsets" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.offsets.TopicOffsets>" -->
 
 <html lang="en">
 <head>
@@ -38,6 +40,9 @@
 
     <hr/>
 
+    <#-- to prevent user going back seeing partially selected inputs, better to have clean start than inconsistent-->
+    <form autocomplete="off">
+
     <div class="form table">
         <div class="form-row">
             <div class="col-2">
@@ -51,33 +56,67 @@
                 </select>
             </div>
         </div>
-        <div class="form-row mt-3">
-            <div class="col-2">
-                Select topics
-            </div>
-            <div class="col">
-                <div class="form-row form-inline" id="topic-select-type">
-                    <label class="btn btn-outline-primary form-control m-1 active">
-                        All <input type="radio" name="topicSelectType" value="ALL" checked>
-                    </label>
-                    <label  class="btn btn-outline-success form-control m-1">
-                        Only <input type="radio" name="topicSelectType" value="ONLY">
-                    </label>
-                    <label class="btn btn-outline-danger form-control m-1">
-                        Not <input type="radio" name="topicSelectType" value="NOT">
-                    </label>
-                </div>
-                <div class="form-row" id="topics-multi-select" style="display: none;">
-                    <select name="topics" class="form-control" title="select topics..." multiple="multiple"
-                            data-live-search="true" data-size="6">
-                        <#list topics as topic>
-                            <option value="${topic.topicName}">${topic.topicName}</option>
-                        </#list>
-                    </select>
-                </div>
+    </div>
+
+    <div style="display: none;">
+        <#list topics as topic>
+            <div class="topic-name" data-topic="${topic.topicName}"></div>
+        </#list>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="form-row form-inline" id="topic-select-type">
+                <h5>Select topics</h5>
+                <label class="btn btn-outline-primary form-control m-1 active">
+                    All <input type="radio" name="topicSelectType" value="ALL" checked>
+                </label>
+                <label  class="btn btn-outline-success form-control m-1">
+                    Custom <input type="radio" name="topicSelectType" value="CUSTOM">
+                </label>
+                <h5>(<span id="selected-topics-count">0</span>)</h5>
             </div>
         </div>
+        <div id="topics-multi-select" class="card-body pl-0 pr-0" style="display: none;">
+            <table id="topics-table" class="table datatable">
+                <thead class="thead-dark">
+                <tr>
+                    <th></th>
+                    <th>Topic</th>
+                    <th>Size</th>
+                    <th>Rate</th>
+                </tr>
+                </thead>
+                <#list topics as topic>
+                    <tr>
+                        <td data-order="0">
+                            <input type="checkbox" class="topic-checkbox form-control mouse-pointer"
+                                   title="select/unselect" data-topic="${topic.topicName}">
+                        </td>
+                        <td>${topic.topicName}</td>
+                        <#if (topicsReplicas[topic.topicName].totalSizeBytes)??>
+                            <#assign sizeBytes = topicsReplicas[topic.topicName].totalSizeBytes>
+                            <td data-order="${sizeBytes?c}">
+                                ${util.prettyDataSize(sizeBytes)}
+                            </td>
+                        <#else>
+                            <td data-order="-1">N/A</td>
+                        </#if>
+                        <#if (topicsOffsets[topic.topicName].messagesRate)??>
+                            <#assign messagesRate = topicsOffsets[topic.topicName].messagesRate.longestRangeRate()>
+                            <td data-order="${messagesRate?c}">
+                                ${util.prettyNumber(messagesRate)} msg/sec
+                            </td>
+                        <#else>
+                            <td data-order="-1">N/A</td>
+                        </#if>
+                    </tr>
+                </#list>
+            </table>
+        </div>
     </div>
+    </form>
+    <br/>
 
     <button id="continue-throttle-btn" class="btn btn-info btn-sm">
         Continue...
