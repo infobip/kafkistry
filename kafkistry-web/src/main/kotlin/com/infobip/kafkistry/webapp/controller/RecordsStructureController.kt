@@ -34,7 +34,9 @@ class RecordsStructureController(
     fun showRecordsStructureMenu(): ModelAndView {
         val recordsStructureApi = recordsStructureApi() ?: return disabled()
         val existingValues = existingValuesApi.all()
-        val clusterIdentifiers = existingValues.clusterIdentifiers.filter { clusterEnabledFilter.enabled(it) }
+        val clusterIdentifiers = existingValues.clusterRefs
+            .filter { clusterEnabledFilter.enabled(it) }
+            .map { it.identifier }
         val topicTypes = recordsStructureApi.allTopicsTypes()
         return ModelAndView("recordsStructure/index", mapOf(
             "clusterIdentifiers" to clusterIdentifiers,

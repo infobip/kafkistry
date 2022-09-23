@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.service.consume
 
 import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
@@ -23,13 +24,13 @@ class KafkaConsumerService(
         topicName: TopicName,
         readConfig: ReadConfig
     ): KafkaRecordsResult {
-        clusterIdentifier.checkClusterEnabled()
         val cluster = clustersRepository.getCluster(clusterIdentifier)
+        cluster.ref().checkClusterEnabled()
         val user = userResolver.resolveUserOrUnknown()
         return topicReader.readTopicRecords(topicName, cluster, user.username, readConfig)
     }
 
-    private fun KafkaClusterIdentifier.checkClusterEnabled() {
+    private fun ClusterRef.checkClusterEnabled() {
         if (!clusterEnabledFilter.enabled(this)) {
             throw KafkistryConsumeException("Cluster '$this' is disabled")
         }

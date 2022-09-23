@@ -64,7 +64,9 @@ class ConsumeRecordsController(
                 .filter { it.status.exists ?: false }
                 .map { it.topicName }
         }
-        val clusterIdentifiers = existingValuesApi.all().clusterIdentifiers.filter { clusterEnabledFilter.enabled(it) }
+        val clusterIdentifiers = existingValuesApi.all().clusterRefs
+            .filter { clusterEnabledFilter.enabled(it) }
+            .map { it.identifier }
         return ModelAndView(
             "consume/consume", mapOf(
                 "clusterTopics" to clusterTopics,

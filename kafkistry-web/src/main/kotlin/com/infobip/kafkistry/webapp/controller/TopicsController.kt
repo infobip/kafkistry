@@ -2,6 +2,7 @@ package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.api.*
 import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
@@ -204,7 +205,8 @@ class TopicsController(
                 true to null
             }
         }
-        val topicResources = if (clusterInfo != null && clusterEnabledFilter.enabled(clusterIdentifier)) {
+        val clusterRef = with(topicStatus) { ClusterRef(clusterIdentifier,  clusterTags) }
+        val topicResources = if (clusterInfo != null && clusterEnabledFilter.enabled(clusterRef)) {
             try {
                 resourceAnalyzerApi.getTopicStatusOnCluster(clusterIdentifier, topicName)
             } catch (ex: KafkistryValidationException) {

@@ -325,10 +325,12 @@ Example below shows that `KR-PRRD` can reach `KFK-P1` and `KFK-P2`, but can't `K
 ```
 So, it's better to simply disable particular clusters when you know they are unreachable.
 
-| Property            | Description                                                                  |
-|---------------------|------------------------------------------------------------------------------|
-| `ENABLED_CLUSTERS`  | Comma separated list of cluster identifiers to allow attempt to connect to   |
-| `DISABLED_CLUSTERS` | Comma separated list of cluster identifiers to prevent attempt to connect to |
+| Property            | Default | Description                                                                                                                                           |
+|---------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ENABLED_CLUSTERS`  | _any_   | Comma separated list of cluster identifiers to allow attempt to connect to. Can be literal `*`                                                        |
+| `DISABLED_CLUSTERS` | _none_  | Comma separated list of cluster identifiers to prevent attempt to connect to. Can be literal `*`                                                      |
+| `ENABLED_TAGS`      | _any_   | Comma separated list of cluster tags to allow attempt to connect to. Matches when any of cluster tags matches tag from this list. Can be literal `*`  |
+| `DISABLED_TAGS`     | _none_  | Comma separated list of cluster tags to prevent attempt to connect to. Blocks when any of cluster tags matches tag from this list. Can be literal `*` |
 
 
 

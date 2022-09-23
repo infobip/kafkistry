@@ -28,6 +28,24 @@ class Filter(private val properties: FilterProperties) : (String) -> Boolean {
         return true
     }
 
+    fun matches(values: Collection<String>): Boolean {
+        with(properties) {
+            if (ALL in included) {
+                return values.isNotEmpty()
+            }
+            if (included.isNotEmpty() && values.all { it !in included }) {
+                return false
+            }
+            if (ALL in excluded) {
+                return values.isEmpty()
+            }
+            if (excluded.isNotEmpty() && values.any { it in excluded }) {
+                return false
+            }
+        }
+        return true
+    }
+
 }
 
 

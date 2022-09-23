@@ -36,7 +36,7 @@ class TopicResourcesAnalyzer(
         topicDescription: TopicDescription
     ): Map<KafkaClusterIdentifier, OptionalValue<TopicClusterDiskUsageExt>> {
         return clustersRegistryService.listClustersRefs()
-            .filter { enabledFilter.enabled(it.identifier) }
+            .filter { enabledFilter.enabled(it) }
             .filter { topicDescription.presence.needToBeOnCluster(it) }
             .associate { clusterRef ->
                 val topicDiskUsage = try {

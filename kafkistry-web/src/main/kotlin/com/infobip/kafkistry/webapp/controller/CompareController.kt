@@ -47,7 +47,7 @@ class CompareController(
                         .map { it.ref() }
                         .filter { presence.needToBeOnCluster(it) }
                         .sortedBy {
-                            when (clusterEnabledFilter.enabled(it.identifier)) {
+                            when (clusterEnabledFilter.enabled(it)) {
                                 true -> 0
                                 false -> 1  //disabled clusters last
                             }

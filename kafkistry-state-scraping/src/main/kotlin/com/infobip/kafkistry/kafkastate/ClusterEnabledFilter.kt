@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.kafkastate
 
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.utils.Filter
 import com.infobip.kafkistry.utils.FilterProperties
@@ -14,6 +15,9 @@ class KafkaEnabledClustersProperties {
 
     @NestedConfigurationProperty
     var clusters = FilterProperties()
+
+    @NestedConfigurationProperty
+    var tags = FilterProperties()
 }
 
 @Component
@@ -21,8 +25,10 @@ class ClusterEnabledFilter(
     enabledClustersProperties: KafkaEnabledClustersProperties
 ) {
 
-    private val filter = Filter(enabledClustersProperties.clusters)
+    private val identifierFilter = Filter(enabledClustersProperties.clusters)
+    private val tagFilter = Filter(enabledClustersProperties.tags)
 
-    fun enabled(clusterIdentifier: KafkaClusterIdentifier): Boolean = filter(clusterIdentifier)
+    fun enabled(clusterIdentifier: KafkaClusterIdentifier): Boolean = enabled(ClusterRef(clusterIdentifier))
+    fun enabled(clusterRef: ClusterRef): Boolean = identifierFilter(clusterRef.identifier) && tagFilter.matches(clusterRef.tags)
 
 }

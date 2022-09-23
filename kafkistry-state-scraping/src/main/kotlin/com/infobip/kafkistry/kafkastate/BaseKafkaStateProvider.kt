@@ -64,7 +64,7 @@ abstract class BaseKafkaStateProvider(
 
     protected fun doRefreshClustersStates() {
         val clusters = clustersRepository.findAll()
-        val (enabledClusters, disabledClusters) = clusters.partition { clusterFilter.enabled(it.identifier) }
+        val (enabledClusters, disabledClusters) = clusters.partition { clusterFilter.enabled(it.ref()) }
         setupCachedState(
                 enabledClusters.map { it.identifier },
                 disabledClusters.map { it.identifier }
