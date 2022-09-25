@@ -69,9 +69,10 @@
         <dokka-maven-plugin.version>1.6.21</dokka-maven-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <gpg-sign-skip>false</gpg-sign-skip>
+        <jib-maven-plugin.goal>dockerBuild</jib-maven-plugin.goal>
         <docker.skip-build>true</docker.skip-build>
         <docker.from-image>openjdk:18-jdk</docker.from-image>
-        <docker.to-image>infobip/kafkistry:${project.version}</docker.to-image>
+        <docker.to-image>infobip/kafkistry</docker.to-image>
         <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <git-commit-id-maven-plugin.skip>false</git-commit-id-maven-plugin.skip>
@@ -387,7 +388,7 @@
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>dockerBuild</goal>
+                            <goal>${jib-maven-plugin.goal}</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -398,6 +399,10 @@
                     </from>
                     <to>
                         <image>${docker.to-image}</image>
+                        <tags>
+                            <tag>latest</tag>
+                            <tag>${project.version}</tag>
+                        </tags>
                     </to>
                     <container>
                         <mainClass>${docker.main-class}</mainClass>
@@ -467,6 +472,48 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>multiPlatformDocker</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <jib-maven-plugin.goal>build</jib-maven-plugin.goal>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.google.cloud.tools</groupId>
+                        <artifactId>jib-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <from>
+                                <platforms>
+                                    <platform>
+                                        <architecture>amd64</architecture>
+                                        <os>linux</os>
+                                    </platform>
+                                    <platform>
+                                        <architecture>arm64</architecture>
+                                        <os>linux</os>
+                                    </platform>
+                                </platforms>
+                            </from>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <scm>
         <url>git@github.com:infobip/kafkistry.git</url>
