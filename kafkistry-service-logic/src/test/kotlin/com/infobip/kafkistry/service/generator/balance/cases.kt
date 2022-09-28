@@ -431,6 +431,25 @@ fun state5(): GlobalState {
     return GlobalState(brokerIds, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
 }
 
+fun stateEachTopicUnevenImpactPerBroker(): GlobalState {
+    val allBrokers: List<BrokerId> = (1..4).toList()
+    val assignor = PartitionsReplicasAssignor()
+    val assignments = (1..2).map {
+        val initialAssignment = assignor.assignNewPartitionReplicas(
+            existingAssignments = emptyMap(),
+            allBrokers = allBrokers,
+            numberOfNewPartitions = 3,
+            replicationFactor = 2,
+            existingPartitionLoads = emptyMap()
+        ).newAssignments
+        TopicAssignments(topic = "topic-$it", partitionAssignments = initialAssignment)
+    }
+    val loads = assignments.map {
+        TopicLoad(topic = it.topic, partitionLoads = it.partitionAssignments.keys.map { PartitionLoad.ZERO })
+    }
+    return GlobalState(allBrokers, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
+}
+
 fun stateRandom(
     randomSeed: Long = 0L,
     brokers: Int = 6,

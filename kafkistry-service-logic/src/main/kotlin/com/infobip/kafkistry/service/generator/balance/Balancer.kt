@@ -12,7 +12,7 @@ class Balancer {
         val globalContext = globalState.createGlobalContext()
         val avgLoad = globalContext.brokersLoad.average
         val initialLoadDiff = globalContext.brokersLoad.brokersLoadDiff()
-        val normalizedInitialLoadDiff = initialLoadDiff.normalize(avgLoad, balanceObjective)
+        val normalizedDeviation = globalContext.brokersLoad.normalizedLoadDeviation(balanceObjective)
 
         val sortedBrokers = globalContext.brokersLoad.sortedElements { load, avg ->
             load.score(avg, balanceObjective)
@@ -43,8 +43,11 @@ class Balancer {
 
         fun Migrations.toResult(newLoadCompute: GlobalContext.(Migrations) -> CollectionLoad<BrokerId, BrokerLoad>): MigrationResult {
             val newBrokersLoad = globalContext.newLoadCompute(this)
-            val brokersLoadDiff = newBrokersLoad.brokersLoadDiff()
-            return MigrationResult(this, brokersLoadDiff, brokersLoadDiff.normalize(avgLoad, balanceObjective))
+            return MigrationResult(
+                migrations = this,
+                loadDiff = newBrokersLoad.brokersLoadDiff(),
+                normalizedDeviation = newBrokersLoad.normalizedLoadDeviation(balanceObjective),
+            )
         }
 
         //migration candidates sorted by estimate score (starting with best towards worst)
@@ -57,7 +60,7 @@ class Balancer {
                 //calculate how much could we gain with this migrations possibility estimate
                 migrations.toResult { computeNewBrokersLoadEstimate(it) }
             }
-            .sortedBy { it.normalizedLoadDiff } //smaller diff -> better, process better estimates before worse ones in case there is time limit
+            .sortedBy { it.normalizedDeviation } //smaller diff -> better, process better estimates before worse ones in case there is time limit
             .toList()
 
         /**
@@ -71,17 +74,17 @@ class Balancer {
                     //calculate how much could we gain with this migrations possibility
                     migrationsResult.migrations.toResult { computeNewBrokersLoadActual(it) }    //CPU costly computation
                 }
-                .filter { it.normalizedLoadDiff < normalizedInitialLoadDiff } //filter-out migrations that produce worse disbalance than initial
-                .minByOrNull { it.normalizedLoadDiff }
+                .filter { it.normalizedDeviation < normalizedDeviation } //filter-out migrations that produce worse disbalance than initial
+                .minByOrNull { it.normalizedDeviation }
         }
 
         // try to select best migration first by taking only migrations with estimate better than current disbalance
-        // if there are no better migrations then fallback to searching migrations with worse estimate
+        // if there are no better migrations, then fallback to searching migrations with worse estimate
         val bestMigrationsDiff = migrationResultCandidates.asSequence()
-            .filter { it.normalizedLoadDiff < normalizedInitialLoadDiff }   //try with migrations with estimate better than initial
+            .filter { it.normalizedDeviation < normalizedDeviation }   //try with migrations with estimate better than initial
             .selectBestMigrations()
             ?: migrationResultCandidates.asSequence()
-                .filter { it.normalizedLoadDiff >= normalizedInitialLoadDiff }  //no promising estimates, fallback to worst candidates by estimate
+                .filter { it.normalizedDeviation >= normalizedDeviation }  //no promising estimates, fallback to worst candidates by estimate
                 .selectBestMigrations()
 
         return bestMigrationsDiff?.migrations
@@ -90,7 +93,7 @@ class Balancer {
     data class MigrationResult(
         val migrations: Migrations,
         val loadDiff: BrokerLoad,
-        val normalizedLoadDiff: Double
+        val normalizedDeviation: Double,
     )
 
     private fun GlobalContext.findMigrations(

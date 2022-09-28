@@ -196,6 +196,19 @@ class BalancerTest {
     }
 
     @Test
+    fun `test balance every topic balanced but uneven impact per broker`() {
+        val objective = BalanceObjective.of(REPLICAS_COUNT)
+        val proposedMigrations = performBalancing(stateEachTopicUnevenImpactPerBroker(), objective, iterations = 2)
+        with(proposedMigrations) {
+            println("diff before: " + clusterBalanceBefore.combinedLoadDiff)
+            println("diff after: " + clusterBalanceAfter.combinedLoadDiff)
+            println("diff improve: " + (clusterBalanceAfter.combinedLoadDiff.mapValues { it.value - clusterBalanceBefore.combinedLoadDiff.getValue(it.key) }))
+        }
+        proposedMigrations.assertScoreBetterThanBeforeOrOptimal(objective)
+        assertThat(proposedMigrations.migrations).isNotEmpty
+    }
+
+    @Test
     @Ignore("slow execution - used for profiling")
     fun `test balancing performance`() {
         fun execute(seed: Long): Long {

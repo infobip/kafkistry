@@ -7,9 +7,7 @@ import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.generator.balance.BalancePriority.*
 import com.infobip.kafkistry.service.generator.balance.ChangeMode.*
-import kotlin.math.max
-import kotlin.math.roundToInt
-import kotlin.math.roundToLong
+import kotlin.math.*
 
 operator fun PartitionLoad.plus(other: PartitionLoad) = PartitionLoad(
     size + other.size, rate + other.rate, consumers + other.consumers
@@ -110,6 +108,13 @@ fun Map<BrokerId, BrokerLoad>.diffBy(by: (BrokerLoad) -> Double): Double {
     return max - min
 }
 
+fun Map<BrokerId, BrokerLoad>.deviationBy(by: (BrokerLoad) -> Double): Double {
+    if (isEmpty()) return 0.0
+    val metricValues = values.map(by)
+    val avg = metricValues.average()
+    return sqrt(metricValues.sumOf { (it - avg)*(it - avg) } / size)
+}
+
 fun MutableMap<TopicName, TopicAssignments>.applyMigrations(migrations: Iterable<PartitionReAssignment>) {
     for (migration in migrations) {
         applyMigration(migration)
@@ -145,6 +150,21 @@ fun CollectionLoad<BrokerId, BrokerLoad>.brokersLoadDiff() = BrokerLoad(
     replicas = elements.diffBy { it.replicas },
     leaders = elements.diffBy { it.leaders },
 )
+
+fun CollectionLoad<BrokerId, BrokerLoad>.brokersLoadDeviation() = BrokerLoad(
+    size = elements.deviationBy { it.size },
+    rate = elements.deviationBy { it.rate },
+    consumeRate = elements.deviationBy { it.consumeRate },
+    replicationRate = elements.deviationBy { it.replicationRate },
+    replicas = elements.deviationBy { it.replicas },
+    leaders = elements.deviationBy { it.leaders },
+)
+
+fun CollectionLoad<BrokerId, BrokerLoad>.normalizedLoadDeviation(balanceObjective: BalanceObjective): Double {
+    //closer each broker's load is to average load the better
+    val deviation = brokersLoadDeviation()
+    return deviation.normalize(average, balanceObjective)
+}
 
 fun MutableMap<TopicName, TopicAssignments>.applyMigration(migration: PartitionReAssignment) {
     val topicAssignments = this[migration.topicPartition.topic] ?: return
