@@ -454,11 +454,11 @@ class PartitionsReplicasAssignor {
                         .flatten()
                 for (underloadedBrokerPartition in possibleUnderloadedSinks) {
                     val newLeaderSwapRoute = findSwapRoute(
-                            overloadedBrokers.keys,
-                            underloadedBrokerPartition,
+                        FindRouteCtx(
+                            partitionFilter, overloadedBrokers.keys, depthRank,
                             mutableSetOf(underloadedBrokerPartition.partition),
-                            partitionFilter,
-                            depthRank
+                        ),
+                        underloadedBrokerPartition,
                     )
                     if (newLeaderSwapRoute.isNotEmpty()) {
                         val solution = newLeaderSwapRoute.plus(underloadedBrokerPartition).reversed().dropLast(1)
@@ -472,32 +472,34 @@ class PartitionsReplicasAssignor {
         }
     }
 
+    private data class FindRouteCtx(
+        val partitionFilter: (Partition) -> Boolean,
+        val overloadedBrokerIds: Set<BrokerId>,
+        val depthRank: Int,
+        val visitedPartitions: MutableSet<Partition> = mutableSetOf(),
+    )
+
     private fun AssignmentContext.findSwapRoute(
-            overloadedBrokerIds: Set<BrokerId>,
-            destinationSink: BrokerPartition,
-            visitedPartitions: MutableSet<Partition>,
-            partitionFilter: (Partition) -> Boolean,
-            depthRank: Int
+        ctx: FindRouteCtx,
+        destinationSink: BrokerPartition,
     ): List<BrokerPartition> {
-        val sinkLeaderBroker = (partitionsBrokers[destinationSink.partition] ?: return emptyList())[depthRank]
-        if (sinkLeaderBroker in overloadedBrokerIds) {
+        val sinkLeaderBroker = (partitionsBrokers[destinationSink.partition] ?: return emptyList())[ctx.depthRank]
+        if (sinkLeaderBroker in ctx.overloadedBrokerIds) {
             return listOf(BrokerPartition(sinkLeaderBroker, destinationSink.partition))
         }
         val hopPartitions = brokersPartitions[sinkLeaderBroker] ?: return emptyList()
-        return hopPartitions.asSequence()
-                .filter(partitionFilter)
-                .filter { partitionsBrokers[it]!!.indexOf(sinkLeaderBroker) >= depthRank }
-                .filter { it !in visitedPartitions }
-                .map {
-                    val nextSink = BrokerPartition(sinkLeaderBroker, it)
-                    visitedPartitions.add(it)
-                    val cycle = findSwapRoute(overloadedBrokerIds, nextSink, visitedPartitions, partitionFilter, depthRank)
-                    visitedPartitions.remove(it)
-                    cycle.plus(nextSink)
-                }
-                .filter { it.isNotEmpty() }
-                .firstOrNull()
-                ?: emptyList()
+        for (hopPartition in hopPartitions) {
+            if (!ctx.partitionFilter(hopPartition)) continue
+            if (partitionsBrokers[hopPartition]!!.indexOf(sinkLeaderBroker) < ctx.depthRank) continue
+            if (hopPartition in ctx.visitedPartitions) continue
+            ctx.visitedPartitions.add(hopPartition)
+            val nextSink = BrokerPartition(sinkLeaderBroker, hopPartition)
+            val cycle = findSwapRoute(ctx, nextSink)
+            if (cycle.isNotEmpty()) {
+                return cycle.plus(nextSink)
+            }
+        }
+        return emptyList()
     }
 
     private fun AssignmentContext.findAvailablePartitionLeaderBroker(

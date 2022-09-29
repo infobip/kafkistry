@@ -1529,4 +1529,44 @@ class PartitionsReplicasAssignorTest {
         assignor.reduceReplicationFactor(existingAssignments, 3)
     }
 
+    @Test
+    fun `multi swap leaders disbalance`() {
+        val allBrokers: List<BrokerId> = (1..24).toList()
+        val existingAssignments = mapOf(
+            0 to listOf(1, 2, 3),
+            1 to listOf(2, 4, 15),
+            2 to listOf(17, 15, 16),
+            3 to listOf(23, 6, 10),
+            4 to listOf(6, 7, 11),
+            5 to listOf(7, 8, 6),
+            6 to listOf(8, 9, 1),
+            7 to listOf(20, 16, 21),
+            8 to listOf(10, 11, 3),
+            9 to listOf(22, 17, 24),
+            10 to listOf(5, 12, 7),
+            11 to listOf(12, 14, 19),
+            12 to listOf(13, 20, 9),
+            13 to listOf(21, 22, 14),
+            14 to listOf(16, 21, 23),
+            15 to listOf(18, 23, 22),
+            16 to listOf(24, 19, 5),
+            17 to listOf(18, 1, 20),
+            18 to listOf(9, 13, 2),
+            19 to listOf(15, 10, 8),
+            20 to listOf(11, 3, 4),
+            21 to listOf(4, 5, 12),
+            22 to listOf(19, 18, 17),
+            23 to listOf(14, 24, 13),
+        )
+        assertThat(assignor.replicasDisbalance(existingAssignments, allBrokers))
+            .`as`("replicas disbalance before").isEqualTo(0)
+        assertThat(assignor.leadersDisbalance(existingAssignments, allBrokers))
+            .`as`("leaders disbalance before").isEqualTo(1)
+        val assignmentsChange = assignor.reBalancePreferredLeaders(existingAssignments, allBrokers)
+        assertThat(assignor.replicasDisbalance(assignmentsChange.newAssignments, allBrokers))
+            .`as`("replicas disbalance after").isEqualTo(0)
+        assertThat(assignor.leadersDisbalance(assignmentsChange.newAssignments, allBrokers))
+            .`as`("leaders disbalance after").isEqualTo(0)
+    }
+
 }
