@@ -33,6 +33,7 @@
         <span class="ml-3">
             <@sql.topicReplicaSizes cluster=clusterInfo.identifier topic=topicName/>
             <@sql.topicBrokerReplicaSizes cluster=clusterInfo.identifier topic=topicName/>
+            <@sql.topicReplicaLeadersCounts cluster=clusterInfo.identifier topic=topicName/>
         </span>
     </div>
     <div class="card-body p-0">

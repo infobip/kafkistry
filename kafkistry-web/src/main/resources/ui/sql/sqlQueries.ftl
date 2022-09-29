@@ -173,6 +173,21 @@
     <@button sql=sql text = "Replica sizes per broker"/>
 </#macro>
 
+<#macro topicReplicaLeadersCounts cluster topic>
+    <#assign sql>
+        /* Topic replicas/leaders count per broker */
+        SELECT
+          t.brokerId,
+          count(*) as replicasPerBroker,
+          sum(case when t.leader then 1 else 0 end) as leadersPerBroker
+        FROM Topics_Replicas AS t
+        WHERE t.Topic_cluster = "${cluster}" AND t.Topic_topic = "${topic}"
+        GROUP BY t.brokerId
+        LIMIT 1000
+    </#assign>
+    <@button sql=sql text = "Replicas/leaders per broker"/>
+</#macro>
+
 <#macro topicReassignmeentProgress cluster topic>
     <#assign sql>
         /* Topic re-assignment progress per partition */
