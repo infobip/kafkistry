@@ -8,7 +8,7 @@ import com.infobip.kafkistry.model.Presence
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-internal class AclsConflictCheckerTest {
+internal class AclsConflictResolverTest {
 
     private val clusterIdentifier = "kfk-acl"
 
@@ -149,6 +149,16 @@ internal class AclsConflictCheckerTest {
         val conflicts = checker.addingTransactionalConflicts("User:x-1 * TRANSACTIONAL_ID:x-1* ALL ALLOW")
         assertThat(conflicts).containsExactlyInAnyOrder(
             "User:x * TRANSACTIONAL_ID:x* WRITE ALLOW",
+        )
+    }
+    @Test
+    fun `test conflict on shorter prefixed transactional id`() {
+        val checker = newResolverOf(
+            "User:x * TRANSACTIONAL_ID:x-1* WRITE ALLOW",
+        )
+        val conflicts = checker.addingTransactionalConflicts("User:x-1 * TRANSACTIONAL_ID:x* ALL ALLOW")
+        assertThat(conflicts).containsExactlyInAnyOrder(
+            "User:x * TRANSACTIONAL_ID:x-1* WRITE ALLOW",
         )
     }
 }

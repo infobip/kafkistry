@@ -15,8 +15,7 @@ class AclsConflictResolver(
         fun AclClusterLinkData.addVirtualNames(): AclClusterLinkData {
             fun virtualNamesFor(type: AclResource.Type): List<String> {
                 return acls.asSequence()
-                    .filter { it.resource.type == type }
-                    .filter { it.resource.namePattern == AclResource.NamePattern.LITERAL && it.resource.name != "*" }
+                    .filter { it.resource.type == type && it.resource.name != "*" }
                     .map { it.resource.name }
                     .toList()
             }
@@ -134,35 +133,4 @@ class AclsConflictResolver(
 
     }
 
-//    fun findConflictingGroupAcls(aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier): List<KafkaAclRule> {
-//        val checker = ConflictChecker(linkResolver(clusterIdentifier, withAcls = listOf(aclRule), withoutAcls = emptyList()))
-//        return checker.consumerGroupConflicts(aclRule, clusterIdentifier)
-//    }
-//
-//    fun findConflictingGroupAclsOld(aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier): List<KafkaAclRule> {
-//        if (aclRule.resource.type != AclResource.Type.GROUP || aclRule.operation.policy == AclOperation.Policy.DENY) {
-//            return emptyList()
-//        }
-//        val linkResolver = linkResolver(clusterIdentifier, withAcls = listOf(aclRule), withoutAcls = emptyList())
-//        val consumerGroups = linkResolver
-//            .findAffectedConsumerGroups(aclRule, clusterIdentifier)
-//            .plus(aclRule.resource.name)
-//            .distinct()
-//        return consumerGroups
-//            .flatMap { groupId ->
-//                linkResolver
-//                    .findConsumerGroupAffectingAclRules(groupId, clusterIdentifier)
-//                    .filter { it.operation.type == AclOperation.Type.ALL || it.operation.type == AclOperation.Type.READ }
-//                    .map { groupId to it }
-//            }
-//            .groupBy ({ it.first }) { it.second }
-//            .flatMap { (_, groupAcls) ->
-//                val canJoinPrincipalAcls = groupAcls
-//                    .groupBy { it.principal }
-//                    .filterValues { acls -> acls.none { it.operation.policy == AclOperation.Policy.DENY } }
-//                if (canJoinPrincipalAcls.size > 1) canJoinPrincipalAcls.values.flatten() else emptyList()
-//            }
-//            .distinct()
-//            .minus(aclRule)
-//    }
 }
