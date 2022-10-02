@@ -70,17 +70,19 @@ class AclsSuggestionService(
                     clusterInspection.statuses
                             .filter {
                                 //should include this rule in result
-                                when (it.statusType) {
-                                    OK, UNEXPECTED, UNKNOWN -> true
-                                    MISSING, NOT_PRESENT_AS_EXPECTED, SECURITY_DISABLED, UNAVAILABLE -> false
-                                    CLUSTER_DISABLED -> {
-                                        disabledClusters.add(clusterIdentifier)
-                                        currentPrincipalAcls?.hasRuleOnCluster(it.rule, clusterRef) ?: false
-                                    }
-                                    CLUSTER_UNREACHABLE -> throw KafkistryIllegalStateException(
+                                it.statusTypes.all { type ->
+                                    when (type) {
+                                        OK, UNEXPECTED, UNKNOWN -> true
+                                        MISSING, NOT_PRESENT_AS_EXPECTED, SECURITY_DISABLED, UNAVAILABLE -> false
+                                        CLUSTER_DISABLED -> {
+                                            disabledClusters.add(clusterIdentifier)
+                                            currentPrincipalAcls?.hasRuleOnCluster(it.rule, clusterRef) ?: false
+                                        }
+                                        CLUSTER_UNREACHABLE -> throw KafkistryIllegalStateException(
                                             "Can't suggest acls of principal '$principal', cluster is unreachable: '$clusterIdentifier'"
-                                    )
-                                    else -> true
+                                        )
+                                        else -> true
+                                    }
                                 }
                             }
                             .map { it.rule to clusterInspection.clusterIdentifier }

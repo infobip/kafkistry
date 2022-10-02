@@ -121,7 +121,7 @@ class AclTransposeTest {
     }
 
     private fun KafkaAclRule.withStatus(statusType: AclInspectionResultType) = AclRuleStatus(
-        statusType, this, emptyList(), emptyList(), statusType.availableOperations(true), emptyList(),
+        listOf(statusType), this, emptyList(), emptyList(), statusType.availableOperations(true), emptyList(),
     )
     private infix fun AclInspectionResultType.has(count: Int) = NamedTypeQuantity(this, count) 
 }

@@ -11,6 +11,7 @@ import com.infobip.kafkistry.service.acl.AclInspectionResultType
 import com.infobip.kafkistry.service.acl.PrincipalAclsInspection
 import com.infobip.kafkistry.service.acl.toKafkaAclRule
 import org.springframework.stereotype.Component
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.persistence.*
 
@@ -26,16 +27,26 @@ class AclRulesDataSource(
         val allClusterRefs = clustersRegistry.listClustersRefs()
         val allPrincipals = aclsInspectionService.inspectAllPrincipals()
         val unknownPrincipals = aclsInspectionService.inspectUnknownPrincipals()
-        val aclIdGenerator = AtomicLong(1)
+        val aclIdGenerator = AclIdGenerator()
         return (allPrincipals + unknownPrincipals).flatMap {
             mapPrincipalClusterAcls(it, allClusterRefs, aclIdGenerator)
+        }
+    }
+
+    private class AclIdGenerator {
+
+        private val nextId = AtomicLong(1)
+        private val rules = ConcurrentHashMap<Pair<KafkaClusterIdentifier, KafkaAclRule>, Long>()
+
+        fun idFor(clusterIdentifier: KafkaClusterIdentifier, rule: KafkaAclRule): Long {
+            return rules.computeIfAbsent(clusterIdentifier to rule) { nextId.getAndIncrement() }
         }
     }
 
     private fun mapPrincipalClusterAcls(
         principalAclsInspection: PrincipalAclsInspection,
         allClusters: List<ClusterRef>,
-        idGenerator: AtomicLong
+        idGenerator: AclIdGenerator
     ): List<Acl> {
         val shouldExistMap = principalAclsInspection.principalAcls?.rules?.let { rules ->
             rules.associate { aclRule ->
@@ -46,23 +57,29 @@ class AclRulesDataSource(
         return principalAclsInspection.clusterInspections.flatMap { clusterInspection ->
             clusterInspection.statuses.map { aclRuleStatus ->
                 Acl().apply {
-                    id = idGenerator.getAndIncrement()
+                    id = idGenerator.idFor(clusterInspection.clusterIdentifier, aclRuleStatus.rule)
                     principal = principalAclsInspection.principal
                     cluster = clusterInspection.clusterIdentifier
                     acl = aclRuleStatus.rule.toAcl()
-                    status = aclRuleStatus.statusType.name
-                    exist = when (aclRuleStatus.statusType) {
-                        AclInspectionResultType.OK, AclInspectionResultType.UNEXPECTED, AclInspectionResultType.UNKNOWN -> true
-                        AclInspectionResultType.MISSING, AclInspectionResultType.NOT_PRESENT_AS_EXPECTED, AclInspectionResultType.SECURITY_DISABLED, AclInspectionResultType.UNAVAILABLE -> false
-                        AclInspectionResultType.CLUSTER_DISABLED, AclInspectionResultType.CLUSTER_UNREACHABLE -> null
-                        else -> null
-                    }
+                    ok = aclRuleStatus.statusTypes.all { it.valid }
+                    status = aclRuleStatus.statusTypes.joinToString(separator = ",") { it.name }
+                    exist = aclRuleStatus.statusTypes.mapNotNull { type ->
+                        when (type) {
+                            AclInspectionResultType.OK, AclInspectionResultType.UNEXPECTED, AclInspectionResultType.UNKNOWN -> true
+                            AclInspectionResultType.MISSING, AclInspectionResultType.NOT_PRESENT_AS_EXPECTED, AclInspectionResultType.SECURITY_DISABLED, AclInspectionResultType.UNAVAILABLE -> false
+                            AclInspectionResultType.CLUSTER_DISABLED, AclInspectionResultType.CLUSTER_UNREACHABLE -> null
+                            else -> null
+                        }
+                    }.all { it }
                     shouldExist = shouldExistMap
                         ?.get(aclRuleStatus.rule)
                         ?.get(clusterInspection.clusterIdentifier)
                         ?: false
                     affectedTopics = aclRuleStatus.affectedTopics
                     affectedGroups = aclRuleStatus.affectedConsumerGroups
+                    conflictingRules = aclRuleStatus.conflictingAcls.map {
+                        idGenerator.idFor(clusterInspection.clusterIdentifier, it)
+                    }
                 }
             }
         }
@@ -90,6 +107,7 @@ class Acl {
     lateinit var cluster: KafkaClusterIdentifier
     lateinit var acl: AclRule
 
+    var ok: Boolean? = null
     lateinit var status: String
 
     var exist: Boolean? = null
@@ -104,6 +122,11 @@ class Acl {
     @Column(name = "groupId")
     @JoinTable(name = "Acls_AffectedGroups")
     lateinit var affectedGroups: List<ConsumerGroupId>
+
+    @ElementCollection
+    @Column(name = "Acl_otherId")
+    @JoinTable(name = "Acls_ConflictingRules")
+    lateinit var conflictingRules: List<Long>
 }
 
 @Embeddable

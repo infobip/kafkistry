@@ -73,7 +73,10 @@
                 <td><@aclUtil.resource resource = rule.resource/></td>
                 <td><@aclUtil.operation type = rule.operation.type/></td>
                 <td><@aclUtil.policy policy = rule.operation.policy/></td>
-                <td><@util.namedTypeStatusAlert type = ruleStatus.statusType/></td>
+                <td>
+                    <#list ruleStatus.statusTypes as statusType>
+                        <@util.namedTypeStatusAlert type = statusType/>
+                    </#list>
                 <td>
                     <#if ruleStatus.availableOperations?size == 0>
                         ----

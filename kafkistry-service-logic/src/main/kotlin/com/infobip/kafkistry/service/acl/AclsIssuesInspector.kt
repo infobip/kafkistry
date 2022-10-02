@@ -9,6 +9,7 @@ import com.infobip.kafkistry.kafkastate.StateType.VISIBLE
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CONFLICT
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
@@ -181,19 +182,32 @@ class AclsIssuesInspector(
         statusType: AclInspectionResultType,
         rule: KafkaAclRule,
         clusterIdentifier: KafkaClusterIdentifier,
-        principalExists: Boolean
-    ) = AclRuleStatus(
-        statusType = statusType,
-        rule = rule,
-        affectedTopics = aclLinkResolver.findAffectedTopics(rule, clusterIdentifier),
-        affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(rule, clusterIdentifier),
-        availableOperations = statusType.availableOperations(principalExists),
-        conflictingAcls = when (rule.resource.type) {
+        principalExists: Boolean,
+    ): AclRuleStatus {
+        val conflictingAcls = when (rule.resource.type) {
             AclResource.Type.GROUP -> aclsConflictResolver.checker().consumerGroupConflicts(rule, clusterIdentifier)
-            AclResource.Type.TRANSACTIONAL_ID -> aclsConflictResolver.checker().transactionalIdConflicts(rule, clusterIdentifier)
+            AclResource.Type.TRANSACTIONAL_ID -> aclsConflictResolver.checker()
+                .transactionalIdConflicts(rule, clusterIdentifier)
             else -> emptyList()
         }
-    )
+        val statusTypes = if (conflictingAcls.isEmpty()) {
+            listOf(statusType)
+        } else {
+            if (statusType == OK) {
+                listOf(CONFLICT)
+            } else {
+                listOf(statusType, CONFLICT)
+            }
+        }
+        return AclRuleStatus(
+            statusTypes = statusTypes,
+            rule = rule,
+            affectedTopics = aclLinkResolver.findAffectedTopics(rule, clusterIdentifier),
+            affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(rule, clusterIdentifier),
+            availableOperations = statusType.availableOperations(principalExists),
+            conflictingAcls = conflictingAcls,
+        )
+    }
 
 }
 

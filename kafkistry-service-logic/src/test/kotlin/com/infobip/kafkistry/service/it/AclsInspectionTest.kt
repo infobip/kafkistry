@@ -20,6 +20,7 @@ import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.service.acl.*
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CONFLICT
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
@@ -103,7 +104,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules(rule_X_T1)
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(OK)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(OK)
     }
 
     @Test
@@ -113,7 +114,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules()
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(MISSING)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(MISSING)
     }
 
     @Test
@@ -123,7 +124,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules(rule_X_T1)
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(UNEXPECTED)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(UNEXPECTED)
     }
 
     @Test
@@ -132,7 +133,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules(rule_X_T1)
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(UNKNOWN)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(UNKNOWN)
     }
 
     @Test
@@ -142,7 +143,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules()
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(NOT_PRESENT_AS_EXPECTED)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(NOT_PRESENT_AS_EXPECTED)
     }
 
     @Test
@@ -152,7 +153,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules(security = false)
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(SECURITY_DISABLED)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(SECURITY_DISABLED)
     }
 
     @Test
@@ -162,7 +163,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules(stateType = StateType.UNREACHABLE)
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(CLUSTER_UNREACHABLE)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(CLUSTER_UNREACHABLE)
     }
 
     @Test
@@ -172,7 +173,7 @@ class AclsInspectionTest {
         cluster1.mockClusterStateRules(stateType = StateType.DISABLED)
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertOk()
-        assertThat(result.statuses.map { it.statusType }).containsExactly(CLUSTER_DISABLED)
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(CLUSTER_DISABLED)
     }
 
     //1.5 hours to write this test correctly
@@ -256,10 +257,10 @@ class AclsInspectionTest {
         val expected_P1_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P1",
                 clusterIdentifier = "c_1",
-                status = AclStatus(true, listOf(OK has 2)),
+                status = AclStatus(false, listOf(OK has 1, CONFLICT has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2, rule_p4_r2))
+                        AclRuleStatus(listOf(OK), rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(listOf(CONFLICT), rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2, rule_p4_r2))
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -269,8 +270,8 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_1",
                 status = AclStatus(false, listOf(OK has 1, UNKNOWN has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf()),
-                        AclRuleStatus(UNKNOWN, rule_p2_r2, listOf("t2"), listOf(), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS), listOf())
+                        AclRuleStatus(listOf(OK), rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(listOf(UNKNOWN), rule_p2_r2, listOf("t2"), listOf(), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS), listOf())
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyList(),
@@ -278,11 +279,11 @@ class AclsInspectionTest {
         val expected_P3_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
                 clusterIdentifier = "c_1",
-                status = AclStatus(false, listOf(OK has 2, UNEXPECTED has 1)),
+                status = AclStatus(false, listOf(OK has 2, UNEXPECTED has 1, CONFLICT has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
-                        AclRuleStatus(UNEXPECTED, rule_p3_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS), listOf(rule_p1_r2, rule_p4_r2)),
-                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(OK), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(listOf(UNEXPECTED, CONFLICT), rule_p3_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS), listOf(rule_p1_r2, rule_p4_r2)),
+                        AclRuleStatus(listOf(OK), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyList(),
@@ -290,10 +291,10 @@ class AclsInspectionTest {
         val expected_P4_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P4",
                 clusterIdentifier = "c_1",
-                status = AclStatus(false, listOf(UNKNOWN has 2)),
+                status = AclStatus(false, listOf(UNKNOWN has 2, CONFLICT has 1)),
                 statuses = listOf(
-                        AclRuleStatus(UNKNOWN, rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
-                        AclRuleStatus(UNKNOWN, rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf(rule_p1_r2, rule_p3_r2))
+                        AclRuleStatus(listOf(UNKNOWN), rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
+                        AclRuleStatus(listOf(UNKNOWN, CONFLICT), rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf(rule_p1_r2, rule_p3_r2))
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL),
                 affectingQuotaEntities = emptyList(),
@@ -302,10 +303,10 @@ class AclsInspectionTest {
         val expected_P1_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P1",
                 clusterIdentifier = "c_2",
-                status = AclStatus(true, listOf(OK has 2)),
+                status = AclStatus(false, listOf(OK has 1, CONFLICT has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2, rule_p4_r2))
+                        AclRuleStatus(listOf(OK), rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(listOf(CONFLICT), rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2, rule_p4_r2))
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -315,7 +316,7 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_2",
                 status = AclStatus(true, listOf(OK has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(OK), rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -323,11 +324,11 @@ class AclsInspectionTest {
         val expected_P3_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
                 clusterIdentifier = "c_2",
-                status = AclStatus(true, listOf(OK has 3)),
+                status = AclStatus(false, listOf(OK has 2, CONFLICT has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2, rule_p4_r2)),
-                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(OK), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(listOf(CONFLICT), rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2, rule_p4_r2)),
+                        AclRuleStatus(listOf(OK), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -335,10 +336,10 @@ class AclsInspectionTest {
         val expected_P4_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P4",
                 clusterIdentifier = "c_2",
-                status = AclStatus(false, listOf(UNKNOWN has 2)),
+                status = AclStatus(false, listOf(UNKNOWN has 2, CONFLICT has 1)),
                 statuses = listOf(
-                        AclRuleStatus(UNKNOWN, rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
-                        AclRuleStatus(UNKNOWN, rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf(rule_p1_r2, rule_p3_r2))
+                        AclRuleStatus(listOf(UNKNOWN), rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
+                        AclRuleStatus(listOf(UNKNOWN, CONFLICT), rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf(rule_p1_r2, rule_p3_r2))
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL),
                 affectingQuotaEntities = emptyList(),
@@ -347,10 +348,10 @@ class AclsInspectionTest {
         val expected_P1_on_c3 = PrincipalAclsClusterInspection(
                 principal = "User:P1",
                 clusterIdentifier = "c_3",
-                status = AclStatus(true, listOf(OK has 2)),
+                status = AclStatus(false, listOf(OK has 1, CONFLICT has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2))
+                        AclRuleStatus(listOf(OK), rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(listOf(CONFLICT), rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2))
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -360,7 +361,7 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_3",
                 status = AclStatus(true, listOf(OK has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(OK), rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -368,11 +369,11 @@ class AclsInspectionTest {
         val expected_P3_on_c3 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
                 clusterIdentifier = "c_3",
-                status = AclStatus(true, listOf(OK has 2, NOT_PRESENT_AS_EXPECTED has 1)),
+                status = AclStatus(false, listOf(NOT_PRESENT_AS_EXPECTED has 1, CONFLICT has 1, OK has 1)),
                 statuses = listOf(
-                        AclRuleStatus(NOT_PRESENT_AS_EXPECTED, rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2)),
-                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(NOT_PRESENT_AS_EXPECTED), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(listOf(CONFLICT), rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2)),
+                        AclRuleStatus(listOf(OK), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -397,7 +398,7 @@ class AclsInspectionTest {
         assertThat(clustersResult[0].principalAclsInspections[1]).isEqualTo(expected_P2_on_c1)
         assertThat(clustersResult[0].principalAclsInspections[2]).isEqualTo(expected_P3_on_c1)
         assertThat(clustersResult[0].principalAclsInspections[3]).isEqualTo(expected_P4_on_c1)
-        assertThat(clustersResult[0].status).isEqualTo(AclStatus(false, listOf(OK has 5, UNKNOWN has 3, UNEXPECTED has 1)))
+        assertThat(clustersResult[0].status).isEqualTo(AclStatus(false, listOf(OK has 4, CONFLICT has 3, UNKNOWN has 3, UNEXPECTED has 1)))
 
         assertThat(clustersResult[1].clusterIdentifier).isEqualTo("c_2")
         assertThat(clustersResult[1].principalAclsInspections).hasSize(4)
@@ -405,14 +406,14 @@ class AclsInspectionTest {
         assertThat(clustersResult[1].principalAclsInspections[1]).isEqualTo(expected_P2_on_c2)
         assertThat(clustersResult[1].principalAclsInspections[2]).isEqualTo(expected_P3_on_c2)
         assertThat(clustersResult[1].principalAclsInspections[3]).isEqualTo(expected_P4_on_c2)
-        assertThat(clustersResult[1].status).isEqualTo(AclStatus(false, listOf(OK has 6, UNKNOWN has 2)))
+        assertThat(clustersResult[1].status).isEqualTo(AclStatus(false, listOf(OK has 4, CONFLICT has 3, UNKNOWN has 2)))
 
         assertThat(clustersResult[2].clusterIdentifier).isEqualTo("c_3")
         assertThat(clustersResult[2].principalAclsInspections).hasSize(3)
         assertThat(clustersResult[2].principalAclsInspections[0]).isEqualTo(expected_P1_on_c3)
         assertThat(clustersResult[2].principalAclsInspections[1]).isEqualTo(expected_P2_on_c3)
         assertThat(clustersResult[2].principalAclsInspections[2]).isEqualTo(expected_P3_on_c3)
-        assertThat(clustersResult[2].status).isEqualTo(AclStatus(true, listOf(OK has 5, NOT_PRESENT_AS_EXPECTED has 1)))
+        assertThat(clustersResult[2].status).isEqualTo(AclStatus(false, listOf(OK has 3, CONFLICT has 2, NOT_PRESENT_AS_EXPECTED has 1)))
 
         assertThat(principalsResult).hasSize(3)
         assertThat(principalsResult[0]).isEqualTo(
@@ -420,7 +421,7 @@ class AclsInspectionTest {
                 principal = "User:P1",
                 principalAcls = p1Rules,
                 clusterInspections = listOf(expected_P1_on_c1, expected_P1_on_c2, expected_P1_on_c3),
-                status = AclStatus(true, listOf(OK has 6)),
+                status = AclStatus(false, listOf(OK has 3, CONFLICT has 3)),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyMap(),
         )
@@ -440,7 +441,7 @@ class AclsInspectionTest {
                 principal = "User:P3",
                 principalAcls = p3Rules,
                 clusterInspections = listOf(expected_P3_on_c1, expected_P3_on_c2, expected_P3_on_c3),
-                status = AclStatus(false, listOf(OK has 7, UNEXPECTED has 1, NOT_PRESENT_AS_EXPECTED has 1)),
+                status = AclStatus(false, listOf(OK has 5, CONFLICT has 3, UNEXPECTED has 1, NOT_PRESENT_AS_EXPECTED has 1)),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyMap(),
         )
@@ -451,7 +452,7 @@ class AclsInspectionTest {
                         principal = "User:P4",
                         principalAcls = null,
                         clusterInspections = listOf(expected_P4_on_c1, expected_P4_on_c2, expected_P4_on_c3),
-                        status = AclStatus(false, listOf(UNKNOWN has 4)),
+                        status = AclStatus(false, listOf(UNKNOWN has 4, CONFLICT has 2)),
                         availableOperations = listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL),
                         affectingQuotaEntities = emptyMap(),
                 )
@@ -463,9 +464,8 @@ class AclsInspectionTest {
         assertFailsWith<KafkistryIllegalStateException> {
             suggestion.suggestPrincipalAclsImport("User:P1")
         }
-        assertFailsWith<KafkistryIllegalStateException> {
-            suggestion.suggestPrincipalAclsUpdate("User:P1")
-        }
+        //ignore result, no automatic conflict rsulotion suggestions
+        suggestion.suggestPrincipalAclsUpdate("User:P1")
 
         //P2
         assertFailsWith<KafkistryIllegalStateException> {

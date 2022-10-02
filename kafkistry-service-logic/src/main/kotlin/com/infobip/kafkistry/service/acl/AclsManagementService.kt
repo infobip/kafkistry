@@ -30,13 +30,13 @@ class AclsManagementService(
     ) {
         val clusterInspection = aclsInspection.inspectPrincipalAclsOnCluster(principal, clusterIdentifier)
         val rulesToDelete = clusterInspection.statuses.asSequence()
-                .filter { it.statusType == UNKNOWN || it.statusType == UNEXPECTED }
-                .map { it.rule }
-                .toList()
+            .filter { UNKNOWN in it.statusTypes || UNEXPECTED in it.statusTypes }
+            .map { it.rule }
+            .toList()
         if (rulesToDelete.isEmpty()) {
             throw KafkistryIllegalStateException(
-                    "No UNKNOWN or UNEXPECTED acl rules of principal '$principal' on cluster '$clusterIdentifier' to create, " +
-                            "principal's rules statuses are " + clusterInspection.status
+                "No UNKNOWN or UNEXPECTED acl rules of principal '$principal' on cluster '$clusterIdentifier' to create, " +
+                        "principal's rules statuses are " + clusterInspection.status
             )
         }
         doDeleteAclRules(principal, rulesToDelete, clusterIdentifier)
@@ -46,12 +46,11 @@ class AclsManagementService(
         principal: PrincipalId, rule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
     ) {
         val clusterInspection = aclsInspection.inspectPrincipalAclsOnCluster(principal, clusterIdentifier)
-        val ruleStatus = clusterInspection.statuses.asSequence()
-                .find { it.rule == rule }
-                ?: throw KafkistryIllegalStateException("Rule to delete is not found, rule: $rule")
-        when (ruleStatus.statusType) {
-            UNKNOWN, UNEXPECTED -> Unit
-            else -> throw KafkistryIllegalStateException("Rule to delete is not for deletion, status is ${ruleStatus.statusType}")
+        val ruleStatus = clusterInspection.statuses.find { it.rule == rule }
+            ?: throw KafkistryIllegalStateException("Rule to delete is not found, rule: $rule")
+
+        if (UNKNOWN !in ruleStatus.statusTypes && UNEXPECTED !in ruleStatus.statusTypes) {
+            throw KafkistryIllegalStateException("Rule to delete is not for deletion, status is ${ruleStatus.statusTypes.map { it.name }}")
         }
         doDeleteAclRules(rule.principal, listOf(rule), clusterIdentifier)
     }
@@ -65,9 +64,9 @@ class AclsManagementService(
     ) {
         val clusterInspection = aclsInspection.inspectPrincipalAclsOnCluster(principal, clusterIdentifier)
         val rulesToCreate = clusterInspection.statuses.asSequence()
-                .filter { it.statusType == MISSING }
-                .map { it.rule }
-                .toList()
+            .filter { MISSING in it.statusTypes }
+            .map { it.rule }
+            .toList()
         if (rulesToCreate.isEmpty()) {
             throw KafkistryIllegalStateException(
                     "No MISSING acl rules of principal '$principal' on cluster '$clusterIdentifier' to create, " +
@@ -79,12 +78,10 @@ class AclsManagementService(
 
     fun createPrincipalMissingAcl(principal: PrincipalId, rule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier) {
         val clusterInspection = aclsInspection.inspectPrincipalAclsOnCluster(principal, clusterIdentifier)
-        val ruleStatus = clusterInspection.statuses.asSequence()
-                .find { it.rule == rule }
-                ?: throw KafkistryIllegalStateException("Rule to create is not found, rule: $rule")
-        when (ruleStatus.statusType) {
-            MISSING -> Unit
-            else -> throw KafkistryIllegalStateException("Rule to create is not missing, status is ${ruleStatus.statusType}")
+        val ruleStatus = clusterInspection.statuses.find { it.rule == rule }
+            ?: throw KafkistryIllegalStateException("Rule to create is not found, rule: $rule")
+        if (MISSING !in ruleStatus.statusTypes) {
+            throw KafkistryIllegalStateException("Rule to create is not missing, status is ${ruleStatus.statusTypes.map { it.name }}")
         }
         doCreateAclRules(rule.principal, listOf(rule), clusterIdentifier)
     }

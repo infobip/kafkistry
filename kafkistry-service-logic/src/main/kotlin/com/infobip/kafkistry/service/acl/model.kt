@@ -21,6 +21,7 @@ data class AclInspectionResultType(
         val CLUSTER_UNREACHABLE = AclInspectionResultType("CLUSTER_UNREACHABLE", ERROR, false, NamedTypeDoc.CLUSTER_UNREACHABLE)
         val SECURITY_DISABLED = AclInspectionResultType("SECURITY_DISABLED", WARNING, false, "Can't get ACLs fro kafka due to security/authorizer being disabled")
         val UNAVAILABLE = AclInspectionResultType("UNAVAILABLE", IGNORE, false,  NamedTypeDoc.UNAVAILABLE)
+        val CONFLICT = AclInspectionResultType("CONFLICT", WARNING, false, "ACL rule is in conflict/clash with another ACL rule")
     }
 }
 
@@ -31,7 +32,7 @@ data class AclStatus(
     companion object {
         val EMPTY_OK = AclStatus(true, emptyList())
 
-        fun from(statuses: List<AclRuleStatus>) = SubjectStatus.from(statuses.map { it.statusType }) { ok, counts ->
+        fun from(statuses: List<AclRuleStatus>) = SubjectStatus.from(statuses.flatMap { it.statusTypes }) { ok, counts ->
             AclStatus(ok, counts)
         }
     }
@@ -42,7 +43,7 @@ fun Iterable<AclStatus>.aggregate(): AclStatus = aggregateStatusTypes(AclStatus.
 }
 
 data class AclRuleStatus(
-    val statusType: AclInspectionResultType,
+    val statusTypes: List<AclInspectionResultType>,
     val rule: KafkaAclRule,
     val affectedTopics: List<TopicName>,
     val affectedConsumerGroups: List<ConsumerGroupId>,

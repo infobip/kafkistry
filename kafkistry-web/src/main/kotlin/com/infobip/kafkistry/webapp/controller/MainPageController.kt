@@ -113,7 +113,8 @@ class MainPageController(
             .plus(inspectApi.inspectUnknownPrincipals().asSequence())
             .flatMap { it.clusterInspections }
             .flatMap { it.statuses }
-            .groupingBy { it.statusType }
+            .flatMap { it.statusTypes }
+            .groupingBy { it }
             .eachCountDescending()
         return ModelAndView(
             "home/aclsStats", mutableMapOf(

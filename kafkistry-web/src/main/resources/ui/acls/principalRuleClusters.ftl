@@ -53,7 +53,8 @@
         <#assign ruleRowClasses = "rule-${ruleStatuses?index} card-body p-0 collapseable ${showClass} rule-info-row table-sm">
         <tr class="${ruleRowClasses} thead-light">
             <th colspan="2">On cluster</th>
-            <th colspan="2">Affected resources</th>
+            <th colspan="1">Affected resources</th>
+            <th colspan="1">Conflicts</th>
             <th colspan="2">Action</th>
             <th>Status</th>
         </tr>
@@ -62,9 +63,21 @@
                 <td colspan="2">
                     <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a>
                 </td>
-                <td colspan="2">
+                <td colspan="1">
                     <#assign ruleStatus = clusterStatus>
                     <#include "affectedResources.ftl">
+                </td>
+                <td>
+                    <#if clusterStatus.conflictingAcls?size == 0>
+                        <i>(none)</i>
+                    <#else>
+                        <#list clusterStatus.conflictingAcls as conflictingAcl>
+                            <a href="${appUrl.acls().showAllPrincipalAcls(conflictingAcl.principal, conflictingAcl.toString(), clusterIdentifier)}"
+                                class="btn btn-sm btn-outline-dark">
+                                ${conflictingAcl.toString()}
+                            </a>
+                        </#list>
+                    </#if>
                 </td>
                 <td colspan="2">
                     <#if clusterStatus.availableOperations?size == 0>
@@ -79,7 +92,11 @@
                         />
                     </#list>
                 </td>
-                <td><@util.namedTypeStatusAlert type = clusterStatus.statusType/></td>
+                <td>
+                    <#list clusterStatus.statusTypes as statusType>
+                        <@util.namedTypeStatusAlert type = statusType/>
+                    </#list>
+                </td>
             </tr>
         </#list>
     </#list>
