@@ -5,6 +5,7 @@ package com.infobip.kafkistry.model
 //////////////////////////////////
 
 typealias PrincipalId = String
+typealias TransactionalId = String
 
 data class PrincipalAclRules(
     val principal: PrincipalId,

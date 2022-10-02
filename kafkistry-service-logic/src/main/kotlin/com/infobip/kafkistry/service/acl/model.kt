@@ -46,7 +46,8 @@ data class AclRuleStatus(
     val rule: KafkaAclRule,
     val affectedTopics: List<TopicName>,
     val affectedConsumerGroups: List<ConsumerGroupId>,
-    val availableOperations: List<AvailableAclOperation>
+    val availableOperations: List<AvailableAclOperation>,
+    val conflictingAcls: List<KafkaAclRule>,
 )
 
 data class PrincipalAclsClusterInspection(

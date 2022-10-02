@@ -258,8 +258,8 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_1",
                 status = AclStatus(true, listOf(OK has 2)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf())
+                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2, rule_p4_r2))
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -269,8 +269,8 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_1",
                 status = AclStatus(false, listOf(OK has 1, UNKNOWN has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf()),
-                        AclRuleStatus(UNKNOWN, rule_p2_r2, listOf("t2"), listOf(), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS))
+                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(UNKNOWN, rule_p2_r2, listOf("t2"), listOf(), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS), listOf())
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyList(),
@@ -280,9 +280,9 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_1",
                 status = AclStatus(false, listOf(OK has 2, UNEXPECTED has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p3_r1, listOf("t1"), listOf(), listOf()),
-                        AclRuleStatus(UNEXPECTED, rule_p3_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS)),
-                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf())
+                        AclRuleStatus(OK, rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(UNEXPECTED, rule_p3_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS), listOf(rule_p1_r2, rule_p4_r2)),
+                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyList(),
@@ -292,8 +292,8 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_1",
                 status = AclStatus(false, listOf(UNKNOWN has 2)),
                 statuses = listOf(
-                        AclRuleStatus(UNKNOWN, rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL)),
-                        AclRuleStatus(UNKNOWN, rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL))
+                        AclRuleStatus(UNKNOWN, rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
+                        AclRuleStatus(UNKNOWN, rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf(rule_p1_r2, rule_p3_r2))
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL),
                 affectingQuotaEntities = emptyList(),
@@ -304,8 +304,8 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_2",
                 status = AclStatus(true, listOf(OK has 2)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf())
+                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2, rule_p4_r2))
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -315,7 +315,7 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_2",
                 status = AclStatus(true, listOf(OK has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf())
+                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -325,9 +325,9 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_2",
                 status = AclStatus(true, listOf(OK has 3)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p3_r1, listOf("t1"), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p3_r2, listOf(), listOf("g1"), listOf()),
-                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf())
+                        AclRuleStatus(OK, rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(OK, rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2, rule_p4_r2)),
+                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -337,8 +337,8 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_2",
                 status = AclStatus(false, listOf(UNKNOWN has 2)),
                 statuses = listOf(
-                        AclRuleStatus(UNKNOWN, rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL)),
-                        AclRuleStatus(UNKNOWN, rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL))
+                        AclRuleStatus(UNKNOWN, rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
+                        AclRuleStatus(UNKNOWN, rule_p4_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf(rule_p1_r2, rule_p3_r2))
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL),
                 affectingQuotaEntities = emptyList(),
@@ -349,8 +349,8 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_3",
                 status = AclStatus(true, listOf(OK has 2)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf())
+                        AclRuleStatus(OK, rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(OK, rule_p1_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p3_r2))
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -360,7 +360,7 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_3",
                 status = AclStatus(true, listOf(OK has 1)),
                 statuses = listOf(
-                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf())
+                        AclRuleStatus(OK, rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -370,9 +370,9 @@ class AclsInspectionTest {
                 clusterIdentifier = "c_3",
                 status = AclStatus(true, listOf(OK has 2, NOT_PRESENT_AS_EXPECTED has 1)),
                 statuses = listOf(
-                        AclRuleStatus(NOT_PRESENT_AS_EXPECTED, rule_p3_r1, listOf("t1"), listOf(), listOf()),
-                        AclRuleStatus(OK, rule_p3_r2, listOf(), listOf("g1"), listOf()),
-                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf())
+                        AclRuleStatus(NOT_PRESENT_AS_EXPECTED, rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
+                        AclRuleStatus(OK, rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2)),
+                        AclRuleStatus(OK, rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),

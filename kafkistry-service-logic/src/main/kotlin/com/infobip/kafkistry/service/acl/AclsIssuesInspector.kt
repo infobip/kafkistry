@@ -20,7 +20,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class AclsIssuesInspector(
-        private val aclLinkResolver: AclLinkResolver
+    private val aclLinkResolver: AclLinkResolver,
+    private val aclsConflictResolver: AclsConflictResolver,
 ) {
 
     fun inspectPrincipalAcls(
@@ -94,13 +95,7 @@ class AclsIssuesInspector(
                 }
             }
         }
-        return AclRuleStatus(
-                statusType = statusType,
-                rule = aclRule,
-                affectedTopics = aclLinkResolver.findAffectedTopics(aclRule, clusterRef.identifier),
-                affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(aclRule, clusterRef.identifier),
-                availableOperations = statusType.availableOperations(principalAcls != null)
-        )
+        return ruleStatus(statusType, aclRule, clusterRef.identifier, principalAcls != null)
     }
 
     private fun PrincipalAclRules.toInspectionResult(
@@ -110,13 +105,7 @@ class AclsIssuesInspector(
         val statuses = rules.map {
             val aclRule = it.toKafkaAclRule(principal)
             val statusType = statusResolver(it)
-            AclRuleStatus(
-                    statusType = statusType,
-                    rule = aclRule,
-                    affectedTopics = aclLinkResolver.findAffectedTopics(aclRule, clusterIdentifier),
-                    affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(aclRule, clusterIdentifier),
-                    availableOperations = statusType.availableOperations(true)
-            )
+            ruleStatus(statusType, aclRule, clusterIdentifier, true)
         }
         return PrincipalAclsClusterInspection(
                 clusterIdentifier = clusterIdentifier,
@@ -139,13 +128,7 @@ class AclsIssuesInspector(
                     exists = kafkaAclRule in existingPrincipalAcls,
                     shouldExist = it.presence.needToBeOnCluster(clusterRef)
             )
-            AclRuleStatus(
-                    statusType = statusType,
-                    rule = kafkaAclRule,
-                    affectedTopics = aclLinkResolver.findAffectedTopics(kafkaAclRule, clusterRef.identifier),
-                    affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(kafkaAclRule, clusterRef.identifier),
-                    availableOperations = statusType.availableOperations(true)
-            )
+            ruleStatus(statusType, kafkaAclRule, clusterRef.identifier, true)
         }
         val wantedAclRules = principalAcls.rules.map { it.toKafkaAclRule(principalAcls.principal) }
         val unknownStatuses = existingPrincipalAcls
@@ -191,14 +174,26 @@ class AclsIssuesInspector(
         clusterIdentifier: KafkaClusterIdentifier,
         principalExists: Boolean
     ): List<AclRuleStatus> = map {
-        AclRuleStatus(
-                statusType = UNKNOWN,
-                rule = it,
-                affectedTopics = aclLinkResolver.findAffectedTopics(it, clusterIdentifier),
-                affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(it, clusterIdentifier),
-                availableOperations = UNKNOWN.availableOperations(principalExists)
-        )
+        ruleStatus(UNKNOWN, it, clusterIdentifier, principalExists)
     }
+
+    private fun ruleStatus(
+        statusType: AclInspectionResultType,
+        rule: KafkaAclRule,
+        clusterIdentifier: KafkaClusterIdentifier,
+        principalExists: Boolean
+    ) = AclRuleStatus(
+        statusType = statusType,
+        rule = rule,
+        affectedTopics = aclLinkResolver.findAffectedTopics(rule, clusterIdentifier),
+        affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(rule, clusterIdentifier),
+        availableOperations = statusType.availableOperations(principalExists),
+        conflictingAcls = when (rule.resource.type) {
+            AclResource.Type.GROUP -> aclsConflictResolver.checker().consumerGroupConflicts(rule, clusterIdentifier)
+            AclResource.Type.TRANSACTIONAL_ID -> aclsConflictResolver.checker().transactionalIdConflicts(rule, clusterIdentifier)
+            else -> emptyList()
+        }
+    )
 
 }
 

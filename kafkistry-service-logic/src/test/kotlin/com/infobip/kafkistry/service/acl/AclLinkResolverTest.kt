@@ -3,13 +3,9 @@ package com.infobip.kafkistry.service.acl
 import com.nhaarman.mockitokotlin2.whenever
 import io.kotlintest.mock.mock
 import org.assertj.core.api.Assertions.assertThat
-import com.infobip.kafkistry.model.ConsumerGroupId
-import com.infobip.kafkistry.model.PrincipalId
-import com.infobip.kafkistry.model.QuotaEntity
-import com.infobip.kafkistry.model.QuotaEntityID
-import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.kafka.asString
 import com.infobip.kafkistry.kafka.parseAcl
+import com.infobip.kafkistry.model.*
 import org.junit.Test
 
 class AclLinkResolverTest {
@@ -222,7 +218,7 @@ class AclLinkResolverTest {
         quotaEntities: List<QuotaEntity> = emptyList(),
         acls: List<String> = emptyList()
     ): AclLinkResolver {
-        val data = AclClusterLinkData(topics, groups, quotaEntities, acls.map { it.parseAcl() })
+        val data = AclClusterLinkData(ClusterRef(cluster), topics, groups, quotaEntities, acls.map { it.parseAcl() })
         val provider: AclResolverDataProvider = mock()
         whenever(provider.getClustersData()).thenReturn(mapOf(cluster to data))
         return AclLinkResolver(provider)
