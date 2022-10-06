@@ -66,14 +66,7 @@ class AclsInspectionService(
 
     fun inspectPrincipalAcls(principalAcls: PrincipalAclRules): PrincipalAclsInspection {
         val conflictChecker = aclsConflictResolver.checker(
-            listOf(
-                OverridingAclResolverDataProvider.PrincipalOverrides(
-                    principalId = principalAcls.principal,
-                    acls = principalAcls.rules.associate {
-                        it.toKafkaAclRule(principalAcls.principal) to it.presence
-                    }
-                )
-            )
+            listOf(principalAcls)
         )
         return inspectPrincipalAcls(principalAcls.principal, principalAcls, conflictChecker)
     }

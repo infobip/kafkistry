@@ -150,18 +150,18 @@ class VirtualNamesAclResolverDataProvider(
 
 class OverridingAclResolverDataProvider(
     private val delegate: AclResolverDataProvider,
-    private val overrides: List<PrincipalOverrides>,
+    private val overrides: List<PrincipalAclRules>,
 ) : AclResolverDataProvider {
 
     override fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData> {
-        val principalsOverrides = overrides.associateBy { it.principalId }
+        val principalsOverrides = overrides.associateBy { it.principal }
         return delegate.getClustersData()
             .mapValues { (_, clusterData) ->
                 val expectedToExist = principalsOverrides
-                    .flatMap { (_, aclOverrides) ->
-                        aclOverrides.acls
-                            .filterValues { it.needToBeOnCluster(clusterData.clusterRef) }
-                            .keys
+                    .flatMap { (principal, aclOverrides) ->
+                        aclOverrides.rules
+                            .filter { it.presence.needToBeOnCluster(clusterData.clusterRef) }
+                            .map { it.toKafkaAclRule(principal) }
                     }
                 val currentAcls = clusterData.acls
                 val ignoredExistingAcls = currentAcls.filterNot {
@@ -172,10 +172,5 @@ class OverridingAclResolverDataProvider(
                 )
             }
     }
-
-    data class PrincipalOverrides(
-        val principalId: PrincipalId,
-        val acls: Map<KafkaAclRule, Presence>,
-    )
 
 }

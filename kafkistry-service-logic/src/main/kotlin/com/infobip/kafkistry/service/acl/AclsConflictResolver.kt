@@ -55,7 +55,7 @@ class AclsConflictResolver(
     private val defaultCheckerResolver = ConflictChecker(AclLinkResolver(srcAclDataProvider))
 
     fun checker(
-        principalOverrides: List<OverridingAclResolverDataProvider.PrincipalOverrides> = emptyList(),
+        principalOverrides: List<PrincipalAclRules> = emptyList(),
     ): ConflictChecker {
         if (principalOverrides.isEmpty()) {
             return defaultCheckerResolver

@@ -6,6 +6,7 @@ import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.Presence
+import com.infobip.kafkistry.model.PrincipalAclRules
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -57,7 +58,10 @@ internal class AclsConflictResolverTest {
             .distinct()
             .associateWith { Presence.ALL }
         val overrides = listOf(
-            OverridingAclResolverDataProvider.PrincipalOverrides(kafkaAcl.principal, overrideAcls)
+            PrincipalAclRules(
+                principal = kafkaAcl.principal, description = "", owner = "",
+                rules = overrideAcls.map { (rule, presence) -> rule.toAclRule(presence) },
+            )
         )
         return checker(overrides)
     }
@@ -114,7 +118,6 @@ internal class AclsConflictResolverTest {
             "User:b * GROUP:g2 READ ALLOW",
             "User:c * GROUP:other READ ALLOW",
         )
-        Math.sqrt(2.0)
         val conflicts = checker.addingGroupConflicts("User:x * GROUP:g* READ ALLOW")
         assertThat(conflicts).containsExactlyInAnyOrder(
             "User:a * GROUP:g1 READ ALLOW",
