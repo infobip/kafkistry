@@ -17,7 +17,8 @@ class AclsInspectionService(
     private val aclsRegistry: AclsRegistryService,
     private val clustersRegistry: ClustersRegistryService,
     private val kafkaClustersStateProvider: KafkaClustersStateProvider,
-    private val aclsIssuesInspector: AclsIssuesInspector
+    private val aclsIssuesInspector: AclsIssuesInspector,
+    private val aclsConflictResolver: AclsConflictResolver,
 ) {
 
     fun inspectAllPrincipals(): List<PrincipalAclsInspection> {
@@ -63,23 +64,39 @@ class AclsInspectionService(
         return inspectPrincipalAcls(principal, principalAcls)
     }
 
+    fun inspectPrincipalAcls(principalAcls: PrincipalAclRules): PrincipalAclsInspection {
+        val conflictChecker = aclsConflictResolver.checker(
+            listOf(
+                OverridingAclResolverDataProvider.PrincipalOverrides(
+                    principalId = principalAcls.principal,
+                    acls = principalAcls.rules.associate {
+                        it.toKafkaAclRule(principalAcls.principal) to it.presence
+                    }
+                )
+            )
+        )
+        return inspectPrincipalAcls(principalAcls.principal, principalAcls, conflictChecker)
+    }
+
     fun inspectRuleOnCluster(
             aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
     ): AclRuleStatus {
         val principalAcls = aclsRegistry.findPrincipalAcls(aclRule.principal)
         val clusterRef = clustersRegistry.getCluster(clusterIdentifier).ref()
         val latestClusterState = kafkaClustersStateProvider.getLatestClusterState(clusterIdentifier)
-        return aclsIssuesInspector.inspectSingleRule(aclRule, principalAcls, clusterRef, latestClusterState)
+        val conflictResolver = aclsConflictResolver.checker()
+        return aclsIssuesInspector.inspectSingleRule(aclRule, principalAcls, clusterRef, latestClusterState, conflictResolver)
     }
 
     private fun inspectPrincipalAcls(
         principal: PrincipalId,
-        principalAcls: PrincipalAclRules?
+        principalAcls: PrincipalAclRules?,
+        conflictChecker: AclsConflictResolver.ConflictChecker = aclsConflictResolver.checker(),
     ): PrincipalAclsInspection {
         val clustersRefs = clustersRegistry.listClustersRefs()
         val clusterInspections = clustersRefs.map { clusterRef ->
-                inspectPrincipalAclsOnCluster(principal, principalAcls, clusterRef)
-            }
+            inspectPrincipalAclsOnCluster(principal, principalAcls, clusterRef, conflictChecker)
+        }
         val affectingQuotaEntities = clusterInspections
             .flatMap { it.affectingQuotaEntities.map { entity -> entity to it.clusterIdentifier } }
             .groupBy ({ it.first }, {it.second })
@@ -115,7 +132,7 @@ class AclsInspectionService(
     private fun inspectClusterAcls(
         clusterRef: ClusterRef,
         latestClusterState: StateData<KafkaClusterState>,
-        allPrincipalAcls: List<PrincipalAclRules>
+        allPrincipalAcls: List<PrincipalAclRules>,
     ): ClusterAclsInspection {
         val knownPrincipals = allPrincipalAcls.map { it.principal }.toSet()
         val unknownPrincipals = (latestClusterState.valueOrNull()?.acls ?: emptyList()).asSequence()
@@ -129,31 +146,34 @@ class AclsInspectionService(
                 .sortedBy { (principal, _) -> principal }
                 .map { (principal, principalAcls) ->
                     aclsIssuesInspector.inspectPrincipalAcls(
-                            principal = principal,
-                            clusterRef = clusterRef,
-                            principalAcls = principalAcls,
-                            clusterState = latestClusterState
+                        principal = principal,
+                        clusterRef = clusterRef,
+                        principalAcls = principalAcls,
+                        clusterState = latestClusterState,
+                        conflictChecker = aclsConflictResolver.checker(),
                     )
                 }
                 .toList()
         return ClusterAclsInspection(
-                clusterIdentifier = clusterRef.identifier,
-                principalAclsInspections = principalAclsInspections,
-                status = principalAclsInspections.map { it.status }.aggregate()
+            clusterIdentifier = clusterRef.identifier,
+            principalAclsInspections = principalAclsInspections,
+            status = principalAclsInspections.map { it.status }.aggregate(),
         )
     }
 
     private fun inspectPrincipalAclsOnCluster(
         principal: PrincipalId,
         principalAcls: PrincipalAclRules?,
-        clusterRef: ClusterRef
+        clusterRef: ClusterRef,
+        conflictChecker: AclsConflictResolver.ConflictChecker = aclsConflictResolver.checker(),
     ): PrincipalAclsClusterInspection {
         val latestClusterState = kafkaClustersStateProvider.getLatestClusterState(clusterRef.identifier)
         return aclsIssuesInspector.inspectPrincipalAcls(
-                principal = principal,
-                clusterRef = clusterRef,
-                principalAcls = principalAcls,
-                clusterState = latestClusterState
+            principal = principal,
+            clusterRef = clusterRef,
+            principalAcls = principalAcls,
+            clusterState = latestClusterState,
+            conflictChecker = conflictChecker,
         )
     }
 

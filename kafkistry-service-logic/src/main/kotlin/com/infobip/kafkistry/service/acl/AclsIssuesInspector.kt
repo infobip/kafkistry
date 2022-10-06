@@ -22,14 +22,14 @@ import org.springframework.stereotype.Component
 @Component
 class AclsIssuesInspector(
     private val aclLinkResolver: AclLinkResolver,
-    private val aclsConflictResolver: AclsConflictResolver,
 ) {
 
     fun inspectPrincipalAcls(
         clusterRef: ClusterRef,
         principal: PrincipalId,
         principalAcls: PrincipalAclRules?,
-        clusterState: StateData<KafkaClusterState>
+        clusterState: StateData<KafkaClusterState>,
+        conflictChecker: AclsConflictResolver.ConflictChecker,
     ): PrincipalAclsClusterInspection {
         val clusterData = clusterState.valueOrNull()
         if (principalAcls == null) {
@@ -38,7 +38,7 @@ class AclsIssuesInspector(
             } else {
                 val statuses = clusterData.acls
                         .filter { it.principal == principal }
-                        .asUnknownRules(clusterRef.identifier, false)
+                        .asUnknownRules(clusterRef, false, conflictChecker)
                 PrincipalAclsClusterInspection(
                         principal = principal,
                         clusterIdentifier = clusterRef.identifier,
@@ -50,12 +50,14 @@ class AclsIssuesInspector(
             }
         }
         return when {
-            clusterState.stateType == DISABLED -> principalAcls.toInspectionResult(clusterRef.identifier) { CLUSTER_DISABLED }
+            clusterState.stateType == DISABLED -> {
+                principalAcls.toInspectionResult(clusterRef, conflictChecker) { CLUSTER_DISABLED }
+            }
             clusterState.stateType != VISIBLE || clusterData?.acls == null -> {
-                principalAcls.toInspectionResult(clusterRef.identifier) { CLUSTER_UNREACHABLE }
+                principalAcls.toInspectionResult(clusterRef, conflictChecker) { CLUSTER_UNREACHABLE }
             }
             clusterData.clusterInfo.securityEnabled.not() -> {
-                principalAcls.toInspectionResult(clusterRef.identifier) {
+                principalAcls.toInspectionResult(clusterRef, conflictChecker) {
                     if (it.presence.needToBeOnCluster(clusterRef)) {
                         SECURITY_DISABLED
                     } else {
@@ -64,9 +66,10 @@ class AclsIssuesInspector(
                 }
             }
             else -> inspectAcls(
-                    clusterRef = clusterRef,
-                    principalAcls = principalAcls,
-                    existingPrincipalAcls = clusterData.acls.filter { it.principal == principal }
+                clusterRef = clusterRef,
+                principalAcls = principalAcls,
+                existingPrincipalAcls = clusterData.acls.filter { it.principal == principal },
+                conflictChecker = conflictChecker,
             )
         }
     }
@@ -75,7 +78,8 @@ class AclsIssuesInspector(
         aclRule: KafkaAclRule,
         principalAcls: PrincipalAclRules?,
         clusterRef: ClusterRef,
-        clusterState: StateData<KafkaClusterState>
+        clusterState: StateData<KafkaClusterState>,
+        conflictChecker: AclsConflictResolver.ConflictChecker,
     ): AclRuleStatus {
         val clusterData = clusterState.valueOrNull()
         val statusType = when {
@@ -96,32 +100,34 @@ class AclsIssuesInspector(
                 }
             }
         }
-        return ruleStatus(statusType, aclRule, clusterRef.identifier, principalAcls != null)
+        return ruleStatus(statusType, aclRule, clusterRef, principalAcls != null, conflictChecker)
     }
 
     private fun PrincipalAclRules.toInspectionResult(
-        clusterIdentifier: KafkaClusterIdentifier,
+        clusterRef: ClusterRef,
+        conflictChecker: AclsConflictResolver.ConflictChecker,
         statusResolver: (AclRule) -> AclInspectionResultType
     ): PrincipalAclsClusterInspection {
         val statuses = rules.map {
             val aclRule = it.toKafkaAclRule(principal)
             val statusType = statusResolver(it)
-            ruleStatus(statusType, aclRule, clusterIdentifier, true)
+            ruleStatus(statusType, aclRule, clusterRef, true, conflictChecker)
         }
         return PrincipalAclsClusterInspection(
-                clusterIdentifier = clusterIdentifier,
+                clusterIdentifier = clusterRef.identifier,
                 principal = principal,
                 statuses = statuses,
                 status = AclStatus.from(statuses),
                 availableOperations = statuses.mergeAvailableOps { it.availableOperations },
-                affectingQuotaEntities = aclLinkResolver.findPrincipalAffectingQuotas(principal, clusterIdentifier),
+                affectingQuotaEntities = aclLinkResolver.findPrincipalAffectingQuotas(principal, clusterRef.identifier),
         )
     }
 
     private fun inspectAcls(
         clusterRef: ClusterRef,
         principalAcls: PrincipalAclRules,
-        existingPrincipalAcls: List<KafkaAclRule>
+        existingPrincipalAcls: List<KafkaAclRule>,
+        conflictChecker: AclsConflictResolver.ConflictChecker,
     ): PrincipalAclsClusterInspection {
         val statuses = principalAcls.rules.map {
             val kafkaAclRule = it.toKafkaAclRule(principalAcls.principal)
@@ -129,12 +135,12 @@ class AclsIssuesInspector(
                     exists = kafkaAclRule in existingPrincipalAcls,
                     shouldExist = it.presence.needToBeOnCluster(clusterRef)
             )
-            ruleStatus(statusType, kafkaAclRule, clusterRef.identifier, true)
+            ruleStatus(statusType, kafkaAclRule, clusterRef, true, conflictChecker)
         }
         val wantedAclRules = principalAcls.rules.map { it.toKafkaAclRule(principalAcls.principal) }
         val unknownStatuses = existingPrincipalAcls
                 .filter { it !in wantedAclRules }
-                .asUnknownRules(clusterRef.identifier, true)
+                .asUnknownRules(clusterRef, true, conflictChecker)
         val allStatuses = statuses + unknownStatuses
         return PrincipalAclsClusterInspection(
                 clusterIdentifier = clusterRef.identifier,
@@ -172,22 +178,23 @@ class AclsIssuesInspector(
     )
 
     private fun Iterable<KafkaAclRule>.asUnknownRules(
-        clusterIdentifier: KafkaClusterIdentifier,
-        principalExists: Boolean
+        clusterRef: ClusterRef,
+        principalExists: Boolean,
+        conflictChecker: AclsConflictResolver.ConflictChecker,
     ): List<AclRuleStatus> = map {
-        ruleStatus(UNKNOWN, it, clusterIdentifier, principalExists)
+        ruleStatus(UNKNOWN, it, clusterRef, principalExists, conflictChecker)
     }
 
     private fun ruleStatus(
         statusType: AclInspectionResultType,
         rule: KafkaAclRule,
-        clusterIdentifier: KafkaClusterIdentifier,
+        clusterRef: ClusterRef,
         principalExists: Boolean,
+        conflictChecker: AclsConflictResolver.ConflictChecker,
     ): AclRuleStatus {
         val conflictingAcls = when (rule.resource.type) {
-            AclResource.Type.GROUP -> aclsConflictResolver.checker().consumerGroupConflicts(rule, clusterIdentifier)
-            AclResource.Type.TRANSACTIONAL_ID -> aclsConflictResolver.checker()
-                .transactionalIdConflicts(rule, clusterIdentifier)
+            AclResource.Type.GROUP -> conflictChecker.consumerGroupConflicts(rule, clusterRef)
+            AclResource.Type.TRANSACTIONAL_ID -> conflictChecker.transactionalIdConflicts(rule, clusterRef)
             else -> emptyList()
         }
         val statusTypes = if (conflictingAcls.isEmpty()) {
@@ -202,8 +209,8 @@ class AclsIssuesInspector(
         return AclRuleStatus(
             statusTypes = statusTypes,
             rule = rule,
-            affectedTopics = aclLinkResolver.findAffectedTopics(rule, clusterIdentifier),
-            affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(rule, clusterIdentifier),
+            affectedTopics = aclLinkResolver.findAffectedTopics(rule, clusterRef.identifier),
+            affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(rule, clusterRef.identifier),
             availableOperations = statusType.availableOperations(principalExists),
             conflictingAcls = conflictingAcls,
         )

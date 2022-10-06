@@ -85,6 +85,18 @@
 
 <br/>
 
+<button id="dry-run-inspect-acls-btn" class="btn btn-secondary btn-sm mt-2">
+    Dry run inspect principal ACLs <@info.icon tooltip=doc.dryRunTopicInspectAclsBtn/>
+</button>
+
+<#assign statusId = "dryRunInspectAcls">
+<#include "../../common/serverOpStatus.ftl">
+<#assign statusId = "">
+
+<div id="dry-run-inspect-acls-status"></div>
+
+<br/>
+
 <#include "../../common/updateForm.ftl">
 
 <#include "../../common/existingValues.ftl">

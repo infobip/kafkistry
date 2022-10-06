@@ -2,14 +2,10 @@ package com.infobip.kafkistry.service.acl
 
 import com.google.common.base.Suppliers
 import com.infobip.kafkistry.kafka.KafkaAclRule
-import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.AclResource.NamePattern.LITERAL
 import com.infobip.kafkistry.model.AclResource.NamePattern.PREFIXED
 import com.infobip.kafkistry.model.AclResource.Type.*
-import com.infobip.kafkistry.service.quotas.QuotasRegistryService
-import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
@@ -328,114 +324,3 @@ data class AclClusterLinkData(
     val transactionalIds: List<TransactionalId> = emptyList(),
 )
 
-interface AclResolverDataProvider {
-
-    fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData>
-}
-
-@Component
-class AclResolverDataProviderImpl(
-    private val clustersRegistry: ClustersRegistryService,
-    private val topicsRegistry: TopicsRegistryService,
-    private val quotasRegistry: QuotasRegistryService,
-    private val clustersStateProvider: KafkaClustersStateProvider,
-    private val consumerGroupsProvider: KafkaConsumerGroupsProvider,
-    private val quotasProvider: KafkaQuotasProvider,
-    private val aclsRegistry: AclsRegistryService
-) : AclResolverDataProvider {
-
-    override fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData> {
-        val allTopics = topicsRegistry.listTopics()
-        val allQuotas = quotasRegistry.listAllQuotas()
-        val allPrincipalsAcls = aclsRegistry.listAllPrincipalsAcls()
-        return clustersRegistry.listClustersRefs().associate { clusterRef ->
-            val clusterState = clustersStateProvider.getLatestClusterState(clusterRef.identifier)
-            val clusterConsumerGroups = consumerGroupsProvider.getLatestState(clusterRef.identifier)
-            val clusterQuotas = quotasProvider.getLatestState(clusterRef.identifier)
-            clusterRef.identifier to AclClusterLinkData(
-                    clusterRef = clusterRef,
-                    topics = clusterTopicNames(clusterRef, allTopics, clusterState, allPrincipalsAcls),
-                    consumerGroups = consumerGroupIds(clusterState, clusterConsumerGroups),
-                    quotaEntities = clusterEntityQuotas(clusterRef, allQuotas, clusterQuotas),
-                    acls = clusterAcls(clusterRef, clusterState, allPrincipalsAcls)
-            )
-        }
-    }
-
-    private fun clusterTopicNames(
-        clusterRef: ClusterRef,
-        allTopics: List<TopicDescription>,
-        clusterState: StateData<KafkaClusterState>,
-        allPrincipalAcls: List<PrincipalAclRules>
-    ): List<TopicName> {
-        return sequence {
-            allTopics.asSequence()
-                    .filter { it.presence.needToBeOnCluster(clusterRef) }
-                    .map { it.name }
-                    .also { yieldAll(it) }
-            clusterState.valueOrNull()?.topics?.asSequence()?.map { it.name }?.also { yieldAll(it) }
-            clusterState.valueOrNull()?.acls?.asSequence()
-                    ?.filter { it.resource.type == TOPIC && it.resource.namePattern == LITERAL }
-                    ?.map { it.resource.name }
-                    ?.also { yieldAll(it) }
-            allPrincipalAcls.asSequence()
-                    .flatMap { it.rules.asSequence() }
-                    .filter { it.presence.needToBeOnCluster(clusterRef) }
-                    .map { it.resource }
-                    .extractResourceNames(TOPIC)
-                    .also { yieldAll(it) }
-        }.distinct().sorted().toList()
-    }
-
-    private fun clusterEntityQuotas(
-        clusterRef: ClusterRef,
-        allQuotas: List<QuotaDescription>,
-        clusterQuotas: StateData<ClusterQuotas>,
-    ): List<QuotaEntity> {
-        return sequence {
-            allQuotas.asSequence()
-                    .filter { it.presence.needToBeOnCluster(clusterRef) }
-                    .map { it.entity }
-                    .also { yieldAll(it) }
-            yieldAll(clusterQuotas.valueOrNull()?.quotas.orEmpty().keys)
-        }.distinct().sortedBy { it.asID() }.toList()
-    }
-
-    private fun consumerGroupIds(
-            clusterState: StateData<KafkaClusterState>,
-            clusterConsumerGroups: StateData<ClusterConsumerGroups>
-    ): List<ConsumerGroupId> {
-        return sequence {
-            clusterState.valueOrNull()?.acls?.asSequence()
-                    ?.map { it.resource }
-                    ?.extractResourceNames(GROUP)
-                    ?.also { yieldAll(it) }
-            clusterConsumerGroups.valueOrNull()?.apply {
-                consumerGroups.keys.also { yieldAll(it) }
-            }
-        }.distinct().sorted().toList()
-    }
-
-    private fun Sequence<AclResource>.extractResourceNames(type: AclResource.Type): Sequence<String> = this
-            .filter { it.type == type }
-            .filter { it.namePattern == LITERAL && it.name != "*" }
-            .map { it.name }
-
-    private fun clusterAcls(
-        clusterRef: ClusterRef,
-        clusterState: StateData<KafkaClusterState>,
-        allPrincipalAcls: List<PrincipalAclRules>
-    ): List<KafkaAclRule> {
-        return sequence {
-            allPrincipalAcls.asSequence()
-                    .flatMap { principalAcls ->
-                        principalAcls.rules.asSequence()
-                                .filter { it.presence.needToBeOnCluster(clusterRef) }
-                                .map { it.toKafkaAclRule(principalAcls.principal) }
-                    }
-                    .also { yieldAll(it) }
-            clusterState.valueOrNull()?.acls?.also { yieldAll(it) }
-        }.distinct().toList()
-    }
-
-}

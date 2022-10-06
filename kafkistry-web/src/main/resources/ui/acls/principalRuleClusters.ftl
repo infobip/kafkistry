@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="principalRuleClusters"  type="com.infobip.kafkistry.service.acl.PrincipalAclsClustersPerRuleInspection" -->
 <#-- @ftlvariable name="selectedRule"  type="java.lang.String" -->
+<#-- @ftlvariable name="hideActions"  type="java.lang.Boolean" -->
 
 <#import "../common/util.ftl" as util>
 <#import "util.ftl" as aclUtil>
@@ -21,6 +22,7 @@
     </thead>
     <tbody>
     <#assign selectedRule = (selectedRule??)?then(selectedRule, "")>
+    <#assign hideActions = (hideActions??)?then(hideActions, false)>
 
     <#if principalRuleClusters.statuses?size == 0>
         <tr>
@@ -53,9 +55,11 @@
         <#assign ruleRowClasses = "rule-${ruleStatuses?index} card-body p-0 collapseable ${showClass} rule-info-row table-sm">
         <tr class="${ruleRowClasses} thead-light">
             <th colspan="2">On cluster</th>
-            <th colspan="1">Affected resources</th>
-            <th colspan="1">Conflicts</th>
-            <th colspan="2">Action</th>
+            <th colspan="${hideActions?then("2", "1")}">Affected resources</th>
+            <th colspan="${hideActions?then("2", "1")}">Conflicts</th>
+            <#if !hideActions>
+                <th colspan="2">Action</th>
+            </#if>
             <th>Status</th>
         </tr>
         <#list ruleStatuses.clusterStatuses as clusterIdentifier, clusterStatus>
@@ -63,11 +67,11 @@
                 <td colspan="2">
                     <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a>
                 </td>
-                <td colspan="1">
+                <td colspan="${hideActions?then("2", "1")}">
                     <#assign ruleStatus = clusterStatus>
                     <#include "affectedResources.ftl">
                 </td>
-                <td>
+                <td colspan="${hideActions?then("2", "1")}">
                     <#if clusterStatus.conflictingAcls?size == 0>
                         <i>(none)</i>
                     <#else>
@@ -79,19 +83,21 @@
                         </#list>
                     </#if>
                 </td>
-                <td colspan="2">
-                    <#if clusterStatus.availableOperations?size == 0>
-                        ----
-                    </#if>
-                    <#list clusterStatus.availableOperations as operation>
-                        <@aclUtil.availableOperation
-                        operation=operation
-                        principal=principalRuleClusters.principal
-                        cluster=clusterIdentifier
-                        rule=clusterStatus.rule.toString()
-                        />
-                    </#list>
-                </td>
+                <#if !hideActions>
+                    <td colspan="2">
+                        <#if clusterStatus.availableOperations?size == 0>
+                            ----
+                        </#if>
+                        <#list clusterStatus.availableOperations as operation>
+                            <@aclUtil.availableOperation
+                            operation=operation
+                            principal=principalRuleClusters.principal
+                            cluster=clusterIdentifier
+                            rule=clusterStatus.rule.toString()
+                            />
+                        </#list>
+                    </td>
+                </#if>
                 <td>
                     <#list clusterStatus.statusTypes as statusType>
                         <@util.namedTypeStatusAlert type = statusType/>

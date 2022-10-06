@@ -9,6 +9,7 @@ class AclsUrls(base: String) : BaseUrls() {
         const val ACLS = "/acls"
         const val ACLS_PRINCIPAL = "/principal"
         const val ACLS_PRINCIPAL_HISTORY = "/principal/history"
+        const val ACLS_DRY_RUN_INSPECT = "/dry-run-inspect"
         const val ACLS_CREATE_PRINCIPAL = "/create-principal"
         const val ACLS_EDIT_PRINCIPAL = "/edit-principal"
         const val ACLS_EDIT_PRINCIPAL_ON_BRANCH = "/edit-principal-on-branch"
@@ -25,6 +26,7 @@ class AclsUrls(base: String) : BaseUrls() {
     private val showAll = Url(base)
     private val showAllPrincipalAcls = Url("$base$ACLS_PRINCIPAL", listOf("principal", "rule", "clusterIdentifier"))
     private val showPrincipalHistory = Url("$base$ACLS_PRINCIPAL_HISTORY", listOf("principal"))
+    private val showDryRunInspect = Url("$base$ACLS_DRY_RUN_INSPECT")
     private val showCreatePrincipal = Url("$base$ACLS_CREATE_PRINCIPAL")
     private val showEditPrincipal = Url("$base$ACLS_EDIT_PRINCIPAL", listOf("principal"))
     private val showEditPrincipalOnBranch = Url("$base$ACLS_EDIT_PRINCIPAL_ON_BRANCH", listOf("principal", "branch"))
@@ -54,6 +56,8 @@ class AclsUrls(base: String) : BaseUrls() {
     )
 
     fun showPrincipalHistory(principal: PrincipalId) = showPrincipalHistory.render("principal" to principal)
+
+    fun showDryRunInspect() = showDryRunInspect.render()
 
     fun showCreatePrincipal() = showCreatePrincipal.render()
 

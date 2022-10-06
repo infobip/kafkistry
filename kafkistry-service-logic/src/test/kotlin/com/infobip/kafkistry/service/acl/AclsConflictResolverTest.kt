@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.acl
 
+import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.kafka.asString
 import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.ClusterRef
@@ -12,7 +13,7 @@ internal class AclsConflictResolverTest {
 
     private val clusterIdentifier = "kfk-acl"
 
-    private fun newResolverOf(vararg acls: String): AclsConflictResolver {
+    private fun newResolverOf(vararg acls: String): TestAclsConflictResolver {
         val kafkaAcls = acls.map { it.parseAcl() }
         val clusterData = AclClusterLinkData(
             clusterRef = ClusterRef(clusterIdentifier),
@@ -22,23 +23,43 @@ internal class AclsConflictResolverTest {
             quotaEntities = emptyList(),
         )
 
-        return AclsConflictResolver(object : AclResolverDataProvider {
+        return TestAclsConflictResolver(object : AclResolverDataProvider {
             override fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData> {
                 return mapOf(clusterIdentifier to clusterData)
             }
         })
     }
 
-    private fun AclsConflictResolver.addingGroupConflicts(acl: String): List<String> {
-        return checker(withAcls = mapOf(acl.parseAcl() to Presence.ALL))
-            .consumerGroupConflicts(acl.parseAcl(), clusterIdentifier)
+    class TestAclsConflictResolver(
+        aclResolverDataProvider: AclResolverDataProvider
+    ) : AclsConflictResolver(aclResolverDataProvider, AclsConflictResolverProperties()),
+        AclResolverDataProvider by aclResolverDataProvider
+
+    private fun TestAclsConflictResolver.addingGroupConflicts(acl: String): List<String> {
+        val kafkaAcl = acl.parseAcl()
+        return newChecker(kafkaAcl)
+            .consumerGroupConflicts(kafkaAcl, ClusterRef(clusterIdentifier))
             .map { it.asString() }
     }
 
-    private fun AclsConflictResolver.addingTransactionalConflicts(acl: String): List<String> {
-        return checker(withAcls = mapOf(acl.parseAcl() to Presence.ALL))
-            .transactionalIdConflicts(acl.parseAcl(), clusterIdentifier)
+    private fun TestAclsConflictResolver.addingTransactionalConflicts(acl: String): List<String> {
+        val kafkaAcl = acl.parseAcl()
+        return newChecker(kafkaAcl)
+            .transactionalIdConflicts(kafkaAcl, ClusterRef(clusterIdentifier))
             .map { it.asString() }
+    }
+
+    private fun TestAclsConflictResolver.newChecker(kafkaAcl: KafkaAclRule): AclsConflictResolver.ConflictChecker {
+        val overrideAcls = getClustersData()
+            .flatMap { (_, data) -> data.acls }
+            .filter { it.principal == kafkaAcl.principal }
+            .plus(kafkaAcl)
+            .distinct()
+            .associateWith { Presence.ALL }
+        val overrides = listOf(
+            OverridingAclResolverDataProvider.PrincipalOverrides(kafkaAcl.principal, overrideAcls)
+        )
+        return checker(overrides)
     }
 
     @Test
@@ -151,6 +172,7 @@ internal class AclsConflictResolverTest {
             "User:x * TRANSACTIONAL_ID:x* WRITE ALLOW",
         )
     }
+
     @Test
     fun `test conflict on shorter prefixed transactional id`() {
         val checker = newResolverOf(
@@ -161,4 +183,22 @@ internal class AclsConflictResolverTest {
             "User:x * TRANSACTIONAL_ID:x-1* WRITE ALLOW",
         )
     }
+
+    @Test
+    fun `test deny is not conflict`() {
+        val checker = newResolverOf(
+            "User:x * GROUP:gr* READ ALLOW",
+            "User:y * GROUP:g* READ ALLOW",
+        )
+        val conflicts = checker.addingGroupConflicts("User:y * GROUP:group ALL DENY")
+        assertThat(conflicts).isEmpty()
+        val conflictsWithoutAddDeny = checker.checker().consumerGroupConflicts(
+            "User:y * GROUP:group ALL DENY".parseAcl(), ClusterRef(clusterIdentifier)
+        )
+        assertThat(conflictsWithoutAddDeny).containsExactlyInAnyOrder(
+            "User:x * GROUP:gr* READ ALLOW".parseAcl(),
+            "User:y * GROUP:g* READ ALLOW".parseAcl(),
+        )
+    }
+
 }

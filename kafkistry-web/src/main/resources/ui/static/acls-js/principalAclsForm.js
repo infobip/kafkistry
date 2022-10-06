@@ -4,6 +4,7 @@ $(document).ready(function () {
     $("#add-rule-btn").click(addRule);
     let rules = $("#rules");
     rules.on("click", ".remove-rule-btn", null, removeRule);
+    $("#dry-run-inspect-acls-btn").click(dryRunInspectAcls);
 
     initAutocompleteOwners(true);
     initSelectPickers();
@@ -11,6 +12,8 @@ $(document).ready(function () {
     resolveInitialYaml();
     refreshYaml();
 });
+
+let principalAclsDryRunInspected = null;
 
 function addRule() {
     let template = $("#rule-template").html();
@@ -116,6 +119,35 @@ function refreshYaml() {
         let before = initialYaml ? initialYaml : "";
         $("#config-yaml").html(generateDiffHtml(before, yaml));
     });
+}
+
+function dryRunInspectAcls() {
+    showOpProgressOnId("dryRunInspectAcls", "Inspecting ACLs...");
+    let principalAcls = extractPrincipalAcls();
+    principalAclsDryRunInspected = principalAcls;
+    $
+        .ajax(urlFor("acls.showDryRunInspect"), {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            headers: {ajax: 'true'},
+            data: JSON.stringify(principalAcls)
+        })
+        .done(function (response) {
+            hideServerOpOnId("dryRunInspectAcls");
+            let resultContainer = $("#dry-run-inspect-acls-status");
+            resultContainer.html(response);
+            registerAllInfoTooltipsIn(resultContainer);
+        })
+        .fail(function (error) {
+            let errHtml = extractErrHtml(error);
+            if (errHtml) {
+                hideServerOpOnId("dryRunInspectAcls");
+                $("#dry-run-inspect-acls-status").html(errHtml);
+            } else {
+                let errorMsg = extractErrMsg(error);
+                showOpErrorOnId("dryRunInspectAcls", "Dry run of inspect failed", errorMsg);
+            }
+        });
 }
 
 function validatePrincipalAcls(principalAcls) {

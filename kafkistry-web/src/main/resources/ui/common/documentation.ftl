@@ -88,3 +88,4 @@ perform after preferred leader re-balance.">
 </#assign>
 
 <#assign aclHostHelpMsg = "IP address(es) from which host(s) is principal (kafka client) allowed to connect so that this rule applies">
+<#assign dryRunTopicInspectAclsBtn="Show what would be the result of principal ACLs inspection if the rules would be saved with given setup">

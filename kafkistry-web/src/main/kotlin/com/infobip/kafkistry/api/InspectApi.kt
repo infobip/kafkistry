@@ -132,6 +132,11 @@ class InspectApi(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
     ): AclRuleStatus = aclsInspectionService.inspectRuleOnCluster(rule.parseAcl(), clusterIdentifier)
 
+    @GetMapping("/acls/principal-inspect-dry-run")
+    fun inspectPrincipalUpdateDryRun(
+        @RequestBody principalAcls: PrincipalAclRules,
+    ): PrincipalAclsInspection = aclsInspectionService.inspectPrincipalAcls(principalAcls)
+
     @GetMapping("/quotas/entity-cluster")
     fun inspectEntityQuotasOnCluster(
         @RequestParam("quotaEntityID") entityID: QuotaEntityID,

@@ -489,7 +489,9 @@ class DataStateInitializer(
                         "User:bob * TOPIC:topic-example-4 WRITE ALLOW".parseAcl()
                             .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
                         "User:bob 10.11.12.13 TOPIC:topic* ALL DENY".parseAcl()
-                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS))
+                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
+                        "User:bob * GROUP:group* READ ALLOW".parseAcl()
+                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
                     )
                 ).also {
                     log.info("Adding principal ACLs: {}", it)
@@ -515,7 +517,9 @@ class DataStateInitializer(
                     owner = "Team_Test",
                     rules = listOf(
                         "User:mark * TOPIC:topic-example-3 ALL ALLOW".parseAcl()
-                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS))
+                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
+                        "User:mark * GROUP:group ALL ALLOW".parseAcl()
+                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
                     )
                 ).also {
                     log.info("Adding principal ACLs: {}", it)
@@ -527,8 +531,9 @@ class DataStateInitializer(
         kafkaClientProvider.doWithClient(cluster) {
             val acls = listOf(
                 "User:bob * TOPIC:topic-example-4 WRITE ALLOW".parseAcl(),
+                "User:bob * GROUP:group* READ ALLOW".parseAcl(),
                 "User:alice * TOPIC:topic-example-1 ALL ALLOW".parseAcl(),
-                "User:mark * TOPIC:topic-example-3 ALL ALLOW".parseAcl()
+                "User:mark * TOPIC:topic-example-3 ALL ALLOW".parseAcl(),
             )
             log.info("Creating ACLs on kafka: {}", acls)
             it.createAcls(acls).get()

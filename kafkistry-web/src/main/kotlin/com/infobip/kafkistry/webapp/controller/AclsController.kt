@@ -6,6 +6,7 @@ import com.infobip.kafkistry.api.InspectApi
 import com.infobip.kafkistry.api.SuggestionApi
 import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.service.acl.AvailableAclOperation
 import com.infobip.kafkistry.service.acl.transpose
@@ -17,6 +18,7 @@ import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_CREATE_PRINCIPAL
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_CREATE_RULES
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_DELETE_PRINCIPAL
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_DELETE_RULES
+import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_DRY_RUN_INSPECT
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_EDIT_PRINCIPAL
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_EDIT_PRINCIPAL_ON_BRANCH
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_IMPORT_PRINCIPAL
@@ -24,9 +26,7 @@ import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_PRINCIPAL
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_PRINCIPAL_HISTORY
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_SUGGESTED_EDIT_PRINCIPAL
 import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
 
 @Controller
@@ -65,6 +65,18 @@ class AclsController(
                 "selectedRule" to selectedRule,
                 "selectedCluster" to selectedClusterIdentifier,
                 "pendingPrincipalRequests" to pendingPrincipalAclsRequests
+        ))
+    }
+
+    @PostMapping(ACLS_DRY_RUN_INSPECT)
+    fun showDryRunInspect(
+        @RequestBody principalAcls: PrincipalAclRules
+    ): ModelAndView {
+        val principalInspectionClusterRules = inspectApi.inspectPrincipalUpdateDryRun(principalAcls)
+        val principalInspectionRuleClusters = principalInspectionClusterRules.transpose()
+        return ModelAndView("acls/dryRunInspect", mutableMapOf(
+            "principalClusterRules" to principalInspectionClusterRules,
+            "principalRuleClusters" to principalInspectionRuleClusters,
         ))
     }
 

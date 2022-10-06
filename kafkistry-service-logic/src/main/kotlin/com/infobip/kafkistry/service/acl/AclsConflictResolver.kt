@@ -2,76 +2,70 @@ package com.infobip.kafkistry.service.acl
 
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.utils.Filter
+import com.infobip.kafkistry.utils.FilterProperties
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.stereotype.Component
 
 @Component
-//TODO ability to disable
+@ConfigurationProperties("app.acl.conflict-checking")
+class AclsConflictResolverProperties {
+
+    @NestedConfigurationProperty
+    var consumerGroups = EnabledProperties()
+    @NestedConfigurationProperty
+    var transactionalIds = EnabledProperties()
+
+    class EnabledProperties {
+        var enabled = true
+
+        @NestedConfigurationProperty
+        var enabledClusters = FilterProperties()
+
+        @NestedConfigurationProperty
+        var enabledClusterTags = FilterProperties()
+    }
+}
+
+private class EnabledFilter(
+    private val properties: AclsConflictResolverProperties.EnabledProperties,
+) {
+    private val clusterFilter = Filter(properties.enabledClusters)
+    private val clusterTagFilter = Filter(properties.enabledClusterTags)
+
+    fun enabled(clusterRef: ClusterRef): Boolean {
+        if (!properties.enabled) {
+            return false
+        }
+        return clusterFilter(clusterRef.identifier) && clusterTagFilter.matches(clusterRef.tags)
+    }
+}
+
+@Component
 class AclsConflictResolver(
-    private val aclDataProvider: AclResolverDataProvider,
+    aclDataProvider: AclResolverDataProvider,
+    properties: AclsConflictResolverProperties,
 ) {
 
-    private val srcAclDataProvider = object : AclResolverDataProvider {
+    private val cgFilter = EnabledFilter(properties.consumerGroups)
+    private val txnFilter = EnabledFilter(properties.transactionalIds)
 
-        fun AclClusterLinkData.addVirtualNames(): AclClusterLinkData {
-            fun virtualNamesFor(type: AclResource.Type): List<String> {
-                return acls.asSequence()
-                    .filter { it.resource.type == type && it.resource.name != "*" }
-                    .map { it.resource.name }
-                    .toList()
-            }
-            val virtualTopics = virtualNamesFor(AclResource.Type.TOPIC)
-            val virtualGroups = virtualNamesFor(AclResource.Type.GROUP)
-            val virtualTransactionalIds = virtualNamesFor(AclResource.Type.TRANSACTIONAL_ID)
-            return copy(
-                topics = consumerGroups.plus(virtualTopics).distinct(),
-                consumerGroups = consumerGroups.plus(virtualGroups).distinct(),
-                transactionalIds = transactionalIds.plus(virtualTransactionalIds).distinct(),
-            )
-        }
-
-        override fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData> {
-            return aclDataProvider.getClustersData()
-                .mapValues { it.value.addVirtualNames() }
-        }
-
-    }
-
-    private val aclLinkResolver = AclLinkResolver(srcAclDataProvider)
-
-    private fun linkResolver(
-        withAcls: Map<KafkaAclRule, Presence>,
-        withoutAcls: Map<KafkaAclRule, Presence>,
-    ): AclLinkResolver {
-        if (withAcls.isEmpty() && withoutAcls.isEmpty()) {
-            return aclLinkResolver
-        }
-        return AclLinkResolver(object : AclResolverDataProvider {
-            override fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData> {
-                return srcAclDataProvider.getClustersData()
-                    .mapValues { (_, clusterData) ->
-                        val aclsToAdd = withAcls
-                            .filterValues { it.needToBeOnCluster(clusterData.clusterRef) }
-                            .keys
-                        val aclsToRemove = withoutAcls
-                            .filterValues { it.needToBeOnCluster(clusterData.clusterRef) }
-                            .keys
-                        if (aclsToAdd.isNotEmpty() || aclsToRemove.isNotEmpty()) {
-                            clusterData.copy(
-                                acls = clusterData.acls.plus(aclsToAdd).minus(aclsToRemove.toSet()).distinct()
-                            )
-                        } else {
-                            clusterData
-                        }
-                    }
-            }
-
-        })
-    }
+    private val srcAclDataProvider = VirtualNamesAclResolverDataProvider(aclDataProvider)
+    private val defaultCheckerResolver = ConflictChecker(AclLinkResolver(srcAclDataProvider))
 
     fun checker(
-        withAcls: Map<KafkaAclRule, Presence> = emptyMap(),
-        withoutAcls: Map<KafkaAclRule, Presence> = emptyMap(),
-    ) = ConflictChecker(linkResolver(withAcls, withoutAcls))
+        principalOverrides: List<OverridingAclResolverDataProvider.PrincipalOverrides> = emptyList(),
+    ): ConflictChecker {
+        if (principalOverrides.isEmpty()) {
+            return defaultCheckerResolver
+        }
+        return ConflictChecker(
+            AclLinkResolver(
+                OverridingAclResolverDataProvider(srcAclDataProvider, principalOverrides)
+            )
+        )
+    }
 
     inner class ConflictChecker(
         private val aclLinkResolver: AclLinkResolver,
@@ -98,7 +92,7 @@ class AclsConflictResolver(
                         .filter { it.operation.type in permittingOperations }
                         .map { resourceName to it }
                 }
-                .groupBy ({ it.first }) { it.second }
+                .groupBy({ it.first }) { it.second }
                 .flatMap { (_, resourceAcls) ->
                     val canAccessPrincipalAcls = resourceAcls
                         .groupBy { it.principal }
@@ -114,23 +108,33 @@ class AclsConflictResolver(
         }
 
         fun consumerGroupConflicts(
-            aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
-        ): List<KafkaAclRule> = findConflicting(
-            clusterIdentifier, AclResource.Type.GROUP, aclRule,
-            setOf(AclOperation.Type.ALL, AclOperation.Type.READ),
-            affectedNamesExtractor = { acl, cluster -> findAffectedConsumerGroups(acl, cluster) },
-            affectingAclsExtractor = { name, cluster -> findConsumerGroupAffectingAclRules(name, cluster) },
-        )
+            aclRule: KafkaAclRule, clusterRef: ClusterRef
+        ): List<KafkaAclRule> {
+            if (!cgFilter.enabled(clusterRef)) {
+                return emptyList()
+            }
+            return findConflicting(
+                clusterRef.identifier, AclResource.Type.GROUP, aclRule,
+                setOf(AclOperation.Type.ALL, AclOperation.Type.READ),
+                affectedNamesExtractor = { acl, cluster -> findAffectedConsumerGroups(acl, cluster) },
+                affectingAclsExtractor = { name, cluster -> findConsumerGroupAffectingAclRules(name, cluster) },
+            )
+        }
 
         fun transactionalIdConflicts(
-            aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
-        ): List<KafkaAclRule> = findConflicting(
-            clusterIdentifier, AclResource.Type.TRANSACTIONAL_ID, aclRule,
-            setOf(AclOperation.Type.ALL, AclOperation.Type.WRITE),
-            affectedNamesExtractor = { acl, cluster -> findAffectedTransactionalIds(acl, cluster) },
-            affectingAclsExtractor = { name, cluster -> findTransactionalIdAffectingAclRules(name, cluster) },
-        )
+            aclRule: KafkaAclRule, clusterRef: ClusterRef
+        ): List<KafkaAclRule> {
+            if (!txnFilter.enabled(clusterRef)) {
+                return emptyList()
+            }
+            return findConflicting(
+                clusterRef.identifier, AclResource.Type.TRANSACTIONAL_ID, aclRule,
+                setOf(AclOperation.Type.ALL, AclOperation.Type.WRITE),
+                affectedNamesExtractor = { acl, cluster -> findAffectedTransactionalIds(acl, cluster) },
+                affectingAclsExtractor = { name, cluster -> findTransactionalIdAffectingAclRules(name, cluster) },
+            )
+        }
 
-    }
+     }
 
 }
