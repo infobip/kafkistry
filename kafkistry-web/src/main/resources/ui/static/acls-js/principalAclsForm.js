@@ -182,6 +182,9 @@ function validatePrincipalAcls(principalAcls) {
             return "Rule[" + i + "] policy not defined";
         }
     }
+    if (JSON.stringify(principalAclsDryRunInspected) !== JSON.stringify(principalAcls)) {
+        return "Please perform 'Dry run inspect ACLs' before saving";
+    }
     return false;
 }
 
