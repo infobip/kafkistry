@@ -1070,7 +1070,7 @@ app.topic-inspection:
    - When this happens it usually means traffic rate is high so that topic doesn't have time based retention of `retention.ms` as one might expect
    -
      | Property                                                                            | Default | Description                                                                                                                                  |
-     |-------------------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------------|
+     |-------------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------|
      | `app.topic-inspection.underprovisioned-retention.min-oldness-ratio-to-retention-ms` | `0.8`   | Trigger this status when oldest record in partition is younger than 80% of topic's `retention.ms`                                            |
      | `app.topic-inspection.underprovisioned-retention.required-ratio-to-retention-bytes` | `0.8`   | Prevent this status from triggering unless partition is "loaded" with data; i.e. partition size is at least 80% of topic's `retention.bytes` |
    
@@ -1123,6 +1123,33 @@ app.topic-validation:
     |-----------|---------|-------------|
     | `app.topic-validation.kstream-partition-count.enabled-on.clusters.<include/exclude>` | _all_ | On which clusters to check KStream's topics partition count for co-partition match, see [options](#filter-options) |
     | `app.topic-validation.kstream-partition-count.enabled-on.topics.<include/exclude>` | _all_ | For which topics to check KStream's topics partition count for co-partition match, see [options](#filter-options) |
+
+## ACLs inspection
+
+Kafkistry inspects the status of each ACL rule, for example is it OK, MISSING, UNKNOWN, etc. 
+Beside that basic inspection, there is checking for ACL rules _conflict_.
+
+Currently, there are two types of conflicts detection implemented:
+ * **Consumer group** conflict
+   + Triggered when there are at least two different principals which have **READ** permission on some `group.id` which would allow all of them joining to same consumer group at  the same time
+ * **Transactional ID** conflict
+   + Triggered when there are at least two different principals which have **WRITE** permission on some `transactional.id` which would allow all of them using same transactional id at the same time
+
+Those checks can be disabled globally or per specific cluster:
+
+| Property                                              | Default | Description                                                              |
+|-------------------------------------------------------|---------|--------------------------------------------------------------------------|
+| `ACL_GROUP_CONFLICT_ENABLED`                          | _true_  | Flag to globally enable/disable consumer group conflict checking.        |
+| `ACL_GROUP_CONFLICT_INCLUDED_CLUSTERS`                | _all_   | Comma-separated list of cluster identifiers to perform checking.         |
+| `ACL_GROUP_CONFLICT_EXCLUDED_CLUSTERS`                | _none_  | Comma-separated list of cluster identifiers **NOT** to perform checking. |
+| `ACL_GROUP_CONFLICT_INCLUDED_CLUSTER_TAGS`            | _all_   | Comma-separated list of cluster tags to perform checking.                |
+| `ACL_GROUP_CONFLICT_EXCLUDED_CLUSTER_TAGS`            | _none_  | Comma-separated list of cluster tags **NOT** to perform checking.        |
+| `ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED`               | _true_  | Flag to globally enable/disable transactional id conflict checking.      |
+| `ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTERS`     | _all_   | Comma-separated list of cluster identifiers to perform checking.         |
+| `ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTERS`     | _none_  | Comma-separated list of cluster identifiers **NOT** to perform checking. |
+| `ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTER_TAGS` | _all_   | Comma-separated list of cluster tags to perform checking.                |
+| `ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTER_TAGS` | _none_  | Comma-separated list of cluster tags **NOT** to perform checking.        |
+
 
 ## SQL metadata querying - SQLite
 

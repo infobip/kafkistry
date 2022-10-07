@@ -94,6 +94,24 @@ app:
       max-cardinality: ${RECORD_ANALYZER_VALUES_MAX_CARDINALITY:25}
   jira:
     base-url: ${JIRA_BASE_URL:}
+  acl:
+    conflict-checking:
+      consumer-groups:
+        enabled: ${ACL_GROUP_CONFLICT_ENABLED:true}
+        enabled-clusters:
+          included: ${ACL_GROUP_CONFLICT_INCLUDED_CLUSTERS:}
+          excluded: ${ACL_GROUP_CONFLICT_EXCLUDED_CLUSTERS:}
+        enabled-cluster-tags:
+          included: ${ACL_GROUP_CONFLICT_INCLUDED_CLUSTER_TAGS:}
+          excluded: ${ACL_GROUP_CONFLICT_EXCLUDED_CLUSTER_TAGS:}
+      transactional-ids:
+        enabled: ${ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED:true}
+        enabled-clusters:
+          included: ${ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTERS:}
+          excluded: ${ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTERS:}
+        enabled-cluster-tags:
+          included: ${ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTER_TAGS:}
+          excluded: ${ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTER_TAGS:}
 
 app.repository:
   git:
