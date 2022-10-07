@@ -93,6 +93,32 @@ function extractResourceRequirements() {
     };
 }
 
+function validateResourceRequirements(resourceRequirements) {
+    let errors = [];
+    if (!(resourceRequirements.retention.amount > 0)) {
+        errors.push("Requirement for retention amount must be positive number");
+    }
+    if (!(resourceRequirements.avgMessageSize.amount > 0)) {
+        errors.push("Requirement for avg msg size must be positive number");
+    }
+    if (!(resourceRequirements.messagesRate.amount > 0)) {
+        errors.push("Requirement for msg rate must be positive number");
+    }
+    function validateOverrides(overrides, forWhat) {
+        Object.keys(overrides).forEach(function (key) {
+            let override = overrides[key];
+            if (!(override.amount > 0)) {
+                errors.push("Requirement for " + forWhat + " of '" + key + "' must be positive number");
+            }
+        });
+    }
+    validateOverrides(resourceRequirements.messagesRateOverrides, "message rate cluster override");
+    validateOverrides(resourceRequirements.messagesRateTagOverrides, "message rate tag override");
+    validateOverrides(resourceRequirements.retentionOverrides, "retention cluster override");
+    validateOverrides(resourceRequirements.retentionTagOverrides, "retention tag override");
+    return errors;
+}
+
 function toggleResourceRequirementsDefined() {
     let checkbox = $(this);
     let defined = checkbox.is(":checked");

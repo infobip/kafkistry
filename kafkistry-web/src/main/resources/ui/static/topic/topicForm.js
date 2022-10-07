@@ -205,22 +205,29 @@ function addConfigEntry(configContainer, key, value) {
 }
 
 function validateTopicDescription(topicDescription) {
+    let errors = [];
     if (topicDescription.name.trim() === "") {
-        return "Topic name is blank";
+        errors.push("Topic name is blank");
     }
     if (topicDescription.owner.trim() === "") {
-        return "Owner is blank";
+        errors.push("Owner is blank");
     }
     if (topicDescription.description.trim() === "") {
-        return "Description is blank text";
+        errors.push("Description is blank text");
     }
     if (topicDescription.producer.trim() === "") {
-        return "Producer is blank text";
+        errors.push("Producer is blank text");
+    }
+    if (topicDescription.resourceRequirements) {
+        let requirementsErrors = validateResourceRequirements(topicDescription.resourceRequirements);
+        requirementsErrors.forEach(function (error) {
+           errors.push(error);
+        });
     }
     if (JSON.stringify(topicDescriptionDryRunInspected) !== JSON.stringify(topicDescription)) {
-        return "Please perform 'Dry run inspect config' before saving";
+        errors.push("Please perform 'Dry run inspect config' before saving");
     }
-    return false;
+    return errors;
 }
 
 function addConfigValue(event, preventRefreshYaml, predefinedValue) {
@@ -303,6 +310,13 @@ function refreshYaml() {
 function dryRunInspectConfig() {
     showOpProgressOnId("dryRunInspect", "Inspecting config...");
     let topicDescription = extractTopicDescription();
+    if (topicDescription.resourceRequirements) {
+        let errors = validateResourceRequirements(topicDescription.resourceRequirements)
+        if (errors.length > 0) {
+            showOpErrorOnId("dryRunInspect", "Invalid resource requirements", errors.join("\n"));
+            return;
+        }
+    }
     topicDescriptionDryRunInspected = topicDescription;
     $
         .ajax(urlFor("topics.showDryRunInspect"), {

@@ -8,9 +8,9 @@ function createTopic() {
 }
 
 function createTopicDescription(topicDescription) {
-    let validateErr = validateTopicDescription(topicDescription);
-    if (validateErr) {
-        showOpError(validateErr);
+    let validateErrors = validateTopicDescription(topicDescription);
+    if (validateErrors.length > 0) {
+        showOpError("Failed validation", validateErrors.join("\n"));
         return;
     }
     let updateMsg = extractUpdateMessage();

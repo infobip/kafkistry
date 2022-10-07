@@ -4,14 +4,13 @@ $(document).ready(function () {
 
 function editTopic() {
     let topicDescription = extractTopicDescription();
-    let validateErr = validateTopicDescription(topicDescription);
-    if (validateErr) {
-        showOpError(validateErr);
-        return;
-    }
+    let validateErrors = validateTopicDescription(topicDescription);
     let updateMsg = extractUpdateMessage();
     if (updateMsg.trim() === "") {
-        showOpError("Please specify update reason");
+        validateErrors.push("Please specify update reason");
+    }
+    if (validateErrors.length > 0) {
+        showOpError("Failed validation", validateErrors.join("\n"));
         return;
     }
     updateMsg = appendJiraIssuesIfAny(updateMsg, topicDescription.description);

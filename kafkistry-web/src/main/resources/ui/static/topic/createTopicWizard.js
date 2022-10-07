@@ -9,9 +9,9 @@ $(document).ready(function () {
 function createTopicFromWizard() {
     let topicCreationWizardAnswers = extractTopicCreationWizardAnswers();
 
-    let validateErr = validateTopicCreationWizardAnswers(topicCreationWizardAnswers);
-    if (validateErr) {
-        showOpError(validateErr);
+    let validateErrors = validateTopicCreationWizardAnswers(topicCreationWizardAnswers);
+    if (validateErrors.length > 0) {
+        showOpError("Invalid input", validateErrors.join("\n"));
         return;
     }
 
@@ -59,47 +59,38 @@ function generatedTopicNameError(errorMsg) {
 }
 
 function validateTopicCreationWizardAnswers(answers) {
+    let errors = [];
     switch (answers.presence.type) {
         case "ALL_CLUSTERS":
             break;
         case "TAGGED_CLUSTERS":
             if (!answers.presence.tag) {
-                return "You have to select a cluster tag for chosen presence!";
+                errors.push("You have to select a cluster tag for chosen presence!");
             }
             break;
         default:
             if (answers.presence.kafkaClusterIdentifiers.length === 0) {
-                return "You have to select at least one cluster for the chosen presence!";
+                errors.push("You have to select at least one cluster for the chosen presence!");
             }
             break;
     }
     let topicNameMetaInvalid = validateTopicMetadata(answers.topicNameMetadata);
     if (topicNameMetaInvalid) {
-        return topicNameMetaInvalid;
+        errors.push(topicNameMetaInvalid);
     }
     if (!answers.teamName) {
-        return errorMessage("Team name");
+        errors.push(errorMessage("Team name"));
     }
     if (!answers.purpose)
-        return errorMessage("Purpose");
+        errors.push(errorMessage("Purpose"));
     if (!answers.producerServiceName)
-        return errorMessage("Producer");
+        errors.push(errorMessage("Producer"));
 
     // resource requirements metrics
-    if (!answers.resourceRequirements.messagesRate.amount)
-        return errorMessage("Messages rate (Numeric)");
-    if (!answers.resourceRequirements.avgMessageSize.amount)
-        return errorMessage("Message size (Numeric)");
-    if (!answers.resourceRequirements.retention.amount)
-        return errorMessage("Retention (Numeric");
-    let messageRateOverrideClusters = Object.keys(answers.resourceRequirements.messagesRateOverrides);
-    for (let i = 0; i < messageRateOverrideClusters.length; i++) {
-        let cluster = messageRateOverrideClusters[i];
-        if (!answers.resourceRequirements.messagesRateOverrides[cluster].amount) {
-            return errorMessage("Messages rate for '" + cluster + "' (Numeric)");
-        }
-    }
-    return false
+    validateResourceRequirements(answers.resourceRequirements).forEach(function (error) {
+        errors.push(error);
+    });
+    return errors;
 }
 
 function errorMessage(property) {
