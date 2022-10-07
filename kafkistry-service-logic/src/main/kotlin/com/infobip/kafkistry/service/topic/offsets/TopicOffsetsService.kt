@@ -4,6 +4,7 @@ import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.PartitionOffsets
 import com.infobip.kafkistry.kafkastate.ClusterTopicOffsets
 import com.infobip.kafkistry.kafkastate.KafkaTopicOffsetsProvider
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
@@ -16,12 +17,12 @@ class TopicOffsetsService(
     private val topicsRateProvider: TopicsRateProvider,
 ) {
 
-    fun allClustersTopicsOffsets(): Map<KafkaClusterIdentifier, ClusterTopicOffsets> {
-        return clustersRegistryService.listClustersIdentifiers()
-            .mapNotNull { clusterIdentifier ->
-                topicOffsetsProvider.getLatestState(clusterIdentifier)
+    fun allClustersTopicsOffsets(): Map<ClusterRef, ClusterTopicOffsets> {
+        return clustersRegistryService.listClustersRefs()
+            .mapNotNull { clusterRef ->
+                topicOffsetsProvider.getLatestState(clusterRef.identifier)
                     .valueOrNull()
-                    ?.let { clusterIdentifier to it }
+                    ?.let { clusterRef to it }
             }
             .toMap()
     }

@@ -1,12 +1,12 @@
 test:
-  feature2.enabled-on.clusters.included: "c1"
-  feature3.enabled-on.clusters.included:
+  feature2.enabled-on.clusters.identifiers.included: "c1"
+  feature3.enabled-on.clusters.identifiers.included:
     - "c2"
   feature4.enabled-on:
-    clusters.included: "*"
+    clusters.identifiers.included: "*"
     topics.included: "*"
   feature5.enabled-on:
-    clusters.excluded: "*"
+    clusters.identifiers.excluded: "*"
     topics.excluded: "*"
   feature6.enabled-on.topics.excluded: "t1"
   feature7.enabled-on.topics.excluded:
@@ -15,16 +15,16 @@ test:
   feature8.enabled-on.topics.included: "t1"
   feature9.enabled-on:
     topics.included: "t1"
-    clusters.included: "c2"
+    clusters.identifiers.included: "c2"
   feature10.enabled-on:
     topics.excluded: "t1"
-    clusters.excluded: "c2"
+    clusters.identifiers.excluded: "c2"
   feature11.enabled-on:
     topics.included: "t1,t2"
-    clusters.included: "c2,c3"
+    clusters.identifiers.included: "c2,c3"
   feature12.enabled-on:
     topics.included: "t2"
-    clusters.included: ""
+    clusters.identifiers.included: ""
   feature13.enabled-on:
     topics.excluded: "t2"
-    clusters.excluded: ""
+    clusters.identifiers.excluded: ""

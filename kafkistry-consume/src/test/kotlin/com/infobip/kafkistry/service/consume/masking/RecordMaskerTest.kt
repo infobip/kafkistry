@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.consume.masking
 
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consume.JsonPathDef
 import com.infobip.kafkistry.service.consume.filter.JsonPathParser
@@ -29,12 +29,12 @@ class RecordMaskerTest {
 
     private fun maskerFor(spec: TopicMaskingSpec): RecordMasker {
         val ruleProvider = object : RecordMaskingRuleProvider {
-            override fun maskingSpecFor(topic: TopicName, clusterIdentifier: KafkaClusterIdentifier) = listOf(spec)
+            override fun maskingSpecFor(topic: TopicName, clusterRef: ClusterRef) = listOf(spec)
         }
         return RecordMaskerFactory(
             maskingRulesProviders = listOf(ruleProvider),
             jsonPathParser = JsonPathParser(),
-        ).createMaskerFor("", "")
+        ).createMaskerFor("", ClusterRef(""))
     }
 
     @Test

@@ -38,7 +38,7 @@ class KStreamPartitionCountRule(
     private val filter = ClusterTopicFilter(properties.enabledOn)
 
     override fun check(topicDescriptionView: TopicDescriptionView, clusterMetadata: ClusterMetadata): RuleViolation? {
-        if (!filter(clusterMetadata.ref.identifier, topicDescriptionView.name)) {
+        if (!filter(clusterMetadata.ref, topicDescriptionView.name)) {
             return valid()
         }
         val missMatchingAppTopics = missMatchingTopics(

@@ -1,13 +1,13 @@
 package com.infobip.kafkistry.service.consume.masking
 
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consume.JsonPathDef
 
 interface RecordMaskingRuleProvider {
 
     fun maskingSpecFor(
-        topic: TopicName, clusterIdentifier: KafkaClusterIdentifier
+        topic: TopicName, clusterRef: ClusterRef
     ): List<TopicMaskingSpec>
 }
 

@@ -98,20 +98,8 @@ app:
     conflict-checking:
       consumer-groups:
         enabled: ${ACL_GROUP_CONFLICT_ENABLED:true}
-        enabled-clusters:
-          included: ${ACL_GROUP_CONFLICT_INCLUDED_CLUSTERS:}
-          excluded: ${ACL_GROUP_CONFLICT_EXCLUDED_CLUSTERS:}
-        enabled-cluster-tags:
-          included: ${ACL_GROUP_CONFLICT_INCLUDED_CLUSTER_TAGS:}
-          excluded: ${ACL_GROUP_CONFLICT_EXCLUDED_CLUSTER_TAGS:}
       transactional-ids:
         enabled: ${ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED:true}
-        enabled-clusters:
-          included: ${ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTERS:}
-          excluded: ${ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTERS:}
-        enabled-cluster-tags:
-          included: ${ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTER_TAGS:}
-          excluded: ${ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTER_TAGS:}
 
 app.repository:
   git:
@@ -137,11 +125,12 @@ app.repository:
 app.kafka:
   enabled:
     clusters:
-      included: ${ENABLED_CLUSTERS:}
-      excluded: ${DISABLED_CLUSTERS:}
-    tags:
-      included: ${ENABLED_TAGS:}
-      excluded: ${DISABLED_TAGS:}
+      identifiers:
+        included: ${ENABLED_CLUSTERS:}
+        excluded: ${DISABLED_CLUSTERS:}
+      tags:
+        included: ${ENABLED_TAGS:}
+        excluded: ${DISABLED_TAGS:}
   read-request-timeout-ms: ${KAFKA_READ_TIMEOUT_MS:15000}       # 15 sec default
   write-request-timeout-ms: ${KAFKA_WRITE_TIMEOUT_MS:120000}    # 2 min default
   properties:

@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.recordstructure
 
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.RecordFieldType
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consume.JsonPathDef
@@ -26,13 +26,12 @@ class AnalyzeFilter(
         ?.let { jsonPathParser.parseAsTree(it) }
 
     fun shouldAnalyze(
-        clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName,
-    ): Boolean = enabledOnFilter(clusterIdentifier, topicName)
+        clusterRef: ClusterRef, topicName: TopicName,
+    ): Boolean = enabledOnFilter(clusterRef, topicName)
 
     fun shouldSampleValues(
-        clusterIdentifier: KafkaClusterIdentifier,
-        topicName: TopicName,
-    ): Boolean = properties.valueSampling.enabled && valueSamplingEnabledOnFilter(clusterIdentifier, topicName)
+        clusterRef: ClusterRef, topicName: TopicName,
+    ): Boolean = properties.valueSampling.enabled && valueSamplingEnabledOnFilter(clusterRef, topicName)
 
     fun shouldSampleValuesForPath(
         jsonPath: List<Pair<RecordFieldType, String?>>,

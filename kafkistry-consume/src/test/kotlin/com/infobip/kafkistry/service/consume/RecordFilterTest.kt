@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.consume
 
+import com.infobip.kafkistry.model.ClusterRef
 import io.kotlintest.matchers.shouldBe
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.header.internals.RecordHeader
@@ -431,7 +432,7 @@ class RecordFilterTest {
             headers: Map<String, String> = emptyMap(),
             value: String = ""
     ): KafkaRecord {
-        return recordFactory.creatorFor("t", "c", RecordDeserialization.ANY).create(ConsumerRecord(
+        return recordFactory.creatorFor("t", ClusterRef("c"), RecordDeserialization.ANY).create(ConsumerRecord(
                 "",
                 0,
                 0,

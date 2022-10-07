@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.consume.masking
 
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consume.filter.JsonPathParser
@@ -13,9 +14,9 @@ class RecordMaskerFactory(
     private val jsonPathParser: JsonPathParser,
 ) {
 
-    fun createMaskerFor(topic: TopicName, clusterIdentifier: KafkaClusterIdentifier): RecordMasker {
+    fun createMaskerFor(topic: TopicName, clusterRef: ClusterRef): RecordMasker {
         val maskingSpec = maskingRulesProviders
-            .flatMap { it.maskingSpecFor(topic, clusterIdentifier) }
+            .flatMap { it.maskingSpecFor(topic, clusterRef) }
             .fold(TopicMaskingSpec.NONE, TopicMaskingSpec::merge)
         if (maskingSpec == TopicMaskingSpec.NONE) {
             return RecordMasker.NOOP

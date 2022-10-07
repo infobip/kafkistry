@@ -4,12 +4,9 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Utf8
+import com.infobip.kafkistry.model.*
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.header.Headers
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.PayloadType
-import com.infobip.kafkistry.model.RecordFieldType
-import com.infobip.kafkistry.model.TopicName
 import java.io.CharConversionException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
@@ -20,7 +17,7 @@ open class AnalyzeContext(
     private val objectMapper: ObjectMapper,
     now: Long = generateTimestamp(),
     private val topic: TopicName,
-    private val cluster: KafkaClusterIdentifier,
+    private val cluster: ClusterRef,
 ) : MergingContext(properties, now) {
 
     private val shouldSampleValues = analyzeFilter.shouldSampleValues(cluster, topic)
@@ -32,7 +29,7 @@ open class AnalyzeContext(
         val recordsStructure = analyzeRecordStructure(
             consumerRecord.headers(), consumerRecord.value()
         )
-        val recordsStructures = clusterRecordsStructures.computeIfAbsent(cluster) { ConcurrentHashMap() }
+        val recordsStructures = clusterRecordsStructures.computeIfAbsent(cluster.identifier) { ConcurrentHashMap() }
         recordsStructures.merge(consumerRecord.topic(), wrapNow(recordsStructure)) { old, new ->
             wrapNow(old.field merge new.field)
         }

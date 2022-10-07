@@ -3,6 +3,7 @@ package com.infobip.kafkistry.metric
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import io.prometheus.client.Collector
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.consumers.*
 import com.infobip.kafkistry.utils.ClusterTopicConsumerGroupFilter
 import com.infobip.kafkistry.utils.ClusterTopicConsumerGroupFilterProperties
@@ -27,6 +28,7 @@ class LagMetricsCollector(
     promProperties: PrometheusMetricsProperties,
     lagProperties: LagMetricsProperties,
     private val consumersService: ConsumersService,
+    private val clustersRegistryService: ClustersRegistryService,
     clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>
 ) : Collector() {
 
@@ -58,10 +60,13 @@ class LagMetricsCollector(
     }
 
     private fun List<ClusterConsumerGroup>.partitionLagSamples(): List<MetricFamilySamples.Sample> {
+        val clusterRefs = clustersRegistryService.listClustersRefs()
+            .associateBy { it.identifier }
         return asSequence().flatMap { clusterGroup ->
             val consumerGroup = clusterGroup.consumerGroup
             consumerGroup.topicMembers.asSequence().flatMap { topicMembers ->
-                if (!filter(clusterGroup.clusterIdentifier, topicMembers.topicName, consumerGroup.groupId)) {
+                val clusterRef = clusterRefs[clusterGroup.clusterIdentifier]
+                if (clusterRef != null && !filter(clusterRef, topicMembers.topicName, consumerGroup.groupId)) {
                     emptySequence()
                 } else {
                     topicMembers.partitionMembers.asSequence().mapNotNull { partitionMember ->

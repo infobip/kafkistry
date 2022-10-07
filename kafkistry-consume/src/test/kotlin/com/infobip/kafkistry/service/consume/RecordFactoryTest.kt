@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.consume
 
+import com.infobip.kafkistry.model.ClusterRef
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.header.internals.RecordHeaders
 import org.apache.kafka.common.record.TimestampType
@@ -41,7 +42,7 @@ class RecordFactoryTest {
             ),
             recordMaskerFactory = RecordMaskerFactory(listOf(maskingProvider), JsonPathParser()),
         )
-        val creator = factory.creatorFor("", "", RecordDeserialization.ANY)
+        val creator = factory.creatorFor("", ClusterRef(""), RecordDeserialization.ANY)
     }
 
     @Test
@@ -116,14 +117,14 @@ class RecordFactoryTest {
         private fun maskingCreator(
             deserialization: RecordDeserialization = RecordDeserialization.ANY
         ): RecordFactory.Creator {
-            whenever(maskingProvider.maskingSpecFor("t", "c")).thenReturn(
+            whenever(maskingProvider.maskingSpecFor("t", ClusterRef("c"))).thenReturn(
                 listOf(
                     TopicMaskingSpec(
                         valuePathDefs = setOf("secret"), keyPathDefs = emptySet(), headerPathDefs = emptyMap(),
                     )
                 )
             )
-            return factory.creatorFor("t", "c", deserialization)
+            return factory.creatorFor("t", ClusterRef("c"), deserialization)
         }
 
         @Test

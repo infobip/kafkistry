@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.recordstructure
 
+import com.infobip.kafkistry.model.ClusterRef
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.header.internals.RecordHeader
 import org.apache.kafka.common.header.internals.RecordHeaders
@@ -16,7 +17,7 @@ import java.util.*
 class DryRunAnalyzerInspector {
 
     companion object {
-        private const val CLUSTER = "dry-run-cluster"
+        private val CLUSTER = ClusterRef("dry-run-cluster")
         private const val TOPIC = "dry-run-topic"
     }
 

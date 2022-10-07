@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.utils
 
+import com.infobip.kafkistry.model.ClusterRef
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -191,9 +192,9 @@ class ClusterTopicFilterTest {
         c1t1: Boolean, c1t2: Boolean,
         c2t1: Boolean, c2t2: Boolean,
     ) {
-        assertThat(filter("c1", "t1")).`as`("c1 - t1").isEqualTo(c1t1)
-        assertThat(filter("c1", "t2")).`as`("c1 - t2").isEqualTo(c1t2)
-        assertThat(filter("c2", "t1")).`as`("c2 - t1").isEqualTo(c2t1)
-        assertThat(filter("c2", "t2")).`as`("c2 - t2").isEqualTo(c2t2)
+        assertThat(filter(ClusterRef("c1"), "t1")).`as`("c1 - t1").isEqualTo(c1t1)
+        assertThat(filter(ClusterRef("c1"), "t2")).`as`("c1 - t2").isEqualTo(c1t2)
+        assertThat(filter(ClusterRef("c2"), "t1")).`as`("c2 - t1").isEqualTo(c2t1)
+        assertThat(filter(ClusterRef("c2"), "t2")).`as`("c2 - t2").isEqualTo(c2t2)
     }
 }

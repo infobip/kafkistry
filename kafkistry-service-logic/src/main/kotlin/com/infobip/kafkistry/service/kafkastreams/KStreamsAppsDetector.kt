@@ -3,7 +3,7 @@ package com.infobip.kafkistry.service.kafkastreams
 import com.infobip.kafkistry.kafka.ConsumerGroupStatus
 import com.infobip.kafkistry.kafka.KafkaExistingTopic
 import com.infobip.kafkistry.kafkastate.ClusterConsumerGroups
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.utils.ClusterTopicConsumerGroupFilter
 import com.infobip.kafkistry.utils.ClusterTopicConsumerGroupFilterProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 class KStreamConfigProperties {
 
     @NestedConfigurationProperty
-    var enabledFor = ClusterTopicConsumerGroupFilterProperties()
+    var enabledOn = ClusterTopicConsumerGroupFilterProperties()
 }
 
 @Component
@@ -28,14 +28,14 @@ class KStreamsAppsDetector(
         private const val K_STREAM_NAME_MARKER = "-KSTREAM-"
     }
 
-    private val filter = ClusterTopicConsumerGroupFilter(properties.enabledFor)
+    private val filter = ClusterTopicConsumerGroupFilter(properties.enabledOn)
 
     fun findKStreamApps(
-        clusterIdentifier: KafkaClusterIdentifier,
+        clusterRef: ClusterRef,
         clusterConsumerGroups: ClusterConsumerGroups,
         topics: List<KafkaExistingTopic>,
     ): List<KafkaStreamsApp> {
-        if (!filter.testCluster(clusterIdentifier)) {
+        if (!filter.testCluster(clusterRef)) {
             return emptyList()
         }
         return clusterConsumerGroups.consumerGroups

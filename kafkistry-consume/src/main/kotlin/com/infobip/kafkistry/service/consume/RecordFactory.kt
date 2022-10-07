@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.service.consume
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryPermissionException
@@ -29,10 +30,10 @@ class RecordFactory(
 
     fun creatorFor(
         topicName: TopicName,
-        clusterIdentifier: KafkaClusterIdentifier,
+        clusterRef: ClusterRef,
         recordDeserialization: RecordDeserialization,
     ): Creator {
-        val masker = recordMaskerFactory.createMaskerFor(topicName, clusterIdentifier)
+        val masker = recordMaskerFactory.createMaskerFor(topicName, clusterRef)
         val keyDeserializers = selectDeserializers(recordDeserialization.keyType, masker.masksKey())
         val valueDeserializers = selectDeserializers(recordDeserialization.valueType, masker.masksValue())
         val headersDeserializers = selectDeserializers(recordDeserialization.headersType, masker.masksHeader())

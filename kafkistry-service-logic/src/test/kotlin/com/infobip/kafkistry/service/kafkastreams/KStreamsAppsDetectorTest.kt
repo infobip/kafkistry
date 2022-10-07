@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.ClusterConsumerGroups
 import com.infobip.kafkistry.kafkastate.Maybe
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.TopicName
 import org.junit.jupiter.api.Test
@@ -16,7 +17,7 @@ internal class KStreamsAppsDetectorTest {
     @Test
     fun `no apps on empty`() {
         val apps = detector.findKStreamApps(
-            "test-cluster",
+            ClusterRef("test-cluster"),
             ClusterConsumerGroups(consumerGroups = emptyMap()),
             topics = emptyList(),
         )
@@ -26,7 +27,7 @@ internal class KStreamsAppsDetectorTest {
     @Test
     fun `few regular groups and topics`() {
         val apps = detector.findKStreamApps(
-            "test-cluster",
+            ClusterRef("test-cluster"),
             ClusterConsumerGroups(
                 consumerGroups = mapOf(
                     mockGroup("dummy-group", topics = mapOf("topic1" to 8, "topic2" to 12)),
@@ -46,7 +47,7 @@ internal class KStreamsAppsDetectorTest {
     @Test
     fun `one kstream join app`() {
         val apps = detector.findKStreamApps(
-            "test-cluster",
+            ClusterRef("test-cluster"),
             ClusterConsumerGroups(
                 consumerGroups = mapOf(
                     mockGroup("kstream-app", partitionAssignor = "stream", topics = mapOf("in-1" to 4, "in-2" to 4)),
@@ -75,7 +76,7 @@ internal class KStreamsAppsDetectorTest {
     @Test
     fun `multiple kstream apps and other stuff`() {
         val apps = detector.findKStreamApps(
-            "test-cluster",
+            ClusterRef("test-cluster"),
             ClusterConsumerGroups(
                 consumerGroups = mapOf(
                     mockGroup("kstream-app", partitionAssignor = "stream", topics = mapOf("in-1" to 4, "in-2" to 4)),

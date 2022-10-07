@@ -6,6 +6,7 @@ import com.infobip.kafkistry.kafka.SamplingPosition
 import com.infobip.kafkistry.kafkastate.OldestRecordsAges
 import com.infobip.kafkistry.kafka.RecordSampler
 import com.infobip.kafkistry.kafka.RecordSamplingListener
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.utils.ClusterTopicFilter
@@ -38,13 +39,13 @@ class KafkaOldestRecordAgeProvider(
     private val clusterStates: MutableMap<KafkaClusterIdentifier, OldestRecordsAges> = ConcurrentHashMap()
 
     override fun need(
-        samplingPosition: SamplingPosition, clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName
+        samplingPosition: SamplingPosition, clusterRef: ClusterRef, topicName: TopicName
     ): Boolean {
-        return samplingPosition == SamplingPosition.OLDEST && sampleFilter(clusterIdentifier, topicName)
+        return samplingPosition == SamplingPosition.OLDEST && sampleFilter(clusterRef, topicName)
     }
 
-    override fun sampler(samplingPosition: SamplingPosition, clusterIdentifier: KafkaClusterIdentifier): RecordSampler {
-        return TimestampRecordVisitor(clusterIdentifier)
+    override fun sampler(samplingPosition: SamplingPosition, clusterRef: ClusterRef): RecordSampler {
+        return TimestampRecordVisitor(clusterRef)
     }
 
     override fun clusterRemoved(clusterIdentifier: KafkaClusterIdentifier) {
@@ -60,7 +61,7 @@ class KafkaOldestRecordAgeProvider(
     }
 
     private inner class TimestampRecordVisitor(
-        private val clusterIdentifier: KafkaClusterIdentifier,
+        private val clusterRef: ClusterRef,
     ) : RecordSampler {
 
         private val timestampSamples = ArrayList<Triple<TopicName, Partition, Long>>()
@@ -76,7 +77,7 @@ class KafkaOldestRecordAgeProvider(
 
         override fun samplingRoundFailed(cause: Throwable) {
             if (timestampSamples.isEmpty()) {
-                clusterStates.remove(clusterIdentifier)
+                clusterStates.remove(clusterRef.identifier)
             } else {
                 wrapUp()
             }
@@ -91,7 +92,7 @@ class KafkaOldestRecordAgeProvider(
                         partition to (now - timestamp)
                     }
                 }
-            clusterStates[clusterIdentifier] = OldestRecordsAges(earliestRecordAges)
+            clusterStates[clusterRef.identifier] = OldestRecordsAges(earliestRecordAges)
         }
     }
 

@@ -79,12 +79,12 @@ class KafkaRecordSamplerProvider(
         val samplersTopics = allListeners
             .map {
                 it to topics.filter { topic ->
-                    it.need(samplingPosition, kafkaCluster.identifier, topic)
+                    it.need(samplingPosition, kafkaCluster.ref(), topic)
                 }
             }
             .filter { (_, topics) -> topics.isNotEmpty() }
             .map { (listener, topics) ->
-                listener.sampler(samplingPosition, kafkaCluster.identifier) to topics.toSet()
+                listener.sampler(samplingPosition, kafkaCluster.ref()) to topics.toSet()
             }
             .takeIf { it.isNotEmpty() }
             ?: return null  //nobody wants anything

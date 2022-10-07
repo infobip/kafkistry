@@ -9,12 +9,14 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
+import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class KStreamsAppsProvider(
+    private val clustersRegistryService: ClustersRegistryService,
     private val clustersStateProvider: KafkaClustersStateProvider,
     private val consumerGroupsProvider: KafkaConsumerGroupsProvider,
     private val kStreamsAppsDetector: KStreamsAppsDetector,
@@ -75,15 +77,16 @@ class KStreamsAppsProvider(
         val allClusterStates = clustersStateProvider.getAllLatestClusterStates()
         val allGroupsStates = consumerGroupsProvider.getAllLatestStates()
         val kStreamApps = (allGroupsStates.keys + allGroupsStates.keys)
-            .associateWith { clusterIdentifier ->
-                val topicsStateData = allClusterStates[clusterIdentifier]
-                val groupsStateData = allGroupsStates[clusterIdentifier]
+            .mapNotNull { clustersRegistryService.findCluster(it)?.ref() }
+            .associate { clusterRef ->
+                val topicsStateData = allClusterStates[clusterRef.identifier]
+                val groupsStateData = allGroupsStates[clusterRef.identifier]
                 val kStreamApps = kStreamsAppsDetector.findKStreamApps(
-                    clusterIdentifier = clusterIdentifier,
+                    clusterRef = clusterRef,
                     clusterConsumerGroups = groupsStateData?.valueOrNull() ?: ClusterConsumerGroups(emptyMap()),
                     topics = topicsStateData?.valueOrNull()?.topics.orEmpty(),
                 )
-                indexApps(
+                clusterRef.identifier to indexApps(
                     groupsStateType = groupsStateData?.stateType ?: StateType.UNKNOWN,
                     topicsStateType = topicsStateData?.stateType ?: StateType.UNKNOWN,
                     kStreamApps = kStreamApps

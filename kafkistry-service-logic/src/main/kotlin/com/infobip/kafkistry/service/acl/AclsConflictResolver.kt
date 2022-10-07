@@ -2,8 +2,8 @@ package com.infobip.kafkistry.service.acl
 
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.utils.Filter
-import com.infobip.kafkistry.utils.FilterProperties
+import com.infobip.kafkistry.utils.ClusterFilter
+import com.infobip.kafkistry.utils.ClusterFilterProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.stereotype.Component
@@ -21,25 +21,16 @@ class AclsConflictResolverProperties {
         var enabled = true
 
         @NestedConfigurationProperty
-        var enabledClusters = FilterProperties()
-
-        @NestedConfigurationProperty
-        var enabledClusterTags = FilterProperties()
+        var enabledOnClusters = ClusterFilterProperties()
     }
 }
 
 private class EnabledFilter(
     private val properties: AclsConflictResolverProperties.EnabledProperties,
 ) {
-    private val clusterFilter = Filter(properties.enabledClusters)
-    private val clusterTagFilter = Filter(properties.enabledClusterTags)
+    private val clusterFilter = ClusterFilter(properties.enabledOnClusters)
 
-    fun enabled(clusterRef: ClusterRef): Boolean {
-        if (!properties.enabled) {
-            return false
-        }
-        return clusterFilter(clusterRef.identifier) && clusterTagFilter.matches(clusterRef.tags)
-    }
+    fun enabled(clusterRef: ClusterRef): Boolean = properties.enabled && clusterFilter(clusterRef)
 }
 
 @Component

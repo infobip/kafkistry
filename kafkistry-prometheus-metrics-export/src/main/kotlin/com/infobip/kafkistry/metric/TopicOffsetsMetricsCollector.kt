@@ -5,7 +5,7 @@ import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.PartitionOffsets
 import com.infobip.kafkistry.kafkastate.ClusterTopicOffsets
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.utils.*
@@ -54,14 +54,14 @@ class TopicOffsetsCollector(
             allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
                 MetricFamilySamples.Sample(
                     beginOffsetMetricName, labelNames,
-                    listOf(labelProvider.labelValue(cluster), topic, partition.toString()),
+                    listOf(labelProvider.labelValue(cluster.identifier), topic, partition.toString()),
                     partitionOffsets.begin.toDouble()
                 )
             }
         val endOffsetSamples = allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
             MetricFamilySamples.Sample(
                 endOffsetMetricName, labelNames,
-                listOf(labelProvider.labelValue(cluster), topic, partition.toString()),
+                listOf(labelProvider.labelValue(cluster.identifier), topic, partition.toString()),
                 partitionOffsets.end.toDouble()
             )
         }
@@ -79,16 +79,16 @@ class TopicOffsetsCollector(
         )
     }
 
-    private inline fun Map<KafkaClusterIdentifier, ClusterTopicOffsets>.metricSamplesBy(
-        crossinline sampleExtractor: (KafkaClusterIdentifier, TopicName, Partition, PartitionOffsets) -> MetricFamilySamples.Sample
+    private inline fun Map<ClusterRef, ClusterTopicOffsets>.metricSamplesBy(
+        crossinline sampleExtractor: (ClusterRef, TopicName, Partition, PartitionOffsets) -> MetricFamilySamples.Sample
     ): List<MetricFamilySamples.Sample> {
         return sequence {
-            forEach { (clusterIdentifier, clusterTopicOffsets) ->
+            forEach { (clusterRef, clusterTopicOffsets) ->
                 clusterTopicOffsets.topicsOffsets.forEach { (topic, partitionOffsets) ->
-                    if (filter(clusterIdentifier, topic)) {
+                    if (filter(clusterRef, topic)) {
                         partitionOffsets.forEach { (partition, offsets) ->
                             val sample = sampleExtractor(
-                                clusterIdentifier, topic, partition, offsets
+                                clusterRef, topic, partition, offsets
                             )
                             yield(sample)
                         }

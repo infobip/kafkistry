@@ -14,16 +14,16 @@ class ClusterEnabledFilterTest {
     ): ClusterEnabledFilter {
         return KafkaEnabledClustersProperties().apply {
             if (!disabled.isNullOrEmpty()) {
-                clusters.excluded = disabled.split(",").toSet()
+                clusters.identifiers.excluded = disabled.split(",").toSet()
             }
             if (!enabled.isNullOrEmpty()) {
-                clusters.included = enabled.split(",").toSet()
+                clusters.identifiers.included = enabled.split(",").toSet()
             }
             if (!disabledTags.isNullOrEmpty()) {
-                tags.excluded = disabledTags.split(",").toSet()
+                clusters.tags.excluded = disabledTags.split(",").toSet()
             }
             if (!enabledTags.isNullOrEmpty()) {
-                tags.included = enabledTags.split(",").toSet()
+                clusters.tags.included = enabledTags.split(",").toSet()
             }
         }.let { ClusterEnabledFilter(it) }
     }

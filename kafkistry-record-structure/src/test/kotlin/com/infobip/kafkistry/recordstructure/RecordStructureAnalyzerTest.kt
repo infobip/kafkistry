@@ -17,7 +17,7 @@ import kotlin.system.measureTimeMillis
 class RecordStructureAnalyzerTest {
 
     companion object {
-        private const val CLUSTER = "test-cluster"
+        private val CLUSTER = ClusterRef("test-cluster")
         private const val TOPIC = "test-topic"
     }
 
@@ -69,8 +69,8 @@ class RecordStructureAnalyzerTest {
         )
     }
 
-    private fun RecordStructureAnalyzer.structure() = getStructure(CLUSTER, TOPIC)
-    private fun RecordStructureAnalyzer.allStructures() = getAllStructures(CLUSTER)
+    private fun RecordStructureAnalyzer.structure() = getStructure(CLUSTER.identifier, TOPIC)
+    private fun RecordStructureAnalyzer.allStructures() = getAllStructures(CLUSTER.identifier)
 
     private fun assertJsonStructure(expectedStructure: RecordsStructure, vararg jsons: String?) {
         newAnalyzer().assertJsonStructure(expectedStructure, *jsons)

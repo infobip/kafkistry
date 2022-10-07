@@ -262,12 +262,12 @@ Things to know is adding Kafkistry in `super.users` sounds too scary:
 
 There are tests for all interactions that Kafkistry does with kafka cluster.
 
-| Kafka Version     | Compatibility          | Need connect to ZK for some operations |
-|-------------------|------------------------|----------------------------------------|
-| v > `2.8`         | full?  _(not out yet)_ | no                                     |
-| `2.6` ≤ v ≤ `2.8` | full                   | no                                     |
-| `2.1` ≤ v < `2.6` | full                   | yes                                    |
-| `1.0` ≤ v < `2.1` | partial _(not tested)_ | yes                                    |
+| Kafka Version     | Compatibility             | Need connect to ZK for some operations |
+|-------------------|---------------------------|----------------------------------------|
+| v > `3.3`         | full?  _(not tested yet)_ | no                                     |
+| `2.6` ≤ v ≤ `3.3` | full                      | no                                     |
+| `2.1` ≤ v < `2.6` | full                      | yes                                    |
+| `1.0` ≤ v < `2.1` | partial _(not tested)_    | yes                                    |
 
 Kafkistry determines major/minor version of kafka by looking at controller's `inter.broker.protocol.version` config property.
 This may not reflect an actual build version of broker, but it will mean actual version is greater or equal.
@@ -351,7 +351,7 @@ This section describes such options, this section is referenced by other section
 
 | Property            | Default  | Description             |
 |---------------------|----------|-------------------------|
-| `<prefix>.included` | _(none)_ | Which values to include |
+| `<prefix>.included` | _(all)_  | Which values to include |
 | `<prefix>.excluded` | _(none)_ | Which values to exclude |
 
 Each of those properties can be:
@@ -367,6 +367,16 @@ Each of those properties can be:
    - "my-topic-1"
    - "my-topic-2"
     ```
+
+### Cluster filter options
+
+| Property                        | Default  | Description                                                                                |
+|---------------------------------|----------|--------------------------------------------------------------------------------------------|
+| `<prefix>.identifiers.included` | _(all)_  | Which cluster identifiers to include. Can be omitted, `*`, CSV string or list of strings.  |
+| `<prefix>.identifiers.excluded` | _(none)_ | Which cluster identifiers to exclude. Can be omitted, `*`, CSV string or list of strings.  |
+| `<prefix>.tags.included`        | _(all)_  | Clusters having which tags to include. Can be omitted, `*`, CSV string or list of strings. |
+| `<prefix>.tags.excluded`        | _(none)_ | Clusters having which tags to exclude. Can be omitted, `*`, CSV string or list of strings. |
+
    
 ### Example of properties in yaml
 ````yaml
@@ -488,11 +498,11 @@ Both of those have the following labels:
 
 Available configuration properties
 
-| Property                                                               | Default | Description                                                                                  |
-|------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------------|
-| `app.metrics.topic-offsets.enabled`                                    | `true`  | Enable/disable exporting topic partition offsets metric at all                               |
-| `app.metrics.topic-offsets.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include topic offsets metric. See [filtering options](#filter-options) |
-| `app.metrics.topic-offsets.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include topic offsets metric. See [filtering options](#filter-options)   |
+| Property                                                                       | Default | Description                                                                                                  |
+|--------------------------------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------|
+| `app.metrics.topic-offsets.enabled`                                            | `true`  | Enable/disable exporting topic partition offsets metric at all                                               |
+| `app.metrics.topic-offsets.enabled-on.clusters.<...cluster filter options...>` | _all_   | For which clusters to include topic offsets metric. See [cluster filtering options](#cluster-filter-options) |
+| `app.metrics.topic-offsets.enabled-on.topics.<...filter options...>`           | _all_   | For which topics to include topic offsets metric. See [filtering options](#filter-options)                   |
 
 Use cases:
  - rate of increase of `kafkistry_topic_end_offset` directly corresponds to produce rate
@@ -850,14 +860,13 @@ When topic is being consumed by Kafkistry, all sensitive values will be replaced
 
 Rules for masking can be defined via following configuration properties:
 
-| Property                                                                  | Default | Description                                                                                          |
-|---------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------|
-| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_   | From which clusters to apply masking of topic records. See [filtering options](#filter-options)      |
-| `app.masking.rules.<my-rule-name>.target.topics.<...filter options...>`   | _all_   | From which topics to apply masking of topic records. See [filtering options](#filter-options)        |
-| `app.masking.rules.<my-rule-name>.target.clusters.<...filter options...>` | _all_   | From which clusters to apply masking of topic records. See [filtering options](#filter-options)      |
-| `app.masking.rules.<my-rule-name>.value-json-paths`                       | _none_  | Comma-separated list of json path field in record's deserialized value to apply masking replacement  |
-| `app.masking.rules.<my-rule-name>.key-json-paths`                         | _none_  | Comma-separated list of json path field in record's deserialized key to apply masking replacement    |
-| `app.masking.rules.<my-rule-name>.headers-json-paths.<header-name>`       | _none_  | Comma-separated list of json path field in record's deserialized header to apply masking replacement |
+| Property                                                                          | Default | Description                                                                                                     |
+|-----------------------------------------------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------|
+| `app.masking.rules.<my-rule-name>.target.clusters.<...cluster filter options...>` | _all_   | From which clusters to apply masking of topic records. See [cluster filtering options](#cluster-filter-options) |
+| `app.masking.rules.<my-rule-name>.target.topics.<...filter options...>`           | _all_   | From which topics to apply masking of topic records. See [filtering options](#filter-options)                   |
+| `app.masking.rules.<my-rule-name>.value-json-paths`                               | _none_  | Comma-separated list of json path field in record's deserialized value to apply masking replacement             |
+| `app.masking.rules.<my-rule-name>.key-json-paths`                                 | _none_  | Comma-separated list of json path field in record's deserialized key to apply masking replacement               |
+| `app.masking.rules.<my-rule-name>.headers-json-paths.<header-name>`               | _none_  | Comma-separated list of json path field in record's deserialized header to apply masking replacement            |
 
 Rules for masking can be obtained by supplying custom implementation of
 [RecordTimestampExtractor](kafkistry-consume/src/main/kotlin/com/infobip/kafkistry/service/consume/masking/RecordMaskingRuleProvider.kt)
@@ -871,13 +880,11 @@ This information gives insight what is the _"effective time retention"_ in cases
 low `retention.bytes` and high throughput, which might cause effective retention to be much 
 less than `retention.ms`.
 
-| Property                                  | Default | Description                                                                            |
-|-------------------------------------------|---------|----------------------------------------------------------------------------------------|
-| `OLDEST_RECORD_AGE_ENABLED`               | `true`  | Enable/disable sampling of oldest (lowest offset) record timestamp                     |
-| `app.oldest-record-age.included-clusters` | _none_  | Comma-separated list of cluster identifiers, consume records only from those clusters  |
-| `app.oldest-record-age.excluded-clusters` | _none_  | Comma-separated list of cluster identifiers,  do not consume records from those topics |
-| `app.oldest-record-age.included-topics`   | _none_  | Comma-separated list of topic names, consume records only from those topics            |
-| `app.oldest-record-age.excluded-topics`   | _none_  | Comma-separated list of topic names, do not consume records from those topics          |
+| Property                                                                   | Default | Description                                                                                                           |
+|----------------------------------------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------------|
+| `OLDEST_RECORD_AGE_ENABLED`                                                | `true`  | Enable/disable sampling of oldest (lowest offset) record timestamp                                                    |
+| `app.oldest-record-age.enabled-on.clusters.<...cluster filter options...>` | _all_   | Nested properties for which **clusters** to enable sampling. See [cluster filtering options](#cluster-filter-options) |
+| `app.oldest-record-age.enabled-on.topics.<...filter options...>`           | _all_   | Nested properties for which **topics** to enable sampling. See [filtering options](#filter-options)                   |
 
 Default implementation for extraction of timestamp from `ConsumerRecord` simply uses `ConsumerRecord.timestamp()` method.
 This behaviour can be changed by supplying custom implementation of 
@@ -899,26 +906,26 @@ topic should have same or similar structure.
 
 Options to configure analyzer.
 
-| Property                                                                        | Default                          | Description                                                                                                                                                    |
-|---------------------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `RECORD_ANALYZER_ENABLED`                                                       | `true`                           |                                                                                                                                                                |
-| `RECORD_ANALYZER_STORAGE_DIR`                                                   | `kafkistry/record-analyzer-data` | Path to directory where Kafkistry will persist analyzed data on disk                                                                                           |
-| `RECORD_ANALYZER_TRIM_TIME_WINDOW`                                              | `259200000` (3days)              | Width of time window. (If some field in JSON hadn't been seen for more than this time it will be removed from index)                                           |
-| `RECORD_ANALYZER_CONCURRENCY`                                                   | `1`                              | How many threads should handle analysis                                                                                                                        |
-| `RECORD_ANALYZER_MAX_QUEUE_SIZE`                                                | `20000`                          | Actual sampling is performed by different thread than analysing thread. This is max size of in-memory queue for records being sampled and waiting for analysis |
-| `RECORD_ANALYZER_TRIM_AND_DUMP_RATE`                                            | `120000` (2min)                  | How often to evict old fields from tree structure and to persist whole index on disk                                                                           |
-| `RECORD_ANALYZER_VALUE_SAMPLING_ENABLED`                                        | `true`                           | Should values of json field be analysed, `false` means that only value type is indexed                                                                         |
-| `RECORD_ANALYZER_VALUES_MAX_CARDINALITY`                                        | `25`                             | Threshold for how many different values are considered to be high-cardinality                                                                                  |
-| `app.record-analyzer.enabled-on.clusters.<...filter options...>`                | _all_                            | From which clusters to perform analysis of topic records. See [filtering options](#filter-options)                                                             |
-| `app.record-analyzer.enabled-on.topics.<...filter options...>`                  | _all_                            | From which topics to perform analysis of topic records. See [filtering options](#filter-options)                                                               |
-| `app.record-analyzer.value-sampling.enabled`                                    | `true`                           | Weather or not to sample values of analyzer records.                                                                                                           |
-| `app.record-analyzer.value-sampling.max-number-abs`                             | `1000000`                        | In case of numeric field having magnitude bigger than this value will cause to mark it as too-big                                                              |
-| `app.record-analyzer.value-sampling.max-string-length`                          | `50`                             | In case of string field having length more than this value will cause to mark it as too-big                                                                    |
-| `app.record-analyzer.value-sampling.max-cardinality`                            | `25`                             | In case of sampling sees more different values, particular field will be marked as high-cardinality field                                                      |
-| `app.record-analyzer.value-sampling.enabled-on.clusters.<...filter options...>` | _all_                            | From which clusters to sample values of topic records. See [filtering options](#filter-options)                                                                |
-| `app.record-analyzer.value-sampling.enabled-on.topics.<...filter options...>`   | _all_                            | From which topics to sample values of topic records. See [filtering options](#filter-options)                                                                  |
-| `app.record-analyzer.value-sampling.included-fields`                            | _none_                           | Comma-separated list of json path field, sample values only from json fields of this whitelist                                                                 |
-| `app.record-analyzer.value-sampling.excluded-fields`                            | _none_                           | Comma-separated list of json path field, do not sample values from json fields of this blacklist                                                               |
+| Property                                                                                | Default                          | Description                                                                                                                                                    |
+|-----------------------------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `RECORD_ANALYZER_ENABLED`                                                               | `true`                           |                                                                                                                                                                |
+| `RECORD_ANALYZER_STORAGE_DIR`                                                           | `kafkistry/record-analyzer-data` | Path to directory where Kafkistry will persist analyzed data on disk                                                                                           |
+| `RECORD_ANALYZER_TRIM_TIME_WINDOW`                                                      | `259200000` (3days)              | Width of time window. (If some field in JSON hadn't been seen for more than this time it will be removed from index)                                           |
+| `RECORD_ANALYZER_CONCURRENCY`                                                           | `1`                              | How many threads should handle analysis                                                                                                                        |
+| `RECORD_ANALYZER_MAX_QUEUE_SIZE`                                                        | `20000`                          | Actual sampling is performed by different thread than analysing thread. This is max size of in-memory queue for records being sampled and waiting for analysis |
+| `RECORD_ANALYZER_TRIM_AND_DUMP_RATE`                                                    | `120000` (2min)                  | How often to evict old fields from tree structure and to persist whole index on disk                                                                           |
+| `RECORD_ANALYZER_VALUE_SAMPLING_ENABLED`                                                | `true`                           | Should values of json field be analysed, `false` means that only value type is indexed                                                                         |
+| `RECORD_ANALYZER_VALUES_MAX_CARDINALITY`                                                | `25`                             | Threshold for how many different values are considered to be high-cardinality                                                                                  |
+| `app.record-analyzer.enabled-on.clusters.<...cluster filter options...>`                | _all_                            | From which clusters to perform analysis of topic records. See [cluster filtering options](#cluster-filter-options)                                             |
+| `app.record-analyzer.enabled-on.topics.<...filter options...>`                          | _all_                            | From which topics to perform analysis of topic records. See [filtering options](#filter-options)                                                               |
+| `app.record-analyzer.value-sampling.enabled`                                            | `true`                           | Weather or not to sample values of analyzer records.                                                                                                           |
+| `app.record-analyzer.value-sampling.max-number-abs`                                     | `1000000`                        | In case of numeric field having magnitude bigger than this value will cause to mark it as too-big                                                              |
+| `app.record-analyzer.value-sampling.max-string-length`                                  | `50`                             | In case of string field having length more than this value will cause to mark it as too-big                                                                    |
+| `app.record-analyzer.value-sampling.max-cardinality`                                    | `25`                             | In case of sampling sees more different values, particular field will be marked as high-cardinality field                                                      |
+| `app.record-analyzer.value-sampling.enabled-on.clusters.<...cluster filter options...>` | _all_                            | From which clusters to sample values of topic records. See [cluster filtering options](#cluster-filter-options)                                                |
+| `app.record-analyzer.value-sampling.enabled-on.topics.<...filter options...>`           | _all_                            | From which topics to sample values of topic records. See [filtering options](#filter-options)                                                                  |
+| `app.record-analyzer.value-sampling.included-fields`                                    | _none_                           | Comma-separated list of json path field, sample values only from json fields of this whitelist                                                                 |
+| `app.record-analyzer.value-sampling.excluded-fields`                                    | _none_                           | Comma-separated list of json path field, do not sample values from json fields of this blacklist                                                               |
 
 
 
@@ -1030,11 +1037,11 @@ It works by:
  - topics consumed by that consumer group are marked as _inputTopics_ of KStream app
  - topics having name `<consumerGroup/kStreamAppId>-KSTREAM-*` are marked as _internalTopics_ of KStream app
 
-| Property                                                                  | Default | Description                                                                             |
-|---------------------------------------------------------------------------|---------|-----------------------------------------------------------------------------------------|
-| `app.kstream.detection.enabled-on.clusters.<...filter options...>`        | _all_   | On which clusters to detect KStreams. See [filtering options](#filter-options)          |
-| `app.kstream.detection.enabled-on.consumer-groups.<...filter options...>` | _all_   | For which consumer groups to detect KStreams. See [filtering options](#filter-options)  |
-| `app.kstream.detection.enabled-on.topics.<...filter options...>`          | _all_   | Which topics to include in KStreams detection. See [filtering options](#filter-options) |
+| Property                                                                   | Default | Description                                                                                    |
+|----------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------|
+| `app.kstream.detection.enabled-on.clusters.<...cluster filter options...>` | _all_   | On which clusters to detect KStreams. See [cluster filtering options](#cluster-filter-options) |
+| `app.kstream.detection.enabled-on.consumer-groups.<...filter options...>`  | _all_   | For which consumer groups to detect KStreams. See [filtering options](#filter-options)         |
+| `app.kstream.detection.enabled-on.topics.<...filter options...>`           | _all_   | Which topics to include in KStreams detection. See [filtering options](#filter-options)        |
 
 
 
@@ -1110,19 +1117,21 @@ app.topic-validation:
 
 - [SegmentSizeToRetentionBytesRatioRule](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/validation/rules/SegmentSizeToRetentionBytesRatioRule.kt)
   - Verifies that topic's segment size is not too big nor too small comparing to retention size
-  - | Property  | Default | Description |
-    |-----------|---------|-------------|
-    | `app.topic-validation.segment-size-rule.max-ratio-to-retention-bytes` | `0.5` | Raises violation if topic's `segmment.bytes` > `0.5 * retention.bytes` |
-    | `app.topic-validation.segment-size-rule.min-ratio-to-retention-bytes` | `0.02` | Raises violation if topic's `segmment.bytes` < `0.02 * retention.bytes` |
+  -
+    | Property                                                              | Default | Description                                                             |
+    |-----------------------------------------------------------------------|---------|-------------------------------------------------------------------------|
+    | `app.topic-validation.segment-size-rule.max-ratio-to-retention-bytes` | `0.5`   | Raises violation if topic's `segmment.bytes` > `0.5 * retention.bytes`  |
+    | `app.topic-validation.segment-size-rule.min-ratio-to-retention-bytes` | `0.02`  | Raises violation if topic's `segmment.bytes` < `0.02 * retention.bytes` |
 
 - [KStreamPartitionCountRule](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/validation/rules/KStreamPartitionCountRule.kt)
   - In most cases, when using KStreams there is requirement that joining topics have the same partition count so called co-partitioning.
   - This rule exists to warn before proceeding to change partition count of one of topics involved in specific KStream application
   - This rule might raise false positive violation in cases when co-partitioning is not requirement. In such cases this rule can be disabled for particular topic, or whole rule can be disabled.
-  - | Property  | Default | Description |
-    |-----------|---------|-------------|
-    | `app.topic-validation.kstream-partition-count.enabled-on.clusters.<include/exclude>` | _all_ | On which clusters to check KStream's topics partition count for co-partition match, see [options](#filter-options) |
-    | `app.topic-validation.kstream-partition-count.enabled-on.topics.<include/exclude>` | _all_ | For which topics to check KStream's topics partition count for co-partition match, see [options](#filter-options) |
+  -
+    | Property                                                                                         | Default | Description                                                                                                                        |
+    |--------------------------------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------------------------------------------------|
+    | `app.topic-validation.kstream-partition-count.enabled-on.clusters.<...cluster filter options..>` | _all_   | On which clusters to check KStream's topics partition count for co-partition match, see [cluster options](#cluster-filter-options) |
+    | `app.topic-validation.kstream-partition-count.enabled-on.topics.<...filter options...>`          | _all_   | For which topics to check KStream's topics partition count for co-partition match, see [options](#filter-options)                  |
 
 ## ACLs inspection
 
@@ -1137,19 +1146,12 @@ Currently, there are two types of conflicts detection implemented:
 
 Those checks can be disabled globally or per specific cluster:
 
-| Property                                              | Default | Description                                                              |
-|-------------------------------------------------------|---------|--------------------------------------------------------------------------|
-| `ACL_GROUP_CONFLICT_ENABLED`                          | _true_  | Flag to globally enable/disable consumer group conflict checking.        |
-| `ACL_GROUP_CONFLICT_INCLUDED_CLUSTERS`                | _all_   | Comma-separated list of cluster identifiers to perform checking.         |
-| `ACL_GROUP_CONFLICT_EXCLUDED_CLUSTERS`                | _none_  | Comma-separated list of cluster identifiers **NOT** to perform checking. |
-| `ACL_GROUP_CONFLICT_INCLUDED_CLUSTER_TAGS`            | _all_   | Comma-separated list of cluster tags to perform checking.                |
-| `ACL_GROUP_CONFLICT_EXCLUDED_CLUSTER_TAGS`            | _none_  | Comma-separated list of cluster tags **NOT** to perform checking.        |
-| `ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED`               | _true_  | Flag to globally enable/disable transactional id conflict checking.      |
-| `ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTERS`     | _all_   | Comma-separated list of cluster identifiers to perform checking.         |
-| `ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTERS`     | _none_  | Comma-separated list of cluster identifiers **NOT** to perform checking. |
-| `ACL_TRANSACTIONAL_ID_CONFLICT_INCLUDED_CLUSTER_TAGS` | _all_   | Comma-separated list of cluster tags to perform checking.                |
-| `ACL_TRANSACTIONAL_ID_CONFLICT_EXCLUDED_CLUSTER_TAGS` | _none_  | Comma-separated list of cluster tags **NOT** to perform checking.        |
-
+| Property                                                                                         | Default | Description                                                                                                                                                  |
+|--------------------------------------------------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ACL_GROUP_CONFLICT_ENABLED`                                                                     | _true_  | Flag to globally enable/disable consumer group conflict checking.                                                                                            |
+| `app.acl.conflict-checking.consumer-groups.enabled-on-clusters.<...cluster filter options...>`   | _all_   | Selective options to filter for which clusters to perform **consumer groups** ACL conflict checking. See [cluster filter options](#cluster-filter-options)   |
+| `ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED`                                                          | _true_  | Flag to globally enable/disable transactional id conflict checking.                                                                                          |
+| `app.acl.conflict-checking.transactional-ids.enabled-on-clusters.<...cluster filter options...>` | _all_   | Selective options to filter for which clusters to perform **transactional ids** ACL conflict checking. See [cluster filter options](#cluster-filter-options) |
 
 ## SQL metadata querying - SQLite
 

@@ -9,6 +9,7 @@ import com.infobip.kafkistry.kafka.RecordSampler
 import com.infobip.kafkistry.kafka.RecordSamplingListener
 import com.infobip.kafkistry.metric.MetricHolder
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
@@ -105,7 +106,7 @@ class RecordStructureAnalyzerExecutor(
     /**
      * Accept all sampled records into this queue and process each by different processing thread(s)
      */
-    private val queue: Queue<Pair<KafkaClusterIdentifier, ConsumerRecord<ByteArray?, ByteArray?>>> =
+    private val queue: Queue<Pair<ClusterRef, ConsumerRecord<ByteArray?, ByteArray?>>> =
         ArrayDeque(properties.executor.maxQueueSize)
     private val queueLock = ReentrantLock()
     private val queueCondition = queueLock.newCondition()
@@ -146,12 +147,12 @@ class RecordStructureAnalyzerExecutor(
     override fun isRunning(): Boolean = running
 
     override fun need(
-        samplingPosition: SamplingPosition, clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName
+        samplingPosition: SamplingPosition, clusterRef: ClusterRef, topicName: TopicName
     ): Boolean {
-        return samplingPosition == SamplingPosition.NEWEST && analyzeFilter.shouldAnalyze(clusterIdentifier, topicName)
+        return samplingPosition == SamplingPosition.NEWEST && analyzeFilter.shouldAnalyze(clusterRef, topicName)
     }
 
-    override fun sampler(samplingPosition: SamplingPosition, clusterIdentifier: KafkaClusterIdentifier) =
+    override fun sampler(samplingPosition: SamplingPosition, clusterRef: ClusterRef) =
         object : RecordSampler {
 
             /**
@@ -165,7 +166,7 @@ class RecordStructureAnalyzerExecutor(
                         queue.poll()    //drop record, better to skip some than exhaust memory
                         droppedMessagesCount.inc()
                     }
-                    queue.offer(clusterIdentifier to consumerRecord)
+                    queue.offer(clusterRef to consumerRecord)
                     queueCondition.signal()
                 }
                 updateQueueSizeMetric()
@@ -193,16 +194,16 @@ class RecordStructureAnalyzerExecutor(
     }
 
     private fun processRecord(
-        cluster: KafkaClusterIdentifier, record: ConsumerRecord<ByteArray?, ByteArray?>
+        cluster: ClusterRef, record: ConsumerRecord<ByteArray?, ByteArray?>
     ) {
-        sampledMessagesCount.labels(cluster, record.topic()).inc()
+        sampledMessagesCount.labels(cluster.identifier, record.topic()).inc()
         val timer = analyzeLatency.startTimer()
         val success = issuesRegistry.doCapturingException("record-analyzer", "Analyze one record", 60_000L) {
             analyzer.analyzeRecord(cluster, record)
         }
         timer.observeDuration()
         if (!success) {
-            failedMessagesCount.labels(cluster, record.topic()).inc()
+            failedMessagesCount.labels(cluster.identifier, record.topic()).inc()
         }
     }
 

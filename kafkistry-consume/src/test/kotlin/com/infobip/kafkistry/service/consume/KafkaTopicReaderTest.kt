@@ -16,6 +16,7 @@ import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.KafkistryConsumeException
 import org.junit.After
 import org.junit.Before
@@ -269,7 +270,7 @@ private fun String.asValue(): KafkaValue {
         "---", 0,0, ByteArray(0), this.encodeToByteArray()
     )
     val record = RecordFactoryTest.factory.creatorFor(
-        "", "", RecordDeserialization.ANY
+        "", ClusterRef(""), RecordDeserialization.ANY
     ).create(consumerRecord)
     return record.value
 }

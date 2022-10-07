@@ -4,6 +4,7 @@ import io.prometheus.client.Collector
 import org.apache.kafka.common.config.TopicConfig
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
@@ -110,7 +111,8 @@ class RetentionMetricsCollector(
             topicStatuses.statusPerClusters.flatMap TopicCluster@{ topicStatus ->
                 val existingTopic = topicStatus.existingTopicInfo ?: return@TopicCluster emptyList()
                 val clusterIdentifier = topicStatus.clusterIdentifier
-                if (!filter(clusterIdentifier, topicName)) {
+                val clusterRef = ClusterRef(topicStatus.clusterIdentifier, topicStatus.clusterTags)
+                if (!filter(clusterRef, topicName)) {
                     return@flatMap emptyList()
                 }
                 val retentionMs = existingTopic.config[TopicConfig.RETENTION_MS_CONFIG]?.value?.toLongOrNull()

@@ -24,16 +24,16 @@ class RecordStructureAnalyzer(
     private val clusterRecordsStructures: ClusterRecordsStructuresMap = load()
 
     fun analyzeRecord(
-        clusterIdentifier: KafkaClusterIdentifier,
+        clusterRef: ClusterRef,
         consumerRecord: ConsumerRecord<ByteArray?, ByteArray?>
     ) {
-        if (!analyzeFilter.shouldAnalyze(clusterIdentifier, consumerRecord.topic())) {
+        if (!analyzeFilter.shouldAnalyze(clusterRef, consumerRecord.topic())) {
             return
         }
         AnalyzeContext(
             properties, analyzeFilter, objectMapper,
             topic = consumerRecord.topic(),
-            cluster = clusterIdentifier,
+            cluster = clusterRef,
         ).analyzeRecord(consumerRecord, clusterRecordsStructures)
     }
 

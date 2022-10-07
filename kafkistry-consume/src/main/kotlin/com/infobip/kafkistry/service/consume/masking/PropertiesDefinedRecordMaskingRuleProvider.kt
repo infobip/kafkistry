@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.consume.masking
 
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consume.JsonPathDef
 import com.infobip.kafkistry.utils.ClusterTopicFilter
@@ -47,11 +47,11 @@ class PropertiesDefinedRecordMaskingRuleProvider(
         )
     }
 
-    private val topicClusterSpecs = ConcurrentHashMap<Pair<TopicName, KafkaClusterIdentifier>, List<TopicMaskingSpec>>()
+    private val topicClusterSpecs = ConcurrentHashMap<Pair<TopicName, ClusterRef>, List<TopicMaskingSpec>>()
 
-    override fun maskingSpecFor(topic: TopicName, clusterIdentifier: KafkaClusterIdentifier): List<TopicMaskingSpec> {
-        return topicClusterSpecs.computeIfAbsent(topic to clusterIdentifier) {
-            specs.filter { it.clusterTopicFilter.filter(clusterIdentifier, topic) }.map { it.maskingSpec }
+    override fun maskingSpecFor(topic: TopicName, clusterRef: ClusterRef): List<TopicMaskingSpec> {
+        return topicClusterSpecs.computeIfAbsent(topic to clusterRef) {
+            specs.filter { it.clusterTopicFilter.filter(clusterRef, topic) }.map { it.maskingSpec }
         }
     }
 

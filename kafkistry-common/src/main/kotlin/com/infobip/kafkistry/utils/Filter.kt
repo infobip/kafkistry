@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.utils
 
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
@@ -48,35 +49,58 @@ class Filter(private val properties: FilterProperties) : (String) -> Boolean {
 
 }
 
+class ClusterFilterProperties {
+
+    @NestedConfigurationProperty
+    var identifiers = FilterProperties()
+
+    @NestedConfigurationProperty
+    var tags = FilterProperties()
+}
+
+open class ClusterFilter(
+    properties: ClusterFilterProperties
+): (ClusterRef) -> Boolean {
+
+    private val identifierFilter = Filter(properties.identifiers)
+    private val tagFilter = Filter(properties.tags)
+
+    fun enabled(clusterIdentifier: KafkaClusterIdentifier): Boolean = this(ClusterRef(clusterIdentifier))
+    fun enabled(clusterRef: ClusterRef): Boolean = this(clusterRef)
+
+    override fun invoke(
+        clusterRef: ClusterRef
+    ): Boolean = identifierFilter(clusterRef.identifier) && tagFilter.matches(clusterRef.tags)
+}
 
 class ClusterTopicFilterProperties {
 
     @NestedConfigurationProperty
-    var clusters = FilterProperties()
+    var clusters = ClusterFilterProperties()
 
     @NestedConfigurationProperty
     var topics = FilterProperties()
 }
 
 open class ClusterTopicFilter(
-    clusters: FilterProperties,
+    clusters: ClusterFilterProperties,
     topics: FilterProperties,
-): (KafkaClusterIdentifier, TopicName) -> Boolean {
+): (ClusterRef, TopicName) -> Boolean {
 
     constructor(properties: ClusterTopicFilterProperties): this(properties.clusters, properties.topics)
 
-    private val clusterFilter = Filter(clusters)
+    private val clusterFilter = ClusterFilter(clusters)
     private val topicFilter = Filter(topics)
 
     fun filter(
-        clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName,
-    ): Boolean = this(clusterIdentifier, topicName)
+        clusterRef: ClusterRef, topicName: TopicName,
+    ): Boolean = this(clusterRef, topicName)
 
     override fun invoke(
-        clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName
-    ): Boolean = clusterFilter(clusterIdentifier) && topicFilter(topicName)
+        clusterRef: ClusterRef, topicName: TopicName
+    ): Boolean = clusterFilter(clusterRef) && topicFilter(topicName)
 
-    fun testCluster(clusterIdentifier: KafkaClusterIdentifier): Boolean = clusterFilter(clusterIdentifier)
+    fun testCluster(clusterRef: ClusterRef): Boolean = clusterFilter(clusterRef)
     fun testTopic(topicName: TopicName): Boolean = topicFilter(topicName)
 
 }
@@ -84,7 +108,7 @@ open class ClusterTopicFilter(
 class ClusterTopicConsumerGroupFilterProperties {
 
     @NestedConfigurationProperty
-    var clusters = FilterProperties()
+    var clusters = ClusterFilterProperties()
 
     @NestedConfigurationProperty
     var topics = FilterProperties()
@@ -94,18 +118,18 @@ class ClusterTopicConsumerGroupFilterProperties {
 }
 
 open class ClusterTopicConsumerGroupFilter(
-    clusters: FilterProperties,
+    clusters: ClusterFilterProperties,
     topics: FilterProperties,
     consumerGroups: FilterProperties,
-): ClusterTopicFilter(clusters, topics), (KafkaClusterIdentifier, TopicName, ConsumerGroupId) -> Boolean {
+): ClusterTopicFilter(clusters, topics), (ClusterRef, TopicName, ConsumerGroupId) -> Boolean {
 
     constructor(properties: ClusterTopicConsumerGroupFilterProperties): this(properties.clusters, properties.topics, properties.consumerGroups)
 
     private val consumerGroupsFilter = Filter(consumerGroups)
 
     override fun invoke(
-        clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName, consumerGroupId: ConsumerGroupId
-    ): Boolean = this(clusterIdentifier, topicName) && consumerGroupsFilter(consumerGroupId)
+        clusterRef: ClusterRef, topicName: TopicName, consumerGroupId: ConsumerGroupId
+    ): Boolean = this(clusterRef, topicName) && consumerGroupsFilter(consumerGroupId)
 
     fun testConsumerGroup(consumerGroupId: ConsumerGroupId): Boolean = consumerGroupsFilter(consumerGroupId)
 }
