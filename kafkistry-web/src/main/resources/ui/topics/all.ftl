@@ -42,7 +42,7 @@
                 <div class="clone-existing-container" style="display: none;">
                     <form class="form-inline mb-0" action="${appUrl.topics().showCloneAddNewTopic()}" method="get">
                         <label>
-                            <input id="cloneInput" class="m-2" style="width: 300px;" type="search"
+                            <input id="cloneInput" class="m-2 form-control" style="width: 300px;" type="search"
                                    name="topicName" placeholder="Choose existing topic...">
                         </label>
                     </form>

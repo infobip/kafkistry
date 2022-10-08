@@ -148,14 +148,14 @@ abstract class UITestCase(
 
     fun clearTopicsSearch() {
         //because previous search can have content already filled in
-        browser.findElementByCssSelector("input.form-control[type=search]")
+        browser.findElementByCssSelector(".dataTables_filter input.form-control[type=search]")
             .sendKeys(Keys.chord(Keys.CONTROL,"a", Keys.DELETE))
     }
 
     fun topicsPageSearchAndOpenTopic(name: String) {
         clearTopicsSearch()
         //type topic in search
-        browser.findElementByCssSelector("input.form-control[type=search]").sendKeys(name)
+        browser.findElementByCssSelector(".dataTables_filter input.form-control[type=search]").sendKeys(name)
         //open topic inspect
         browser.findElementWithText(name).click()
     }
