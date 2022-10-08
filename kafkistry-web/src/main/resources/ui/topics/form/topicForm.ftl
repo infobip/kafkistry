@@ -12,6 +12,12 @@
 <#import "../../common/documentation.ftl" as doc>
 <#import "../../common/infoIcon.ftl" as info>
 
+<style>
+    .bootstrap-select {
+        max-width: 700px !important;
+    }
+</style>
+
 <div hidden="hidden" id="yaml-source-metadata"
      data-source-type="${topicSourceType}"
      data-id="<#if !(newName??)>${topic.name}</#if>"
@@ -80,18 +86,63 @@
                 <#assign resourceRequirements = topic.resourceRequirements>
             </#if>
             <#include "topicResourceRequirements.ftl">
-            <div class="resource-input-row form-group row">
-                <div class="col">
-                    <div id="applyRequirementsToConfig" role="button"
-                         class="btn btn-sm btn-outline-info float-right">
-                        Apply requirements to config
+            <#import "topicFormConfigComponents.ftl" as comp>
+
+            <div class="resource-input-row">
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-">
+                        <button id="apply-requirements-show-opts" class="btn btn-sm btn-outline-info">
+                            Apply requirements to config...
+                            <#assign applyTooltip>
+                                Apply means changing various configuration properties based on given expectations.
+                                For example, adjusting <code>retention.bytes</code>, <code>retention.ms</code>, etc...<br/>
+                                Apply action only modifies current UI's form properties to conform given requirements.<br/>
+                                Minimization of config is also applied during apply.<br/>
+                                Check diff at bottom of page to get info about what has been changed.
+                            </#assign>
+                            <@info.icon tooltip = applyTooltip/>
+                        </button>
                     </div>
-                    <div class="clearfix"></div>
-                    <#assign statusId = "applyResourceRequirementsStatus">
-                    <#include "../../common/serverOpStatus.ftl">
-                    <#assign statusId = "">
+                    <div class="col"></div>
                 </div>
+                <div id="apply-requirements-menu" class="m-2" style="display: none;">
+                    <div class="row">
+                        <div class="col"></div>
+                        <div class="col-">
+                            <div class="m-1">
+                                <button id="apply-requirements-for-all" class="btn btn-sm btn-primary">
+                                    Apply for all
+                                    <#assign applyTooltip>
+                                        Apply needed config adjusting for <strong>all</strong> relevant clusters.
+                                    </#assign>
+                                    <@info.icon tooltip = applyTooltip/>
+                                </button>
+                                <button id="apply-requirements-for-selected" class="btn btn-sm btn-success">
+                                    Apply only for selected
+                                    <#assign applyTooltip>
+                                        Apply needed config adjusting only for <strong>selected</strong> clusters or
+                                        clusters having selected tag.
+                                    </#assign>
+                                    <@info.icon tooltip = applyTooltip/>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col"></div>
+                        <div class="m-1 col- apply-requirements-menu-item">
+                            <@comp.commonLocComp.selectLocation selectedIdentifier="" selectedTag="" multi=true/>
+                        </div>
+                        <div class="col"></div>
+                    </div>
+                </div>
+                <#assign statusId = "applyResourceRequirementsStatus">
+                <#include "../../common/serverOpStatus.ftl">
+                <#assign statusId = "">
             </div>
+
         </div>
     </div>
 </div>

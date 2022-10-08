@@ -118,8 +118,12 @@ class SuggestionApi(
 
     @PostMapping("/apply-resource-requirements")
     fun applyResourceRequirements(
+        @RequestParam(name = "onlyClusterIdentifiers", required = false) onlyClusterIdentifiers: Set<KafkaClusterIdentifier>?,
+        @RequestParam(name = "onlyClusterTags", required = false) onlyClusterTags: Set<Tag>?,
         @RequestBody topicDescription: TopicDescription
-    ): TopicDescription = suggestionService.applyResourceRequirements(topicDescription)
+    ): TopicDescription = suggestionService.applyResourceRequirements(
+        topicDescription, onlyClusterIdentifiers, onlyClusterTags
+    )
 
     @GetMapping("/import-principal-acls")
     fun suggestPrincipalAclsImport(

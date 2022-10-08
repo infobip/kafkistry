@@ -13,7 +13,14 @@ $(document).ready(function () {
     $("#dry-run-inspect-btn").click(dryRunInspectConfig);
     $("input[name='propertiesOverridden']").each(togglePropertiesOverridden);
     $("input[name='resourceRequirementsDefined']").click(toggleResourceRequirementsDefined);
-    $("#applyRequirementsToConfig").click(applyRequirementsToConfig);
+
+    initChildSelectPickers($(".apply-requirements-menu-item"));
+    $("#apply-requirements-show-opts").click(function () {
+        $("#apply-requirements-menu").toggle();
+    });
+    $("#apply-requirements-for-all").click(applyRequirementsToConfig);
+    $("#apply-requirements-for-selected").click(applyRequirementsToConfigForSelected);
+
     initSelectLocationPickers("#clusters .cluster-override");
     initSelectConfigPropertyPickers(".globalConfig");
     initSelectConfigPropertyPickers("#clusters .cluster-override");
@@ -344,10 +351,39 @@ function dryRunInspectConfig() {
 }
 
 function applyRequirementsToConfig() {
+    doApplyRequirementsToConfig([], []);
+}
+
+function applyRequirementsToConfigForSelected() {
+    let selectedLocations = selectedLocationsIn($(".apply-requirements-menu-item"));
+    if (selectedLocations.length === 0) {
+        showOpErrorOnId("applyResourceRequirementsStatus", "Nothing is selected to apply.");
+        return;
+    }
+    let clusters = [];
+    let tags = [];
+    selectedLocations.forEach(function (location) {
+        switch (location.type) {
+            case "CLUSTER":
+                clusters.push(location.value);
+                break;
+            case "TAG":
+                tags.push(location.value);
+                break;
+        }
+    });
+    doApplyRequirementsToConfig(clusters, tags);
+}
+
+function doApplyRequirementsToConfig(onlyClusterIdentifiers, onlyClusterTags) {
+    $("#apply-requirements-menu").hide();
     showOpProgressOnId("applyResourceRequirementsStatus", "Applying resource requirements to config...");
     let topicDescription = extractTopicDescription();
     $
-        .ajax("api/suggestion/apply-resource-requirements", {
+        .ajax("api/suggestion/apply-resource-requirements" +
+            "?onlyClusterIdentifiers="+onlyClusterIdentifiers.join(",") +
+            "&onlyClusterTags="+onlyClusterTags.join(",")
+            , {
             method: "POST",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify(topicDescription)

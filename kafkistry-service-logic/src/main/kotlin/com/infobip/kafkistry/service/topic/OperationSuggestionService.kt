@@ -462,19 +462,31 @@ class OperationSuggestionService(
         return overridesMinimizer.minimizeOverrides(this, allClusterRefs)
     }
 
-    fun applyResourceRequirements(topicDescription: TopicDescription): TopicDescription {
+    fun applyResourceRequirements(
+        topicDescription: TopicDescription,
+        onlyClusterIdentifiers: Set<KafkaClusterIdentifier>?,
+        onlyClusterTags: Set<Tag>?,
+    ): TopicDescription {
         val resourceRequirements = topicDescription.resourceRequirements
             ?: throw KafkistryIllegalStateException("Can't apply undefined resource requirements")
-        return clustersRegistry.listClusters()
+        return clustersRegistry.listClustersRefs()
+            .filter { clusterRef ->
+                val identifiers = onlyClusterIdentifiers.orEmpty()
+                val tags = onlyClusterTags.orEmpty()
+                when {
+                    identifiers.isEmpty() && tags.isEmpty() -> true
+                    else -> (clusterRef.identifier in identifiers) || (tags.any { it in clusterRef.tags })
+                }
+            }
             .map { it to clusterStateProvider.getLatestClusterState(it.identifier) }
-            .fold(topicDescription) { resultTopicDescription, (cluster, clusterState) ->
+            .fold(topicDescription) { resultTopicDescription, (clusterRef, clusterState) ->
                 val currentPartitionCount = clusterState.valueOrNull()
                     ?.topics
                     ?.find { it.name == topicDescription.name }
                     ?.partitionsAssignments?.size
                 val newPartitionCount =
-                    topicWizardConfigGenerator.determinePartitionCount(resourceRequirements, cluster.ref())
-                val oldTopicProperties = topicDescription.propertiesForCluster(cluster.ref())
+                    topicWizardConfigGenerator.determinePartitionCount(resourceRequirements, clusterRef)
+                val oldTopicProperties = topicDescription.propertiesForCluster(clusterRef)
                 val topicProperties = if (currentPartitionCount == null || currentPartitionCount < newPartitionCount) {
                     //do not suggest lower partition count than existing topic already has
                     oldTopicProperties.copy(partitionCount = newPartitionCount)
@@ -485,20 +497,19 @@ class OperationSuggestionService(
                     topicProperties = topicProperties,
                     resourceRequirements = resourceRequirements,
                     clusterInfo = clusterState.valueOrNull()?.clusterInfo,
-                    clusterRef = cluster.ref(),
+                    clusterRef = clusterRef,
                 )
 
                 val retentionBytes = requiredUsages.diskUsagePerPartitionReplica
                 val segmentBytes = topicWizardConfigGenerator.determineSegmentBytes(retentionBytes)
                 resultTopicDescription
-                    .withClusterProperties(cluster.identifier, topicProperties)
-                    .withClusterProperty(cluster.identifier, "retention.bytes", retentionBytes.toString())
+                    .withClusterProperties(clusterRef.identifier, topicProperties)
+                    .withClusterProperty(clusterRef.identifier, "retention.bytes", retentionBytes.toString())
                     .withClusterProperty(
-                        cluster.identifier,
-                        "retention.ms",
-                        resourceRequirements.retention(cluster.ref()).toMillis().toString()
+                        clusterRef.identifier, "retention.ms",
+                        resourceRequirements.retention(clusterRef).toMillis().toString()
                     )
-                    .withClusterProperty(cluster.identifier, "segment.bytes", segmentBytes.toString())
+                    .withClusterProperty(clusterRef.identifier, "segment.bytes", segmentBytes.toString())
             }
             .minimize()
     }

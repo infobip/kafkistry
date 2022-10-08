@@ -110,6 +110,7 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
 
         //apply resource requirements
         browser.findElementWithText("Apply requirements to config").scrollIntoView().click()
+        browser.findElementWithText("Apply for all").scrollIntoView().click()
         await {
             browser.assertPageText().doesNotContain("Applying resource requirements")
         }
