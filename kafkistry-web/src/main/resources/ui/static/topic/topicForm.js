@@ -7,6 +7,8 @@ $(document).ready(function () {
     $(document).on("click", ".remove-cluster-btn", null, removeClusterOverride);
     $(document).on("click", ".remove-config-btn", null, removeConfigValue);
     $(document).on("click", "input[name='propertiesOverridden']", null, togglePropertiesOverridden);
+    $(document).on("click", ".move-override-up-btn", null, moveOverrideUp);
+    $(document).on("click", ".move-override-down-btn", null, moveOverrideDown);
 
     initAutocompleteOwners(true);
     initAutocompleteProducers(true);
@@ -396,5 +398,25 @@ function doApplyRequirementsToConfig(onlyClusterIdentifiers, onlyClusterTags) {
             let errorMsg = extractErrMsg(error);
             showOpErrorOnId("applyResourceRequirementsStatus", "Applying of resource requirements to config failed", errorMsg);
         });
+}
+
+function moveOverrideUp() {
+    let override = $(this).closest(".cluster-override");
+    let previous = override.prev();
+    if (previous.length === 0) {
+        return;
+    }
+    override.insertBefore(previous);
+    refreshYaml();
+}
+
+function moveOverrideDown() {
+    let override = $(this).closest(".cluster-override");
+    let next = override.next();
+    if (next.length === 0) {
+        return;
+    }
+    next.insertBefore(override);
+    refreshYaml();
 }
 

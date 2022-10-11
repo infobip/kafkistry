@@ -66,6 +66,8 @@
         <div class="row alert-secondary p-1 pt-3 rounded-top">
             <div class="col">
                 <@commonLocComp.selectLocation selectedIdentifier=clusterIdentifier selectedTag=clusterTag/>
+                <div class="move-override-up-btn btn btn-sm btn-outline-info" title="Move override UP">&uarr;</div>
+                <div class="move-override-down-btn btn btn-sm btn-outline-info" title="Move override DOWN">&darr;</div>
             </div>
             <div class="col"></div>
             <div class="col-">
