@@ -514,6 +514,10 @@ class OperationSuggestionService(
             .minimize()
     }
 
+    fun minimizeTopicDescription(topicDescription: TopicDescription): TopicDescription {
+        return topicDescription.minimize()
+    }
+
     fun suggestBrokerTopicPartitionsThrottle(
         throttleBrokerTopicPartitions: ThrottleBrokerTopicPartitions
     ): ThrottleBrokerTopicPartitionsSuggestion {

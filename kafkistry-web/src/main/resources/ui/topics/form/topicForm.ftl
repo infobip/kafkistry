@@ -236,6 +236,42 @@
     </div>
 </div>
 
+<div id="minimize-form" style="display: none;">
+    <br/>
+    <div class="alert alert-success">
+        Topic configuration is detected that it can be minimized. (Having the same effect with fewer overrides)
+        <br/>
+        <table class="table table-sm bg-white">
+            <thead class="thead-light">
+            <tr>
+                <th></th>
+                <th>Current</th>
+                <th>Minimized</th>
+            </tr>
+            </thead>
+            <tr>
+                <th>overrides count</th>
+                <td id="current-num-overrides"></td>
+                <td id="minimized-num-overrides"></td>
+            </tr>
+            <tr>
+                <th>config properties count</th>
+                <td id="current-num-configs"></td>
+                <td id="minimized-num-configs"></td>
+            </tr>
+        </table>
+        <button id="show-minimize-suggestion-diff-btn" class="btn btn-sm btn-success">Show suggestion diff...</button>
+        <div id="minimize-suggestion" style="display: none;" class="p-2 bg-white">
+            <pre id="minimize-suggestion-diff">
+                ---
+            </pre>
+            <button id="apply-suggested-minimization-btn" class="btn btn-sm btn-primary">
+                Apply suggested minimization
+            </button>
+        </div>
+    </div>
+</div>
+
 <br>
 <hr/>
 

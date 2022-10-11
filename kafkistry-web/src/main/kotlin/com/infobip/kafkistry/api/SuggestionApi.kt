@@ -125,6 +125,11 @@ class SuggestionApi(
         topicDescription, onlyClusterIdentifiers, onlyClusterTags
     )
 
+    @PostMapping("/minimize-topic-description")
+    fun applyResourceRequirements(
+        @RequestBody topicDescription: TopicDescription
+    ): TopicDescription = suggestionService.minimizeTopicDescription(topicDescription)
+
     @GetMapping("/import-principal-acls")
     fun suggestPrincipalAclsImport(
         @RequestParam("principal") principal: PrincipalId

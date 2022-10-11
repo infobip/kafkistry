@@ -23,6 +23,14 @@ $(document).ready(function () {
     $("#apply-requirements-for-all").click(applyRequirementsToConfig);
     $("#apply-requirements-for-selected").click(applyRequirementsToConfigForSelected);
 
+    $("#show-minimize-suggestion-diff-btn").click(function () {
+        $("#minimize-suggestion").toggle();
+    });
+    $("#apply-suggested-minimization-btn").click(function () {
+        let topicDescription = JSON.parse($("#minimize-suggestion-diff").attr("data-minimizedTopicDescription"));
+        applyTopicDescription(topicDescription);
+    });
+
     initSelectLocationPickers("#clusters .cluster-override");
     initSelectConfigPropertyPickers(".globalConfig");
     initSelectConfigPropertyPickers("#clusters .cluster-override");
@@ -313,6 +321,7 @@ function refreshYaml() {
     jsonToYaml(topicDescription, function (yaml) {
         let before = initialYaml ? initialYaml : "";
         $("#config-yaml").html(generateDiffHtml(before, yaml));
+        tryMinimizeTopicDescription(topicDescription, yaml);
     });
 }
 
@@ -398,6 +407,72 @@ function doApplyRequirementsToConfig(onlyClusterIdentifiers, onlyClusterTags) {
             let errorMsg = extractErrMsg(error);
             showOpErrorOnId("applyResourceRequirementsStatus", "Applying of resource requirements to config failed", errorMsg);
         });
+}
+
+function tryMinimizeTopicDescription(topicDescription, yaml) {
+    $
+        .ajax("api/suggestion/minimize-topic-description", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(topicDescription)
+        })
+        .done(function (response) {
+            compareMinimizedTopicWithCurrent(topicDescription, yaml, response);
+        })
+        .fail(function (error) {
+            let errorMsg = extractErrMsg(error);
+            console.log("Error on attempt to minimize topic description: "+ errorMsg);
+        });
+}
+
+function compareMinimizedTopicWithCurrent(current, yaml, minimized) {
+    function topicDescriptionWeight(topicDescription) {
+        let keys = {};
+        let configCount = Object.keys(topicDescription.config).length;
+        Object.keys(topicDescription.perClusterProperties).forEach(function (cluster) {
+            keys["cluster-" + cluster] = 1;
+        });
+        Object.keys(topicDescription.perClusterConfigOverrides).forEach(function (cluster) {
+            keys["cluster-" + cluster] = 1;
+            let configOverrides = topicDescription.perClusterConfigOverrides[cluster];
+            if (configOverrides) {
+                configCount += Object.keys(configOverrides).length;
+            }
+        });
+        Object.keys(topicDescription.perTagProperties).forEach(function (tag) {
+            keys["tag-" + tag] = 1;
+        });
+        Object.keys(topicDescription.perTagConfigOverrides).forEach(function (tag) {
+            keys["tag-" + tag] = 1;
+            let configOverrides = topicDescription.perTagConfigOverrides[tag];
+            if (configOverrides) {
+                configCount += Object.keys(configOverrides).length;
+            }
+        });
+        return {
+            overridesCount: Object.keys(keys).length,
+            configCount: configCount,
+            totalWeight: Object.keys(keys).length + configCount,
+        };
+    }
+    let currentWeight = topicDescriptionWeight(current);
+    let minimizedWeight = topicDescriptionWeight(minimized);
+    if (minimizedWeight.totalWeight < currentWeight.totalWeight) {
+        console.log("Can be minimized, old weight = " + JSON.stringify(currentWeight) + ", new weight = " + JSON.stringify(minimizedWeight));
+        $("#current-num-overrides").text(currentWeight.overridesCount);
+        $("#minimized-num-overrides").text(minimizedWeight.overridesCount);
+        $("#current-num-configs").text(currentWeight.configCount);
+        $("#minimized-num-configs").text(minimizedWeight.configCount);
+        $("#minimize-form").show();
+        jsonToYaml(minimized, function (minimizedYaml) {
+            let diff = $("#minimize-suggestion-diff");
+            diff.html(generateDiffHtml(yaml, minimizedYaml));
+            diff.attr("data-minimizedTopicDescription", JSON.stringify(minimized));
+        });
+    } else {
+        console.log("No need to minimize, old weight = " + currentWeight + ", new weight = " + minimizedWeight);
+        $("#minimize-form").hide();
+    }
 }
 
 function moveOverrideUp() {
