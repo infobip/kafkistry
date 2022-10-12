@@ -267,8 +267,10 @@ class OverridesMinimizerTest {
         )
         val minimized = minimizer.minimizeOverrides(original, clustersABCD)
         clustersABCD.assertThatAllEffectiveConfigurationIsSame(original, minimized, true)
-        assertThat(minimized.config).isEqualTo(original.config)
-        assertThat(minimized.perClusterConfigOverrides).isEqualTo(mapOf("c" to mapOf("y" to "b")))
+        assertAll {
+            assertThat(minimized.config).isEqualTo(original.config)
+            assertThat(minimized.perClusterConfigOverrides).isEqualTo(mapOf("c" to mapOf("y" to "b")))
+        }
     }
 
     private val taggedClusters = listOf(
@@ -291,9 +293,11 @@ class OverridesMinimizerTest {
         )
         val minimized = minimizer.minimizeOverrides(original, taggedClusters)
         taggedClusters.assertThatAllEffectiveConfigurationIsSame(original, minimized, true)
-        assertThat(minimized.properties).isEqualTo(original.properties)
-        assertThat(minimized.perTagProperties).isEqualTo(mapOf("large" to TopicProperties(50,4)))
-        assertThat(minimized.perClusterProperties).isEqualTo(mapOf("c" to TopicProperties(10,3)))
+        assertAll {
+            assertThat(minimized.properties).isEqualTo(original.properties)
+            assertThat(minimized.perTagProperties).isEqualTo(mapOf("large" to TopicProperties(50, 4)))
+            assertThat(minimized.perClusterProperties).isEqualTo(mapOf("c" to TopicProperties(10, 3)))
+        }
     }
 
     @Test
@@ -309,39 +313,106 @@ class OverridesMinimizerTest {
         )
         val minimized = minimizer.minimizeOverrides(original, taggedClusters)
         taggedClusters.assertThatAllEffectiveConfigurationIsSame(original, minimized, true)
-        assertThat(minimized.config).isEqualTo(original.config)
-        assertThat(minimized.perTagConfigOverrides).isEqualTo(
-            mapOf("large" to mapOf("x" to "100"), "bar" to mapOf("tagged" to "tv"))
+        assertAll {
+            assertThat(minimized.config).isEqualTo(original.config)
+            assertThat(minimized.perTagConfigOverrides).isEqualTo(
+                mapOf("large" to mapOf("x" to "100"), "bar" to mapOf("tagged" to "tv"))
+            )
+            assertThat(minimized.perClusterConfigOverrides).isEqualTo(mapOf("c" to mapOf("y" to "b")))
+        }
+    }
+
+    private val taggedClusters2 = listOf(
+        ClusterRef("a", tags = listOf("large", "foo")),
+        ClusterRef("b", tags = listOf("large", "bar")),
+        ClusterRef("c", tags = listOf("small", "foo")),
+        ClusterRef("d", tags = listOf("small", "bar")),
+        ClusterRef("e", tags = listOf("small", "foo")),
+        ClusterRef("f", tags = listOf("other")),
+        ClusterRef("g", tags = listOf("other")),
+        ClusterRef("h", tags = listOf("other")),
+        ClusterRef("i", tags = listOf("other")),
+    )
+
+    @Test
+    fun `extract tag property override even when others have same props`() {
+        val original = newTopic(
+            properties = TopicProperties(1, 3),
+            perClusterProperties = mapOf(
+                "a" to TopicProperties(2, 4),
+                "b" to TopicProperties(2, 4),
+                "c" to TopicProperties(2, 4),
+                "d" to TopicProperties(1, 3),
+            )
         )
-        assertThat(minimized.perClusterConfigOverrides).isEqualTo(mapOf("c" to mapOf("y" to "b")))
+        val minimized = minimizer.minimizeOverrides(original, taggedClusters2)
+        taggedClusters.assertThatAllEffectiveConfigurationIsSame(original, minimized, true)
+        assertAll {
+            assertThat(minimized.properties).isEqualTo(TopicProperties(1, 3))
+            assertThat(minimized.perTagProperties).isEqualTo(
+                mapOf("large" to TopicProperties(2, 4))
+            )
+            assertThat(minimized.perClusterProperties).isEqualTo(
+                mapOf("c" to TopicProperties(2, 4))
+            )
+        }
+    }
+
+    @Test
+    fun `extract tag configs override even when others have same configs`() {
+        val original = newTopic(
+            perClusterConfigOverrides = mapOf(
+                "a" to mapOf("x" to "x1", "y" to "l", "z" to "p"),
+                "b" to mapOf("x" to "x1", "y" to "l"),
+                "c" to mapOf("x" to "x1", "y" to "s", "z" to "p"),
+                "d" to mapOf("x" to "x1", "y" to "s"),
+                "e" to mapOf("x" to "x1", "y" to "s", "z" to "p"),
+                "f" to mapOf("x" to "x1", "y" to "o"),
+                "g" to mapOf("x" to "x1", "y" to "o"),
+                "h" to mapOf("x" to "x1", "y" to "o"),
+                "i" to mapOf("x" to "x1", "y" to "o", "z" to "p"),
+            )
+        )
+        val minimized = minimizer.minimizeOverrides(original, taggedClusters2)
+        taggedClusters.assertThatAllEffectiveConfigurationIsSame(original, minimized, true)
+        assertAll {
+            assertThat(minimized.config).isEqualTo(
+                mapOf(
+                    "x" to "x1", "y" to "o",
+                )
+            )
+            assertThat(minimized.perTagConfigOverrides).isEqualTo(
+                mapOf(
+                    "large" to mapOf("y" to "l"),
+                    "small" to mapOf("y" to "s"),
+                    "foo" to mapOf("z" to "p"),
+                )
+            )
+            assertThat(minimized.perClusterConfigOverrides).isEqualTo(
+                mapOf("i" to mapOf("z" to "p"))
+            )
+        }
     }
 
     @Test
     fun `randomly generated topic to satisfy minimization properties`() {
         val seed = System.currentTimeMillis()
         val random = Random(seed)
-        val numRuns = 30
+        val numRuns = 300
         var numMinimized = 0
+        var numTagsForPropsUsed = 0
+        var numTagsForConfigUsed = 0
         repeat(numRuns) {
-            val allClusters = random.range(1..15).map { ClusterRef("c_$it", emptyList()) }
-            val original = newTopic(
-                    properties = TopicProperties(random.between(2..4), random.between(1..3)),
-                    perClusterProperties = allClusters
-                            .filter { random.nextBoolean() }
-                            .associate { clusterRef ->
-                                clusterRef.identifier to TopicProperties(random.between(2..4), random.between(1..3))
-                            },
-                    config = random.stringStringMap(5, 4),
-                    perClusterConfigOverrides = allClusters
-                            .filter { random.nextBoolean() }
-                            .associate { clusterRef ->
-                                clusterRef.identifier to random.stringStringMap(5, 4)
-                            }
-            )
+            val allTags = random.range(0..5).map { "tag_$it" }
+            val allClusters = random.range(1..15)
+                .map {
+                    ClusterRef("c_$it", tags = allTags.filter { random.nextBoolean() })
+                }
+            val original = random.newTopic(allClusters)
             val minimized = minimizer.minimizeOverrides(original, allClusters)
-            if (minimized != original) {
-                numMinimized++
-            }
+            if (minimized != original) numMinimized++
+            if (minimized.perTagProperties.isNotEmpty()) numTagsForPropsUsed++
+            if (minimized.perTagConfigOverrides.isNotEmpty()) numTagsForConfigUsed++
             try {
                 allClusters.assertThatAllEffectiveConfigurationIsSame(original, minimized, null)
             } catch (e: Exception) {
@@ -350,7 +421,27 @@ class OverridesMinimizerTest {
                 throw e
             }
         }
-        println("Stats: minimized $numMinimized of $numRuns")
+        println(
+            "Stats: minimized $numMinimized of $numRuns runs, " +
+                    "tagsForPropsUsed=$numTagsForPropsUsed tagsForConfigUsed=$numTagsForConfigUsed"
+        )
+    }
+
+    private fun Random.newTopic(allClusters: List<ClusterRef>): TopicDescription {
+        return newTopic(
+            properties = TopicProperties(between(2..4), between(1..3)),
+            perClusterProperties = allClusters
+                .filter { nextBoolean() }
+                .associate { clusterRef ->
+                    clusterRef.identifier to TopicProperties(between(2..4), between(1..3))
+                },
+            config = stringStringMap(5, 4),
+            perClusterConfigOverrides = allClusters
+                .filter { nextBoolean() }
+                .associate { clusterRef ->
+                    clusterRef.identifier to stringStringMap(6, 4)
+                }
+        )
     }
 
     private fun List<ClusterRef>.assertThatAllEffectiveConfigurationIsSame(

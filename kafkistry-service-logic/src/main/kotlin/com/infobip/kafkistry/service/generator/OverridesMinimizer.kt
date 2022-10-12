@@ -69,14 +69,36 @@ class OverridesMinimizer {
             .groupBy ({ it.value }, { it.key })
             .mapValues { (_, values) -> values.toSet() }
         val propertiesTags = propertiesClusters.mapValues { clustersTags[it.value] }
-        val finalPerClusterProperties = perClusterProperties.filterValues {
+        val unmatchedPerClusterProperties = perClusterProperties.filterValues {
             propertiesTags[it] == null   //keep only the ones which will not be overridden by tag
         }
-        val finalTagProperties = propertiesTags.mapNotNull { (properties, tags) ->
+        val tagProperties = propertiesTags.mapNotNull { (properties, tags) ->
             tags?.firstOrNull()?.let { it to properties }
         }.toMap()
 
-        return BaseAndOverrides(finalProperties, finalPerClusterProperties, finalTagProperties)
+        val partiallyCoveredClusters = mutableSetOf<KafkaClusterIdentifier>()
+        val partialTagProperties = propertiesClusters
+            .filterKeys { it != finalProperties }   //don't take global default
+            .filterValues { clusters ->
+                clusters.all { it in unmatchedPerClusterProperties.keys }
+            }
+            .mapNotNull { (properties, clusters) ->
+                clustersTags.entries
+                    .filter { it.value.isNotEmpty() && clusters.containsAll(it.key) }
+                    .map { (tagClusters, tags) -> tags.first() to tagClusters }
+                    .maxByOrNull { it.second.size }    //pick tag covering as much as possible
+                    ?.let {
+                        partiallyCoveredClusters.addAll(it.second)
+                        it.first to properties
+                    }
+            }
+            .toMap()
+
+        return BaseAndOverrides(
+            base = finalProperties,
+            clusterOverrides = unmatchedPerClusterProperties.filterKeys { it !in partiallyCoveredClusters },
+            tagOverrides = tagProperties + partialTagProperties,
+        )
     }
 
     private fun minimizeConfig(allClusterRefs: List<ClusterRef>, topic: TopicDescription): BaseAndOverrides<TopicConfigMap> {
@@ -115,7 +137,7 @@ class OverridesMinimizer {
             .groupBy({ it.second to it.third }, { it.first })
             .mapValues { it.value.toSet() }
         val entryTags = entryClusters.mapValues { clustersTags[it.value] }
-        val finalPerClusterOverrides = perClusterEntries
+        val unmatchedPerClusterOverrides = perClusterEntries
             .filter {
                 entryTags[it.second to it.third] == null   //keep only the ones which will ot be overridden by tag
             }
@@ -123,14 +145,41 @@ class OverridesMinimizer {
             .mapValues { (_, entries) ->
                 entries.associate { it.second to it.third }
             }
-        val finalTagOverrides = entryTags
+        val tagOverrides = entryTags
             .mapNotNull { (entry, tags) ->
                 tags?.firstOrNull()?.let { it to entry }
             }
             .groupBy({ it.first },{it.second})
             .mapValues { (_, entries) -> entries.toMap() }
 
-        return BaseAndOverrides(finalBaseConfig, finalPerClusterOverrides, finalTagOverrides)
+        val partiallyCoveredClusterEntries = mutableSetOf<Pair<KafkaClusterIdentifier, String>>()
+        val partialTagConfigs = entryClusters
+            .filterKeys { it.first !in finalBaseConfig.keys }   //don't take global default
+            .filterValues { clusters ->
+                clusters.all { it in unmatchedPerClusterOverrides.keys }
+            }
+            .mapNotNull { (entry, clusters) ->
+                clustersTags.entries
+                    .filter { it.value.isNotEmpty() && clusters.containsAll(it.key) }
+                    .map { (tagClusters, tags) -> tags.first() to tagClusters }
+                    .maxByOrNull { it.second.size }    //pick tag covering as much as possible
+                    ?.let { (tag, clusters) ->
+                        partiallyCoveredClusterEntries.addAll(clusters.map { it to entry.first })
+                        tag to entry
+                    }
+            }
+            .groupBy({ it.first },{it.second})
+            .mapValues { (_, entries) -> entries.toMap() }
+
+        return BaseAndOverrides(
+            base = finalBaseConfig,
+            clusterOverrides = unmatchedPerClusterOverrides
+                .mapValues { (cluster, configs) ->
+                    configs.filterKeys { (cluster to it) !in partiallyCoveredClusterEntries }
+                }
+                .filterValues { it.isNotEmpty() },
+            tagOverrides = tagOverrides + partialTagConfigs,
+        )
     }
 
     private data class BaseAndOverrides<T>(
