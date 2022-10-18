@@ -4,6 +4,6 @@ $(document).ready(function () {
 });
 
 function filterTableByValue() {
-    let statusType = $(this).attr("data-filter-value");
-    filterDatatableBy(statusType);
+    let statusType = $(this).attr("data-status-type");
+    filterDatatableBy(statusType, "consumer-groups");
 }

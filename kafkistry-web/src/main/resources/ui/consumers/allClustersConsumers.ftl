@@ -48,28 +48,8 @@
             <span class="h5">Statistics/counts</span>
         </div>
         <div class="card-body p-1">
-            <table class="table p-0 m-0">
-                <tr style="vertical-align:top;" class="no-hover">
-                    <td class="p-0">
-                        <#assign title = "Consumer status">
-                        <#assign type = "consumer">
-                        <#assign counts = consumersData.consumersStats.consumerStatusCounts>
-                        <#include "statCountsTable.ftl">
-                    </td>
-                    <td class="p-0">
-                        <#assign title = "Lag status">
-                        <#assign type = "lag">
-                        <#assign counts = consumersData.consumersStats.lagStatusCounts>
-                        <#include "statCountsTable.ftl">
-                    </td>
-                    <td class="p-0">
-                        <#assign title = "Partition assignor">
-                        <#assign type = "partition_assignor">
-                        <#assign counts = consumersData.consumersStats.partitionAssignorCounts>
-                        <#include "statCountsTable.ftl">
-                    </td>
-                </tr>
-            </table>
+            <#assign consumersStats = consumersData.consumersStats>
+            <#include "../consumers/consumerGroupsCounts.ftl">
         </div>
     </div>
     <div class="card">
@@ -77,7 +57,7 @@
             <span class="h4">All clusters consumers</span>
         </div>
         <div class="card-body pl-0 pr-0">
-            <table class="table table-bordered datatable display">
+            <table id="consumer-groups" class="table table-bordered datatable display">
                 <thead class="thead-dark">
                 <tr>
                     <th>Group</th>

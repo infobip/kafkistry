@@ -18,22 +18,6 @@
     <#return "alert-secondary">
 </#function>
 
-<#function lagStatusAlertClass lag>
-    <#switch lag>
-        <#case "NO_LAG">
-            <#return "alert-success">
-        <#case "UNKNOWN">
-            <#return "alert-warning">
-        <#case "MINOR_LAG">
-            <#return "alert-warning">
-        <#case "HAS_LAG">
-            <#return "alert-danger">
-        <#case "OVERFLOW">
-            <#return "bg-danger">
-    </#switch>
-    <#return "alert-secondary">
-</#function>
-
 <#macro lagDoc>
     <#assign lagDocTooltip>
         Difference between topic's log end (latest) offset and consumer group's most recently commited offset.

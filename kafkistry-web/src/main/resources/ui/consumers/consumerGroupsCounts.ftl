@@ -1,16 +1,15 @@
-<#-- @ftlvariable name="clusterGroups"  type="com.infobip.kafkistry.service.consumers.ClusterConsumerGroups" -->
+<#-- @ftlvariable name="consumersStats"  type="com.infobip.kafkistry.service.consumers.ConsumersStats" -->
 
 <#import "../common/util.ftl" as util>
 <#import "../consumers/util.ftl" as consumerUtil>
 
-<#assign consumersStats = clusterGroups.consumersStats>
 
 <#if consumersStats.consumerStatusCounts?size == 0>
     <div class="p-3">
         <span><i>(No consumer groups)</i></span>
     </div>
 <#else>
-    <div class="row">
+    <div class="form-row">
         <div class="col-4">
             <table class="table table-sm m-0">
                 <thead class="thead-light">
