@@ -178,8 +178,16 @@ class OverridesMinimizer {
                     configs.filterKeys { (cluster to it) !in partiallyCoveredClusterEntries }
                 }
                 .filterValues { it.isNotEmpty() },
-            tagOverrides = tagOverrides + partialTagConfigs,
+            tagOverrides = tagOverrides mergeWith partialTagConfigs,
         )
+    }
+
+    private infix fun Map<Tag, TopicConfigMap>.mergeWith(other: Map<Tag, TopicConfigMap>): Map<Tag, TopicConfigMap> {
+        return entries.plus(other.entries)
+            .groupBy ({ it.key }, {it.value})
+            .mapValues { (_, values) ->
+                if (values.size == 1) values[0] else values[0].plus(values[1])
+            }
     }
 
     private data class BaseAndOverrides<T>(

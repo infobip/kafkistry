@@ -9,6 +9,7 @@ import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.junit.Test
 import java.util.*
+import java.util.stream.Collectors
 
 class OverridesMinimizerTest {
 
@@ -398,33 +399,29 @@ class OverridesMinimizerTest {
     fun `randomly generated topic to satisfy minimization properties`() {
         val seed = System.currentTimeMillis()
         val random = Random(seed)
-        val numRuns = 300
-        var numMinimized = 0
-        var numTagsForPropsUsed = 0
-        var numTagsForConfigUsed = 0
-        repeat(numRuns) {
+        val numRuns = 10_000
+        val stats = MinimizeStats()
+        repeat(numRuns) { run ->
             val allTags = random.range(0..5).map { "tag_$it" }
             val allClusters = random.range(1..15)
                 .map {
                     ClusterRef("c_$it", tags = allTags.filter { random.nextBoolean() })
                 }
             val original = random.newTopic(allClusters)
-            val minimized = minimizer.minimizeOverrides(original, allClusters)
-            if (minimized != original) numMinimized++
-            if (minimized.perTagProperties.isNotEmpty()) numTagsForPropsUsed++
-            if (minimized.perTagConfigOverrides.isNotEmpty()) numTagsForConfigUsed++
+            val minimizeRun = original.minimize(allClusters)
+            stats.observe(minimizeRun)
             try {
-                allClusters.assertThatAllEffectiveConfigurationIsSame(original, minimized, null)
-            } catch (e: Exception) {
-                println("Failure for seed: $seed")
-                println("Failure for topic: $original")
+                minimizeRun.assertThatAllEffectiveConfigurationIsSame(requireBetterOrEqualScoreForAll = false)
+            } catch (e: Error) {
+                println("Failure for seed: $seed on run $run")
+                println(" -clusters: $allClusters")
+                println(" -original: $original")
+                println(" -minimized: ${minimizeRun.minimized}")
                 throw e
             }
         }
-        println(
-            "Stats: minimized $numMinimized of $numRuns runs, " +
-                    "tagsForPropsUsed=$numTagsForPropsUsed tagsForConfigUsed=$numTagsForConfigUsed"
-        )
+        stats.printStats()
+        stats.assertStatisticallyGood()
     }
 
     private fun Random.newTopic(allClusters: List<ClusterRef>): TopicDescription {
@@ -447,9 +444,17 @@ class OverridesMinimizerTest {
     private fun List<ClusterRef>.assertThatAllEffectiveConfigurationIsSame(
             original: TopicDescription, minimized: TopicDescription, shouldChange: Boolean?
     ) {
-        val identifiers = map { it.identifier }
+        MinimizeRun(this, original, minimized, original.score(), minimized.score())
+            .assertThatAllEffectiveConfigurationIsSame(shouldChange)
+    }
+
+    private fun MinimizeRun.assertThatAllEffectiveConfigurationIsSame(
+        shouldChange: Boolean? = null,
+        requireBetterOrEqualScoreForAll: Boolean = true,
+    ) {
+        val identifiers = allClusters.map { it.identifier }
         assertAll {
-            this@assertThatAllEffectiveConfigurationIsSame.forEach { clusterRef ->
+            allClusters.forEach { clusterRef ->
                 val originalProperties = original.propertiesForCluster(clusterRef)
                 val minimizedProperties = minimized.propertiesForCluster(clusterRef)
                 val originalConfig = original.configForCluster(clusterRef)
@@ -466,19 +471,26 @@ class OverridesMinimizerTest {
                         .allMatch { it in identifiers }
                 assertThat(configsOverrideClusters).`as`("has only known clusters")
                         .allMatch { it in identifiers }
-            }
-            if (shouldChange != null) {
-                if (shouldChange) {
-                    assertThat(minimized).`as`("should be changed").isNotEqualTo(original)
-                } else {
-                    assertThat(minimized).`as`("should not be changed").isEqualTo(original)
+                if (shouldChange != null) {
+                    if (shouldChange) {
+                        assertThat(minimized).`as`("should be changed").isNotEqualTo(original)
+                    } else {
+                        assertThat(minimized).`as`("should not be changed").isEqualTo(original)
+                    }
+                }
+                //assert that minimization took effect
+                if (requireBetterOrEqualScoreForAll) {
+                    assertThat(newScore.weight)
+                        .`as`("new score weight compared to old weight")
+                        .isLessThanOrEqualTo(oldScore.weight)
+                    assertThat(minimized.perClusterProperties.size)
+                        .`as`("less or equal number of properties overrides after")
+                        .isLessThanOrEqualTo(original.perClusterProperties.size)
+                    assertThat(minimized.perClusterConfigOverrides.size)
+                        .`as`("less or equal number of config overrides after")
+                        .isLessThanOrEqualTo(original.perClusterConfigOverrides.size)
                 }
             }
-            //assert that minimization took effect
-            assertThat(minimized.perClusterProperties.size).`as`("less or equal number of properties overrides after")
-                    .isLessThanOrEqualTo(original.perClusterProperties.size)
-            assertThat(minimized.perClusterConfigOverrides.size).`as`("less or equal number of config overrides after")
-                    .isLessThanOrEqualTo(original.perClusterConfigOverrides.size)
         }
     }
 
@@ -495,4 +507,108 @@ class OverridesMinimizerTest {
     private fun Random.range(lengthRange: IntRange): List<Int> {
         return (1..between(lengthRange)).map { it }
     }
+
+    private fun TopicDescription.minimize(allClusters: List<ClusterRef>): MinimizeRun {
+        val minimized = minimizer.minimizeOverrides(this, allClusters)
+        return MinimizeRun(
+            allClusters = allClusters,
+            original = this,
+            minimized = minimized,
+            oldScore = this.score(),
+            newScore = minimized.score(),
+        )
+    }
+    private class MinimizeStats {
+
+        private var runs = 0
+        private var numChanged = 0
+        private var numMinimized = 0
+        private var numWorsened = 0
+        private var numTagsForPropsUsed = 0
+        private var numTagsForConfigUsed = 0
+        private val scores = mutableListOf<Pair<Score, Score>>()
+
+        fun observe(minimizeRun: MinimizeRun) {
+            runs++
+            with(minimizeRun) {
+                if (minimized != original) numChanged++
+                if (minimized.perTagProperties.isNotEmpty()) numTagsForPropsUsed++
+                if (minimized.perTagConfigOverrides.isNotEmpty()) numTagsForConfigUsed++
+                if (newScore.weight < oldScore.weight) numMinimized++
+                if (newScore.weight > oldScore.weight) numWorsened++
+                scores.add(oldScore to newScore)
+            }
+        }
+
+        fun printStats() {
+            println("---------------------------")
+            println("----- MINIMIZE STATS ------")
+            println("Total runs:    $runs")
+            println("Num changed:   $numChanged (${100.0 * numChanged / runs}%)")
+            println("Num minimized: $numMinimized (${100.0 * numMinimized / runs}%)")
+            println("Num worsened:  $numWorsened (${100.0 * numWorsened / runs}%)")
+            println("Tag prop used: $numTagsForPropsUsed (${100.0 * numTagsForPropsUsed / runs}%)")
+            println("Tag conf used: $numTagsForConfigUsed (${100.0 * numTagsForConfigUsed / runs}%)")
+
+            fun Pair<Score, Score>.format(): String {
+                val (old, new) = this
+                return "%4d %4d %4d -> %4d %4d %4d | %4d %4d %4d".format(
+                    old.configsCount, old.overrideCount, old.weight,
+                    new.configsCount, new.overrideCount, new.weight,
+                    old.configsCount-new.configsCount, old.overrideCount-new.overrideCount, old.weight-new.weight,
+                )
+            }
+            val sortedScores = scores.sortedByDescending { (old, new) -> old.weight - new.weight }
+            println("Best changes:")
+            println("  O.cc O.oc  O.w -> N.cc N.oc N.w  | d.cc d.oc  d.w")
+            sortedScores.take(10).forEach { println("  "+ it.format()) }
+            println("Worst changes:")
+            println("  O.cc O.oc  O.w -> N.cc N.oc N.w  | d.cc d.oc  d.w")
+            sortedScores.reversed().take(10).forEach { println("  "+ it.format()) }
+            scores.stream()
+                .collect(Collectors.summarizingInt { it.first.weight })
+                .also { println("Old weight stats: $it") }
+            scores.stream()
+                .collect(Collectors.summarizingInt { it.second.weight })
+                .also { println("New weight stats: $it") }
+            scores.stream()
+                .collect(Collectors.summarizingInt { it.first.weight - it.second.weight })
+                .also { println("Old weight - new weight stats: $it") }
+            println("---------------------------")
+        }
+
+        fun assertStatisticallyGood() {
+            assertAll {
+                assertThat(numWorsened).`as`("num worsened < 1% of $runs").isLessThan(runs / 100)
+                assertThat(numMinimized).`as`("num minimized > 50% of $runs").isGreaterThan(runs / 2)
+            }
+        }
+    }
+}
+
+data class MinimizeRun(
+    val allClusters: List<ClusterRef>,
+    val original: TopicDescription,
+    val minimized: TopicDescription,
+    val oldScore: Score,
+    val newScore: Score,
+)
+
+data class Score(
+    val configsCount: Int,
+    val overrideCount: Int,
+) {
+    val weight = configsCount + overrideCount
+}
+
+fun TopicDescription.score(): Score {
+    val configs = config.size +
+            perClusterConfigOverrides.entries.sumOf { it.value.size } +
+            perTagConfigOverrides.entries.sumOf { it.value.size }
+    val clusterOverrides = (perClusterConfigOverrides.keys +perClusterProperties.keys).size
+    val tagOverrides = (perTagConfigOverrides.keys + perTagProperties.keys).size
+    return Score(
+        configsCount = configs,
+        overrideCount = clusterOverrides + tagOverrides,
+    )
 }
