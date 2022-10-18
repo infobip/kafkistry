@@ -16,10 +16,7 @@
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${appUrl.quotas().showAll()}#${stateType.name}" title="Click to filter quotas...">
-                        <#assign stateClass = util.levelToHtmlClass(stateType.level)>
-                        <div class="alert alert-sm ${stateClass} mb-0">
-                            ${stateType.name}
-                        </div>
+                        <@util.namedTypeStatusAlert type = stateType alertInline=false/>
                     </a>
                 </td>
                 <td class="text-right">${count}</td>

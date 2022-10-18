@@ -20,8 +20,7 @@
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${appUrl.topics().showTopics()}#${statusType.name}" title="Click to filter topics...">
-                        <#assign asStatusFlag = true>
-                        <#include "../common/topicStatusResultBox.ftl">
+                        <@util.namedTypeStatusAlert type = statusType alertInline=false/>
                     </a>
                 </td>
                 <td class="text-right">${count}</td>

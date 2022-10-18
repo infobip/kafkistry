@@ -5,6 +5,7 @@
 <#-- @ftlvariable name="topicConfigDoc" type="java.util.Map<java.lang.String, java.lang.String>" -->
 
 <#import "../common/infoIcon.ftl" as cInfo>
+<#import "../common/util.ftl" as util>
 
 <#macro displayValue name comparedValue>
 <#-- @ftlvariable name="comparedValue" type="com.infobip.kafkistry.service.topic.compare.ComparedValue" -->
@@ -61,13 +62,13 @@
         </th>
         <th>
             <#list result.inspectionStatusTypes.sourceTypes as statusType>
-                <#include "../common/topicStatusResultBox.ftl">
+                <@util.namedTypeStatusAlert type = statusType alertInline=false/>
             </#list>
         </th>
         <#list result.inspectionStatusTypes.targetsTypes as targetTypes>
             <th>
                 <#list targetTypes as statusType>
-                    <#include "../common/topicStatusResultBox.ftl">
+                    <@util.namedTypeStatusAlert type = statusType alertInline=false/>
                 </#list>
             </th>
         </#list>

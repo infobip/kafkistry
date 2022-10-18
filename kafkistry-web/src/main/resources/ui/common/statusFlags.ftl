@@ -19,7 +19,7 @@
     </div>
 <#elseif nonOkTopicStatusTypes?? && nonOkTopicStatusTypes?size <= 2>
     <#list nonOkTopicStatusTypes as statusType>
-        <#include "topicStatusResultBox.ftl">
+        <@util.namedTypeStatusAlert type = statusType alertInline=false/>
     </#list>
 <#else>
     <#if !statusFlags.configOk>

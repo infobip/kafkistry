@@ -274,22 +274,31 @@
     </span>
 </#macro>
 
-<#macro namedTypeStatusAlert type isStatusFlag=false>
+<#macro namedTypeStatusAlert type alertInline=true>
 <#-- @ftlvariable name="type" type="com.infobip.kafkistry.service.NamedType" -->
     <#import "infoIcon.ftl" as infoForAlert>
-    <div role="alert" class="alert alert-inline alert-sm ${levelToHtmlClass(type.level)} mb-1">
+    <div role="alert" class="alert text-nowrap
+        <#if alertInline>alert-inline mb-1<#else>mb-0</#if>
+        alert-sm ${levelToHtmlClass(type.level)}"
+    >
         ${type.name}
-        <#if !isStatusFlag>
-            <#assign tooltip>
-                <#if type.valid>
-                    <span class='badge badge-success'>VALID</span>
-                <#else>
-                    <span class='badge badge-danger'>INVALID</span>
-                </#if>
-                ${type.doc}
-            </#assign>
-            <@infoForAlert.icon tooltip=tooltip/>
-        </#if>
+        <#assign tooltip>
+            <#if type.valid>
+                <span class='badge badge-success'>VALID</span>
+            <#else>
+                <span class='badge badge-danger'>INVALID</span>
+            </#if>
+            ${type.doc}
+            <#if (type.getClass().simpleName?starts_with("Topic"))>
+                <#assign topicStatusType = type>
+                <#-- @ftlvariable name="topicStatusType" type="com.infobip.kafkistry.service.topic.TopicInspectionResultType" -->
+                <br/>
+                <span>
+                    <strong>Issue category:</strong> <span class='text-info'>${topicStatusType.category}</span>
+                </span>
+            </#if>
+        </#assign>
+        <@infoForAlert.icon tooltip=tooltip/>
     </div>
 </#macro>
 

@@ -1,5 +1,7 @@
 <#-- @ftlvariable name="topicOnClusterStatus" type="com.infobip.kafkistry.service.topic.TopicOnClusterInspectionResult" -->
 
+<#import "../common/util.ftl" as util>
+
 <#assign detailedStatuses = []>
 <#list (topicOnClusterStatus.wrongValues)![] as wrongValue>
     <#assign detailedStatuses = detailedStatuses + [wrongValue.type]>
@@ -16,8 +18,7 @@
 
 <#list topicOnClusterStatus.types as statusType>
     <#if !(detailedStatuses?seq_contains(statusType))>
-        <#assign alertInline = true>
-        <#include "topicStatusResultBox.ftl">
+        <@util.namedTypeStatusAlert type=statusType/>
     </#if>
 </#list>
 <#assign alertInline = false>
@@ -25,7 +26,7 @@
     <#list topicOnClusterStatus.wrongValues as wrongValue>
         <#if wrongValue?is_first><br/></#if>
         <#assign statusType = wrongValue.type>
-        <#include "topicStatusResultBox.ftl">
+        <@util.namedTypeStatusAlert type=statusType alertInline=false/>
         <div class="text-break">
             <strong>What:</strong> "${wrongValue.key}"<br/>
             <strong>Expected:</strong>
@@ -56,21 +57,21 @@
 
 <#if topicOnClusterStatus.ruleViolations??>
     <#list topicOnClusterStatus.ruleViolations as ruleViolation>
-        <#assign statusType = ruleViolation.type><#include "topicStatusResultBox.ftl">
+        <@util.namedTypeStatusAlert type=ruleViolation.type alertInline=false/>
         <@violatonUtil.interpretMessage violation=ruleViolation.violation/>
         <hr/>
     </#list>
 </#if>
 <#if topicOnClusterStatus.currentConfigRuleViolations??>
     <#list topicOnClusterStatus.currentConfigRuleViolations as ruleViolation>
-        <#assign statusType = ruleViolation.type><#include "topicStatusResultBox.ftl">
+        <@util.namedTypeStatusAlert type=ruleViolation.type alertInline=false/>
         <@violatonUtil.interpretMessage violation=ruleViolation.violation/>
         <hr/>
     </#list>
 </#if>
 <#if topicOnClusterStatus.typeDescriptions?size gt 0>
     <#list topicOnClusterStatus.typeDescriptions as typeDescription>
-        <#assign statusType = typeDescription.type><#include "topicStatusResultBox.ftl">
+        <@util.namedTypeStatusAlert type=typeDescription.type alertInline=false/>
         <@violatonUtil.richMessage message=typeDescription.message placeholders=typeDescription.placeholders/>
         <hr/>
     </#list>

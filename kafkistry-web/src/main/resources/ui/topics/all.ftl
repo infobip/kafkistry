@@ -84,7 +84,7 @@
                 <td>
                     <#assign allTopicStatusTypes = util.allTopicStatusTypes(topic.statusPerClusters)>
                     <#list allTopicStatusTypes as statusType>
-                        <@util.namedTypeStatusAlert type = statusType isStatusFlag=true/>
+                        <@util.namedTypeStatusAlert type = statusType/>
                     </#list>
                 </td>
             </tr>
