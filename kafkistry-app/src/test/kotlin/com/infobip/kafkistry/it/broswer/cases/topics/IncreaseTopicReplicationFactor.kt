@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.it.broswer.cases.topics
 
+import com.infobip.kafkistry.api.InspectApi
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.it.broswer.Context
 import com.infobip.kafkistry.it.broswer.UITestCase
@@ -64,6 +65,13 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
         browser.findElementById("assign-new-replicas-btn").scrollIntoView().click()
         await {
             browser.assertPageText().contains("New partition replicas assignment completed with success")
+        }
+
+        await {
+            val topicStatus = appCtx.getBean(InspectApi::class.java).inspectTopicOnCluster(
+                "my-replication-1", CLUSTER_IDENTIFIER,
+            )
+            assertThat(topicStatus.currentReAssignments).`as`("reassignment actually completes").isEmpty()
         }
 
         browser.findElementWithText("Back").scrollIntoView().click()
