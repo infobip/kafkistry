@@ -25,7 +25,7 @@
     "alert-success": 3,
     "alert-warning": 4,
     "alert-danger": 5,
-    "bg-danger": 6
+    "bg-danger text-white": 6
     }>
     <#assign worst = alertClasses[0]>
     <#list alertClasses as alertClass>
@@ -45,17 +45,20 @@
     <#assign alerts = []>
     <#assign seenIssues = []>
     <#assign issuesTooltip>
+        <table class="table table-sm table-borderless">
         <#list clusterIssues as issue>
             <#if seenIssues?seq_contains(issue.name)>
                 <#continue>
             </#if>
-            <#assign alertClass = violatonUtil.severityClass(issue.violation.severity)?replace("badge", "alert")>
-            <#assign alerts = alerts + [alertClass]>
+            <#assign alerts = alerts + [util.levelToHtmlClass(issue.level)]>
+            <tr>
+                <td>
+                    <small><@util.namedTypeStatusAlert type=issue alertInline=false/></small>
+                </td>
+            </tr>
             <#assign seenIssues = seenIssues + [issue.name]>
-            <div class='alert alert-sm ${alertClass} mb-1'>
-                <small>${issue.name}</small>
-            </div>
         </#list>
+        </table>
     </#assign>
     <div class="text-nowrap alert alert-sm ${mostSevereClass(alerts)} mb-1 collapsed" data-toggle="collapsing"
          data-target="#cluster-issues-${clusterIdentifier}">
@@ -83,11 +86,8 @@
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                            href="${clusterUrl}#topics|${statusType.name}" title="Filter topics by...">
-                            <#assign stateClass = util.levelToHtmlClass(statusType.level)>
-                            <#assign alerts = alerts + [stateClass]>
-                            <div class="alert alert-sm ${stateClass} mb-0 small">
-                                ${statusType.name}
-                            </div>
+                            <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
+                            <small><@util.namedTypeStatusAlert type=statusType alertInline=false/></small>
                         </a>
                     </td>
                     <td>${count}</td>
@@ -121,11 +121,8 @@
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                            href="${clusterUrl}#acls|${statusType.name}" title="Filter ACLs by...">
-                            <#assign stateClass = util.levelToHtmlClass(statusType.level)>
-                            <#assign alerts = alerts + [stateClass]>
-                            <div class="alert alert-sm ${stateClass} mb-0 small">
-                                ${statusType.name}
-                            </div>
+                            <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
+                            <small><@util.namedTypeStatusAlert type=statusType alertInline=false/></small>
                         </a>
                     </td>
                     <td>${count}</td>
@@ -159,11 +156,8 @@
                     <td>
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                            href="${clusterUrl}#quotas|${statusType.name}" title="Filter quotas by...">
-                            <#assign stateClass = util.levelToHtmlClass(statusType.level)>
-                            <#assign alerts = alerts + [stateClass]>
-                            <div class="alert alert-sm ${stateClass} mb-0 small">
-                                ${statusType.name}
-                            </div>
+                            <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
+                            <small><@util.namedTypeStatusAlert type=statusType alertInline=false/></small>
                         </a>
                     </td>
                     <td>${count}</td>

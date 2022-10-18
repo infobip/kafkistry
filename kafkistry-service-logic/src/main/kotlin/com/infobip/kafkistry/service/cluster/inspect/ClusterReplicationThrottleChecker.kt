@@ -69,7 +69,8 @@ class ClusterReplicationThrottleChecker(
                         "MAX_THROTTLE_RATE" to Placeholder(THROTTLE_RATE, maxThrottle),
                     )
                 },
-            )
+            ),
+            doc = "Indicates that there is $name being set on cluster",
         )
     }
 

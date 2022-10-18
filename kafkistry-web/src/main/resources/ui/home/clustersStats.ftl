@@ -45,10 +45,7 @@
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${appUrl.clusters().showClusters()}#${issue.name}" title="Click to filter clusters...">
-                        <#assign alertClass = violatonUtil.severityClass(issue.violation.severity)?replace("badge", "alert")>
-                        <div class="alert alert-sm ${alertClass} mb-0">
-                            ${issue.name}
-                        </div>
+                        <@util.namedTypeStatusAlert type=issue alertInline=false/>
                     </a>
                 </td>
                 <td class="text-right">${count}</td>

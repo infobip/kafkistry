@@ -90,7 +90,8 @@ class ClusterDisbalanceIssuesChecker(
                     "MIN_BROKER_VALUE" to Placeholder(valueName, minBrokerValue),
                     "MAX_BROKER_VALUE" to Placeholder(valueName, maxBrokerValue),
                 ),
-            )
+            ),
+            doc = "Indicates that here is significant disproportion of ${resourceName.lowercase()} across brokers in a cluster."
         )
     }
 

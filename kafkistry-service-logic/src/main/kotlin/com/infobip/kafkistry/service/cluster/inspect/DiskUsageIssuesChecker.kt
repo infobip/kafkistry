@@ -44,10 +44,11 @@ class DiskUsageIssuesChecker(
                     name = "HAVING_ERRORS_ANALYZING_DISK_USAGE",
                     violation = RuleViolation(
                         ruleClassName = checkerClassName,
-                        severity = RuleViolation.Severity.ERROR,
+                        severity = RuleViolation.Severity.CRITICAL,
                         message = "Having ${clusterDiskUsage.errors.size} errors. " +
                                 clusterDiskUsage.errors.joinToString("; "),
-                    )
+                    ),
+                    doc = "Unable to analyze disk usage due to runtime error(s)",
                 ).also { add(it) }
             }
         }
@@ -71,20 +72,23 @@ class DiskUsageIssuesChecker(
                 capacityBytes = capacityBytes,
                 portionOfCapacity = usedPercent,
                 severity = RuleViolation.Severity.WARNING,
+                doc = "Indicates that disk usage is reaching limits of total capacity available."
             )
             UsageLevel.HIGH -> ProblematicDisk(
                 issueName = "DISK_USAGE_HIGH",
                 usageBytes = usedBytes,
                 capacityBytes = capacityBytes,
                 portionOfCapacity = usedPercent,
-                severity = RuleViolation.Severity.WARNING,
+                severity = RuleViolation.Severity.ERROR,
+                doc = "Indicates that used disk is almost full."
             )
             UsageLevel.OVERFLOW -> ProblematicDisk(
                 issueName = "DISK_USAGE_OVERFLOW",
                 usageBytes = usedBytes,
                 capacityBytes = capacityBytes,
                 portionOfCapacity = usedPercent,
-                severity = RuleViolation.Severity.ERROR,
+                severity = RuleViolation.Severity.CRITICAL,
+                doc = "Indicates that disk usage is somehow reporting more being used than total available."
             )
         }
     }
@@ -101,6 +105,7 @@ class DiskUsageIssuesChecker(
             capacityBytes = capacityBytes,
             portionOfCapacity = usedPercent,
             severity = RuleViolation.Severity.CRITICAL,
+            doc = "Indicates that current topics have 'retention.bytes' that add up to more required disk than available",
         )
     }
 
@@ -110,6 +115,7 @@ class DiskUsageIssuesChecker(
         val capacityBytes: Long,
         val portionOfCapacity: Double,
         val severity: RuleViolation.Severity,
+        val doc: String,
     )
 
     private fun ProblematicDisk.toIssue(brokerId: BrokerId?, messagePrefix: String): ClusterInspectIssue {
@@ -126,7 +132,8 @@ class DiskUsageIssuesChecker(
                     "PERCENTAGE" to Placeholder("used.percentage", portionOfCapacity),
                     "BROKER" to Placeholder("broker.id", brokerId ?: "all brokers"),
                 ),
-            )
+            ),
+            doc = doc,
         )
     }
 }

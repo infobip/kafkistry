@@ -34,7 +34,7 @@
         <#case "ERROR">
             <#return "alert-danger">
         <#case "CRITICAL">
-            <#return "bg-danger">
+            <#return "bg-danger text-white">
         <#default >
             <#return "">
     </#switch>

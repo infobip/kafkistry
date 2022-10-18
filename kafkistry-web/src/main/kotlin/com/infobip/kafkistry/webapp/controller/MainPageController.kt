@@ -49,8 +49,8 @@ class MainPageController(
 
     @GetMapping(CLUSTER_STATS)
     fun showClustersStats(): ModelAndView {
-        fun newIssue(name: String, severity: RuleViolation.Severity, message: String = "") = ClusterInspectIssue(
-            name = name, violation = RuleViolation("", severity, message)
+        fun newIssue(name: String, severity: RuleViolation.Severity, message: String = "", doc: String) = ClusterInspectIssue(
+            name = name, violation = RuleViolation("", severity, message), doc = doc,
         )
         val clustersStatuses = inspectApi.inspectClustersStatuses()
         val clustersStats = clustersStatuses.groupingBy { it.clusterState }.eachCountDescending()
@@ -61,9 +61,12 @@ class MainPageController(
                 try {
                     inspectApi.inspectClusterIssues(clusterIdentifier).distinctBy { it.name }
                         .takeIf { it.isNotEmpty() }
-                        ?: listOf(newIssue("NO_ISSUES", RuleViolation.Severity.NONE))
+                        ?: listOf(newIssue("NO_ISSUES", RuleViolation.Severity.NONE, doc = "No cluster issues found"))
                 } catch (ex: KafkistryException) {
-                    listOf(newIssue("INSPECT_ERROR", RuleViolation.Severity.ERROR, ex.deepToString()))
+                    listOf(newIssue(
+                        "INSPECT_ERROR", RuleViolation.Severity.CRITICAL, ex.deepToString(),
+                        doc = "Indicates runtime error during analyzing cluster issues."
+                    ))
                 }
             }
             .groupingBy { it.copy(violation = it.violation.copy(message = "", placeholders = emptyMap())) }

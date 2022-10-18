@@ -20,5 +20,6 @@ class ClusterIssuesInspectorService(
         return issueCheckers
             .filter { it.javaClass !in properties.excludedCheckerClasses }
             .flatMap { it.checkIssues(clusterIdentifier) }
+            .sortedByDescending { it.level }
     }
 }
