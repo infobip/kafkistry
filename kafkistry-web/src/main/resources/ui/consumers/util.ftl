@@ -1,18 +1,5 @@
 <#import "../common/infoIcon.ftl" as cglInfo>
-
-<#function alertClassFor value type>
-<#-- @ftlvariable name="value" type="java.lang.Object" -->
-<#-- @ftlvariable name="type" type="java.lang.String" -->
-    <#switch type>
-        <#case "cluster">
-            <#return "alert-primary">
-        <#case "lag">
-            <#return lagStatusAlertClass(value)>
-        <#case "consumer">
-            <#return consumerStatusAlertClass(value)>
-    </#switch>
-    <#return "alert-secondary">
-</#function>
+<#import "../common/util.ftl" as cgUtil>
 
 <#function consumerStatusAlertClass status>
     <#switch status>

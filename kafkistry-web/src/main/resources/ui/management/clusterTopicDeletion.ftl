@@ -18,6 +18,7 @@
 
 <#include "../commonMenu.ftl">
 
+<#import "../common/util.ftl" as util>
 <#import "../consumers/util.ftl" as consumerUtil>
 
 <div class="container">
@@ -85,9 +86,7 @@
                                 <#list consumerGroup.topicMembers as topicMember>
                                     <#if topicMember.topicName == topicName>
                                         <td>
-                                            <div class="alert alert-inline alert-sm mb-0 ${consumerUtil.lagStatusAlertClass(topicMember.lag.status)}">
-                                                ${topicMember.lag.status}
-                                            </div>
+                                            <@util.namedTypeStatusAlert type=topicMember.lag.status/>
                                         </td>
                                     </#if>
                                 </#list>

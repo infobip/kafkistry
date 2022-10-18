@@ -245,9 +245,7 @@
                                 <#list consumerGroup.topicMembers as topicMember>
                                     <#if topicMember.topicName == topicName>
                                         <td>
-                                            <div class="alert alert-inline alert-sm mb-0 ${consumerUtil.lagStatusAlertClass(topicMember.lag.status)}">
-                                                ${topicMember.lag.status}
-                                            </div>
+                                            <@util.namedTypeStatusAlert type=topicMember.lag.status/>
                                         </td>
                                         <td class="text-right">
                                             ${topicMember.lag.amount!'N/A'}

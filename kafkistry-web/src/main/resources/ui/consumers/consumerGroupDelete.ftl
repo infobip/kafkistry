@@ -41,9 +41,7 @@
                 </div>
             </td>
             <td>
-                <div class="alert alert-inline alert-sm mb-0 ${statusUtil.lagStatusAlertClass(consumerGroup.lag.status)}">
-                    ${consumerGroup.lag.status}
-                </div>
+                <@util.namedTypeStatusAlert type=consumerGroup.lag.status/>
             </td>
             <td>${consumerGroup.topicMembers?size}</td>
         </tr>

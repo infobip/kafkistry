@@ -113,9 +113,7 @@
                             </span>
                         </div>
                         <div class="float-right">
-                            <div class="alert alert-inline mb-0 p-0 pr-1 pl-1 ${statusUtil.lagStatusAlertClass(topicMember.lag.status)}">
-                                ${topicMember.lag.status}
-                            </div>
+                            <@util.namedTypeStatusAlert type=topicMember.lag.status/>
                             Total lag:${topicMember.lag.amount!'N/A'}
                             <#if topicMember.lag.percentage??>
                                 <small title="Percentage of worst partition lag">
@@ -148,9 +146,7 @@
                                 <tr>
                                     <td>${partition.partition}</td>
                                     <td>
-                                        <div class="alert alert-inline mb-0 p-0 pr-1 pl-1 ${statusUtil.lagStatusAlertClass(partition.lag.status)}">
-                                            ${partition.lag.status}
-                                        </div>
+                                        <@util.namedTypeStatusAlert type=partition.lag.status/>
                                     </td>
                                     <td class="text-right">
                                         ${partition.lag.amount!'N/A'}

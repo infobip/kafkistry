@@ -7,6 +7,8 @@ import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.NamedType
+import com.infobip.kafkistry.service.StatusLevel
 
 data class ClusterConsumerGroups(
     val clusterIdentifier: KafkaClusterIdentifier,
@@ -49,12 +51,16 @@ data class ClusterConsumerGroup(
     val consumerGroup: KafkaConsumerGroup
 )
 
-enum class LagStatus(val level: Int) {
-    NO_LAG(0),
-    UNKNOWN(1),
-    MINOR_LAG(2),
-    HAS_LAG(3),
-    OVERFLOW(4),
+enum class LagStatus(
+    override val level: StatusLevel,
+    override val valid: Boolean,
+    override val doc: String,
+): NamedType {
+    NO_LAG(StatusLevel.SUCCESS, true, "Zero lag or small lag comparing to traffic rate"),
+    UNKNOWN(StatusLevel.WARNING, false, "Not enough info about topic end offsets and/or consumer's last committed offsets"),
+    MINOR_LAG(StatusLevel.WARNING, false, "Has minor lag relative to traffic rate"),
+    HAS_LAG(StatusLevel.ERROR, false, "Has significant lag relative to traffic rate"),
+    OVERFLOW(StatusLevel.CRITICAL, false, "Last committed offset by consumer is older than begin offset (oldest) in topic partition"),
 }
 
 data class ClusterDataStatus(

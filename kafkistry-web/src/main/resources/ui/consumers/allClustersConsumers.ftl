@@ -106,10 +106,7 @@
                             ${consumerGroup.partitionAssignor}
                         </td>
                         <td>
-                            <#assign class = statusUtil.lagStatusAlertClass(consumerGroup.lag.status)>
-                            <div class="alert ${class} alert-cell">
-                                ${consumerGroup.lag.status}
-                            </div>
+                            <@util.namedTypeStatusAlert type=consumerGroup.lag.status/>
                         </td>
                         <td>
                             <span class="text-nowrap">

@@ -281,7 +281,11 @@
         <#if alertInline>alert-inline mb-1<#else>mb-0</#if>
         alert-sm ${levelToHtmlClass(type.level)}"
     >
-        ${type.name}
+        <#attempt>
+            ${type.name}
+        <#recover>
+            ${type.name()}  <#-- workaround for enums -->
+        </#attempt>
         <#assign tooltip>
             <#if type.valid>
                 <span class='badge badge-success'>VALID</span>

@@ -2,7 +2,8 @@
 <#-- @ftlvariable name="type" type="java.lang.String" -->
 <#-- @ftlvariable name="counts" type="java.util.Map<java.lang.Object, java.lang.Integer>" -->
 
-<#import "util.ftl" as alertUtil>
+<#import "util.ftl" as cgUtil>
+<#import "../common/util.ftl" as util>
 
 <table class="table table-sm">
     <thead class="thead-dark">
@@ -13,7 +14,18 @@
     <#list counts as key, count>
         <tr>
             <td class="status-filter-btn" data-filter-value="${key}">
-                <#assign class = alertUtil.alertClassFor(key, type)>
+                <#assign class = "alert-secondary">
+                <#switch type>
+                    <#case "cluster">
+                        <#assign class = "alert-primary">
+                        <#break>
+                    <#case "lag">
+                        <#assign class = util.levelToHtmlClass(key.level)>
+                        <#break>
+                    <#case "consumer">
+                        <#assign class = cgUtil.consumerStatusAlertClass(key)>
+                        <#break>
+                </#switch>
                 <div class="alert ${class}">${key}</div>
             </td>
             <td>${count}</td>

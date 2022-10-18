@@ -71,7 +71,7 @@ class LagInspection(
             in lagProperties.minorTimeLagRange() -> LagStatus.MINOR_LAG
             else -> LagStatus.HAS_LAG
         }
-        return maxOf(amountLagStatus, timeLagStatus, Comparator.comparing { it.level })
+        return maxOf(amountLagStatus, timeLagStatus, Comparator.comparing { it.ordinal })
     }
 
     fun aggregate(lags: List<Lag>): Lag {
@@ -80,7 +80,7 @@ class LagInspection(
         }
         val totalAmount = lags.mapNotNull { it.amount }.takeIf { it.isNotEmpty() }?.sum()
         val maxPercentage = lags.asSequence().mapNotNull { it.percentage }.maxOrNull()
-        val totalStatus = lags.asSequence().map { it.status }.maxByOrNull { it.level } ?: LagStatus.UNKNOWN
+        val totalStatus = lags.asSequence().map { it.status }.maxByOrNull { it.ordinal } ?: LagStatus.UNKNOWN
         return Lag(totalAmount, maxPercentage, totalStatus)
     }
 

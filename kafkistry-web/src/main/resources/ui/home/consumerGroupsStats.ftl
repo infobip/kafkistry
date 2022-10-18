@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="consumersStats"  type="com.infobip.kafkistry.service.consumers.ConsumersStats" -->
 
+<#import "../common/util.ftl" as util>
 <#import "../consumers/util.ftl" as consumerUtil>
 
 <#if consumersStats.consumerStatusCounts?size == 0>
@@ -20,7 +21,7 @@
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}"
                        title="Click to filter consumer groups...">
-                        <#assign stateClass = consumerUtil.alertClassFor(stateType, "consumer")>
+                        <#assign stateClass = consumerUtil.consumerStatusAlertClass(stateType)>
                         <div class="alert alert-sm ${stateClass} mb-0">
                             ${stateType}
                         </div>
@@ -42,10 +43,7 @@
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}"
                        title="Click to filter consumer groups...">
-                        <#assign stateClass = consumerUtil.alertClassFor(stateType, "lag")>
-                        <div class="alert alert-sm ${stateClass} mb-0">
-                            ${stateType}
-                        </div>
+                        <@util.namedTypeStatusAlert type=stateType alertInline=false/>
                     </a>
                 </td>
                 <td class="text-right">${count}</td>

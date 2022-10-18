@@ -3,12 +3,6 @@ package com.infobip.kafkistry.service
 import com.infobip.kafkistry.kafka.ExistingConfig
 import com.infobip.kafkistry.model.*
 
-interface NamedType {
-    val name: String
-    val level: StatusLevel
-    val valid: Boolean
-    val doc: String
-}
 object NamedTypeDoc {
     const val OK = "Everything is as expected"
     const val MISSING = "It should exist on kafka cluster but it is not found"
@@ -24,16 +18,6 @@ data class NamedTypeQuantity<T : NamedType, Q>(
     val type: T,
     val quantity: Q,
 )
-
-enum class StatusLevel {
-    SUCCESS,
-    IMPORTANT,
-    IGNORE,
-    INFO,
-    WARNING,
-    ERROR,
-    CRITICAL,
-}
 
 interface SubjectStatus<T : NamedType> {
     val ok: Boolean

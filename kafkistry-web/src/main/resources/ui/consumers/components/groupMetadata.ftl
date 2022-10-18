@@ -50,9 +50,7 @@
         <tr>
             <th>Lag</th>
             <td>
-                <div class="alert alert-inline alert-sm mb-0 ${statusUtil.lagStatusAlertClass(consumerGroup.lag.status)}">
-                    ${consumerGroup.lag.status}
-                </div>
+                <@util.namedTypeStatusAlert type=consumerGroup.lag.status/>
                 (total: ${consumerGroup.lag.amount!'N/A'})
             </td>
         </tr>
