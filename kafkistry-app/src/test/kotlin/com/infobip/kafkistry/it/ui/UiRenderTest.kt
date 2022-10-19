@@ -338,10 +338,10 @@ class UiRenderTest {
         assertThat(page.select(".cluster-row")).extracting(
                 Function { it.selectFirst("td:nth-child(1) a").text() },
                 Function { it.selectFirst("td:nth-child(1) a").attr("href") },
-                Function { it.selectFirst("td:nth-child(3) div.alert").text() }
+                Function { it.selectFirst("td:nth-child(3) div.alert").text().wordsSet() },
         ).containsOnly(
-                tuple("c_1", "/kafkistry/clusters/inspect?clusterIdentifier=c_1", "VISIBLE"),
-                tuple("c_2", "/kafkistry/clusters/inspect?clusterIdentifier=c_2", "VISIBLE")
+                tuple("c_1", "/kafkistry/clusters/inspect?clusterIdentifier=c_1", setOf("VISIBLE")),
+                tuple("c_2", "/kafkistry/clusters/inspect?clusterIdentifier=c_2", setOf("VISIBLE")),
         )
     }
 
