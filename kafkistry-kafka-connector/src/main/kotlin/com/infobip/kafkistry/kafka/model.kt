@@ -2,7 +2,8 @@ package com.infobip.kafkistry.kafka
 
 import org.apache.kafka.clients.admin.ConfigEntry
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.NamedType
+import com.infobip.kafkistry.service.StatusLevel
 import java.io.Serializable
 
 data class ConnectionDefinition(
@@ -127,8 +128,17 @@ data class PartitionOffsets(
         val end: Long
 )
 
-enum class ConsumerGroupStatus {
-    UNKNOWN, PREPARING_REBALANCE, COMPLETING_REBALANCE, STABLE, DEAD, EMPTY
+enum class ConsumerGroupStatus(
+    override val level: StatusLevel,
+    override val valid: Boolean,
+    override val doc: String,
+) : NamedType {
+    UNKNOWN(StatusLevel.WARNING, false, "Not valid state, but instead it's a placeholder for un-parsable API response from kafka"),
+    PREPARING_REBALANCE(StatusLevel.INFO, true, "The consumer group is to be rebalanced, triggered by some of following: new member wants to join, member left, member updated, failure in member heartbeat."),
+    COMPLETING_REBALANCE(StatusLevel.INFO, true, "All members have joined the group (re-balance timeout reached). Assigning partitions to members."),
+    STABLE(StatusLevel.SUCCESS, true, "Members in the consumer group are active and can consume messages normally."),
+    DEAD(StatusLevel.ERROR, false, "The consumer group has no members and no metadata. The group is going to be removed from Kafka node soon. It might be due to the inactivity, or the group is being migrated to different group coordinator."),
+    EMPTY(StatusLevel.WARNING, false, "The consumer group has metadata but has no joined members. All consumer members are down. If this group won't be used anymore consider deleting it."),
 }
 
 data class ConsumerGroup(

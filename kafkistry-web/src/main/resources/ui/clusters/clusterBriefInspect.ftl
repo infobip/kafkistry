@@ -206,11 +206,8 @@
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${clusterUrl}#consumer-groups|${stateStatusType}" title="Filter consumer groups by...">
-                        <#assign stateClass = consumersUtil.consumerStatusAlertClass(stateStatusType)>
-                        <#assign alerts = alerts + [stateClass]>
-                        <div class="alert alert-sm ${stateClass} mb-0 small">
-                            ${stateStatusType}
-                        </div>
+                        <#assign alerts = alerts + [util.levelToHtmlClass(stateStatusType.level)]>
+                        <small><@util.namedTypeStatusAlert type=stateStatusType alertInline=false/></small>
                     </a>
                 </td>
                 <td>${count}</td>

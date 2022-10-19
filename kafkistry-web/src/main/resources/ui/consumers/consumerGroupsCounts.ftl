@@ -21,10 +21,7 @@
                     <tr>
                         <td class="status-filter-btn agg-count-status-type" data-status-type="${stateType}"
                             title="Click to filter by..." data-table-id="consumer-groups">
-                            <#assign stateClass = consumerUtil.consumerStatusAlertClass(stateType)>
-                            <div class="alert alert-sm ${stateClass} mb-0">
-                                ${stateType}
-                            </div>
+                            <@util.namedTypeStatusAlert type=stateType alertInline=false/>
                         </td>
                         <td style="text-align: right;">${count}</td>
                     </tr>

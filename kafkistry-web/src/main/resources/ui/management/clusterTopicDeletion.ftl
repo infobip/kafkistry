@@ -79,9 +79,7 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <div class="alert alert-inline alert-sm mb-0 ${consumerUtil.consumerStatusAlertClass(consumerGroup.status)}">
-                                        ${consumerGroup.status}
-                                    </div>
+                                    <@util.namedTypeStatusAlert type=consumerGroup.status/>
                                 </td>
                                 <#list consumerGroup.topicMembers as topicMember>
                                     <#if topicMember.topicName == topicName>

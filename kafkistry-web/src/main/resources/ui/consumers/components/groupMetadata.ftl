@@ -37,11 +37,7 @@
     <#else>
         <tr>
             <th>Status</th>
-            <td>
-                <div class="alert alert-inline alert-sm mb-0 ${statusUtil.consumerStatusAlertClass(consumerGroup.status)}">
-                    ${consumerGroup.status}
-                </div>
-            </td>
+            <td><@util.namedTypeStatusAlert type=consumerGroup.status/></td>
         </tr>
         <tr>
             <th>Partition assignor</th>

@@ -77,10 +77,7 @@
                             </a>
                         </td>
                         <td>
-                            <#assign class = statusUtil.consumerStatusAlertClass(consumerGroup.status)>
-                            <div class="alert ${class} alert-cell">
-                                ${consumerGroup.status}
-                            </div>
+                            <@util.namedTypeStatusAlert type=consumerGroup.status/>
                         </td>
                         <td>
                             ${consumerGroup.partitionAssignor}

@@ -35,14 +35,8 @@
         <tr>
             <td>${clusterIdentifier}</td>
             <td>${consumerGroupId}</td>
-            <td>
-                <div class="alert alert-inline alert-sm mb-0 ${statusUtil.consumerStatusAlertClass(consumerGroup.status)}">
-                    ${consumerGroup.status}
-                </div>
-            </td>
-            <td>
-                <@util.namedTypeStatusAlert type=consumerGroup.lag.status/>
-            </td>
+            <td><@util.namedTypeStatusAlert type=consumerGroup.status/></td>
+            <td><@util.namedTypeStatusAlert type=consumerGroup.lag.status/></td>
             <td>${consumerGroup.topicMembers?size}</td>
         </tr>
     </table>
