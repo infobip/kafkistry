@@ -52,7 +52,7 @@
             </#if>
             <#assign alerts = alerts + [util.levelToHtmlClass(issue.level)]>
             <tr>
-                <td class="p-0">
+                <td class="p-1">
                     <@util.namedTypeStatusAlert type=issue alertInline=false small=true/>
                 </td>
             </tr>

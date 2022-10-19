@@ -24,10 +24,7 @@
                 <td>
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${appUrl.clusters().showClusters()}#${stateType}" title="Click to filter clusters...">
-                        <#assign stateClass = util.clusterStatusToHtmlClass(stateType)>
-                        <div class="alert alert-sm ${stateClass} mb-0">
-                            ${stateType}
-                        </div>
+                        <@util.namedTypeStatusAlert type=stateType alertInline=false/>
                     </a>
                 </td>
                 <td class="text-right">${count}</td>

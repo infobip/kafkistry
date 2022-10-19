@@ -40,19 +40,6 @@
     </#switch>
 </#function>
 
-<#function clusterStatusToHtmlClass stateType>
-<#-- @ftlvariable name="stateType"  type="com.infobip.kafkistry.kafkastate.StateType" -->
-    <#switch stateType>
-        <#case "VISIBLE">
-            <#return "alert-success">
-        <#case "DISABLED">
-            <#return "alert-secondary">
-        <#default>
-            <#return "alert-danger">
-    </#switch>
-    <#return "">
-</#function>
-
 <#function clusterStatusFlags statusPerClusters>
 <#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.topic.TopicClusterStatus>" -->
     <#assign clusterFlags = {}>

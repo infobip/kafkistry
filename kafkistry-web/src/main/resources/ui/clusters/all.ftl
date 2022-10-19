@@ -72,10 +72,7 @@
                     </#if>
                 </td>
                 <td>
-                    <#assign stateClass = util.clusterStatusToHtmlClass(clusterStatus.clusterState)>
-                    <div class="alert ${stateClass} mb-0" role="alert">
-                        ${clusterStatus.clusterState}
-                    </div>
+                    <@util.namedTypeStatusAlert type=clusterStatus.clusterState/>
                     <br/>
                     <span class="small font-weight-bold">Last refresh:</span><br/>
                     <span class="time small" data-time="${clusterStatus.lastRefreshTime?c}"></span>

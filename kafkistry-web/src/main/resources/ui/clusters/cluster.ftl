@@ -161,12 +161,7 @@
         </tr>
         <tr>
             <th>Cluster state</th>
-            <td>
-                <#assign stateClass = util.clusterStatusToHtmlClass(clusterStatus.clusterState)>
-                <div class="alert ${stateClass} mb-0" role="alert">
-                    ${clusterStatus.clusterState}
-                </div>
-            </td>
+            <td><@util.namedTypeStatusAlert type=clusterStatus.clusterState/></td>
         </tr>
         <tr>
             <th>Last refresh</th>

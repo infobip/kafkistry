@@ -32,12 +32,14 @@
         </div>
         <div class="card-body p-1">
             <#list consumersData.clustersDataStatuses as clusterDataStatus>
-                <#assign stateClass = util.clusterStatusToHtmlClass(clusterDataStatus.clusterStatus)>
+                <#assign stateClass = util.levelToHtmlClass(clusterDataStatus.clusterStatus.level)>
                 <#assign clusterTooltip>
                     ${clusterDataStatus.clusterStatus}<br/>
                     Last refresh before: ${(.now?long - clusterDataStatus.lastRefreshTime)/1000} sec
                 </#assign>
-                <div class="alert alert-sm alert-inline ${stateClass} cluster-status-badge" role="alert">
+                <div class="alert alert-sm alert-inline ${stateClass} cluster-status-badge status-filter-btn" role="alert"
+                     data-status-type="${clusterDataStatus.clusterIdentifier}"
+                     title="Click to filter by..." data-table-id="consumer-groups">
                     ${clusterDataStatus.clusterIdentifier} <@info.icon tooltip=clusterTooltip/>
                 </div>
             </#list>

@@ -9,13 +9,19 @@ import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.QuotaProperties
+import com.infobip.kafkistry.service.NamedType
+import com.infobip.kafkistry.service.StatusLevel
 
-enum class StateType {
-    VISIBLE,
-    UNREACHABLE,
-    UNKNOWN,
-    INVALID_ID,
-    DISABLED
+enum class StateType(
+    override val level: StatusLevel,
+    override val valid: Boolean,
+    override val doc: String,
+) : NamedType {
+    VISIBLE(StatusLevel.SUCCESS, true, "Responsive on API calls"),
+    UNREACHABLE(StatusLevel.ERROR, false, "Having failed API calls"),
+    UNKNOWN(StatusLevel.WARNING, false, "Not having definition for this cluster in registry"),
+    INVALID_ID(StatusLevel.CRITICAL, false, "Working with cluster with custer ID different than expected by definition in registry"),
+    DISABLED(StatusLevel.IGNORE, true, "Disabled in configuration not to attempt to connect at all"),
 }
 
 data class StateData<T>(

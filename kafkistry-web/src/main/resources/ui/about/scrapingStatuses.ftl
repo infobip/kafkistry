@@ -32,21 +32,14 @@
         <#list scrapingStatuses as scrapingStatus>
             <tr>
                 <td title="Class: ${scrapingStatus.scraperClass}">
-                    <code>
-                        ${scrapingStatus.stateTypeName}
-                    </code>
+                    <code>${scrapingStatus.stateTypeName}</code>
                 </td>
                 <td>
                     <a href="${appUrl.clusters().showCluster(scrapingStatus.clusterIdentifier)}">
                         ${scrapingStatus.clusterIdentifier}
                     </a>
                 </td>
-                <td>
-                    <#assign stateClass = util.clusterStatusToHtmlClass(scrapingStatus.stateType)>
-                    <div class="alert ${stateClass} mb-0" role="alert">
-                        ${scrapingStatus.stateType.name()}
-                    </div>
-                </td>
+                <td><@util.namedTypeStatusAlert type=scrapingStatus.stateType/></td>
                 <td class="time small" data-time="${scrapingStatus.lastRefreshTime?c}"></td>
             </tr>
         </#list>
