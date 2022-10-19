@@ -20,7 +20,7 @@
 
 <div class="card">
     <div class="card-header">
-        <span class="h4">Affected by ACL rules</span>
+        <span class="h4">Affected by ACL rules (${affectingAcls?size})</span>
     </div>
     <div class="card-body p-0">
         <#if affectingAcls?size == 0>

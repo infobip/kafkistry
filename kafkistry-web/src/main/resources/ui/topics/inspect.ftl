@@ -214,7 +214,7 @@
         <br/>
         <div class="card">
             <div class="card-header">
-                <span class="h4">Consumer groups</span>
+                <span class="h4">Consumer groups (${topicConsumerGroups?size})</span>
             </div>
             <div class="card-body p-1">
                 <#if topicConsumerGroups?size == 0>
@@ -238,12 +238,12 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <@util.namedTypeStatusAlert type=consumerGroup.status/>
+                                    <@util.namedTypeStatusAlert type=consumerGroup.status small=true/>
                                 </td>
                                 <#list consumerGroup.topicMembers as topicMember>
                                     <#if topicMember.topicName == topicName>
                                         <td>
-                                            <@util.namedTypeStatusAlert type=topicMember.lag.status/>
+                                            <@util.namedTypeStatusAlert type=topicMember.lag.status small=true/>
                                         </td>
                                         <td class="text-right">
                                             ${topicMember.lag.amount!'N/A'}
@@ -270,8 +270,9 @@
 
         <br/>
         <div class="card">
+            <#assign numKStreamApps = kStreamsInvolvement.inputOf?size + ((kStreamsInvolvement.internalIn)??)?then(1, 0)>
             <div class="card-header">
-                <span class="h4">KStream applications</span>
+                <span class="h4">KStream applications (${numKStreamApps})</span>
             </div>
             <div class="card-body p-1">
                 <#if kStreamsInvolvement.inputOf?size == 0 && !(kStreamsInvolvement.internalIn)??>

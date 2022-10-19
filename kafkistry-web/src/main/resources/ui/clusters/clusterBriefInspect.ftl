@@ -45,15 +45,15 @@
     <#assign alerts = []>
     <#assign seenIssues = []>
     <#assign issuesTooltip>
-        <table class="table table-sm table-borderless">
+        <table class="table table-sm table-borderless ml-1">
         <#list clusterIssues as issue>
             <#if seenIssues?seq_contains(issue.name)>
                 <#continue>
             </#if>
             <#assign alerts = alerts + [util.levelToHtmlClass(issue.level)]>
             <tr>
-                <td>
-                    <small><@util.namedTypeStatusAlert type=issue alertInline=false/></small>
+                <td class="p-0">
+                    <@util.namedTypeStatusAlert type=issue alertInline=false small=true/>
                 </td>
             </tr>
             <#assign seenIssues = seenIssues + [issue.name]>
@@ -78,16 +78,16 @@
     <#assign fullyOk = false>
     <#assign alerts = []>
     <#assign topicsCountsTooltip>
-        <table class="table table-sm table-borderless">
+        <table class="table table-sm table-borderless ml-1">
             <#list clusterTopics.topicsStatusCounts as statusTypeCount>
                 <#assign statusType = statusTypeCount.type>
                 <#assign count = statusTypeCount.quantity>
                 <tr>
-                    <td>
+                    <td class="p-0">
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                            href="${clusterUrl}#topics|${statusType.name}" title="Filter topics by...">
                             <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
-                            <small><@util.namedTypeStatusAlert type=statusType alertInline=false/></small>
+                            <@util.namedTypeStatusAlert type=statusType alertInline=false small=true/>
                         </a>
                     </td>
                     <td>${count}</td>
@@ -113,16 +113,16 @@
     <#assign fullyOk = false>
     <#assign alerts = []>
     <#assign aclsCountsTooltip>
-        <table class="table table-sm table-borderless">
+        <table class="table table-sm table-borderless ml-1">
             <#list clusterAcls.status.statusCounts as statusTypeCount>
                 <#assign statusType = statusTypeCount.type>
                 <#assign count = statusTypeCount.quantity>
                 <tr>
-                    <td>
+                    <td class="p-0">
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                            href="${clusterUrl}#acls|${statusType.name}" title="Filter ACLs by...">
                             <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
-                            <small><@util.namedTypeStatusAlert type=statusType alertInline=false/></small>
+                            <@util.namedTypeStatusAlert type=statusType alertInline=false small=true/>
                         </a>
                     </td>
                     <td>${count}</td>
@@ -148,16 +148,16 @@
     <#assign fullyOk = false>
     <#assign alerts = []>
     <#assign quotasCountsTooltip>
-        <table class="table table-sm table-borderless">
+        <table class="table table-sm table-borderless ml-1">
             <#list clusterQuotas.status.statusCounts as statusTypeCount>
                 <#assign statusType = statusTypeCount.type>
                 <#assign count = statusTypeCount.quantity>
                 <tr>
-                    <td>
+                    <td class="p-0">
                         <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                            href="${clusterUrl}#quotas|${statusType.name}" title="Filter quotas by...">
                             <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
-                            <small><@util.namedTypeStatusAlert type=statusType alertInline=false/></small>
+                            <@util.namedTypeStatusAlert type=statusType alertInline=false small=true/>
                         </a>
                     </td>
                     <td>${count}</td>
@@ -182,17 +182,17 @@
 <#assign cgFullyOk = true>
 <#assign alerts = []>
 <#assign consumerGroupsCountsTooltip>
-    <table class="table table-sm table-borderless">
+    <table class="table table-sm table-borderless ml-1">
         <#list clusterGroups.consumersStats.lagStatusCounts as lagStatusType, count>
             <#if lagStatusType.toString() != "NO_LAG" && lagStatusType.toString() != "MINOR_LAG">
                 <#assign cgFullyOk = false>
             </#if>
             <tr>
-                <td>
+                <td class="p-0">
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${clusterUrl}#consumer-groups|${lagStatusType}" title="Filter consumer groups by...">
                         <#assign alerts = alerts + [util.levelToHtmlClass(lagStatusType.level)]>
-                        <small><@util.namedTypeStatusAlert type=lagStatusType alertInline=false/></small>
+                        <@util.namedTypeStatusAlert type=lagStatusType alertInline=false small=true/>
                     </a>
                 </td>
                 <td>${count}</td>
@@ -203,11 +203,11 @@
                 <#assign cgFullyOk = false>
             </#if>
             <tr>
-                <td>
+                <td class="p-0">
                     <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
                        href="${clusterUrl}#consumer-groups|${stateStatusType}" title="Filter consumer groups by...">
                         <#assign alerts = alerts + [util.levelToHtmlClass(stateStatusType.level)]>
-                        <small><@util.namedTypeStatusAlert type=stateStatusType alertInline=false/></small>
+                        <@util.namedTypeStatusAlert type=stateStatusType alertInline=false small=true/>
                     </a>
                 </td>
                 <td>${count}</td>

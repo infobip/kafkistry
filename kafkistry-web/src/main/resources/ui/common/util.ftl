@@ -274,12 +274,14 @@
     </span>
 </#macro>
 
-<#macro namedTypeStatusAlert type alertInline=true>
+<#macro namedTypeStatusAlert type alertInline=true small=false>
 <#-- @ftlvariable name="type" type="com.infobip.kafkistry.service.NamedType" -->
     <#import "infoIcon.ftl" as infoForAlert>
     <div role="alert" class="alert text-nowrap
         <#if alertInline>alert-inline mb-1<#else>mb-0</#if>
-        alert-sm ${levelToHtmlClass(type.level)}"
+        alert-sm ${levelToHtmlClass(type.level)}
+        <#if small>mb-0 p-0 pr-1 pl-1</#if>
+        "
     >
         <#attempt>
             ${type.name}
