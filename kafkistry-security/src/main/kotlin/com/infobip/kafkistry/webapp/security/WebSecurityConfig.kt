@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.core.session.SessionRegistry
+import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter
 import org.springframework.security.web.header.HeaderWriterFilter
 import org.springframework.stereotype.Component
@@ -26,6 +28,7 @@ class WebSecurityProperties {
 
 @Configuration
 class WebSecurityConfig(
+    private val authConfiguration: AuthenticationConfiguration,
     private val currentRequestReadingFilter: CurrentRequestReadingFilter,
     private val unauthorizedEntryPoint: UnauthorizedEntryPoint,
     private val preAuthUserResolvers: List<PreAuthUserResolver>,
@@ -35,7 +38,10 @@ class WebSecurityConfig(
     private val httpProperties: WebHttpProperties,
     private val securityProperties: WebSecurityProperties,
     private val sessionRegistry: SessionRegistry,
-) : WebSecurityConfigurerAdapter() {
+) {
+
+    @Bean
+    fun authenticationManager(): AuthenticationManager = authConfiguration.authenticationManager
 
     @Bean
     fun preAuthUserFilter(): PreAuthenticatedUserProcessingFiler {
@@ -51,7 +57,8 @@ class WebSecurityConfig(
         }
     }
 
-    override fun configure(http: HttpSecurity) {
+    @Bean
+    fun httpSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
         //picked HeaderWriterFilter because it's early in filter chain
         http.addFilterBefore(currentRequestReadingFilter, HeaderWriterFilter::class.java)
         if (securityProperties.enabled) {
@@ -86,6 +93,7 @@ class WebSecurityConfig(
                 csrf().disable()
             }
         }
+        return http.build()
     }
 
 }
