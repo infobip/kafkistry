@@ -6,7 +6,6 @@ import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.admin.NewTopic
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.util.SocketUtils
 import org.testcontainers.containers.DockerComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
@@ -15,6 +14,7 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import javax.net.ServerSocketFactory
 
 class KafkaClusterContainer(
         private val topics: Collection<NewTopic>,
@@ -175,7 +175,16 @@ data class HostPort(val host: String, val port: Int) {
     companion object {
         fun newLocalAvailable() = HostPort(
                 host = InetAddress.getLocalHost().hostName,
-                port = SocketUtils.findAvailableTcpPort()
+                port = randomPort(),
         )
+
+        private fun randomPort(): Int {
+            val serverSocket = ServerSocketFactory.getDefault().createServerSocket(
+                0, 1, InetAddress.getByName("localhost")
+            )
+            return serverSocket.localPort.also {
+                serverSocket.close()
+            }
+        }
     }
 }

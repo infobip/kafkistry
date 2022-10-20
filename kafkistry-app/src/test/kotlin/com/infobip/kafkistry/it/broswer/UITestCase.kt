@@ -25,6 +25,7 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated
 import org.openqa.selenium.support.ui.WebDriverWait
 import org.springframework.context.ApplicationContext
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 /**
@@ -75,7 +76,11 @@ abstract class UITestCase(
                 .untilAsserted(assertCheck)
     }
 
-    fun RemoteWebDriver.pageText(): String = findElementByTagName("body").text
+    fun RemoteWebDriver.findElementById(id: String): WebElement = findElement(By.id(id))
+    fun RemoteWebDriver.findElementByCssSelector(css: String): WebElement = findElement(By.cssSelector(css))
+    fun RemoteWebDriver.findElementByLinkText(linkText: String): WebElement = findElement(By.linkText(linkText))
+
+    fun RemoteWebDriver.pageText(): String = findElement(By.tagName("body")).text
 
     fun RemoteWebDriver.assertPageText() = assertThat(pageText())!!
 
@@ -92,7 +97,7 @@ abstract class UITestCase(
 
     fun WebElement.scrollIntoView() = apply {
         (browser as JavascriptExecutor).executeScript("arguments[0].scrollIntoView(true);", this)
-        WebDriverWait(browser, 1).until(
+        WebDriverWait(browser, Duration.ofSeconds(1)).until(
             visibilityOfElementLocated(By.xpath(generateXPATH(this)))
         )
     }

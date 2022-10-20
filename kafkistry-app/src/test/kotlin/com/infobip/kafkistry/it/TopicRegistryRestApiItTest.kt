@@ -12,7 +12,7 @@ import org.junit.ClassRule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration

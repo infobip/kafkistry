@@ -39,7 +39,7 @@ import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
@@ -240,9 +240,9 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/topics")
         assertThat(page.select(".topic-row")).extracting(
-                Function { it.selectFirst("a").text() },
-                Function { it.selectFirst("a").attr("href") },
-                Function { it.selectFirst("td:nth-child(4)").text().wordsSet() }
+                Function { it.selectFirst("a")?.text() },
+                Function { it.selectFirst("a")?.attr("href") },
+                Function { it.selectFirst("td:nth-child(4)")?.text()?.wordsSet() }
         ).containsOnly(
                 tuple("topic_ok", "/kafkistry/topics/inspect?topicName=topic_ok", setOf("OK", "EMPTY")),
                 tuple("topic_expected_missing", "/kafkistry/topics/inspect?topicName=topic_expected_missing", setOf("NOT_PRESENT_AS_EXPECTED", "OK", "EMPTY")),
@@ -253,8 +253,8 @@ class UiRenderTest {
 
     private fun Document.topicPageClusterStatusesAssertion(): AbstractListAssert<*, MutableList<out Tuple>, Tuple, ObjectAssert<Tuple>> {
         return assertThat(select(".per-cluster-status-row")).extracting(
-                Function { it.selectFirst("td:nth-child(1)").text().removeSuffix(" \uD83D\uDD0D") },   //remove magnifier symbol
-                Function { it.selectFirst("td:nth-child(1) a").attr("href") },
+                Function { it.selectFirst("td:nth-child(1)")?.text()?.removeSuffix(" \uD83D\uDD0D") },   //remove magnifier symbol
+                Function { it.selectFirst("td:nth-child(1) a")?.attr("href") },
                 Function { it.select("td:nth-child(2) div.alert").text().wordsSet() }
         )
     }
@@ -315,9 +315,9 @@ class UiRenderTest {
         api.refreshClusters()
         val page = api.getPage("/topics")
         assertThat(page.select(".topic-row")).extracting(
-            Function { it.selectFirst("a").text() },
-            Function { it.selectFirst("a").attr("href") },
-            Function { it.selectFirst("td:nth-child(4)").text().wordsSet() }
+            Function { it.selectFirst("a")?.text() },
+            Function { it.selectFirst("a")?.attr("href") },
+            Function { it.selectFirst("td:nth-child(4)")?.text()?.wordsSet() }
         ).containsOnly(
             tuple("topic_ok", "/kafkistry/topics/inspect?topicName=topic_ok", setOf("UNKNOWN", "EMPTY")),
             tuple("topic_expected_missing", "/kafkistry/topics/inspect?topicName=topic_expected_missing", setOf("UNKNOWN", "EMPTY")),
@@ -336,9 +336,9 @@ class UiRenderTest {
         addAllClustersAndTopics()
         val page = api.getPage("/clusters")
         assertThat(page.select(".cluster-row")).extracting(
-                Function { it.selectFirst("td:nth-child(1) a").text() },
-                Function { it.selectFirst("td:nth-child(1) a").attr("href") },
-                Function { it.selectFirst("td:nth-child(3) div.alert").text().wordsSet() },
+                Function { it.selectFirst("td:nth-child(1) a")?.text() },
+                Function { it.selectFirst("td:nth-child(1) a")?.attr("href") },
+                Function { it.selectFirst("td:nth-child(3) div.alert")?.text()?.wordsSet() },
         ).containsOnly(
                 tuple("c_1", "/kafkistry/clusters/inspect?clusterIdentifier=c_1", setOf("VISIBLE")),
                 tuple("c_2", "/kafkistry/clusters/inspect?clusterIdentifier=c_2", setOf("VISIBLE")),

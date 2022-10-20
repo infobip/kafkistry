@@ -35,7 +35,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>2.6.7</version>
+        <version>2.7.4</version>
         <relativePath />
     </parent>
 
@@ -76,24 +76,27 @@
         <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <git-commit-id-maven-plugin.skip>false</git-commit-id-maven-plugin.skip>
-        <kotlin.version>1.6.20</kotlin.version>
+        <kotlin.version>1.7.20</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-        <org.eclipse.jgit.version>5.4.2.201908231537-r</org.eclipse.jgit.version>
-        <jsoup.version>1.12.1</jsoup.version>
-        <jslack-api-client.version>3.0.3</jslack-api-client.version>
+        <org.eclipse.jgit.version>6.3.0.202209071007-r</org.eclipse.jgit.version>
+        <jsoup.version>1.15.3</jsoup.version>
+        <jslack-api-client.version>3.4.2</jslack-api-client.version>
         <enforcerSkip>true</enforcerSkip>
-        <kafka.version>3.1.0</kafka.version>
-        <zookeeper.version>3.6.3</zookeeper.version>
+        <kafka.version>3.3.1</kafka.version>
+        <spring-kafka.version>2.9.2</spring-kafka.version>
+        <zookeeper.version>3.8.0</zookeeper.version>
         <sqlite-jdbc.version>3.28.0</sqlite-jdbc.version>
         <commons-pool2.version>2.8.0</commons-pool2.version>
-        <janino.version>3.0.6</janino.version>
-        <prometheus-client.version>0.10.0</prometheus-client.version>
-        <guava.version>30.1.1-jre</guava.version>
-        <commons-io.version>2.10.0</commons-io.version>
-        <awaitility.version>4.0.2</awaitility.version>
-        <testcontainers.version>1.17.2</testcontainers.version>
-        <kotlintest.version>2.0.2</kotlintest.version>
+        <janino.version>3.1.8</janino.version>
+        <prometheus-client.version>0.16.0</prometheus-client.version>
+        <guava.version>31.1-jre</guava.version>
+        <commons-io.version>2.11.0</commons-io.version>
+        <awaitility.version>4.2.0</awaitility.version>
+        <testcontainers.version>1.17.4</testcontainers.version>
+        <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
+        <snakeyaml.version>1.31</snakeyaml.version> <!-- override version from SBD (having 1.30); fix vulnerability-->
+        <jackson-bom.version>2.14.0-rc2</jackson-bom.version> <!-- override version from SBD (having 2.13.4); fix vulnerability-->
     </properties>
 
     <dependencyManagement>
@@ -110,6 +113,11 @@
                     java.lang.UnsatisfiedLinkError: org.sqlite.core.NativeDB._open_utf8([BI)V
                     when running in docker container alpine
                 -->
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>2.13.9</version> <!-- override version fix RCE vulnerability; org.apache.kafka:kafka_2.13@3.3.1 pulls org.scala-lang:scala-library@2.13.8-->
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -176,6 +184,13 @@
             <artifactId>kotlintest</artifactId>
             <version>${kotlintest.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <!-- provides vulnerable guava version; newer guava included in project anyway -->
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.nhaarman.mockitokotlin2</groupId>

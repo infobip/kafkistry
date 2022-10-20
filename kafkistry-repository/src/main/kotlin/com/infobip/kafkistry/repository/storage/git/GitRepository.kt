@@ -2,6 +2,11 @@ package com.infobip.kafkistry.repository.storage.git
 
 import com.infobip.kafkistry.metric.MetricHolder
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
+import com.infobip.kafkistry.repository.Committer
+import com.infobip.kafkistry.repository.WriteContext
+import com.infobip.kafkistry.repository.storage.*
+import com.infobip.kafkistry.service.KafkistryGitException
+import com.infobip.kafkistry.utils.deepToString
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.KeyPair
 import com.jcraft.jsch.Session
@@ -18,19 +23,14 @@ import org.eclipse.jgit.revwalk.RevSort
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.RevWalkUtils
 import org.eclipse.jgit.revwalk.filter.RevFilter
-import org.eclipse.jgit.transport.JschConfigSessionFactory
-import org.eclipse.jgit.transport.OpenSshConfig
 import org.eclipse.jgit.transport.SshTransport
+import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory
+import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig
 import org.eclipse.jgit.treewalk.AbstractTreeIterator
 import org.eclipse.jgit.treewalk.CanonicalTreeParser
 import org.eclipse.jgit.treewalk.EmptyTreeIterator
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.util.FS
-import com.infobip.kafkistry.repository.Committer
-import com.infobip.kafkistry.utils.deepToString
-import com.infobip.kafkistry.repository.WriteContext
-import com.infobip.kafkistry.repository.storage.*
-import com.infobip.kafkistry.service.KafkistryGitException
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -234,11 +234,14 @@ class GitRepository(
 
     @Throws(GitAPIException::class)
     private fun cloneOrInitNewRepo() {
+        fun setGitProtocolV1() = repository.config.setString("protocol", null, "version", "1")
+
         if (noRemote) {
             log.info("Going to GIT INIT empty repository in directory $dir")
             Git.init()
                     .setDirectory(dir)
                     .call()
+            setGitProtocolV1()
             makeEmptyCommit()
             log.info("Successful GIT INIT empty repository in directory $dir")
         } else {
@@ -250,6 +253,7 @@ class GitRepository(
                     .setCloneAllBranches(true)
                     .setTransportConfigCallback(transportCallback)
                     .call()
+            setGitProtocolV1()
             repository.config.apply {
                 setString("remote", "origin", "prune", "true")
             }
