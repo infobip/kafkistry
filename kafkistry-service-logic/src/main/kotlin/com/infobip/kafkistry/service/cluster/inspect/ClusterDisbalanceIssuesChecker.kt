@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.service.cluster.inspect
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafkastate.BrokerDiskMetricsStateProvider
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.Placeholder
 import com.infobip.kafkistry.service.RuleViolation
@@ -9,60 +10,85 @@ import com.infobip.kafkistry.service.generator.balance.BrokerLoad
 import com.infobip.kafkistry.service.generator.balance.ClusterBalanceStatus
 import com.infobip.kafkistry.service.generator.balance.GlobalBalancerService
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.stereotype.Component
 
 @Component
 @ConfigurationProperties("app.clusters-inspect.disbalance")
 class ClusterDisbalanceIssuesCheckerProperties {
-    var acceptableDiskUsageDisbalance = 20.0
-    var acceptableReplicaCountDisbalance = 10.0
-    var acceptableLeadersCountDisbalance = 10.0
+
+    @NestedConfigurationProperty
+    var diskUsage = DiskDisbalanceProperties()
+
+    @NestedConfigurationProperty
+    var replicaCount = LogCountDisbalanceProperties()
+
+    @NestedConfigurationProperty
+    var leadersCount = LogCountDisbalanceProperties()
 }
 
-class DisbalanceProperties {
+class DiskDisbalanceProperties {
+    var enabled = true
+    var maxAcceptablePercent: Double = 20.0
+    var minThreshold: Double = 10.0
+}
+class LogCountDisbalanceProperties {
+    var enabled = true
     var maxAcceptablePercent: Double = 10.0
-    var minThreshold: Double? = null
 }
 
 @Component
 class ClusterDisbalanceIssuesChecker(
     private val properties: ClusterDisbalanceIssuesCheckerProperties,
     private val globalBalancerService: GlobalBalancerService,
+    private val brokerDiskMetricsStateProvider: BrokerDiskMetricsStateProvider,
 ) : ClusterIssueChecker {
 
     override fun checkIssues(clusterIdentifier: KafkaClusterIdentifier): List<ClusterInspectIssue> {
+        if (!properties.diskUsage.enabled && !properties.replicaCount.enabled && !properties.leadersCount.enabled) {
+            return emptyList()
+        }
         val balanceStatus = globalBalancerService.getCurrentBalanceStatus(clusterIdentifier)
         return buildList {
             with(balanceStatus) {
-                if (loadDiffPortion.size > properties.acceptableDiskUsageDisbalance) {
-                    disbalanceIssue(
-                        name = "DISK_USAGE_DISBALANCE",
-                        resourceName = "Disk usage",
-                        valueName = "usage.bytes",
-                        acceptableDisbalance = properties.acceptableDiskUsageDisbalance,
-                        resourceValue = { it.size },
-                        resourceValueBrokers = { it.size },
-                    ).also { add(it) }
+                with(properties.diskUsage) {
+                    fun satisfiesThreshold() = maxCurrentDiskUsageOfCapacity(clusterIdentifier)?.let { maxUsage ->
+                        100.0 * maxUsage >= minThreshold
+                    } ?: true
+                    if (enabled && loadDiffPortion.size > maxAcceptablePercent && satisfiesThreshold()) {
+                        disbalanceIssue(
+                            name = "DISK_USAGE_DISBALANCE",
+                            resourceName = "Disk usage",
+                            valueName = "usage.bytes",
+                            acceptableDisbalance = maxAcceptablePercent,
+                            resourceValue = { it.size },
+                            resourceValueBrokers = { it.size },
+                        ).also { add(it) }
+                    }
                 }
-                if (loadDiffPortion.replicas > properties.acceptableReplicaCountDisbalance) {
-                    disbalanceIssue(
-                        name = "REPLICAS_COUNT_DISBALANCE",
-                        resourceName = "Replica count",
-                        valueName = "replica.count",
-                        acceptableDisbalance = properties.acceptableReplicaCountDisbalance,
-                        resourceValue = { it.replicas },
-                        resourceValueBrokers = { it.replicas },
-                    ).also { add(it) }
+                with(properties.replicaCount) {
+                    if (enabled && loadDiffPortion.replicas > maxAcceptablePercent) {
+                        disbalanceIssue(
+                            name = "REPLICAS_COUNT_DISBALANCE",
+                            resourceName = "Replica count",
+                            valueName = "replica.count",
+                            acceptableDisbalance = maxAcceptablePercent,
+                            resourceValue = { it.replicas },
+                            resourceValueBrokers = { it.replicas },
+                        ).also { add(it) }
+                    }
                 }
-                if (loadDiffPortion.leaders > properties.acceptableLeadersCountDisbalance) {
-                    disbalanceIssue(
-                        name = "LEADERS_COUNT_DISBALANCE",
-                        resourceName = "Leaders count",
-                        valueName = "leaders.count",
-                        acceptableDisbalance = properties.acceptableLeadersCountDisbalance,
-                        resourceValue = { it.leaders },
-                        resourceValueBrokers = { it.leaders },
-                    ).also { add(it) }
+                with(properties.leadersCount) {
+                    if (enabled && loadDiffPortion.leaders > maxAcceptablePercent) {
+                        disbalanceIssue(
+                            name = "LEADERS_COUNT_DISBALANCE",
+                            resourceName = "Leaders count",
+                            valueName = "leaders.count",
+                            acceptableDisbalance = maxAcceptablePercent,
+                            resourceValue = { it.leaders },
+                            resourceValueBrokers = { it.leaders },
+                        ).also { add(it) }
+                    }
                 }
             }
         }
@@ -98,6 +124,20 @@ class ClusterDisbalanceIssuesChecker(
             ),
             doc = "Indicates that here is significant disproportion of ${resourceName.lowercase()} across brokers in a cluster."
         )
+    }
+
+    private fun ClusterBalanceStatus.maxCurrentDiskUsageOfCapacity(clusterIdentifier: KafkaClusterIdentifier): Double? {
+        val brokersMetrics = brokerDiskMetricsStateProvider.getLatestState(clusterIdentifier)
+            .valueOrNull()
+            ?.brokersMetrics
+            ?: return null
+        return brokerLoads
+            .mapNotNull { (brokerId, load) ->
+                brokersMetrics[brokerId]?.total?.let { total ->
+                    load.size / total
+                }
+            }
+            .maxOrNull()
     }
 
 }
