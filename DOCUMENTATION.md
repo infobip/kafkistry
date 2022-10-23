@@ -42,6 +42,10 @@
    + [Custom implementation for disk metrics](#custom-implementation-for-fetching-broker-disk-metrics)
  - [KStream detection](#kstreams-detection)
  - [Topic inspection](#topic-inspection)
+   + [Extra topic inspectors](#extra-topic-inspectors)
+   + [Topic rule violations](#topic-rule-violations)
+ - [ACLs inspection](#acls-inspection)
+ - [Cluster inspection](#cluster-inspection)
  - [SQL querying - SQLite](#sql-metadata-querying---sqlite)
    + [ClickHouseDB-like API](#clickhousedb-like-rest-api)
  - [Slack integration](#slack-integration---auditing)
@@ -1152,6 +1156,48 @@ Those checks can be disabled globally or per specific cluster:
 | `app.acl.conflict-checking.consumer-groups.enabled-on-clusters.<...cluster filter options...>`   | _all_   | Selective options to filter for which clusters to perform **consumer groups** ACL conflict checking. See [cluster filter options](#cluster-filter-options)   |
 | `ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED`                                                          | _true_  | Flag to globally enable/disable transactional id conflict checking.                                                                                          |
 | `app.acl.conflict-checking.transactional-ids.enabled-on-clusters.<...cluster filter options...>` | _all_   | Selective options to filter for which clusters to perform **transactional ids** ACL conflict checking. See [cluster filter options](#cluster-filter-options) |
+
+
+## Cluster inspection
+
+There are inspectors on per cluster level looking for issues. Those can be enabled/disables/configured.
+
+### Built-in cluster-level issue checkers
+
+Existing checkers are enabled by default, but can be disabled with following property:
+ - `app.clusters-inspect.excluded-checker-classes`
+where value is list of fully qualified class names to disable/exclude from evaluation.
+
+ - [ClusterDisbalanceIssuesChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterDisbalanceIssuesChecker.kt)
+   - It reports issues when there is uneven disk usage/replica count/leaders count on brokers within same cluster
+   -
+     | Property                                                                 | Default    | Description                                                                                                                                                                                                                                                                              |
+     |--------------------------------------------------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+     | `app.clusters-inspect.disbalance.disk-usage.enabled`                     | `true`     | Is disk usage disbalance checked.                                                                                                                                                                                                                                                        |
+     | `app.clusters-inspect.disbalance.disk-usage.max-acceptable-percent`      | `20` (_%_) | Trigger the issue if difference between max disk usage in cluster comparing to min disk usage in cluster is more than *percent* of average disk usage.                                                                                                                                   |
+     | `app.clusters-inspect.disbalance.disk-usage.min-usage-threshold-percent` | `10` (_%_) | Won't trigger the issue when disk usage on all brokers is less then given this threshold percentage. (to avoid noisy issue for low utilized clusters). This suppressing issue feature depends on Kafkistry's ability to get [disk capacity of brokers](#scraping-brokers-disk-capacity). |
+     | `app.clusters-inspect.disbalance.replica-count.enabled`                  | `true`     | Is broker's replica count disbalance checked.                                                                                                                                                                                                                                            |
+     | `app.clusters-inspect.disbalance.replica-count.max-acceptable-percent`   | `10` (_%_) | Trigger the issue if difference between max replica count broker comparing to min replica count in cluster is more than *percent* of average replica count per broker in cluster.                                                                                                        |
+     | `app.clusters-inspect.disbalance.leader-count.enabled`                   | `true`     | Is broker's leader count disbalance checked.                                                                                                                                                                                                                                             |
+     | `app.clusters-inspect.disbalance.leader-count.max-acceptable-percent`    | `10` (_%_) | Trigger the issue if difference between max leader count broker comparing to min leader count in cluster is more than *percent* of average leader count per broker in cluster.                                                                                                           |
+ - [ClusterReplicationThrottleChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterReplicationThrottleChecker.kt)
+   - It reports issues when there is replication throttle being set
+ - [DiskUsageIssuesChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/DiskUsageIssuesChecker.kt)
+   - It reports issues when disk usage is _"significant"_
+   - It reports issue if all topic's replicas `retention.bytes` hosted on each broker add up to more than broker's disk capacity.
+   - Depends on Kafkistry's ability to get [disk capacity of brokers](#scraping-brokers-disk-capacity)
+   - Meaning what is meaning of _"significant"_ can be defined via following properties.
+   -
+     | Property                          | Default      | Description                                                                      |
+     |-----------------------------------|--------------|----------------------------------------------------------------------------------|
+     | `app.resources.thresholds.low`    | `65.0` (_%_) | Upper bound for usage percentage to be classified as *low*.                      |
+     | `app.resources.thresholds.medium` | `90.0` (_%_) | Upper bound for usage percentage to be classified as *medium*. (above is *high*) |
+
+### Custom cluster-level issue checkers
+
+Custom checker can be implemented via interface [ClusterIssueChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterIssueChecker.kt)
+and being picked up by Spring Framework as bean. (see more on [Writing custom plugins](#writing-custom-plugins)v)
+
 
 ## SQL metadata querying - SQLite
 

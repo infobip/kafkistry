@@ -30,7 +30,7 @@ class ClusterDisbalanceIssuesCheckerProperties {
 class DiskDisbalanceProperties {
     var enabled = true
     var maxAcceptablePercent: Double = 20.0
-    var minThreshold: Double = 10.0
+    var minUsageThreshold: Double = 10.0
 }
 class LogCountDisbalanceProperties {
     var enabled = true
@@ -53,7 +53,7 @@ class ClusterDisbalanceIssuesChecker(
             with(balanceStatus) {
                 with(properties.diskUsage) {
                     fun satisfiesThreshold() = maxCurrentDiskUsageOfCapacity(clusterIdentifier)?.let { maxUsage ->
-                        100.0 * maxUsage >= minThreshold
+                        100.0 * maxUsage >= minUsageThreshold
                     } ?: true
                     if (enabled && loadDiffPortion.size > maxAcceptablePercent && satisfiesThreshold()) {
                         disbalanceIssue(
