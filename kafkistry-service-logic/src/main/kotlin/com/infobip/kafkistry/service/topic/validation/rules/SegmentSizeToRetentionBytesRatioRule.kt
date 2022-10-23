@@ -71,8 +71,8 @@ class SegmentSizeToRetentionBytesRatioRule(
                     placeholders = mapOf(
                         "segmentBytes" to Placeholder(TopicConfig.SEGMENT_BYTES_CONFIG, segmentBytes),
                         "retentionBytes" to Placeholder(TopicConfig.RETENTION_BYTES_CONFIG, retentionBytes),
-                        "ratio" to Placeholder("ratio", ratio),
-                        "maxRatio" to Placeholder("maxRatio", maxRatioToRetentionBytes),
+                        "ratio" to Placeholder("ratio.percent", ratio * 100.0),
+                        "maxRatio" to Placeholder("maxRatio.percent", maxRatioToRetentionBytes * 100.0),
                     ),
                     severity = RuleViolation.Severity.WARNING,
                 )
@@ -83,8 +83,8 @@ class SegmentSizeToRetentionBytesRatioRule(
                     placeholders = mapOf(
                         "segmentBytes" to Placeholder(TopicConfig.SEGMENT_BYTES_CONFIG, segmentBytes),
                         "retentionBytes" to Placeholder(TopicConfig.RETENTION_BYTES_CONFIG, retentionBytes),
-                        "ratio" to Placeholder("ratio", ratio),
-                        "minRatio" to Placeholder("minRatio", minRatioToRetentionBytes),
+                        "ratio" to Placeholder("ratio.percent", ratio * 100.0),
+                        "minRatio" to Placeholder("minRatio.percent", minRatioToRetentionBytes * 100.0),
                     ),
                     severity = RuleViolation.Severity.WARNING,
                 )

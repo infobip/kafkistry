@@ -67,7 +67,7 @@ class TopicUnderprovisionedRetentionInspector(
             NamedTypeCauseDescription(
                 type = UNDERPROVISIONED_RETENTION,
                 message = "Topic has partition with oldest record of age %OLDEST_AGE% which is only " +
-                        "%RETENTION_PERCENT% % of expected time retention.ms of %RETENTION_MS%. " +
+                        "%RETENTION_PERCENT% of expected time retention.ms of %RETENTION_MS%. " +
                         "Low retention partitions are %PARTITIONS_LIST%",
                 placeholders = mapOf(
                     "OLDEST_AGE" to Placeholder("age.ms", worstStats.oldestRecordAgeMs),

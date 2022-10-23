@@ -12,8 +12,8 @@
         <#else><#t>
             ${placeholder.value?c}<#t>
         </#if><#t>
-    </#assign><#t><span class="conf-value" data-name="${placeholder.key}"
-                        data-value="${valueRaw}" title="${placeholder.key}">${valueRaw}</span><#t>
+    </#assign><#t><span class="conf-value conf-in-message" data-name="${placeholder.key}"
+                        data-value="${valueRaw}" title="${placeholder.key}: ${valueRaw}">${valueRaw}</span><#t>
     </code><#t>
 </#macro>
 

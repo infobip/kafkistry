@@ -50,20 +50,24 @@ function refreshAllConfValues() {
 function refreshAllConfValuesIn(container) {
     container.find(".conf-value").each(function () {
         let element = $(this);
-        let inTemplate = $(this).closest(".template").length > 0;
+        let inTemplate = element.closest(".template").length > 0;
         if (!inTemplate) {
             let name = element.attr("data-name");
             let value = element.attr("data-value");
             let prettyVal = prettyValue(name, value);
             if (prettyVal !== null) {
-                element.append(" <span class='small text-primary text-nowrap'>(" + prettyVal + ")</span>");
+                if (element.hasClass("conf-in-message")) {
+                    element.html("<span class='text-nowrap'>" + prettyVal + "</span>");
+                } else {
+                    element.append(" <span class='small text-primary text-nowrap'>(" + prettyVal + ")</span>");
+                }
             }
         }
     })
 }
 
 function prettyValue(name, value, nanDefault) {
-    let valueNum = parseInt(value);
+    let valueNum = value.indexOf(".") > -1 ? parseFloat(value) : parseInt(value);
     if (isNaN(valueNum)) {
         if (nanDefault) {
             return nanDefault;
@@ -96,6 +100,16 @@ function prettyValue(name, value, nanDefault) {
             return prettyBytesValue(valueNum) + "/sec";
         }
     }
+    if (isMsgRate(name)) {
+        if (valueNum >= 0) {
+            return prettyNumber(valueNum) + "msg/sec";
+        }
+    }
+    if (isPercent(name)) {
+        if (valueNum >= 0) {
+            return prettyPercentValue(valueNum);
+        }
+    }
     return null;
 }
 
@@ -113,6 +127,14 @@ function isBytes(name) {
 
 function isRate(name) {
     return name.endsWith(".rate") || name.endsWith(".bytes.per.second") || name.endsWith("ByteRate");
+}
+
+function isMsgRate(name) {
+    return name.endsWith(".msg.rate");
+}
+
+function isPercent(name) {
+    return name.endsWith(".percent");
 }
 
 function setupTooltipHelp(input, name, parent) {
@@ -221,6 +243,13 @@ function prettyBytesValue(bytes) {
     }
     let yb = tb / 1024;
     return round1d(yb) + "YB"
+}
+
+function prettyPercentValue(percent) {
+    if (percent < 0) {
+        return "-" + prettyPercentValue(-percent);
+    }
+    return prettyNumber(percent) + "%"
 }
 
 function prettyNumber(number) {

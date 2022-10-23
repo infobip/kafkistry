@@ -19,6 +19,11 @@ class ClusterDisbalanceIssuesCheckerProperties {
     var acceptableLeadersCountDisbalance = 10.0
 }
 
+class DisbalanceProperties {
+    var maxAcceptablePercent: Double = 10.0
+    var minThreshold: Double? = null
+}
+
 @Component
 class ClusterDisbalanceIssuesChecker(
     private val properties: ClusterDisbalanceIssuesCheckerProperties,
@@ -79,7 +84,7 @@ class ClusterDisbalanceIssuesChecker(
             violation = RuleViolation(
                 ruleClassName = checkerClassName,
                 severity = RuleViolation.Severity.WARNING,
-                message = "$resourceName disbalance portion is %DISBALANCE% % which is more than acceptable disbalance of %ACCEPTABLE_DISBALANCE% %. " +
+                message = "$resourceName disbalance portion is %DISBALANCE% which is more than acceptable disbalance of %ACCEPTABLE_DISBALANCE%. " +
                         "Minimal load is on broker with ID %MIN_BROKER_ID% having $resourceName of %MIN_BROKER_VALUE%. " +
                         "Maximum load is on broker with ID %MAX_BROKER_ID% having $resourceName of %MAX_BROKER_VALUE%. ",
                 placeholders = mapOf(

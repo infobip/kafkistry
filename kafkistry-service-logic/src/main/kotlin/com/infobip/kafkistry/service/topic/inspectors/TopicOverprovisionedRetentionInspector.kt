@@ -72,7 +72,7 @@ class TopicOverprovisionedRetentionInspector(
                 type = OVERPROVISIONED_RETENTION,
                 message = "Topic uses much less disk space than anticipated. " +
                         "Biggest partition uses %USED_BYTES% which is only " +
-                        "%RETENTION_PERCENT% % of maximum retention.bytes of %RETENTION_BYTES%.",
+                        "%RETENTION_PERCENT% of maximum retention.bytes of %RETENTION_BYTES%.",
                 placeholders = mapOf(
                     "USED_BYTES" to Placeholder("used.bytes", bestStats.usageBytes),
                     "RETENTION_PERCENT" to Placeholder("retention.percent", bestStats.percentOfRetentionBytes),
