@@ -129,7 +129,7 @@ class DiskUsageIssuesChecker(
                 placeholders = mapOf(
                     "USED_BYTES" to Placeholder("used.bytes", usageBytes),
                     "CAPACITY_BYTES" to Placeholder("capacity.bytes", capacityBytes),
-                    "PERCENTAGE" to Placeholder("used.percentage", portionOfCapacity),
+                    "PERCENTAGE" to Placeholder("used.percent", portionOfCapacity),
                     "BROKER" to Placeholder("broker.id", brokerId ?: "all brokers"),
                 ),
             ),
