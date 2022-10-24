@@ -97,7 +97,7 @@ function prettyValue(name, value, nanDefault) {
     }
     if (isMsgRate(name)) {
         if (valueNum >= 0) {
-            return prettyNumber(valueNum) + "msg/sec";
+            return prettyNumber(valueNum) + " msg/sec";
         }
     }
     if (isRate(name)) {
