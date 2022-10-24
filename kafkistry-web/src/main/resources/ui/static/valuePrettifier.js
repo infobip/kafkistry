@@ -95,14 +95,14 @@ function prettyValue(name, value, nanDefault) {
             return prettyBytesValue(valueNum);
         }
     }
-    if (isRate(name)) {
-        if (valueNum >= 0) {
-            return prettyBytesValue(valueNum) + "/sec";
-        }
-    }
     if (isMsgRate(name)) {
         if (valueNum >= 0) {
             return prettyNumber(valueNum) + "msg/sec";
+        }
+    }
+    if (isRate(name)) {
+        if (valueNum >= 0) {
+            return prettyBytesValue(valueNum) + "/sec";
         }
     }
     if (isPercent(name)) {
