@@ -110,10 +110,9 @@ class ClusterTopicDataSource(
                         message = it.renderMessage()
                     }
                 }
-            val processedStatusTypeNames = sequenceOf(wrongValueStatuses, ruleViolations)
-                .flatten()
-                .map { it.type }
-                .toSet()
+            val processedStatusTypeNames = sequenceOf(
+                wrongValueStatuses, ruleViolations, describedStatuses
+            ).flatten().map { it.type }.toSet()
             val otherStatuses = topicClusterStatus.status.types
                 .filter { it.name !in processedStatusTypeNames }
                 .map {
