@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.topic.inspectors
 
+import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.service.NamedTypeCauseDescription
 import com.infobip.kafkistry.service.Placeholder
 import com.infobip.kafkistry.service.StatusLevel
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component
 
 val UNEVEN_TRAFFIC_RATE = TopicInspectionResultType(
     name = "UNEVEN_TRAFFIC_RATE",
-    level = StatusLevel.WARNING,
+    level = StatusLevel.INFO,
     category = IssueCategory.RUNTIME_ISSUE,
     doc = "Topic has uneven produce rate across different partitions",
 )
@@ -21,9 +22,15 @@ val UNEVEN_TRAFFIC_RATE = TopicInspectionResultType(
 @ConfigurationProperties("app.topic-inspection.uneven-partition-rate")
 class TopicUnevenPartitionProducingInspectorProperties {
     var ignoreInternal = true
-    var acceptableMaxMinRatio = 4.0
-    var thresholdMinMsgRate = 10.0
+    var only15MinWindow = false
+    var acceptableMaxMinRatio = 5.0
+    var thresholdMinMsgRate = 50.0
 }
+
+data class UnevenPartitionRates(
+    val lowRate: Map<Partition, Double>,
+    val highRate: Map<Partition, Double>,
+)
 
 @Component
 class TopicUnevenPartitionProducingInspector(
@@ -53,8 +60,8 @@ class TopicUnevenPartitionProducingInspector(
             outputCallback.addDescribedStatusType(
                 NamedTypeCauseDescription(
                     type = UNEVEN_TRAFFIC_RATE,
-                    message = "Min rate partition %MIN_PARTITION% (%MIN_RATE% msg/sec) too low comparing to " +
-                            "max rate partition %MAX_PARTITION% (%MAX_RATE% msg/sec)",
+                    message = "Min rate partition %MIN_PARTITION% (rate: %MIN_RATE%) is too low comparing to " +
+                            "max rate partition %MAX_PARTITION% (rate: %MAX_RATE%)",
                     placeholders = mapOf(
                         "MIN_PARTITION" to Placeholder("partition", minRate.key),
                         "MIN_RATE" to Placeholder("min.msg.rate", minRate.value),
@@ -63,8 +70,18 @@ class TopicUnevenPartitionProducingInspector(
                     ),
                 )
             )
+            outputCallback.setExternalInfo(
+                UnevenPartitionRates(
+                    lowRate = rates.filterValues { it < maxRate.value / properties.acceptableMaxMinRatio },
+                    highRate = rates.filterValues { it > minRate.value * properties.acceptableMaxMinRatio },
+                )
+            )
         }
     }
-}
 
-fun PartitionRate.rate() = upTo24HRate ?: upTo15MinRate
+    fun PartitionRate.rate() = if (properties.only15MinWindow) {
+        upTo15MinRate
+    } else {
+        upTo24HRate ?: upTo15MinRate
+    }
+}
