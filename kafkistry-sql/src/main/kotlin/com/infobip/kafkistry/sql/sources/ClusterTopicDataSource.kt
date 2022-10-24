@@ -15,6 +15,7 @@ import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.RuleViolation
+import com.infobip.kafkistry.service.renderMessage
 import com.infobip.kafkistry.service.topic.validation.rules.renderMessage
 import com.infobip.kafkistry.sql.*
 import org.springframework.stereotype.Component
@@ -76,6 +77,7 @@ class ClusterTopicDataSource(
                 TopicOnClusterStatus().apply {
                     type = wrongValue.type.name
                     issueCategory = wrongValue.type.category
+                    valid = false
                     expected = wrongValue.expected
                     expectedDefault = wrongValue.expectedDefault
                     actual = wrongValue.actual
@@ -93,20 +95,35 @@ class ClusterTopicDataSource(
                 TopicOnClusterStatus().apply {
                     type = ruleViolation.type.name
                     issueCategory = ruleViolation.type.category
+                    valid = false
                     message = ruleViolation.renderMessage()
                     ruleClassName = ruleViolation.violation.ruleClassName
                     severity = ruleViolation.violation.severity
                 }
             }.toList()
+            val describedStatuses = topicClusterStatus.status.typeDescriptions
+                .map {
+                    TopicOnClusterStatus().apply {
+                        type = it.type.name
+                        issueCategory = it.type.category
+                        valid = it.type.valid
+                        message = it.renderMessage()
+                    }
+                }
+            val processedStatusTypeNames = sequenceOf(wrongValueStatuses, ruleViolations)
+                .flatten()
+                .map { it.type }
+                .toSet()
             val otherStatuses = topicClusterStatus.status.types
-                .filter { type -> wrongValueStatuses.all { it.type != type.name } && ruleViolations.all { it.type != type.name } }
+                .filter { it.name !in processedStatusTypeNames }
                 .map {
                     TopicOnClusterStatus().apply {
                         type = it.name
                         issueCategory = it.category
+                        valid = it.valid
                     }
                 }
-            statuses = wrongValueStatuses + ruleViolations + otherStatuses
+            statuses = wrongValueStatuses + ruleViolations + describedStatuses + otherStatuses
             if (topicDescription != null && topicDescription.presence.needToBeOnCluster(clusterRef)) {
                 val expectedProperties = topicDescription.propertiesForCluster(clusterRef)
                 expectedPartitionCount = expectedProperties.partitionCount
@@ -273,6 +290,7 @@ class TopicOnClusterStatus {
 
     @Enumerated(EnumType.STRING)
     lateinit var issueCategory: IssueCategory
+    var valid: Boolean? = null
 
     lateinit var message: String
 
