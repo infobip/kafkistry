@@ -73,7 +73,7 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
         )
         val result = rule.check(topicDescriptionView, mock())
         assertThat(result).isNotNull
-        assertThat(result?.renderMessage()).contains("having ratio 0.002 which is less than min configured ratio 0.02")
+        assertThat(result?.renderMessage()).contains("having ratio 0.2 which is less than min configured ratio 2.0")
     }
 
     @Test
@@ -94,7 +94,7 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
         )
         val result = rule.check(topicDescriptionView, mock())
         assertThat(result).isNotNull
-        assertThat(result?.renderMessage()).contains("having ratio 0.9 which is more than max configured ratio 0.5")
+        assertThat(result?.renderMessage()).contains("having ratio 90.0 which is more than max configured ratio 50.0")
     }
 
     @Test
@@ -182,7 +182,7 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
         )
         val result = rule.check(topicDescriptionView, mock())
         assertThat(result).isNotNull
-        assertThat(result?.renderMessage()).contains("having ratio 0.001 which is less than min configured ratio 0.02")
+        assertThat(result?.renderMessage()).contains("having ratio 0.1 which is less than min configured ratio 2.0")
     }
 
     @Test
