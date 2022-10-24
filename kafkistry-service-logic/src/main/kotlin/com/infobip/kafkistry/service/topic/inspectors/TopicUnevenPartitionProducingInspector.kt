@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 
 val UNEVEN_TRAFFIC_RATE = TopicInspectionResultType(
     name = "UNEVEN_TRAFFIC_RATE",
-    level = StatusLevel.INFO,
+    level = StatusLevel.IGNORE,
     category = IssueCategory.RUNTIME_ISSUE,
     doc = "Topic has uneven produce rate across different partitions",
 )
@@ -70,12 +70,15 @@ class TopicUnevenPartitionProducingInspector(
                     ),
                 )
             )
-            outputCallback.setExternalInfo(
-                UnevenPartitionRates(
-                    lowRate = rates.filterValues { it < maxRate.value / properties.acceptableMaxMinRatio },
-                    highRate = rates.filterValues { it > minRate.value * properties.acceptableMaxMinRatio },
-                )
-            )
+            val lowRates = mutableMapOf<Partition, Double>()
+            val highRates = mutableMapOf<Partition, Double>()
+            rates.forEach { (partition, rate) ->
+                val lowRate = rate < maxRate.value / properties.acceptableMaxMinRatio
+                val highRate = rate > minRate.value * properties.acceptableMaxMinRatio
+                if (lowRate && !highRate) lowRates[partition] = rate
+                if (highRate && !lowRate) highRates[partition] = rate
+            }
+            outputCallback.setExternalInfo(UnevenPartitionRates(lowRates, highRates))
         }
     }
 
