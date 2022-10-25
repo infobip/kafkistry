@@ -7,6 +7,7 @@ import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.repository.KafkaClustersRepository
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
+import com.infobip.kafkistry.service.background.BackgroundJobKey
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class AbstractKafkaStateProvider<V>(
@@ -58,8 +59,6 @@ abstract class AbstractKafkaStateProvider<V>(
     override fun doRefreshCluster(kafkaCluster: KafkaCluster): RefreshStatus {
         log.debug("Refreshing {} for cluster '{}'", stateTypeName, kafkaCluster.identifier)
         val issueKey = kafkaCluster.identifier.issueKey()
-        val jobName = "Pooling of ${stateTypeName.replace("_", " ")} on cluster ${kafkaCluster.identifier}"
-
         val startTime = System.currentTimeMillis()
         fun durationSec() = (System.currentTimeMillis() - startTime) / 1000.0
         val clusterState = try {
@@ -68,13 +67,13 @@ abstract class AbstractKafkaStateProvider<V>(
             issuesRegistry.clearIssue(issueKey)
             StateData(StateType.VISIBLE, kafkaCluster.identifier, stateTypeName, startTime, stateValue)
         } catch (ex: InvalidClusterIdException) {
-            issuesRegistry.reportIssue(issueKey, jobName, ex.deepToString())
+            issuesRegistry.reportIssue(issueKey, ex.deepToString())
             StateData(StateType.INVALID_ID, kafkaCluster.identifier, stateTypeName, startTime)
         } catch (ex: Throwable) {
             log.error("Exception while refreshing {} for cluster {}, setting it's state as 'unreachable' after {} sec",
                     stateTypeName, kafkaCluster, durationSec(), ex
             )
-            issuesRegistry.reportIssue(issueKey, jobName, ex.deepToString())
+            issuesRegistry.reportIssue(issueKey, ex.deepToString())
             StateData(StateType.UNREACHABLE, kafkaCluster.identifier, stateTypeName, startTime)
         }
         clusterStates[kafkaCluster.identifier] = clusterState
@@ -85,7 +84,10 @@ abstract class AbstractKafkaStateProvider<V>(
         )
     }
 
-    private fun KafkaClusterIdentifier.issueKey() = "kafka-$stateTypeName-$this"
+    private fun KafkaClusterIdentifier.issueKey(): BackgroundJobKey {
+        val jobName = "Pooling of ${stateTypeName.replace("_", " ")} on cluster $this"
+        return BackgroundJobKey("kafka-$stateTypeName", jobName, this)
+    }
 
     abstract fun fetchState(kafkaCluster: KafkaCluster): V
 

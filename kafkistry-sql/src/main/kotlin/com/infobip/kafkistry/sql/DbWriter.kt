@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.sql
 
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
+import com.infobip.kafkistry.service.background.BackgroundJobKey
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -18,9 +19,8 @@ class DbWriter(
     fun writeAll() {
         //get the data
         val generatedData = sqlDataSources.orElse(emptyList()).mapNotNull {
-            val issueKey = "sql-" + it.javaClass.name
-            val jobName = "Collect SQL data for ${it.javaClass.simpleName}"
-            issuesRegistry.computeCapturingException(issueKey, jobName) {
+            val issueKey = BackgroundJobKey("sql-" + it.javaClass.name, "Collect SQL data for ${it.javaClass.simpleName}")
+            issuesRegistry.computeCapturingException(issueKey) {
                 it.supplyEntities()
             }
         }

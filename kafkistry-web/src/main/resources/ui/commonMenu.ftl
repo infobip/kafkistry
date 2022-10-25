@@ -5,7 +5,7 @@
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="securityEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="menuItems"  type="java.util.List<com.infobip.kafkistry.webapp.menu.MenuItem>" -->
-<#-- @ftlvariable name="backgroundJobIssues"  type="java.util.List<com.infobip.kafkistry.service.background.BackgroundJobIssue>" -->
+<#-- @ftlvariable name="backgroundJobIssueGroups"  type="java.util.List<com.infobip.kafkistry.service.background.BackgroundJobIssuesGroup>" -->
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="imageProps"  type="com.infobip.kafkistry.webapp.ImageProperties" -->
 
@@ -120,28 +120,63 @@
 </script>
 
 <div class="container">
-    <#assign maxExpanded = 0>
-    <#assign maxShown = 7>
-    <#assign collapsedClass = (backgroundJobIssues?size lte maxExpanded)?then("", "collapsed")>
-    <#assign expandedClass = (backgroundJobIssues?size lte maxExpanded)?then("show", "")>
-    <#list backgroundJobIssues as issue>
-        <div class="alert alert-danger issue ${collapsedClass}" role="alert" data-target=".issue-msg-${issue?index}" data-toggle="collapsing"
-        <#if issue?index gte maxShown>style="display: none;" </#if>>
-            <span class="when-collapsed" title="expand...">▼</span>
-            <span class="when-not-collapsed" title="collapse...">△</span>
-            <span class="message">Background job failed: ${issue.jobName}</span>
-            <pre class="pre-message issue-msg-${issue?index} collapseable ${expandedClass}">${issue.failureMessage}</pre>
-        </div>
-        <#if !issue?is_last && issue?index == maxShown - 1>
-            <#assign leftIssues = backgroundJobIssues?size - maxShown>
-            <div id="more-issues-btn">
-                <button class="btn btn-sm btn-outline-danger" onclick="showMoreIssues();">
-                    And ${leftIssues} more failed background jobs...
-                </button>
-                <br/>
-                <br/>
+    <#assign maxShown = 6>
+    <#assign issuesCount = 0>
+    <#list backgroundJobIssueGroups as issuesGroup>
+        <#assign issuesCount += issuesGroup.issues?size>
+    </#list>
+    <#assign elemIndex = 0>
+    <#assign shownCount = 0>
+    <#list backgroundJobIssueGroups as issuesGroup>
+        <#if issuesGroup.issues?size gt 1>
+            <div class="alert alert-danger issue collapsed" role="alert"
+                 data-target=".issue-group-${issuesGroup?index}" data-toggle="collapsing"
+                 <#if elemIndex gte maxShown>style="display: none;" </#if>>
+                <span class="when-collapsed" title="expand...">▼</span>
+                <span class="when-not-collapsed" title="collapse...">△</span>
+                <span class="message">Background jobs failed for ${issuesGroup.groupKey} (${issuesGroup.issues?size} issues)</span>
+                <div class="issue-group-${issuesGroup?index} collapseable">
+                    <ul>
+                        <#list issuesGroup.issues as issue>
+                            <li class="m-2">
+                                <span class="message">${issue.key.jobName}</span>
+                                <pre class="pre-message">${issue.failureMessage}</pre>
+                            </li>
+                        </#list>
+                    </ul>
+                </div>
             </div>
+            <#if elemIndex lt maxShown>
+                <#assign shownCount += issuesGroup.issues?size>
+            </#if>
+            <#assign elemIndex++>
+        <#else>
+            <#list issuesGroup.issues as issue>
+                <div class="alert alert-danger issue collapsed" role="alert"
+                     data-target=".issue-msg-${elemIndex}" data-toggle="collapsing"
+                     <#if elemIndex gte maxShown>style="display: none;" </#if>>
+                    <span class="when-collapsed" title="expand...">▼</span>
+                    <span class="when-not-collapsed" title="collapse...">△</span>
+                    <span class="message">Background job failed: ${issue.key.jobName}</span>
+                    <pre class="pre-message issue-msg-${elemIndex} collapseable">${issue.failureMessage}</pre>
+                </div>
+                <#if elemIndex lt maxShown>
+                    <#assign shownCount++>
+                </#if>
+                <#assign elemIndex++>
+            </#list>
         </#if>
     </#list>
+    <#assign leftIssues = issuesCount - shownCount>
+    <#if leftIssues gt 0>
+        <div id="more-issues-btn">
+            <button class="btn btn-sm btn-outline-danger" onclick="showMoreIssues();">
+                And ${leftIssues} more failed background jobs...
+            </button>
+            <br/>
+            <br/>
+        </div>
+    </#if>
+
 </div>
 

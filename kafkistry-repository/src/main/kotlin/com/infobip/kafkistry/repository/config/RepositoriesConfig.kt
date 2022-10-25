@@ -110,18 +110,14 @@ class GitRepositoriesConfig(
             strictSshHostKeyChecking = properties.strictSshHostKeyChecking,
             dropLocalBranchesMissingOnRemote = properties.dropLocalBranchesMissingOnRemote,
             promProperties = promProperties,
-        ).also {
-            backgroundJobIssuesRegistry.registerSupplier("git", "Git repository") {
-                it.lastRefreshErrorMsg()
-            }
-        }
+        )
     }
 
     @Bean
     fun refreshTrigger(
         git: GitRepository,
         repositories: List<RequestingKeyValueRepository<*, *>>,
-    ) = GitRefreshTrigger(git, repositories)
+    ) = GitRefreshTrigger(git, repositories, backgroundJobIssuesRegistry)
 
 }
 

@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.api
 
 import com.infobip.kafkistry.service.background.BackgroundJobIssue
+import com.infobip.kafkistry.service.background.BackgroundJobIssuesGroup
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -14,4 +15,7 @@ class BackgroundIssuesApi(
 
     @GetMapping
     fun currentIssues(): List<BackgroundJobIssue> = backgroundJobIssuesRegistry.currentIssues()
+
+    @GetMapping("/grouped")
+    fun currentGroupedIssues(): List<BackgroundJobIssuesGroup> = backgroundJobIssuesRegistry.currentGroupedIssues()
 }

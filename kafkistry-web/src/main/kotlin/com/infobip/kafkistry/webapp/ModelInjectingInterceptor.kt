@@ -113,7 +113,7 @@ class PropertiesInjectingInterceptor(
             }
             addObject("gitStorageEnabled", gitRepositoriesProperties?.enabled ?: false)
             addObject("securityEnabled", securityProperties.enabled)
-            addObject("backgroundJobIssues", issuesApi.currentIssues())
+            addObject("backgroundJobIssueGroups", issuesApi.currentGroupedIssues())
             addObject("hostname", hostnameResolver.hostname)
             addObject("lastCommit", latestBuildCommit)
         }

@@ -10,56 +10,56 @@ class BackgroundJobIssuesRegistry {
 
     private val log = LoggerFactory.getLogger(BackgroundJobIssuesRegistry::class.java)
 
-    private val issues = ConcurrentHashMap<String, BackgroundJobIssue>()
-    private val suppliers = ConcurrentHashMap<String, IssueSupplier>()
-
-    private data class IssueSupplier(
-            val jobName: String,
-            val failureCauseSupplier: () -> String?
-    )
+    private val issues = ConcurrentHashMap<BackgroundJobKey, BackgroundJobIssue>()
+    private val lastSuccesses = ConcurrentHashMap<BackgroundJobKey, Long>()
 
     fun doCapturingException(key: String, jobName: String, clearAfter: Long = 0, job: () -> Unit): Boolean {
-        return computeCapturingException(key, jobName, clearAfter, job) != null
+        return doCapturingException(BackgroundJobKey(key, jobName), clearAfter, job)
     }
 
-    fun <T> computeCapturingException(key: String, jobName: String, clearAfter: Long = 0, job: () -> T): T? {
+    fun doCapturingException(key: BackgroundJobKey, clearAfter: Long = 0, job: () -> Unit): Boolean {
+        return computeCapturingException(key, clearAfter, job) != null
+    }
+
+    fun <T> computeCapturingException(key: BackgroundJobKey, clearAfter: Long = 0, job: () -> T): T? {
         return try {
             val result = job()
             val prevIssue = issues[key]
             if (prevIssue != null && System.currentTimeMillis() >= prevIssue.timestamp + clearAfter) {
                 clearIssue(key)
+            } else {
+                reportSuccess(key)
             }
             result
         } catch (ex: Exception) {
-            reportIssue(key, jobName, ex.deepToString())
-            log.error("Background job [{}] '{}' failed with exception", key, jobName, ex)
+            reportIssue(key, ex.deepToString())
+            log.error("{} failed with exception", key, ex)
             null
         }
     }
 
-    fun reportIssue(key: String, jobName: String, failMessage: String) {
-        issues[key] = BackgroundJobIssue(jobName, failMessage, System.currentTimeMillis())
+    fun reportIssue(key: BackgroundJobKey, failMessage: String) {
+        issues[key] = BackgroundJobIssue(key, failMessage, System.currentTimeMillis())
     }
 
-    fun clearIssue(key: String) {
+    fun clearIssue(key: BackgroundJobKey) {
         issues.remove(key)
+        reportSuccess(key)
     }
 
-    fun registerSupplier(key: String, jobName: String, failureCauseSupplier: () -> String?) {
-        suppliers[key] = IssueSupplier(jobName, failureCauseSupplier)
-    }
-
-    fun unRegisterSupplier(key: String) {
-        suppliers.remove(key)
+    private fun reportSuccess(key: BackgroundJobKey) {
+        lastSuccesses[key] = System.currentTimeMillis()
     }
 
     fun currentIssues(): List<BackgroundJobIssue> {
-        val reportedIssues = issues.values
-        val suppliedIssues = suppliers.mapNotNull { (_, issueSupplier) ->
-            issueSupplier.failureCauseSupplier()?.let {
-                BackgroundJobIssue(issueSupplier.jobName, it, System.currentTimeMillis())
+        return issues.values.sortedBy { it.key.jobName }
+    }
+
+    fun currentGroupedIssues(): List<BackgroundJobIssuesGroup> {
+        return currentIssues()
+            .groupBy { it.key.cluster ?: it.key.type }
+            .map { (group, issues) ->
+                BackgroundJobIssuesGroup(group, issues)
             }
-        }
-        return (reportedIssues + suppliedIssues).sortedBy { it.jobName }
     }
 }
