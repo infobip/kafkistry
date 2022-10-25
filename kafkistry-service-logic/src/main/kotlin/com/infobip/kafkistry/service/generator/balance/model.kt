@@ -113,6 +113,7 @@ data class ClusterBalanceStatus(
         val brokerIds: List<BrokerId>,
         val brokerLoads: Map<BrokerId, BrokerLoad>,
         val brokersAverageLoad: BrokerLoad,
+        val brokersTotalLoad: BrokerLoad,
         val brokersLoadDiff: BrokerLoad,
         val loadDiffPortion: BrokerLoad,
         val combinedLoadDiff: Map<BalancePriority, Double>,

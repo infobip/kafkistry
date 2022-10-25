@@ -329,6 +329,7 @@ fun GlobalState.extractBalanceStatus(): ClusterBalanceStatus {
         brokerIds = brokerLoads.elements.keys.sorted(),
         brokerLoads = brokerLoads.elements,
         brokersAverageLoad = brokerLoads.average,
+        brokersTotalLoad = brokerLoads.elements.values.fold(BrokerLoad.ZERO, BrokerLoad::plus),
         brokersLoadDiff = brokersLoadDiff,
         loadDiffPortion = BrokerLoad(
             size = brokersLoadDiff.size percentageOf brokerLoads.average.size,
