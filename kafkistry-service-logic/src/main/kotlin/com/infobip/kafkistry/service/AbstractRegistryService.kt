@@ -72,6 +72,17 @@ abstract class AbstractRegistryService<ID : Any, T : Any, R : Repository<ID, T>,
         eventPublisher.publish(generateRepositoryEvent(entity.id))
     }
 
+    fun updateMulti(entities: List<T>, updateContext: UpdateContext) {
+        entities.forEach {
+            preUpdateCheck(it)
+            if (!repository.existsById(it.id)) {
+                throw KafkistryIntegrityException("Entity of type ${type.simpleName} with id '${it.id}' does not exist, can't update")
+            }
+        }
+        repository.requestUpdateMulti(updateContext.toWriteCtx(), entities)
+        entities.forEach { eventPublisher.publish(generateRepositoryEvent(it.id)) }
+    }
+
     fun findAllPendingRequests(): Map<ID, List<PR>> = repository
             .findPendingRequests()
             .associate { (id, changes) ->

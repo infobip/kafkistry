@@ -63,6 +63,10 @@ class FileSystemFileStorage(
         FileUtils.write(file.name.toFile(), file.content, StandardCharsets.UTF_8)
     }
 
+    override fun writeFiles(writeContext: WriteContext, files: List<StoredFile>) {
+        files.forEach { writeFile(writeContext, it) }
+    }
+
     //regular file system writes are performed immediately in-place, so no pending requests
 
     override fun listChangingFiles(): List<ChangingFile> = emptyList()

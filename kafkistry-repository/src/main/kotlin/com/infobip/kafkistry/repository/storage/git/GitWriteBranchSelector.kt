@@ -17,6 +17,15 @@ class GitWriteBranchSelector(
             branchPerEntity = properties.branchPerEntity
     )
 
+    fun selectBranchName(userUsername: String, fileNames: List<String>): String {
+        when (fileNames.size) {
+            0 -> selectBranchName(userUsername, "[none]")
+            1 -> selectBranchName(userUsername, fileNames.first())
+            else -> selectBranchName(userUsername, "[bulk-update]" + fileNames.hashCode())
+        }
+        return selectBranchName(userUsername, fileNames.joinToString("_"))
+    }
+
     fun selectBranchName(userUsername: String, fileName: String): String {
         if (writeToMaster) {
             return mainBranchName

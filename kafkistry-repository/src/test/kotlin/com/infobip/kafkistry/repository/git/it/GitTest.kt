@@ -520,6 +520,10 @@ class GitTest {
         )
     }
 
+    private fun GitRepository.writeFile(writeContext: WriteContext, subDir: String, name: String, content: String) {
+        writeFile(writeContext, subDir, StoredFile(name, content))
+    }
+
     private val user = Committer("fbar", "foo bar", "foo@bar.com")
 
     private fun ListAssert<GitRepository.BranchChanges>.flatExtractFileChanges(): AbstractListAssert<*, List<Tuple>, Tuple, ObjectAssert<Tuple>> {

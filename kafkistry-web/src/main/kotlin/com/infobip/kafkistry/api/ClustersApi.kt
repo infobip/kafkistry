@@ -46,6 +46,13 @@ class ClustersApi(
         @RequestParam(name = "targetBranch", required = false) targetBranch: String?
     ): Unit = clustersRegistryService.updateCluster(cluster, UpdateContext(message, targetBranch))
 
+    @PutMapping("/bulk")
+    fun updateClusters(
+        @RequestBody clusters: List<KafkaCluster>,
+        @RequestParam("message") message: String,
+        @RequestParam(name = "targetBranch", required = false) targetBranch: String?
+    ): Unit = clustersRegistryService.updateClusters(clusters, UpdateContext(message, targetBranch))
+
     @GetMapping
     fun listClusters(): List<KafkaCluster> = clustersRegistryService.listClusters()
 

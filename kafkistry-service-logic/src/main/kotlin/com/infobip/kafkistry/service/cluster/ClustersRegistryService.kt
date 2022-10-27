@@ -87,6 +87,7 @@ class ClustersRegistryService(
 
     fun addCluster(cluster: KafkaCluster, updateContext: UpdateContext = UpdateContext("adding")) = create(cluster, updateContext)
     fun updateCluster(cluster: KafkaCluster, updateContext: UpdateContext = UpdateContext("updating")) = update(cluster, updateContext)
+    fun updateClusters(clusters: List<KafkaCluster>, updateContext: UpdateContext = UpdateContext("updating")) = updateMulti(clusters, updateContext)
     fun removeCluster(clusterIdentifier: KafkaClusterIdentifier, updateContext: UpdateContext = UpdateContext("removing")) = delete(clusterIdentifier, updateContext)
 
     private fun checkDuplicateByClusterId(cluster: KafkaCluster) {

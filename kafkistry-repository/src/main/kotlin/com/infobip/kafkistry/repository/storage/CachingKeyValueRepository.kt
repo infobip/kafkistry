@@ -74,6 +74,11 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
         refreshById(keyIdExtractor(entity))
     }
 
+    override fun requestUpdateMulti(writeContext: WriteContext, entities: List<T>) {
+        delegate.requestUpdateMulti(writeContext, entities)
+        entities.forEach { refreshById(keyIdExtractor(it)) }
+    }
+
     override fun requestDeleteAll(writeContext: WriteContext) {
         delegate.requestDeleteAll(writeContext)
         refreshAll()

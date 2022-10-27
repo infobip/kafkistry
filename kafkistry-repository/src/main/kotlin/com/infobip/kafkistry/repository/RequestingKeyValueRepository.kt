@@ -29,6 +29,9 @@ interface RequestingKeyValueRepository<ID : Any, T : Any> {
     @Throws(EntryDoesNotExistException::class)
     fun requestUpdate(writeContext: WriteContext, entity: T)
 
+    @Throws(EntryDoesNotExistException::class)
+    fun requestUpdateMulti(writeContext: WriteContext, entities: List<T>)
+
     fun requestDeleteById(writeContext: WriteContext, id: ID)
 
     fun requestDeleteAll(writeContext: WriteContext)

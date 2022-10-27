@@ -45,11 +45,26 @@ class RequestingKeyValueRepositoryStorageAdapter<T : Any>(
 
     @Throws(EntryDoesNotExistException::class)
     override fun requestUpdate(writeContext: WriteContext, entity: T) {
-        val id = keyIdExtractor(entity)
+        val id = keyIdExtractor(entity).also {
+            ensureIdExists(it)
+        }
+        write(writeContext, id, entity)
+    }
+
+    @Throws(EntryDoesNotExistException::class)
+    override fun requestUpdateMulti(writeContext: WriteContext, entities: List<T>) {
+        val data = entities.associateBy { entity ->
+            keyIdExtractor(entity).also {
+                ensureIdExists(it)
+            }
+        }
+        writeAll(writeContext, data)
+    }
+
+    private fun ensureIdExists(id: ID) {
         if (!storage.fileExists(id.toFileName())) {
             throw EntryDoesNotExistException("There is no entry with id $id to update")
         }
-        write(writeContext, id, entity)
     }
 
     override fun findPendingRequests(): List<EntityRequests<ID, T>> {
@@ -150,6 +165,14 @@ class RequestingKeyValueRepositoryStorageAdapter<T : Any>(
                 StoredFile(id.toFileName(), entity.serialize())
         )
     }
+
+    private fun writeAll(writeContext: WriteContext, data: Map<ID, T>) {
+        val files = data.map { (id, entity) ->
+            StoredFile(id.toFileName(), entity.serialize())
+        }
+        storage.writeFiles(writeContext, files)
+    }
+
 
 }
 

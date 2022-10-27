@@ -23,7 +23,11 @@ class GitFileStorage(
     }
 
     override fun writeFile(writeContext: WriteContext, file: StoredFile) {
-        gitRepository.writeFile(writeContext, subDir, file.name, file.content)
+        gitRepository.writeFile(writeContext, subDir, file)
+    }
+
+    override fun writeFiles(writeContext: WriteContext, files: List<StoredFile>) {
+        gitRepository.writeFiles(writeContext, subDir, files)
     }
 
     override fun listChangingFiles(): List<ChangingFile> {

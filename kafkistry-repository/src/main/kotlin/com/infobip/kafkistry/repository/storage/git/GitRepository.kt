@@ -409,22 +409,44 @@ class GitRepository(
         }
     }
 
-    fun writeFile(writeContext: WriteContext, subDir: String, name: String, content: String) {
+    fun writeFile(writeContext: WriteContext, subDir: String, file: StoredFile) {
         exclusiveOnMainBranch {
             with(writeContext) {
-                doInUserBranch(user, name, "KR write autocommit: $message", targetBranch) {
-                    log.info("User {} writing to file {}/{} and adding it to git to track", user.fullName, subDir, name)
-                    FileUtils.write(
-                            subDir.asSubDirFile().child(name),
-                            content,
-                            StandardCharsets.UTF_8
-                    )
-                    git.add()
-                            .addFilepattern("$subDir/$name")
-                            .call()
+                doInUserBranch(user, file.name, "KR write autocommit: $message", targetBranch) {
+                    log.info("User {} writing to file {}/{} and adding it to git to track", user.fullName, subDir, file.name)
+                    file.writeToDisk(subDir)
+                    file.gitAdd(subDir)
                 }
             }
         }
+    }
+
+    fun writeFiles(writeContext: WriteContext, subDir: String, files: List<StoredFile>) {
+        exclusiveOnMainBranch {
+            with(writeContext) {
+                doInUserBranch(user, files.map { it.name }, "KR write autocommit: $message", targetBranch) {
+                    log.info("User {} writing to file {}/{} and adding it to git to track",
+                        user.fullName, subDir, files.map { it.name }
+                    )
+                    files.forEach { it.writeToDisk(subDir) }
+                    files.forEach { it.gitAdd(subDir) }
+                }
+            }
+        }
+    }
+
+    private fun StoredFile.writeToDisk(subDir: String) {
+        FileUtils.write(
+            subDir.asSubDirFile().child(name),
+            content,
+            StandardCharsets.UTF_8
+        )
+    }
+
+    private fun StoredFile.gitAdd(subDir: String) {
+        git.add()
+            .addFilepattern("$subDir/$name")
+            .call()
     }
 
     fun listAllBranchesChanges(subDir: String? = null, fileName: String? = null): List<BranchChanges> {
@@ -556,9 +578,13 @@ class GitRepository(
 
     private fun doInUserBranch(
         user: Committer, fileName: String, commitMessage: String, targetBranch: String?, operation: () -> Unit
+    ) = doInUserBranch(user, listOf(fileName), commitMessage, targetBranch, operation)
+
+    private fun doInUserBranch(
+        user: Committer, fileNames: List<String>, commitMessage: String, targetBranch: String?, operation: () -> Unit
     ) {
         try {
-            val userBranchName = targetBranch ?: writeBranchSelector.selectBranchName(user.username, fileName)
+            val userBranchName = targetBranch ?: writeBranchSelector.selectBranchName(user.username, fileNames)
             val branchAlreadyExists = git.branchList()
                     .call()
                     .map { it.name }

@@ -25,6 +25,12 @@ interface ReadOnlyKeyValueRepository<ID : Any, T : Any> : RequestingKeyValueRepo
         )
     }
 
+    override fun requestUpdateMulti(writeContext: WriteContext, entities: List<T>) {
+        throw KafkistryUnsupportedOperationException(
+            "Can't do multi update on READ-ONLY repository, reason: $reasonBeingReadOnly"
+        )
+    }
+
     override fun requestDeleteAll(writeContext: WriteContext) {
         throw KafkistryUnsupportedOperationException(
             "Can't delete all on READ-ONLY repository, reason: $reasonBeingReadOnly"
