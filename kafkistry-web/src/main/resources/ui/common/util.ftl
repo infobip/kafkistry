@@ -270,11 +270,7 @@
         <#if small>mb-0 p-0 pr-1 pl-1</#if>
         "
     >
-        <#attempt>
-            ${type.name}
-        <#recover>
-            ${type.name()}  <#-- workaround for enums -->
-        </#attempt>
+        ${type?api.getName()} <#-- workaround for to work both for enums and normal data classes -->
         <#assign tooltip>
             <#if type.valid>
                 <span class='badge badge-success'>VALID</span>
