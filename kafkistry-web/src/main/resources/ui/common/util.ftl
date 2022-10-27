@@ -106,6 +106,9 @@
     <#if number < 0>
         <#return "-" + prettyNumber(-number)>
     </#if>
+    <#if number?is_infinite>
+        <#return "Inf">
+    </#if>
     <#if number < 1000>
         <#if number == 0>
             <#return "0">
