@@ -7,7 +7,13 @@
 
 
 <#macro tagInput tag>
-    <div class="tag-input form-group row mb-0">
+    <div class="tag-input form-group form-row mb-0">
+        <label class="col- pr-0">
+            <button class="move-tag-up-btn btn btn-sm btn-outline-info" title="Move tag UP">&uarr;</button>
+        </label>
+        <label class="col-">
+            <button class="move-tag-down-btn btn btn-sm btn-outline-info" title="Move tag DOWN">&darr;</button>
+        </label>
         <label class="col-4">
             <input type="text" name="tag" class="form-control" value="${tag}" placeholder="Tag name...">
         </label>

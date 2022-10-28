@@ -6,7 +6,10 @@ $(document).ready(function () {
         select.selectpicker('refresh');
     });
     $(".add-tag-btn").click(addTag);
-    $(".tags").on("click", ".remove-tag-btn", null, removeTag);
+    let tags = $(".tags");
+    tags.on("click", ".remove-tag-btn", null, removeTag);
+    tags.on("click", ".move-tag-up-btn", null, moveTagUp);
+    tags.on("click", ".move-tag-down-btn", null, moveTagDown);
     $(document).on("change, keypress, click, input", "input, select, button", null, refreshYaml);
     $(".re-test-connection-btn").click(reTestConnection);
 
@@ -33,6 +36,26 @@ function addTag() {
 
 function removeTag() {
     $(this).closest(".tag-input").remove();
+    refreshYaml();
+}
+
+function moveTagUp() {
+    let tag = $(this).closest(".tag-input");
+    let previous = tag.prev();
+    if (previous.length === 0) {
+        return;
+    }
+    tag.insertBefore(previous);
+    refreshYaml();
+}
+
+function moveTagDown() {
+    let tag = $(this).closest(".tag-input");
+    let next = tag.next();
+    if (next.length === 0) {
+        return;
+    }
+    next.insertBefore(tag);
     refreshYaml();
 }
 
