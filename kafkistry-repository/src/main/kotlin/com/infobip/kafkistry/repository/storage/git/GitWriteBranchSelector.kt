@@ -18,12 +18,18 @@ class GitWriteBranchSelector(
     )
 
     fun selectBranchName(userUsername: String, fileNames: List<String>): String {
-        when (fileNames.size) {
+        return when (fileNames.size) {
             0 -> selectBranchName(userUsername, "[none]")
             1 -> selectBranchName(userUsername, fileNames.first())
-            else -> selectBranchName(userUsername, "[bulk-update]" + fileNames.hashCode())
+            else -> {
+                val joined = fileNames.joinToString("_") { it.withoutExtension().onlySimpleChars() }
+                if (joined.length < 100) {
+                    selectBranchName(userUsername, joined)
+                } else {
+                    selectBranchName(userUsername, "[bulk-${fileNames.size}-files]" + fileNames.hashCode())
+                }
+            }
         }
-        return selectBranchName(userUsername, fileNames.joinToString("_"))
     }
 
     fun selectBranchName(userUsername: String, fileName: String): String {
@@ -38,8 +44,11 @@ class GitWriteBranchSelector(
         ).joinToString("_")
     }
 
-    private fun String.cleanFileName(): String {
-        return this.replace(Regex("\\.[a-z]{2,4}$"), "")    //remove file extension (.yaml .txt etc...)
-                .replace(Regex("[^a-zA-Z0-9]+"), "-")       //make sure there will be legal characters in branch name
-    }
+    private fun String.cleanFileName(): String = withoutExtension().onlySimpleChars()
+
+    private fun String.withoutExtension() =
+        replace(Regex("\\.[a-z]{2,4}$"), "")    //remove file extension (.yaml .txt etc...)
+
+    private fun String.onlySimpleChars() =
+        replace(Regex("[^a-zA-Z0-9]+"), "-")       //make sure there will be legal characters in branch name
 }
