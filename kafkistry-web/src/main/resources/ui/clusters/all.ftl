@@ -35,6 +35,9 @@
             <a href="${appUrl.clusters().showAddCluster()}" class="btn btn-primary mr-2">
                 Add new cluster...
             </a>
+            <a href="${appUrl.clusters().showTags()}" class="btn btn-secondary mr-2">
+                Tags...
+            </a>
             <button id="refresh-btn" class="btn btn-outline-secondary">Refresh all</button>
         </div>
     </div>

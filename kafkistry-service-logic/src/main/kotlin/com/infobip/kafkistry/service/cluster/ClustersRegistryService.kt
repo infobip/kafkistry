@@ -112,4 +112,14 @@ class ClustersRegistryService(
         }
     }
 
+    fun listAllTagClusters(): List<TagClusters> {
+        return listClustersRefs()
+            .flatMap { ref ->
+                ref.tags.map { it to ref.identifier }
+            }
+            .groupBy({ it.first }, { it.second })
+            .map { (tag, clusters) -> TagClusters(tag, clusters) }
+            .sortedBy { it.tag }
+    }
+
 }

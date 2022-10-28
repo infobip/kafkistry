@@ -60,3 +60,8 @@ data class QuotasDryRunDiff(
     val quotasToDelete: List<QuotaEntity>,
     val quotasToReconfigure: List<QuotaEntity>,
 )
+
+data class TagClusters(
+    val tag: Tag,
+    val clusters: List<KafkaClusterIdentifier>,
+)

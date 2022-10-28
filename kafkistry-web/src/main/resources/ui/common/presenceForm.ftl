@@ -1,3 +1,4 @@
+<#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="enums"  type="java.util.Map<java.lang.String, java.util.Map<java.lang.String, ? extends java.lang.Object>>" -->
 
@@ -30,6 +31,9 @@
                        <#if presenceType == 'TAGGED_CLUSTERS'>checked</#if>>
                 Cluster tag <@info.icon tooltip=doc.taggedClustersPresenceOption/>
             </label>
+            <a href="${appUrl.clusters().showTags()}#add-new-tag-btn" target="_blank">
+                Need new tag?
+            </a>
         </div>
     </div>
     <div class="form-row pt-1 selected-clusters"

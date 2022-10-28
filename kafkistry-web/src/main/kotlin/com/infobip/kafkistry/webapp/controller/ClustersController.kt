@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.api.*
+import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.generator.balance.BalanceSettings
@@ -21,6 +22,7 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT_
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ISSUES
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_REMOVE
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_RESOURCES
+import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.TAGS
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
@@ -29,11 +31,13 @@ import org.springframework.web.servlet.ModelAndView
 @RequestMapping("\${app.http.root-path}$CLUSTERS")
 class ClustersController(
     private val clustersApi: ClustersApi,
+    private val topicsApi: TopicsApi,
     private val inspectApi: InspectApi,
     private val consumersApi: ConsumersApi,
     private val clusterBalancingApi: ClusterBalancingApi,
     private val resourcesAnalyzerApi: ResourceAnalyzerApi,
     private val existingValuesApi: ExistingValuesApi,
+    private val clusterEnabledFilter: ClusterEnabledFilter,
 ) : BaseController() {
 
     @GetMapping
@@ -236,5 +240,30 @@ class ClustersController(
             "clusterIssues" to clusterIssues,
         ))
     }
+
+    @GetMapping(TAGS)
+    fun showTagsPage(): ModelAndView {
+        val allTags = clustersApi.allTags()
+        val tagTopics = topicsApi.listTopics()
+            .mapNotNull { topic ->
+                topic.presence.tag?.let { it to topic.name }
+            }
+            .groupBy({ it.first }, { it.second })
+        val clusters = clustersApi.listClusters()
+        val enabledClusterIdentifiers = clusters.asSequence()
+            .map { it.ref() }
+            .filter(clusterEnabledFilter)
+            .map { it.identifier }
+            .toList()
+        val pendingClustersRequests = clustersApi.pendingClustersRequests()
+        return ModelAndView("clusters/tags", mapOf(
+            "allTags" to allTags,
+            "tagTopics" to tagTopics,
+            "clusters" to clusters,
+            "enabledClusterIdentifiers" to enabledClusterIdentifiers,
+            "pendingClustersRequests" to pendingClustersRequests,
+        ))
+    }
+
 
 }

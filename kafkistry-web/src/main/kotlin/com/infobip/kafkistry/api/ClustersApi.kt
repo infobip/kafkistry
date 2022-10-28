@@ -12,6 +12,7 @@ import com.infobip.kafkistry.model.KafkaProfile
 import com.infobip.kafkistry.service.history.ClusterRequest
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.UpdateContext
+import com.infobip.kafkistry.service.cluster.TagClusters
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -60,6 +61,9 @@ class ClustersApi(
     fun getCluster(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): KafkaCluster = clustersRegistryService.getCluster(clusterIdentifier)
+
+    @GetMapping("/tags")
+    fun allTags(): List<TagClusters> = clustersRegistryService.listAllTagClusters()
 
     @GetMapping("/single/cluster-state")
     fun getClusterState(

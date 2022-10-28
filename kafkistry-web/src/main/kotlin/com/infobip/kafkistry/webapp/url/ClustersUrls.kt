@@ -22,6 +22,7 @@ class ClustersUrls(base: String) : BaseUrls() {
         const val CLUSTERS_RESOURCES = "/resources"
         const val CLUSTERS_ISSUES = "/issues"
         const val CLUSTERS_DRY_RUN_INSPECT = "/dry-run-inspect"
+        const val TAGS = "/tags"
     }
 
     private val showClusters = Url(base)
@@ -41,6 +42,7 @@ class ClustersUrls(base: String) : BaseUrls() {
     private val showClusterResources = Url("$base$CLUSTERS_RESOURCES", listOf("clusterIdentifier"))
     private val showClusterIssues = Url("$base$CLUSTERS_ISSUES", listOf("clusterIdentifier"))
     private val showClusterDryRunInspect = Url("$base$CLUSTERS_DRY_RUN_INSPECT")
+    private val showTags = Url("$base$TAGS")
 
     fun showClusters() = showClusters.render()
 
@@ -104,5 +106,7 @@ class ClustersUrls(base: String) : BaseUrls() {
     ) = showClusterIssues.render("clusterIdentifier" to clusterIdentifier)
 
     fun showClusterDryRunInspect() = showClusterDryRunInspect.render()
+
+    fun showTags() = showTags.render()
 
 }
