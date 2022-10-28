@@ -20,11 +20,12 @@ class KafkaEnabledClustersProperties {
 @Component
 class ClusterEnabledFilter(
     enabledClustersProperties: KafkaEnabledClustersProperties
-) {
+): (ClusterRef) -> Boolean {
 
     private val filter = ClusterFilter(enabledClustersProperties.clusters)
 
     fun enabled(clusterIdentifier: KafkaClusterIdentifier): Boolean = enabled(ClusterRef(clusterIdentifier))
     fun enabled(clusterRef: ClusterRef): Boolean = filter(clusterRef)
+    override fun invoke(clusterRef: ClusterRef): Boolean = filter(clusterRef)
 
 }
