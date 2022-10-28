@@ -225,6 +225,21 @@
         <h4>Topics diff</h4>
     </div>
     <div class="card-body p-0">
+        <#if topicsDiff.problems?size gt 0>
+            <div class="card">
+                <div class="card-header">
+                    <h4><span class="badge badge-danger">WARNING</span> Having ${topicsDiff.problems?size} problems</h4>
+                </div>
+                <div class="card-body">
+                    <#list topicsDiff.problems as problem>
+                        <div class="alert alert-danger">
+                            ${problem}
+                        </div>
+                    </#list>
+                </div>
+            </div>
+            <br/>
+        </#if>
         <table class="table table-sm">
             <thead class="thead-dark">
             <tr>
@@ -349,3 +364,44 @@
         </#if>
     </div>
 </div>
+
+<div class="inspect-summary" style="display: none;">
+    <#if clusterDryRunInspect.errors?size gt 0>
+        <span class="badge alert-danger">${clusterDryRunInspect.errors?size} ERROR(s)</span>
+    </#if>
+    <span class="badge ${util.usageLevelToHtmlClass(clusterDryRunInspect.clusterDiskUsageAfter.worstPossibleUsageLevel)}"
+          title="Possible disk usage level">
+        Possible usage: ${clusterDryRunInspect.clusterDiskUsageAfter.worstPossibleUsageLevel}
+    </span>
+
+    <#if topicsDiff.problems?size gt 0>
+        <span class="badge alert-danger">${topicsDiff.problems?size} Topic problem(s)</span>
+    </#if>
+    <#if topicsDiff.affectedTopicsCount gt 0>
+        <span class="badge badge-info" title="Affected topics count">
+            Topics: ${topicsDiff.affectedTopicsCount}
+        </span>
+    </#if>
+
+    <#assign affectedAclsCount = clusterDryRunInspect.aclsDiff.aclsToCreate?size
+        + clusterDryRunInspect.aclsDiff.aclsToDelete?size
+    >
+    <#if affectedAclsCount gt 0>
+        <span class="badge badge-info" title="Affected ACLs count">
+            ACLs: ${affectedAclsCount}
+        </span>
+    </#if>
+
+    <#assign affectedQuotasCount = clusterDryRunInspect.quotasDiff.quotasToCreate?size
+        + clusterDryRunInspect.quotasDiff.quotasToDelete?size
+        + clusterDryRunInspect.quotasDiff.quotasToReconfigure?size
+    >
+    <#if affectedQuotasCount gt 0>
+        <span class="badge badge-info" title="Affected Client quotas count">
+            Quotas: ${affectedQuotasCount}
+        </span>
+    </#if>
+
+</div>
+
+
