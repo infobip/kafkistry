@@ -84,15 +84,43 @@ class ClusterEditTagsInspectService(
             filter: (ClusterTopicStatus) -> Boolean
         ): List<TopicName> = filter(filter).map { it.topicName }
 
+        val topicsToCreate = topicsAfter.topicsWhich { CREATE_TOPIC in it.status.availableActions }
+        val topicsToDelete = topicsAfter.topicsWhich { DELETE_TOPIC_ON_KAFKA in it.status.availableActions }
+        val topicsToReconfigure = topicsAfter.topicsWhich { ALTER_TOPIC_CONFIG in it.status.availableActions }
+        val topicsToReScale = topicsAfter.topicsWhich { ALTER_PARTITION_COUNT in it.status.availableActions }
+        val topicToShrinkPartitions = topicsToReducePartitionCount(topicsAfter)
         return TopicsDryRunDiff(
+            problems = sequence {
+                topicToShrinkPartitions.forEach { (topic, partitionCount) ->
+                    yield("Can't reduce partition count for topic '$topic' from ${partitionCount.first} to ${partitionCount.second}")
+                }
+            }.toList(),
             statusCounts = countsBefore diff countsAfter,
-            topicsToCreate = topicsAfter.topicsWhich { CREATE_TOPIC in it.status.availableActions },
-            topicsToDelete = topicsAfter.topicsWhich { DELETE_TOPIC_ON_KAFKA in it.status.availableActions },
-            topicsToReconfigure = topicsAfter.topicsWhich { ALTER_TOPIC_CONFIG in it.status.availableActions },
-            topicsToReScale = topicsAfter.topicsWhich { ALTER_PARTITION_COUNT in it.status.availableActions },
+            affectedTopicsCount = sequenceOf(topicsToCreate, topicsToDelete, topicsToReconfigure, topicsToReScale)
+                .flatten().distinct().count(),
+            topicsToCreate = topicsToCreate,
+            topicsToDelete = topicsToDelete,
+            topicsToReconfigure = topicsToReconfigure,
+            topicsToReScale = topicsToReScale,
             topicDiskUsages = clusterDiskUsageAfter.topicDiskUsages.subtractOptionals(clusterDiskUsageBefore.topicDiskUsages, TopicClusterDiskUsage::minus, TopicClusterDiskUsage::unaryMinus)
         )
     }
+
+    private fun topicsToReducePartitionCount(topicsStatuses: List<ClusterTopicStatus>): Map<TopicName, Pair<Int, Int>> =
+        topicsStatuses
+            .filter { ALTER_PARTITION_COUNT in it.status.availableActions }
+            .mapNotNull { topicStatus ->
+                topicStatus.status.wrongValues
+                    ?.find { it.key == "partition-count" }
+                    ?.let {
+                        val expected = it.expected?.toIntOrNull() ?: 0
+                        val actual = it.actual?.toIntOrNull() ?: 0
+                        actual to expected
+                    }
+                    ?.let { topicStatus.topicName to it }
+            }
+            .filter { (_, partitionCount) -> partitionCount.second < partitionCount.first }
+            .toMap()
 
     private fun computeAclsDiff(
         inspectBefore: ClusterAclsInspection,

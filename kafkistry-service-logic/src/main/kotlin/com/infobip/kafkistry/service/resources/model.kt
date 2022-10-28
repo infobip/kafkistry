@@ -54,6 +54,8 @@ data class ClusterDiskUsage(
     val combined: BrokerDisk,
     val brokerUsages: Map<BrokerId, BrokerDisk>,
     val topicDiskUsages: Map<TopicName, OptionalValue<TopicClusterDiskUsage>>,
+    val worstCurrentUsageLevel: UsageLevel,
+    val worstPossibleUsageLevel: UsageLevel,
     val errors: List<String>,
 )
 
@@ -118,12 +120,22 @@ fun BrokerDiskUsage.portionsOf(diskMetric: BrokerDiskMetric?, usageLevelClassifi
     )
 }
 
-operator fun ClusterDiskUsage.minus(other: ClusterDiskUsage) = ClusterDiskUsage(
-    combined = combined - other.combined,
-    brokerUsages  = brokerUsages.subtract(other.brokerUsages, BrokerDisk::minus, BrokerDisk::unaryMinus),
-    topicDiskUsages = topicDiskUsages.subtractOptionals(other.topicDiskUsages, TopicClusterDiskUsage::minus, TopicClusterDiskUsage::unaryMinus),
-    errors = errors - other.errors,
-)
+operator fun ClusterDiskUsage.minus(other: ClusterDiskUsage): ClusterDiskUsage {
+    val newBrokerUsages = brokerUsages.subtract(other.brokerUsages, BrokerDisk::minus, BrokerDisk::unaryMinus)
+    return ClusterDiskUsage(
+        combined = combined - other.combined,
+        brokerUsages = newBrokerUsages,
+        topicDiskUsages = topicDiskUsages.subtractOptionals(other.topicDiskUsages, TopicClusterDiskUsage::minus, TopicClusterDiskUsage::unaryMinus),
+        worstCurrentUsageLevel = newBrokerUsages.worstUsageLevel { usageLevel },
+        worstPossibleUsageLevel = newBrokerUsages.worstUsageLevel { possibleUsageLevel },
+        errors = errors - other.errors.toSet(),
+    )
+}
+
+fun Map<BrokerId, BrokerDisk>.worstUsageLevel(selector: BrokerDiskPortions.() -> UsageLevel): UsageLevel = values
+    .map { it.portions.selector() }
+    .maxByOrNull { it.ordinal }
+    ?: UsageLevel.NONE
 
 operator fun BrokerDisk.minus(other: BrokerDisk): BrokerDisk {
     val brokerDiskMetric = BrokerDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)

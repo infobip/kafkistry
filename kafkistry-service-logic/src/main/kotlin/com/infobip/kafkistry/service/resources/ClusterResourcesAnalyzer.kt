@@ -54,6 +54,8 @@ class ClusterResourcesAnalyzer(
             ),
             brokerUsages = brokerUsages,
             topicDiskUsages = context.topicsDisks,
+            worstCurrentUsageLevel = brokerUsages.worstUsageLevel { usageLevel },
+            worstPossibleUsageLevel = brokerUsages.worstUsageLevel { possibleUsageLevel },
             errors = context.topicsDisks.mapNotNull { (topicName, optionalDisk) ->
                 optionalDisk.absentReason?.let { errorMsg -> "Topic: '$topicName', error: $errorMsg" }
             }

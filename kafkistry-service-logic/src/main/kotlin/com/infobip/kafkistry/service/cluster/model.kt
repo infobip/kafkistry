@@ -3,9 +3,7 @@ package com.infobip.kafkistry.service.cluster
 import com.infobip.kafkistry.kafka.ClusterInfo
 import com.infobip.kafkistry.kafka.KafkaAclRule
 import com.infobip.kafkistry.kafkastate.StateType
-import com.infobip.kafkistry.model.KafkaCluster
-import com.infobip.kafkistry.model.QuotaEntity
-import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.NamedTypeQuantity
 import com.infobip.kafkistry.service.acl.AclInspectionResultType
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType
@@ -40,7 +38,9 @@ data class CountDiff(
 infix fun Int.diff(after: Int) = CountDiff(this, after, after - this)
 
 data class TopicsDryRunDiff(
+    val problems: List<String>,
     val statusCounts: List<NamedTypeQuantity<TopicInspectionResultType, CountDiff>>,
+    val affectedTopicsCount: Int,
     val topicsToCreate: List<TopicName>,
     val topicsToDelete: List<TopicName>,
     val topicsToReconfigure: List<TopicName>,
