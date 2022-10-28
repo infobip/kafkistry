@@ -18,6 +18,12 @@ $(document).ready(function () {
 let allClusters = {};
 let enabledClusters = [];
 let dryRunInspectedClusters = {};
+let tagPrefixRegex = /^([a-zA-Z]+.?).*/;
+
+function tagPrefixOf(tag) {
+    let match = tag.match(tagPrefixRegex);
+    return match ? match[1] : undefined;
+}
 
 function loadClusters() {
     let clusters = {};
@@ -41,10 +47,7 @@ function addNewTag() {
     let autocompleteTags = {};
     $("#tags-table .tag-row").get().forEach(function (row) {
         let tag = $(row).attr("data-tag");
-        let match = tag.match(/^([a-zA-Z]+.?).*/);
-        if (match) {
-            autocompleteTags[match[1]] = true;
-        }
+        autocompleteTags[tagPrefixOf(tag)] = true;
     });
     initAutocomplete(Object.keys(autocompleteTags), tagInput);
 }
@@ -164,6 +167,24 @@ function extractEditedCluster(clusterIdentifier) {
             newTags.push($(this).attr("data-tag"));
         }
     });
+    editedCluster.tags = computeOrderedTags(oldTags, newTags);
+    return editedCluster;
+}
+
+function computeOrderedTags(oldTags, newTags) {
+    let tagPrefixes = [];   //try to keep order of new tags by prefix
+    oldTags.forEach(function (tag) {
+        let prefix = tagPrefixOf(tag);
+        if (prefix && tagPrefixes.indexOf(prefix) < 0) {
+            tagPrefixes.push(prefix);
+        }
+    });
+    newTags.forEach(function (tag) {
+        let prefix = tagPrefixOf(tag);
+        if (prefix && tagPrefixes.indexOf(prefix) < 0) {
+            tagPrefixes.push(prefix);
+        }
+    });
     let editedTags = oldTags.filter(function (tag) {
         return newTags.indexOf(tag) > -1;
     });
@@ -172,8 +193,15 @@ function extractEditedCluster(clusterIdentifier) {
             editedTags.push(tag);
         }
     });
-    editedCluster.tags = editedTags;
-    return editedCluster;
+    let orderedEditedTags = [];
+    tagPrefixes.forEach(function (prefix) {
+        editedTags.filter(function (tag) {
+            return tag.indexOf(prefix) === 0;
+        }).forEach(function (tag) {
+            orderedEditedTags.push(tag);
+        });
+    });
+    return orderedEditedTags;
 }
 
 function expandCollapseAllDryRuns() {
