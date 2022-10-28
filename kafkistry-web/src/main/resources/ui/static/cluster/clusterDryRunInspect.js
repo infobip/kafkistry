@@ -8,7 +8,7 @@ function clusterDryRunInspect() {
     doClusterDryRunInspect(
         CLUSTER_DRY_RUN_INSPECT_OP,
         $("#cluster-dry-run-inspect-result"),
-        $(""),
+        $("#cluster-dry-run-inspect-summary"),
         extractClusterData
     );
 }

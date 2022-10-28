@@ -7,6 +7,7 @@
     <#include "../common/serverOpStatus.ftl">
     <#assign statusId = "">
 
+    <div id="cluster-dry-run-inspect-summary" class="m-2"></div>
     <div id="cluster-dry-run-inspect-result"></div>
 
 </div>

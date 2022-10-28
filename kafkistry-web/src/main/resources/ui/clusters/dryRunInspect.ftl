@@ -377,9 +377,12 @@
     <#if topicsDiff.problems?size gt 0>
         <span class="badge alert-danger">${topicsDiff.problems?size} Topic problem(s)</span>
     </#if>
+
+    <#assign gearSymbol>&#9881;</#assign>
+
     <#if topicsDiff.affectedTopicsCount gt 0>
-        <span class="badge badge-info" title="Affected topics count">
-            Topics: ${topicsDiff.affectedTopicsCount}
+        <span class="badge badge-dark" title="Affected topics count">
+            ${gearSymbol} Topics: ${topicsDiff.affectedTopicsCount}
         </span>
     </#if>
 
@@ -387,8 +390,8 @@
         + clusterDryRunInspect.aclsDiff.aclsToDelete?size
     >
     <#if affectedAclsCount gt 0>
-        <span class="badge badge-info" title="Affected ACLs count">
-            ACLs: ${affectedAclsCount}
+        <span class="badge badge-dark" title="Affected ACLs count">
+            ${gearSymbol} ACLs: ${affectedAclsCount}
         </span>
     </#if>
 
@@ -397,8 +400,8 @@
         + clusterDryRunInspect.quotasDiff.quotasToReconfigure?size
     >
     <#if affectedQuotasCount gt 0>
-        <span class="badge badge-info" title="Affected Client quotas count">
-            Quotas: ${affectedQuotasCount}
+        <span class="badge badge-dark" title="Affected Client quotas count">
+            ${gearSymbol} Quotas: ${affectedQuotasCount}
         </span>
     </#if>
 
