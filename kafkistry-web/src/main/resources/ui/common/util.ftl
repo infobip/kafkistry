@@ -296,7 +296,7 @@
 
 <#function usageLevelToHtmlClass level>
 <#-- @ftlvariable name="level"  type="com.infobip.kafkistry.service.resources.UsageLevel" -->
-    <#switch level.name()>
+    <#switch level>
         <#case "LOW">
             <#return "alert-success">
         <#case "MEDIUM">
@@ -304,7 +304,7 @@
         <#case "HIGH">
             <#return "alert-danger">
         <#case "OVERFLOW">
-            <#return "bg-danger">
+            <#return "bg-danger text-white">
         <#default>
             <#return "">
     </#switch>
