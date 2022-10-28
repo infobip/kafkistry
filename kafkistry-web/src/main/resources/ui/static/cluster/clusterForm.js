@@ -10,6 +10,9 @@ $(document).ready(function () {
     tags.on("click", ".remove-tag-btn", null, removeTag);
     tags.on("click", ".move-tag-up-btn", null, moveTagUp);
     tags.on("click", ".move-tag-down-btn", null, moveTagDown);
+    let copyTagsSelect = $("select[name=copy-tags-from]");
+    copyTagsSelect.selectpicker();
+    copyTagsSelect.change(copyTagsFromSelected);
     $(document).on("change, keypress, click, input", "input, select, button", null, refreshYaml);
     $(".re-test-connection-btn").click(reTestConnection);
 
@@ -27,10 +30,13 @@ let existingTags = [];
 let lastTestedClusterInfo = null;
 let kafkaClusterDryRunInspected = null;
 
-function addTag() {
+function addTag(tag) {
     let template = $("#tag-template").html();
     $(".tags").append(template);
     let tagInput = $(".tags .tag-input:last").find("input[name=tag]");
+    if (typeof tag === "string") {
+        tagInput.val(tag);
+    }
     setupTagAutocomplete(tagInput);
 }
 
@@ -56,6 +62,17 @@ function moveTagDown() {
         return;
     }
     next.insertBefore(tag);
+    refreshYaml();
+}
+
+function copyTagsFromSelected() {
+    let tagsJson = $(this).val();
+    let tags = JSON.parse(tagsJson);
+    let existingTags = extractClusterData().tags;
+    tags.filter(function (tag) {
+        return existingTags.indexOf(tag) < 0;   //copy only new tags
+    }).forEach(addTag);
+    $(this).selectpicker('val', 'non-selected');    //deselect picked option
     refreshYaml();
 }
 

@@ -1,3 +1,4 @@
+<#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="cluster" type="com.infobip.kafkistry.model.KafkaCluster" -->
 <#-- @ftlvariable name="showDryRunInspect" type="java.lang.Boolean" -->
@@ -71,7 +72,7 @@
             </label>
         </div>
         <div class="col- ml-3">
-            <select name="profiles" class="kafka-profiles form-control selectpicker" multiple title="Properties profies">
+            <select name="profiles" class="kafka-profiles form-control selectpicker" multiple title="Properties profiles">
                 <#assign selectedProfiles = (cluster.profiles)![]>
                 <#list selectedProfiles as profile>
                     <option value="${profile}" selected>${profile}</option>
@@ -111,6 +112,17 @@
                 </#list>
             </div>
             <button class="add-tag-btn btn btn-sm btn-outline-primary">Add tag...</button>
+            <label>
+                <select name="copy-tags-from" class="form-control"
+                        data-live-search="true" data-size="8">
+                    <option disabled selected value="non-selected">Copy all from...</option>
+                    <#list existingValues.clusterRefs as clusterRef>
+                        <option value="${json.writeValueAsString(clusterRef.tags)}">
+                            ${clusterRef.identifier}
+                        </option>
+                    </#list>
+                </select>
+            </label>
         </div>
         <div id="tag-template" style="display: none;">
             <@tagInput tag=""/>
