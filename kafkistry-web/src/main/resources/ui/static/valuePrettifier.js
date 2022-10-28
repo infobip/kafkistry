@@ -67,6 +67,9 @@ function refreshAllConfValuesIn(container) {
 }
 
 function prettyValue(name, value, nanDefault) {
+    if (value === undefined) {
+        return null;
+    }
     let valueNum = value.indexOf(".") > -1 ? parseFloat(value) : parseInt(value);
     if (isNaN(valueNum)) {
         if (nanDefault) {
