@@ -1,9 +1,12 @@
 package com.infobip.kafkistry.webapp.controller
 
+import com.infobip.kafkistry.api.BackgroundIssuesApi
 import com.infobip.kafkistry.api.BuildInfoApi
 import com.infobip.kafkistry.api.ScrapingStatusApi
 import com.infobip.kafkistry.api.WebSessionsApi
+import com.infobip.kafkistry.service.sortedByValueDescending
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.ABOUT
+import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.BACKGROUND_JOBS
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.BUILD_INFO
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.SCRAPING_STATUSES
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.USERS_SESSIONS
@@ -18,6 +21,7 @@ class AboutController(
     private val buildInfoApi: BuildInfoApi,
     private val webSessionsApi: WebSessionsApi,
     private val scrapingStatusApi: ScrapingStatusApi,
+    private val backgroundIssuesApi: BackgroundIssuesApi,
 ) : BaseController() {
 
     @GetMapping
@@ -48,10 +52,19 @@ class AboutController(
     @GetMapping(SCRAPING_STATUSES)
     fun showScrapingStatuses(): ModelAndView {
         val scrapingStatuses = scrapingStatusApi.currentScrapingStatuses()
-        scrapingStatuses.groupingBy { it.stateTypeName }.eachCount()
         return ModelAndView(
             "about/scrapingStatuses", mapOf(
                 "scrapingStatuses" to scrapingStatuses,
+            )
+        )
+    }
+
+    @GetMapping(BACKGROUND_JOBS)
+    fun showBackgroundJobs(): ModelAndView {
+        val backgroundJobStatuses = backgroundIssuesApi.currentStatuses()
+        return ModelAndView(
+            "about/backgroundJobs", mapOf(
+                "backgroundJobStatuses" to backgroundJobStatuses,
             )
         )
     }

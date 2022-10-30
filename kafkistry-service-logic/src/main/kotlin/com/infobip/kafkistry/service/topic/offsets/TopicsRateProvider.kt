@@ -8,6 +8,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.repository.KafkaClustersRepository
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
+import com.infobip.kafkistry.service.background.BackgroundJobKey
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
@@ -72,9 +73,11 @@ class TopicsRateProvider(
     }
 
     @Scheduled(fixedRate = 15_000L)
-    fun tryWriteAll() = issuesRegistry.doCapturingException("topicRate", "Topic message rate calculation") {
+    fun tryWriteAll() = issuesRegistry.doCapturingException(jobKey) {
         refresh()
     }
+
+    private val jobKey = BackgroundJobKey(javaClass.name,"topic-rate-refresh", "Topic message rate calculation")
 
     //start half hour sapling after 2min (after 8 of 15-sec samples)
     private var refreshCounter = AtomicInteger(-2 * ONE_MIN_SAMPLES)

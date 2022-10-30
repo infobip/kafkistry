@@ -3,6 +3,7 @@ package com.infobip.kafkistry.service.background
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 
 data class BackgroundJobKey(
+    val jobClass: String,
     val type: String,
     val jobName: String,
     val cluster: KafkaClusterIdentifier? = null,
@@ -23,5 +24,5 @@ data class BackgroundJobStatus(
     val key: BackgroundJobKey,
     val timestamp: Long,
     val lastSuccess: Boolean,
-    val lastFailureMessage: String,
+    val lastFailureMessage: String?,
 )

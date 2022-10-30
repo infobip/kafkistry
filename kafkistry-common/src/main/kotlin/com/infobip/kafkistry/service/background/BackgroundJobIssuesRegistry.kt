@@ -13,10 +13,6 @@ class BackgroundJobIssuesRegistry {
     private val issues = ConcurrentHashMap<BackgroundJobKey, BackgroundJobIssue>()
     private val lastSuccesses = ConcurrentHashMap<BackgroundJobKey, Long>()
 
-    fun doCapturingException(key: String, jobName: String, clearAfter: Long = 0, job: () -> Unit): Boolean {
-        return doCapturingException(BackgroundJobKey(key, jobName), clearAfter, job)
-    }
-
     fun doCapturingException(key: BackgroundJobKey, clearAfter: Long = 0, job: () -> Unit): Boolean {
         return computeCapturingException(key, clearAfter, job) != null
     }
@@ -62,4 +58,23 @@ class BackgroundJobIssuesRegistry {
                 BackgroundJobIssuesGroup(group, issues)
             }
     }
+
+    fun currentStatuses(): List<BackgroundJobStatus> {
+        return sequence {
+            currentIssues().forEach {
+                yield(it.toFailureStatus())
+            }
+            lastSuccesses.forEach {
+                yield(it.toSuccessStatus())
+            }
+        }.sortedBy { it.timestamp }.toList()
+    }
+
+    private fun BackgroundJobIssue.toFailureStatus() = BackgroundJobStatus(
+        key = key, timestamp = timestamp, lastSuccess = false, lastFailureMessage = failureMessage,
+    )
+
+    private fun Map.Entry<BackgroundJobKey, Long>.toSuccessStatus() = BackgroundJobStatus(
+        key = key, timestamp = value, lastSuccess = true, lastFailureMessage = null,
+    )
 }

@@ -86,7 +86,12 @@ abstract class AbstractKafkaStateProvider<V>(
 
     private fun KafkaClusterIdentifier.issueKey(): BackgroundJobKey {
         val jobName = "Pooling of ${stateTypeName.replace("_", " ")} on cluster $this"
-        return BackgroundJobKey("kafka-$stateTypeName", jobName, this)
+        return BackgroundJobKey(
+            jobClass = this@AbstractKafkaStateProvider.javaClass.name,
+            type = "kafka-$stateTypeName",
+            jobName = jobName,
+            cluster = this,
+        )
     }
 
     abstract fun fetchState(kafkaCluster: KafkaCluster): V

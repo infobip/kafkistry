@@ -15,17 +15,19 @@ class DbWriter(
     private val sqlDataSources: Optional<List<SqlDataSource<*>>>,
 ) {
 
+    private val writeJobKey = BackgroundJobKey(javaClass.name, "sql-write", "Refresh SQL data - DB write")
+
     @Scheduled(fixedDelay = 10_000)
     fun writeAll() {
         //get the data
         val generatedData = sqlDataSources.orElse(emptyList()).mapNotNull {
-            val issueKey = BackgroundJobKey("sql-" + it.javaClass.name, "Collect SQL data for ${it.javaClass.simpleName}")
+            val issueKey = BackgroundJobKey(javaClass.name,"sql-" + it.javaClass.simpleName, "Collect SQL data for ${it.javaClass.name}")
             issuesRegistry.computeCapturingException(issueKey) {
                 it.supplyEntities()
             }
         }
         //write data to DB
-        issuesRegistry.doCapturingException("sql", "Refresh SQL data") {
+        issuesRegistry.doCapturingException(writeJobKey) {
             repository.updateAllLists(generatedData)
         }
     }

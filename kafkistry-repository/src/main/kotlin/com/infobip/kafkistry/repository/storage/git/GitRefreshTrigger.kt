@@ -12,7 +12,7 @@ class GitRefreshTrigger(
 ) {
 
     private var lastCommitId: String? = currentGitCommit()
-    private val jobKey = BackgroundJobKey("git","Git repository refresh")
+    private val jobKey = BackgroundJobKey(javaClass.name,"git","Git repository refresh")
 
     private fun currentGitCommit(): String? {
         return try {

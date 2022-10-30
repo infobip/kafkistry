@@ -24,6 +24,10 @@
                 <a class="nav-link <#if activeNavItem == "scraping-statuses">${activeClasses}</#if>"
                    href="${appUrl.about().showScrapingStatuses()}">Scraping statuses<span class="sr-only">(current)</span></a>
             </li>
+            <li class="nav-item ">
+                <a class="nav-link <#if activeNavItem == "background-jobs">${activeClasses}</#if>"
+                   href="${appUrl.about().showBackgroundJobs()}">Background jobs<span class="sr-only">(current)</span></a>
+            </li>
         </ul>
     </div>
 </nav>

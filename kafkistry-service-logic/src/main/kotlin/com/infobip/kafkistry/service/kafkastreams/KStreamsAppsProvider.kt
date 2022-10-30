@@ -9,6 +9,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
+ import com.infobip.kafkistry.service.background.BackgroundJobKey
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -65,11 +66,13 @@ class KStreamsAppsProvider(
         return clusterKStreamApps.mapValues { it.value.apps }
     }
 
+    private val jobKey = BackgroundJobKey(javaClass.name, "kStreamApps", "KStream apps detection")
+
     @Scheduled(
         fixedRateString = "#{poolingProperties.intervalMs()}",
         initialDelayString = "#{poolingProperties.intervalMs() / 2}",
     )
-    fun refreshAll() = issuesRegistry.doCapturingException("kStreamApps", "KStream apps detection") {
+    fun refreshAll() = issuesRegistry.doCapturingException(jobKey) {
         doRefresh()
     }
 

@@ -199,7 +199,7 @@ class RecordStructureAnalyzerExecutor(
     ) {
         sampledMessagesCount.labels(cluster.identifier, record.topic()).inc()
         val timer = analyzeLatency.startTimer()
-        val jobKey = BackgroundJobKey("record-analyzer", "Analyze one record", cluster.identifier)
+        val jobKey = BackgroundJobKey(javaClass.name,"record-analyzer", "Analyze one record", cluster.identifier)
         val success = issuesRegistry.doCapturingException(jobKey, 60_000L) {
             analyzer.analyzeRecord(cluster, record)
         }
@@ -212,7 +212,8 @@ class RecordStructureAnalyzerExecutor(
     @Scheduled(fixedRateString = "#{recordAnalyzerProperties.executor.trimAndDumpRate}")
     fun trimAndDump() {
         val timer = analyzeLatency.startTimer()
-        val success = issuesRegistry.doCapturingException("record-analyzer-dump", "Trim and dump all records", 180_000L) {
+        val jobKey = BackgroundJobKey(javaClass.name, "record-analyzer-dump", "Trim and dump all records")
+        val success = issuesRegistry.doCapturingException(jobKey, 180_000L) {
             incrementTrimRecordsStructuresCount(analyzer.trim())
             incrementDumpRecordsStructuresCount(analyzer.dump())
         }
