@@ -40,7 +40,7 @@
                     </a>
                 </td>
                 <td><@util.namedTypeStatusAlert type=scrapingStatus.stateType/></td>
-                <td class="time small" data-time="${scrapingStatus.lastRefreshTime?c}"></td>
+                <td class="time small" data-time="${scrapingStatus.lastRefreshTime?c}" data-order="${scrapingStatus.lastRefreshTime?c}"></td>
             </tr>
         </#list>
     </table>
