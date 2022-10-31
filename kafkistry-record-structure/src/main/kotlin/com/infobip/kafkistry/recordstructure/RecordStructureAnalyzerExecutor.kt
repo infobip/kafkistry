@@ -12,8 +12,8 @@ import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.background.BackgroundJob
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
-import com.infobip.kafkistry.service.background.BackgroundJobKey
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.SmartLifecycle
 import org.springframework.scheduling.annotation.Scheduled
@@ -199,8 +199,11 @@ class RecordStructureAnalyzerExecutor(
     ) {
         sampledMessagesCount.labels(cluster.identifier, record.topic()).inc()
         val timer = analyzeLatency.startTimer()
-        val jobKey = BackgroundJobKey(javaClass.name,"record-analyzer", "Analyze one record", cluster.identifier)
-        val success = issuesRegistry.doCapturingException(jobKey, 60_000L) {
+        val backgroundJob = BackgroundJob.of(
+            jobClass = javaClass.name, category = "record-analyzer", phase = "analyze",
+            cluster = cluster.identifier, description = "Analyze one record"
+        )
+        val success = issuesRegistry.doCapturingException(backgroundJob, 60_000L) {
             analyzer.analyzeRecord(cluster, record)
         }
         timer.observeDuration()
@@ -212,8 +215,10 @@ class RecordStructureAnalyzerExecutor(
     @Scheduled(fixedRateString = "#{recordAnalyzerProperties.executor.trimAndDumpRate}")
     fun trimAndDump() {
         val timer = analyzeLatency.startTimer()
-        val jobKey = BackgroundJobKey(javaClass.name, "record-analyzer-dump", "Trim and dump all records")
-        val success = issuesRegistry.doCapturingException(jobKey, 180_000L) {
+        val backgroundJob = BackgroundJob.of(
+            category = "record-analyzer", phase = "disk-dump", description = "Trim and dump all records"
+        )
+        val success = issuesRegistry.doCapturingException(backgroundJob, 180_000L) {
             incrementTrimRecordsStructuresCount(analyzer.trim())
             incrementDumpRecordsStructuresCount(analyzer.dump())
         }

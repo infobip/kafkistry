@@ -6,8 +6,8 @@ import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.repository.KafkaClustersRepository
+import com.infobip.kafkistry.service.background.BackgroundJob
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
-import com.infobip.kafkistry.service.background.BackgroundJobKey
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class AbstractKafkaStateProvider<V>(
@@ -40,7 +40,7 @@ abstract class AbstractKafkaStateProvider<V>(
             val shouldRemove = it !in enabledClusters && it !in disabledClusters
             if (shouldRemove) {
                 clusterRemoved(it)
-                issuesRegistry.clearIssue(it.issueKey())
+                issuesRegistry.clearIssue(it.backgroundJob())
             }
             shouldRemove
         }
@@ -58,22 +58,22 @@ abstract class AbstractKafkaStateProvider<V>(
 
     override fun doRefreshCluster(kafkaCluster: KafkaCluster): RefreshStatus {
         log.debug("Refreshing {} for cluster '{}'", stateTypeName, kafkaCluster.identifier)
-        val issueKey = kafkaCluster.identifier.issueKey()
+        val backgroundJob = kafkaCluster.identifier.backgroundJob()
         val startTime = System.currentTimeMillis()
         fun durationSec() = (System.currentTimeMillis() - startTime) / 1000.0
         val clusterState = try {
             val stateValue = fetchState(kafkaCluster)
             log.debug("Refreshed {} of cluster '{}' in {} sec", stateTypeName, kafkaCluster.identifier, durationSec())
-            issuesRegistry.clearIssue(issueKey)
+            issuesRegistry.clearIssue(backgroundJob)
             StateData(StateType.VISIBLE, kafkaCluster.identifier, stateTypeName, startTime, stateValue)
         } catch (ex: InvalidClusterIdException) {
-            issuesRegistry.reportIssue(issueKey, ex.deepToString())
+            issuesRegistry.reportIssue(backgroundJob, ex.deepToString())
             StateData(StateType.INVALID_ID, kafkaCluster.identifier, stateTypeName, startTime)
         } catch (ex: Throwable) {
             log.error("Exception while refreshing {} for cluster {}, setting it's state as 'unreachable' after {} sec",
                     stateTypeName, kafkaCluster, durationSec(), ex
             )
-            issuesRegistry.reportIssue(issueKey, ex.deepToString())
+            issuesRegistry.reportIssue(backgroundJob, ex.deepToString())
             StateData(StateType.UNREACHABLE, kafkaCluster.identifier, stateTypeName, startTime)
         }
         clusterStates[kafkaCluster.identifier] = clusterState
@@ -84,15 +84,12 @@ abstract class AbstractKafkaStateProvider<V>(
         )
     }
 
-    private fun KafkaClusterIdentifier.issueKey(): BackgroundJobKey {
-        val jobName = "Pooling of ${stateTypeName.replace("_", " ")} on cluster $this"
-        return BackgroundJobKey(
-            jobClass = this@AbstractKafkaStateProvider.javaClass.name,
-            type = "kafka-$stateTypeName",
-            jobName = jobName,
-            cluster = this,
-        )
-    }
+    private fun KafkaClusterIdentifier.backgroundJob() = BackgroundJob.of(
+        category = "kafka-scrape",
+        phase = stateTypeName,
+        cluster = this,
+        description = "Scraping of ${stateTypeName.replace("_", " ")} on cluster $this"
+    )
 
     abstract fun fetchState(kafkaCluster: KafkaCluster): V
 

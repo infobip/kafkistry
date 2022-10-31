@@ -31,37 +31,39 @@
             <th>Status</th>
         </tr>
         </thead>
-        <#list backgroundJobStatuses as job>
+        <#list backgroundJobStatuses as jobStatus>
             <tr>
                 <td>
-                    <pre class="pre-message">${job.key.type}</pre>
+                    <pre class="pre-message"><#t>
+                        ${jobStatus.job.key.category}<#if jobStatus.job.key.phase??>: ${jobStatus.job.key.phase}</#if><#t>
+                    </pre>
                 </td>
                 <td>
                     <#assign tooltip>
-                        <strong>Executing class</strong>: <code>${job.key.jobClass}</code>
-                        <p>${job.key.jobName}</p>
+                        <strong>Executing class</strong>: <code>${jobStatus.job.key.jobClass}</code>
+                        <p>${jobStatus.job.description}</p>
                     </#assign>
                     <@info.icon tooltip=tooltip/>
                 </td>
                 <td>
-                    <#if job.key.cluster??>
-                        <a href="${appUrl.clusters().showCluster(job.key.cluster)}">
-                            ${job.key.cluster}
+                    <#if jobStatus.job.key.cluster??>
+                        <a href="${appUrl.clusters().showCluster(jobStatus.job.key.cluster)}">
+                            ${jobStatus.job.key.cluster}
                         </a>
                     <#else>
                         ---
                     </#if>
                 </td>
-                <td class="time small" data-time="${job.timestamp?c}"></td>
+                <td class="time small" data-time="${jobStatus.timestamp?c}"></td>
                 <td>
-                    <#if job.lastSuccess>
+                    <#if jobStatus.lastSuccess>
                         <span class="badge badge-success">SUCCESS</span>
                     <#else>
                         <span class="badge badge-danger">FAILED</span>
                     </#if>
-                    <#if job.lastFailureMessage??>
+                    <#if jobStatus.lastFailureMessage??>
                         <div class="alert alert-danger mt-1">
-                            <pre class="pre-message">${job.lastFailureMessage}</pre>
+                            <pre class="pre-message">${jobStatus.lastFailureMessage}</pre>
                         </div>
                     </#if>
                 </td>

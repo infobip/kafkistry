@@ -139,7 +139,7 @@
                     <ul>
                         <#list issuesGroup.issues as issue>
                             <li class="m-2">
-                                <span class="message">${issue.key.jobName}</span>
+                                <span class="message">${issue.job.description}</span>
                                 <pre class="pre-message">${issue.failureMessage}</pre>
                             </li>
                         </#list>
@@ -157,7 +157,7 @@
                      <#if elemIndex gte maxShown>style="display: none;" </#if>>
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>
-                    <span class="message">Background job failed: ${issue.key.jobName}</span>
+                    <span class="message">Background job failed: ${issue.job.description}</span>
                     <pre class="pre-message issue-msg-${elemIndex} collapseable">${issue.failureMessage}</pre>
                 </div>
                 <#if elemIndex lt maxShown>
