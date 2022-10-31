@@ -13,38 +13,69 @@ class BackgroundJobIssuesRegistry {
     private val issues = ConcurrentHashMap<BackgroundJobKey, BackgroundJobIssue>()
     private val lastSuccesses = ConcurrentHashMap<BackgroundJobKey, BackgroundJobStatus>()
 
-    fun doCapturingException(job: BackgroundJob, clearAfter: Long = 0, execution: () -> Unit): Boolean {
-        return computeCapturingException(job, clearAfter, execution) != null
+    fun doCapturingException(job: BackgroundJob, clearAfter: Long = 0, execution: () -> Unit) {
+        execCapturingException(job, clearAfter, execution)
     }
 
-    fun <T> computeCapturingException(job: BackgroundJob, clearAfter: Long = 0, execution: () -> T): T? {
+    fun <T> execCapturingException(job: BackgroundJob, clearAfter: Long = 0, execution: () -> T): Result<T> {
+        val jobExecution = newExecution(job)
         return try {
             val result = execution()
             val prevIssue = issues[job.key]
             if (prevIssue != null && System.currentTimeMillis() >= prevIssue.timestamp + clearAfter) {
-                clearIssue(job)
+                jobExecution.succeeded()
             } else {
-                reportSuccess(job)
+                jobExecution.succeededSoftly()
             }
-            result
+            Result.success(result)
         } catch (ex: Exception) {
-            reportIssue(job, ex.deepToString())
+            jobExecution.failed(ex.deepToString())
             log.error("{} failed with exception", job, ex)
-            null
+            Result.failure(ex)
         }
     }
 
-    fun reportIssue(job: BackgroundJob, failMessage: String) {
-        issues[job.key] = BackgroundJobIssue(job, failMessage, System.currentTimeMillis())
+    fun newExecution(job: BackgroundJob) = JobExecution(job, System.currentTimeMillis())
+
+    inner class JobExecution(
+        private val job: BackgroundJob,
+        private val startTime: Long,
+    ) {
+
+        private fun durationMs() = System.currentTimeMillis() - startTime
+
+        fun succeededSoftly() {
+            lastSuccesses[job.key] = job.toSuccessStatus(startTime, durationMs())
+        }
+
+        fun succeeded() {
+            issues.remove(job.key)
+            lastSuccesses[job.key] = job.toSuccessStatus(startTime, durationMs())
+        }
+
+        fun failed(message: String) {
+            issues[job.key] = BackgroundJobIssue(job, message, startTime, durationMs())
+            lastSuccesses.remove(job.key)
+        }
+
     }
 
-    fun clearIssue(job: BackgroundJob) {
+//    fun reportIssue(job: BackgroundJob, durationMs: Long, failMessage: String) {
+//        issues[job.key] = BackgroundJobIssue(job, failMessage, System.currentTimeMillis(), durationMs)
+//    }
+
+//    fun clearIssue(job: BackgroundJob) {
+//        issues.remove(job.key)
+//        reportSuccess(job)
+//    }
+
+//    private fun reportSuccess(job: BackgroundJob, durationMs: Long) {
+//        lastSuccesses[job.key] = job.toSuccessStatus(System.currentTimeMillis(), durationMs)
+//    }
+
+    fun clearJob(job: BackgroundJob) {
         issues.remove(job.key)
-        reportSuccess(job)
-    }
-
-    private fun reportSuccess(job: BackgroundJob) {
-        lastSuccesses[job.key] = job.toSuccessStatus(System.currentTimeMillis())
+        lastSuccesses.remove(job.key)
     }
 
     fun currentIssues(): List<BackgroundJobIssue> {
@@ -69,10 +100,10 @@ class BackgroundJobIssuesRegistry {
     }
 
     private fun BackgroundJobIssue.toFailureStatus() = BackgroundJobStatus(
-        job = job, timestamp = timestamp, lastSuccess = false, lastFailureMessage = failureMessage,
+        job = job, timestamp = timestamp, lastSuccess = false, lastFailureMessage = failureMessage, lastDurationMs = durationMs,
     )
 
-    private fun BackgroundJob.toSuccessStatus(timestamp: Long) = BackgroundJobStatus(
-        job = this, timestamp = timestamp, lastSuccess = true, lastFailureMessage = null,
+    private fun BackgroundJob.toSuccessStatus(timestamp: Long, durationMs: Long) = BackgroundJobStatus(
+        job = this, timestamp = timestamp, lastSuccess = true, lastFailureMessage = null, lastDurationMs = durationMs,
     )
 }

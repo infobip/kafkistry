@@ -3,13 +3,12 @@ package com.infobip.kafkistry.repository.storage.git
 import com.infobip.kafkistry.repository.RequestingKeyValueRepository
 import com.infobip.kafkistry.service.background.BackgroundJob
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
-import com.infobip.kafkistry.service.background.BackgroundJobKey
 import org.springframework.scheduling.annotation.Scheduled
 
 class GitRefreshTrigger(
     private val git: GitRepository,
     private val repositories: List<RequestingKeyValueRepository<*, *>>,
-    private val backgroundJobIssuesRegistry: BackgroundJobIssuesRegistry,
+    private val issuesRegistry: BackgroundJobIssuesRegistry,
 ) {
 
     private var lastCommitId: String? = currentGitCommit()
@@ -27,12 +26,13 @@ class GitRefreshTrigger(
 
     @Scheduled(fixedDelayString = "#{gitRepositoriesProperties.refreshIntervalMs()}")
     fun trigger() {
+        val jobExecution = issuesRegistry.newExecution(backgroundJob)
         git.refreshRepository()
         val lastRefreshErrorMsg = git.lastRefreshErrorMsg()
         if (lastRefreshErrorMsg != null) {
-            backgroundJobIssuesRegistry.reportIssue(backgroundJob, lastRefreshErrorMsg)
+            jobExecution.failed(lastRefreshErrorMsg)
         } else {
-            backgroundJobIssuesRegistry.clearIssue(backgroundJob)
+            jobExecution.succeeded()
         }
         val newCommitId = currentGitCommit()
         val needRefresh = newCommitId != lastCommitId || newCommitId == null

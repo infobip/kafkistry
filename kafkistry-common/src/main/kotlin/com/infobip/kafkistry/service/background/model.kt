@@ -32,6 +32,7 @@ data class BackgroundJobIssue(
     val job: BackgroundJob,
     val failureMessage: String,
     val timestamp: Long,
+    val durationMs: Long,
 )
 
 data class BackgroundJobIssuesGroup(
@@ -44,4 +45,5 @@ data class BackgroundJobStatus(
     val timestamp: Long,
     val lastSuccess: Boolean,
     val lastFailureMessage: String?,
+    val lastDurationMs: Long,
 )

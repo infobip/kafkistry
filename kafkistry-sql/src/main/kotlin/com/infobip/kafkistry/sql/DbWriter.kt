@@ -22,18 +22,18 @@ class DbWriter(
     @Scheduled(fixedDelay = 10_000)
     fun writeAll() {
         //get the data
-        val generatedData = sqlDataSources.orElse(emptyList()).mapNotNull {
+        val generatedData = sqlDataSources.orElse(emptyList()).map {
             val simpleName = it.javaClass.simpleName
                 .removeSuffix("DataSource")
-                .removeSuffix("DataSource")
+                .removeSuffix("DataSupplier")
             val sourceJob = BackgroundJob.of(
                 jobClass = it.javaClass.name, category = "sql", phase = simpleName,
                 description = "Collect SQL data for $simpleName",
             )
-            issuesRegistry.computeCapturingException(sourceJob) {
+            issuesRegistry.execCapturingException(sourceJob) {
                 it.supplyEntities()
             }
-        }
+        }.mapNotNull { it.getOrNull() }
         //write data to DB
         issuesRegistry.doCapturingException(writeJob) {
             repository.updateAllLists(generatedData)

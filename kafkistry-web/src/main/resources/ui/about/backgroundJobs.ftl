@@ -25,25 +25,25 @@
         <thead class="thead-dark">
         <tr>
             <th>Job</th>
-            <th></th>
             <th>Cluster</th>
             <th>Last</th>
+            <th>Duration</th>
             <th>Status</th>
         </tr>
         </thead>
         <#list backgroundJobStatuses as jobStatus>
             <tr>
                 <td>
-                    <pre class="pre-message"><#t>
-                        ${jobStatus.job.key.category}<#if jobStatus.job.key.phase??>: ${jobStatus.job.key.phase}</#if><#t>
-                    </pre>
-                </td>
-                <td>
                     <#assign tooltip>
                         <strong>Executing class</strong>: <code>${jobStatus.job.key.jobClass}</code>
                         <p>${jobStatus.job.description}</p>
                     </#assign>
-                    <@info.icon tooltip=tooltip/>
+                    <#assign jobText>
+                        <pre class="pre-message m-0"><#t>
+                            ${jobStatus.job.key.category}<#if jobStatus.job.key.phase??>: ${jobStatus.job.key.phase}</#if><#t>
+                        </pre>
+                    </#assign>
+                    <@info.icon tooltip=tooltip text=jobText/>
                 </td>
                 <td>
                     <#if jobStatus.job.key.cluster??>
@@ -54,7 +54,10 @@
                         ---
                     </#if>
                 </td>
-                <td class="time small" data-time="${jobStatus.timestamp?c}"></td>
+                <td class="time small" data-time="${jobStatus.timestamp?c}" data-order="${jobStatus.timestamp?c}"></td>
+                <td class="small" data-order="${jobStatus.lastDurationMs?c}">
+                    ${util.prettyDuration(jobStatus.lastDurationMs/1000.0)}
+                </td>
                 <td>
                     <#if jobStatus.lastSuccess>
                         <span class="badge badge-success">SUCCESS</span>

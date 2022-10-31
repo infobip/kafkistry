@@ -203,11 +203,11 @@ class RecordStructureAnalyzerExecutor(
             jobClass = javaClass.name, category = "record-analyzer", phase = "analyze",
             cluster = cluster.identifier, description = "Analyze one record"
         )
-        val success = issuesRegistry.doCapturingException(backgroundJob, 60_000L) {
+        val result = issuesRegistry.execCapturingException(backgroundJob, 60_000L) {
             analyzer.analyzeRecord(cluster, record)
         }
         timer.observeDuration()
-        if (!success) {
+        if (result.isFailure) {
             failedMessagesCount.labels(cluster.identifier, record.topic()).inc()
         }
     }
@@ -218,12 +218,12 @@ class RecordStructureAnalyzerExecutor(
         val backgroundJob = BackgroundJob.of(
             category = "record-analyzer", phase = "disk-dump", description = "Trim and dump all records"
         )
-        val success = issuesRegistry.doCapturingException(backgroundJob, 180_000L) {
+        val result = issuesRegistry.execCapturingException(backgroundJob, 180_000L) {
             incrementTrimRecordsStructuresCount(analyzer.trim())
             incrementDumpRecordsStructuresCount(analyzer.dump())
         }
         timer.observeDuration()
-        if (success) {
+        if (result.isSuccess) {
             jobExecutionsCount.labels("success").inc()
         } else {
             jobExecutionsCount.labels("fail").inc()

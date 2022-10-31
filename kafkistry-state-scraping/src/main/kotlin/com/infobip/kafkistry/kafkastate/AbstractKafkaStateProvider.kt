@@ -40,7 +40,7 @@ abstract class AbstractKafkaStateProvider<V>(
             val shouldRemove = it !in enabledClusters && it !in disabledClusters
             if (shouldRemove) {
                 clusterRemoved(it)
-                issuesRegistry.clearIssue(it.backgroundJob())
+                issuesRegistry.clearJob(it.backgroundJob())
             }
             shouldRemove
         }
@@ -58,22 +58,22 @@ abstract class AbstractKafkaStateProvider<V>(
 
     override fun doRefreshCluster(kafkaCluster: KafkaCluster): RefreshStatus {
         log.debug("Refreshing {} for cluster '{}'", stateTypeName, kafkaCluster.identifier)
-        val backgroundJob = kafkaCluster.identifier.backgroundJob()
+        val jonExecution = issuesRegistry.newExecution(kafkaCluster.identifier.backgroundJob())
         val startTime = System.currentTimeMillis()
         fun durationSec() = (System.currentTimeMillis() - startTime) / 1000.0
         val clusterState = try {
             val stateValue = fetchState(kafkaCluster)
             log.debug("Refreshed {} of cluster '{}' in {} sec", stateTypeName, kafkaCluster.identifier, durationSec())
-            issuesRegistry.clearIssue(backgroundJob)
+            jonExecution.succeeded()
             StateData(StateType.VISIBLE, kafkaCluster.identifier, stateTypeName, startTime, stateValue)
         } catch (ex: InvalidClusterIdException) {
-            issuesRegistry.reportIssue(backgroundJob, ex.deepToString())
+            jonExecution.failed(ex.deepToString())
             StateData(StateType.INVALID_ID, kafkaCluster.identifier, stateTypeName, startTime)
         } catch (ex: Throwable) {
             log.error("Exception while refreshing {} for cluster {}, setting it's state as 'unreachable' after {} sec",
-                    stateTypeName, kafkaCluster, durationSec(), ex
+                stateTypeName, kafkaCluster, durationSec(), ex
             )
-            issuesRegistry.reportIssue(backgroundJob, ex.deepToString())
+            jonExecution.failed(ex.deepToString())
             StateData(StateType.UNREACHABLE, kafkaCluster.identifier, stateTypeName, startTime)
         }
         clusterStates[kafkaCluster.identifier] = clusterState
@@ -85,6 +85,7 @@ abstract class AbstractKafkaStateProvider<V>(
     }
 
     private fun KafkaClusterIdentifier.backgroundJob() = BackgroundJob.of(
+        jobClass = this@AbstractKafkaStateProvider.javaClass.name,
         category = "kafka-scrape",
         phase = stateTypeName,
         cluster = this,
