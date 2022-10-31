@@ -176,6 +176,10 @@
     <#if secs < 0>
         <#return "-" + prettyDuration(-secs)>
     </#if>
+    <#if secs < 1>
+        <#assign ms = secs * 1000.0>
+        <#return "#{ms; m0M2} ms">
+    </#if>
     <#if secs < 120>
         <#return "#{secs; m1M2} sec(s)">
     </#if>
