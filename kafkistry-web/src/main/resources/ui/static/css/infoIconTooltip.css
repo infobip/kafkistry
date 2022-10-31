@@ -1,12 +1,15 @@
 .info-icon {
-    border: 1px solid;
-    border-radius: 50%;
     width: auto;
     height: auto;
-    padding: 0.1em 0.5em;
-    font-size: 0.7em;
     vertical-align: middle;
     cursor: pointer;
+}
+
+.info-icon.circle {
+    border: 1px solid;
+    border-radius: 50%;
+    padding: 0.1em 0.5em;
+    font-size: 0.7em;
 }
 
 .tooltip ul {

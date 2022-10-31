@@ -181,7 +181,7 @@ function setupTooltipHelp(input, name, parent) {
     }
     let help = parent.find(".conf-help");
     if (help.length === 0) {
-        parent.append('<span class="conf-help info-icon">?</span>');
+        parent.append('<span class="conf-help info-icon circle">?</span>');
         help = parent.find(".conf-help");
     }
     if (help.attr("tooltip-initialized") === "true") {
