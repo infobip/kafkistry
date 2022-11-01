@@ -2,11 +2,17 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="gitBranchBaseUrl"  type="java.lang.String" -->
+<#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->
+<#-- @ftlvariable name="gitEmbeddedBrowse"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="pendingClustersRequests"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.history.ClusterRequest>>" -->
+<#-- @ftlvariable name="pendingBranches"  type="java.util.List<com.infobip.kafkistry.service.history.BranchRequests<com.infobip.kafkistry.service.history.ClusterRequest>>" -->
 <#-- @ftlvariable name="allTags" type="java.util.List<com.infobip.kafkistry.service.cluster.TagClusters>" -->
 <#-- @ftlvariable name="tagTopics" type="java.util.Map<java.lang.String, java.util.List<java.lang.String>>" -->
 <#-- @ftlvariable name="clusters" type="java.util.List<com.infobip.kafkistry.model.KafkaCluster>" -->
 <#-- @ftlvariable name="enabledClusterIdentifiers"  type="java.util.List<java.lang.String>" -->
+<#-- @ftlvariable name="branchTagClusters"  type="java.util.Map<java.lang.String, java.util.List<java.lang.String>>" -->
+<#-- @ftlvariable name="branch"  type="java.lang.String" -->
 
 <html lang="en">
 
@@ -23,13 +29,53 @@
 <#include "../commonMenu.ftl">
 
 <#import "../common/util.ftl" as util>
+<#import "../common/infoIcon.ftl" as info>
+
+<#macro tagMarker clusterIdentifier tag initTagged tagged>
+    <#if tagged && initTagged>
+        <#assign btnColorClass = "btn-outline-primary">
+    <#elseif tagged && !initTagged>
+        <#assign btnColorClass = "btn-outline-success">
+    <#elseif !tagged && initTagged>
+        <#assign btnColorClass = "btn-outline-danger">
+    <#else>
+        <#assign btnColorClass = "btn-outline-secondary">
+    </#if>
+    <label title="Click to tag/untag"
+           class="tag-marker-btn btn btn-sm mouse-pointer <#if tagged>active</#if> ${btnColorClass}"
+           data-tagged="${tagged?then("yes", "no")}"
+           data-cluster="${clusterIdentifier}"
+           data-tag="${tag}">
+        ${clusterIdentifier}
+    </label>
+</#macro>
+
+<#macro newTagRow tag="" taggedClusters=[]>
+    <tr class="tag-row new-tag" data-tag="">
+        <td>
+            <div class="row">
+                <div class="col pr-1">
+                    <input name="new-tag-name" class="form-control" placeholder="Tag name..." title="Tag name" value="${tag}">
+                </div>
+                <div class="col-">
+                    <button class="remove-tag-btn btn btn-sm btn-outline-danger">x</button>
+                </div>
+            </div>
+        </td>
+        <td>
+            <#list clusters as cluster>
+                <#assign tagged = taggedClusters?seq_contains(cluster.identifier)>
+                <@tagMarker clusterIdentifier=cluster.identifier tag=tag initTagged=false tagged=tagged/>
+            </#list>
+        </td>
+    </tr>
+</#macro>
+
 
 <div class="container">
 
     <#if gitStorageEnabled>
-        <#assign pendingUpdates = pendingClustersRequests>
-        <#assign entityName = "Cluster">
-        <#include "../common/pendingChangeRequests.ftl">
+        <#include "pendingBranches.ftl">
         <br/>
     </#if>
 
@@ -46,7 +92,21 @@
 
     <div class="card">
         <div class="card-header">
-            <h4>All tag per clusters</h4>
+            <#include "../common/backBtn.ftl">
+            <span class="h4">
+                All tag per clusters
+            </span>
+            <#if gitStorageEnabled && branch??>
+                @
+                <#if gitBranchBaseUrl??>
+                    <#assign url = gitBranchBaseUrl + branch?url>
+                    <a target="_blank" href="${url}">${branch}</a>
+                <#elseif gitEmbeddedBrowse>
+                    <a href="${appUrl.git().showBranch(branch)}">${branch}</a>
+                <#else>
+                    branch '${branch}'
+                </#if>
+            </#if>
         </div>
         <div class="card-body p-0">
             <table class="table m-0" id="tags-table">
@@ -69,16 +129,9 @@
                         </td>
                     </tr>
                 </#if>
-                <#macro tagMarker clusterIdentifier tagged tag>
-                    <label title="Click to tag/untag"
-                           class="tag-marker-btn btn btn-sm mouse-pointer <#if tagged>btn-outline-primary active<#else>btn-outline-secondary</#if>"
-                           data-tagged="${tagged?then("yes", "no")}"
-                           data-cluster="${clusterIdentifier}"
-                           data-tag="${tag}">
-                        ${clusterIdentifier}
-                    </label>
-                </#macro>
+                <#assign renderedTags = []>
                 <#list allTags as tagData>
+                    <#assign renderedTags = renderedTags + [tagData.tag]>
                     <tr class="tag-row" data-tag="${tagData.tag}">
                         <td>
                             <span class="badge badge-secondary mb-2">${tagData.tag}</span>
@@ -96,12 +149,25 @@
                         </td>
                         <td>
                             <#list clusters as cluster>
-                                <#assign tagged = tagData.clusters?seq_contains(cluster.identifier)>
-                                <@tagMarker clusterIdentifier=cluster.identifier tagged=tagged tag=tagData.tag/>
+                                <#assign initTagged = tagData.clusters?seq_contains(cluster.identifier)>
+                                <#if branchTagClusters??>
+                                    <#assign tagged = (branchTagClusters[tagData.tag]![])?seq_contains(cluster.identifier)>
+                                <#else>
+                                    <#assign tagged = initTagged>
+                                </#if>
+                                <@tagMarker clusterIdentifier=cluster.identifier tag=tagData.tag initTagged=initTagged tagged=tagged/>
                             </#list>
                         </td>
                     </tr>
                 </#list>
+                <#if branchTagClusters??>
+                    <#list branchTagClusters as tag, branchTaggedClsters>
+                        <#if renderedTags?seq_contains(tag)>
+                            <#continue>
+                        </#if>
+                        <@newTagRow tag=tag taggedClusters=branchTaggedClsters/>
+                    </#list>
+                </#if>
             </table>
             <button id="add-new-tag-btn" class="btn btn-sm btn-outline-primary form-control m-2">
                 Add new tag...
@@ -109,23 +175,7 @@
         </div>
     </div>
     <table id="tag-template-table" style="display: none;">
-        <tr class="tag-row new-tag" data-tag="">
-            <td>
-                <div class="row">
-                    <div class="col pr-1">
-                        <input name="new-tag-name" class="form-control" placeholder="Tag name..." title="Tag name">
-                    </div>
-                    <div class="col-">
-                        <button class="remove-tag-btn btn btn-sm btn-outline-danger">x</button>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <#list clusters as cluster>
-                    <@tagMarker clusterIdentifier=cluster.identifier tagged=false tag=""/>
-                </#list>
-            </td>
-        </tr>
+        <@newTagRow/>
     </table>
     <br/>
 

@@ -4,6 +4,7 @@ import com.infobip.kafkistry.api.*
 import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.service.generator.balance.BalanceSettings
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ADD
@@ -23,6 +24,7 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ISSUES
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_REMOVE
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_RESOURCES
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.TAGS
+import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.TAGS_ON_BRANCH
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
@@ -73,7 +75,7 @@ class ClustersController(
     @GetMapping(CLUSTERS_EDIT_ON_BRANCH)
     fun showEditTopicOnBranch(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
-        @RequestParam("branch") branch: String
+        @RequestParam("branch") branch: Branch
     ): ModelAndView {
         val clusterRequest = clustersApi.pendingClusterRequest(clusterIdentifier, branch)
         val clusterExists = clustersApi.listClusters().any { it.identifier == clusterIdentifier }
@@ -242,7 +244,28 @@ class ClustersController(
     }
 
     @GetMapping(TAGS)
-    fun showTagsPage(): ModelAndView {
+    fun showTagsPage(): ModelAndView = tagsPage()
+
+    @GetMapping(TAGS_ON_BRANCH)
+    fun showTagsOnBranchPage(
+        @RequestParam("branch") branch: Branch
+    ): ModelAndView {
+        val branchChangedClusterRefs = clustersApi.pendingClustersBranchRequests(branch)
+            .mapNotNull { it.cluster?.ref() }
+        val currentClusterRefs = clustersApi.listClusters().map { it.ref() }
+        val branchClusterRefs = branchChangedClusterRefs + currentClusterRefs.filterNot { ref ->
+            branchChangedClusterRefs.any { it.identifier == ref.identifier }
+        }
+        val branchTagClusters = branchClusterRefs
+            .flatMap { it.tags.map { tag -> tag to it.identifier } }
+            .groupBy({ it.first }, { it.second })
+        return tagsPage(mapOf(
+            "branchTagClusters" to branchTagClusters,
+            "branch" to branch,
+        ))
+    }
+
+    private fun tagsPage(extraModel: Map<String, Any?> = emptyMap()): ModelAndView {
         val allTags = clustersApi.allTags()
         val tagTopics = topicsApi.listTopics()
             .mapNotNull { topic ->
@@ -256,13 +279,15 @@ class ClustersController(
             .map { it.identifier }
             .toList()
         val pendingClustersRequests = clustersApi.pendingClustersRequests()
+        val pendingBranches = clustersApi.pendingClustersBranchesRequests()
         return ModelAndView("clusters/tags", mapOf(
             "allTags" to allTags,
             "tagTopics" to tagTopics,
             "clusters" to clusters,
             "enabledClusterIdentifiers" to enabledClusterIdentifiers,
             "pendingClustersRequests" to pendingClustersRequests,
-        ))
+            "pendingBranches" to pendingBranches,
+        ) + extraModel)
     }
 
 

@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.webapp.url
 
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.repository.storage.Branch
 
 class ClustersUrls(base: String) : BaseUrls() {
 
@@ -23,6 +24,7 @@ class ClustersUrls(base: String) : BaseUrls() {
         const val CLUSTERS_ISSUES = "/issues"
         const val CLUSTERS_DRY_RUN_INSPECT = "/dry-run-inspect"
         const val TAGS = "/tags"
+        const val TAGS_ON_BRANCH = "/tags/on-branch"
     }
 
     private val showClusters = Url(base)
@@ -43,6 +45,7 @@ class ClustersUrls(base: String) : BaseUrls() {
     private val showClusterIssues = Url("$base$CLUSTERS_ISSUES", listOf("clusterIdentifier"))
     private val showClusterDryRunInspect = Url("$base$CLUSTERS_DRY_RUN_INSPECT")
     private val showTags = Url("$base$TAGS")
+    private val showTagsOnBranch = Url("$base$TAGS_ON_BRANCH", listOf("branch"))
 
     fun showClusters() = showClusters.render()
 
@@ -54,7 +57,7 @@ class ClustersUrls(base: String) : BaseUrls() {
 
     fun showEditClusterOnBranch(
         clusterIdentifier: KafkaClusterIdentifier,
-        branch: String
+        branch: Branch
     ) = showEditClusterOnBranch.render("clusterIdentifier" to clusterIdentifier, "branch" to branch)
 
     fun showCluster(
@@ -108,5 +111,7 @@ class ClustersUrls(base: String) : BaseUrls() {
     fun showClusterDryRunInspect() = showClusterDryRunInspect.render()
 
     fun showTags() = showTags.render()
+
+    fun showTagsOnBranch(branch: Branch) = showTagsOnBranch.render("branch" to branch)
 
 }

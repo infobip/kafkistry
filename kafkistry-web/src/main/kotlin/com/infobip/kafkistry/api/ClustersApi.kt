@@ -9,10 +9,12 @@ import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.KafkaProfile
+import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.service.history.ClusterRequest
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.service.cluster.TagClusters
+import com.infobip.kafkistry.service.history.BranchRequests
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -96,6 +98,15 @@ class ClustersApi(
     fun pendingClustersRequests(): Map<KafkaClusterIdentifier, List<ClusterRequest>> =
         clustersRegistryService.findAllPendingRequests()
 
+    @GetMapping("/pending-requests/branch")
+    fun pendingClustersBranchRequests(
+        @RequestParam("branch") branch: Branch,
+    ): List<ClusterRequest> = clustersRegistryService.pendingBranchRequests(branch)
+
+    @GetMapping("/pending-requests/branches")
+    fun pendingClustersBranchesRequests(): List<BranchRequests<ClusterRequest>> =
+        clustersRegistryService.pendingBranches()
+
     @GetMapping("/single/pending-requests")
     fun pendingClustersRequests(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
@@ -104,7 +115,7 @@ class ClustersApi(
     @GetMapping("/single/pending-requests/branch")
     fun pendingClusterRequest(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
-        @RequestParam("branch") branch: String,
+        @RequestParam("branch") branch: Branch,
     ): ClusterRequest = clustersRegistryService.pendingRequest(clusterIdentifier, branch)
 
 }
