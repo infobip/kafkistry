@@ -34,6 +34,10 @@ class GitFileStorage(
         return listChanges()
     }
 
+    override fun listChangingFiles(branch: Branch): List<ChangingFile> {
+        return listChanges(branch = branch)
+    }
+
     override fun listChangingFile(name: String): List<ChangeBranch> {
         return listChanges(name)
                 .firstOrNull()
@@ -53,8 +57,16 @@ class GitFileStorage(
         return gitRepository.listMainBranchHistory(range, subDir = subDir)
     }
 
-    private fun listChanges(fileName: String? = null): List<ChangingFile> {
-        return gitRepository.listAllBranchesChanges(subDir, fileName).asSequence()
+    private fun listChanges(
+        fileName: String? = null,
+        branch: Branch? = null,
+    ): List<ChangingFile> {
+        val branchesChanges = if (branch == null) {
+            gitRepository.listAllBranchesChanges(subDir, fileName)
+        } else {
+            listOf(gitRepository.listBranchChanges(branch, subDir, fileName))
+        }
+        return branchesChanges.asSequence()
                 .flatMap { branchChanges ->
                     branchChanges.filesChanges.asSequence().map {
                         BranchFileChange(branchChanges.branchName, it)

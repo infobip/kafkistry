@@ -71,6 +71,10 @@ class RequestingKeyValueRepositoryStorageAdapter<T : Any>(
         return storage.listChangingFiles().map { it.mapToEntityRequests() }
     }
 
+    override fun findPendingRequests(branch: Branch): List<EntityRequests<ID, T>> {
+        return storage.listChangingFiles(branch).map { it.mapToEntityRequests() }
+    }
+
     override fun findPendingRequestsById(id: ID): List<ChangeRequest<T>> {
         val name = id.toFileName()
         return storage.listChangingFile(name)

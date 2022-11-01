@@ -71,6 +71,8 @@ class FileSystemFileStorage(
 
     override fun listChangingFiles(): List<ChangingFile> = emptyList()
 
+    override fun listChangingFiles(branch: Branch): List<ChangingFile> = emptyList()
+
     override fun listChangingFile(name: String): List<ChangeBranch> = emptyList()
 
     override fun listFileChanges(name: String): List<FileChange> = emptyList()

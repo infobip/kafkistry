@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.repository
 
+import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.repository.storage.CommitsRange
 import com.infobip.kafkistry.service.KafkistryUnsupportedOperationException
 
@@ -38,6 +39,8 @@ interface ReadOnlyKeyValueRepository<ID : Any, T : Any> : RequestingKeyValueRepo
     }
 
     override fun findPendingRequests(): List<EntityRequests<ID, T>> = emptyList()
+
+    override fun findPendingRequests(branch: Branch): List<EntityRequests<ID, T>> = emptyList()
 
     override fun findPendingRequestsById(id: ID): List<ChangeRequest<T>> = emptyList()
 

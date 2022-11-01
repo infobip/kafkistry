@@ -99,9 +99,10 @@ abstract class AbstractRegistryService<ID : Any, T : Any, R : Repository<ID, T>,
     }
 
     fun pendingBranchRequests(branch: Branch): List<PR> {
-        return findAllPendingRequests()
-                .flatMap { (_, requests) -> requests }
-                .filter { it.branch == branch }
+        return repository.findPendingRequests(branch)
+            .flatMap { (id, changes) ->
+                changes.map { mapChangeRequest(id, it) }
+            }
     }
 
     fun pendingBranches(): List<BranchRequests<PR>> {

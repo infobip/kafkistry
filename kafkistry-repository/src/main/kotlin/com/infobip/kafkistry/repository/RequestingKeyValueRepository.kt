@@ -38,6 +38,8 @@ interface RequestingKeyValueRepository<ID : Any, T : Any> {
 
     fun findPendingRequests(): List<EntityRequests<ID, T>>
 
+    fun findPendingRequests(branch: Branch): List<EntityRequests<ID, T>>
+
     fun findPendingRequestsById(id: ID): List<ChangeRequest<T>>
 
     fun listUpdatesOf(id: ID): List<ChangeRequest<T>>

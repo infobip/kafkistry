@@ -462,7 +462,7 @@ class GitRepository(
         }
     }
 
-    fun listBranchChanges(branchName: String, subDir: String? = null, fileName: String? = null): BranchChanges {
+    fun listBranchChanges(branchName: Branch, subDir: String? = null, fileName: String? = null): BranchChanges {
         return exclusive {
             val mainBranchRef = mainBranchRef()
             val branchRef = branchRef(branchName)

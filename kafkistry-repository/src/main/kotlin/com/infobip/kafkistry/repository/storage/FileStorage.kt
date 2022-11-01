@@ -14,6 +14,7 @@ interface FileStorage {
     fun writeFile(writeContext: WriteContext, file: StoredFile)
     fun writeFiles(writeContext: WriteContext, files: List<StoredFile>)
     fun listChangingFiles(): List<ChangingFile>
+    fun listChangingFiles(branch: Branch): List<ChangingFile>
     fun listChangingFile(name: String): List<ChangeBranch>
     fun deleteAllFiles(writeContext: WriteContext)
     fun listFileChanges(name: String): List<FileChange>
