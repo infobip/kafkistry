@@ -1,10 +1,11 @@
 package com.infobip.kafkistry.repository.storage.git
 
 import com.infobip.kafkistry.repository.config.GitBranchSelectProperties
+import com.infobip.kafkistry.repository.storage.Branch
 
 class GitWriteBranchSelector(
         private val writeToMaster: Boolean = false,
-        private val mainBranchName: String = "master",
+        private val mainBranchName: Branch = "master",
         private val eachCommitToNewBranch: Boolean = false,
         private val branchPerUser: Boolean = true,
         private val branchPerEntity: Boolean = true
@@ -17,7 +18,7 @@ class GitWriteBranchSelector(
             branchPerEntity = properties.branchPerEntity
     )
 
-    fun selectBranchName(userUsername: String, fileNames: List<String>): String {
+    fun selectBranchName(userUsername: String, fileNames: List<String>): Branch {
         return when (fileNames.size) {
             0 -> selectBranchName(userUsername, "[none]")
             1 -> selectBranchName(userUsername, fileNames.first())
@@ -32,7 +33,7 @@ class GitWriteBranchSelector(
         }
     }
 
-    fun selectBranchName(userUsername: String, fileName: String): String {
+    fun selectBranchName(userUsername: String, fileName: String): Branch {
         if (writeToMaster) {
             return mainBranchName
         }

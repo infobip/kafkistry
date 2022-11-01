@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="commitChanges" type="com.infobip.kafkistry.repository.storage.CommitChanges" -->
+<#-- @ftlvariable name="commitChanges" type="com.infobip.kafkistry.repository.storage.CommitFileChanges" -->
 <#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="jiraBaseUrl"  type="java.lang.String" -->
 

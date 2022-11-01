@@ -16,6 +16,7 @@ import com.infobip.kafkistry.yaml.YamlMapper
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.model.QuotaDescription
+import com.infobip.kafkistry.repository.storage.Branch
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -32,7 +33,7 @@ class GitRepositoriesProperties {
     var sshPrivateKey: String? = null
     var sshKeyPassphrase: String? = null
     var password: String? = null
-    var mainBranch: String = "master"
+    var mainBranch: Branch = "master"
     var remoteTimeoutSeconds: Int = 30
     var refreshIntervalSeconds: Int = 30
     var strictSshHostKeyChecking: Boolean = false

@@ -49,7 +49,7 @@ class GitFileStorage(
                 .map { FileChange(mainBranch, it) }
     }
 
-    override fun listCommits(range: CommitsRange): List<CommitChanges> {
+    override fun listCommits(range: CommitsRange): List<CommitFileChanges> {
         return gitRepository.listMainBranchHistory(range, subDir = subDir)
     }
 
@@ -78,7 +78,7 @@ class GitFileStorage(
 
 
     private data class BranchFileChange(
-            val branchName: String,
+            val branchName: Branch,
             val fileChange: GitRepository.FileChange
     )
 

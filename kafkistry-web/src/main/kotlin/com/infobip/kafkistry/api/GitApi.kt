@@ -2,7 +2,8 @@ package com.infobip.kafkistry.api
 
 import com.infobip.kafkistry.events.EventPublisher
 import com.infobip.kafkistry.events.RepositoryRefreshEvent
-import com.infobip.kafkistry.repository.storage.CommitChanges
+import com.infobip.kafkistry.repository.storage.Branch
+import com.infobip.kafkistry.repository.storage.CommitFileChanges
 import com.infobip.kafkistry.repository.storage.git.GitRefreshTrigger
 import com.infobip.kafkistry.repository.storage.git.GitRepository
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -34,12 +35,12 @@ class GitApi(
 
     @GetMapping("/branches/inspect")
     fun branchChanges(
-        @RequestParam("branch") branch: String
+        @RequestParam("branch") branch: Branch
     ): GitRepository.BranchChanges = gitRepository.listBranchChanges(branch)
 
     @GetMapping("/commits/{commitId}")
     fun commitChanges(
         @PathVariable("commitId") commitId: String
-    ): CommitChanges = gitRepository.commitChanges(commitId)
+    ): CommitFileChanges = gitRepository.commitChanges(commitId)
 
 }

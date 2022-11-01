@@ -73,7 +73,7 @@ data class EntityRequests<ID, T>(
 
 data class ChangeRequest<T>(
         val type: ChangeType,
-        val branch: String,
+        val branch: Branch,
         val commitChanges: List<CommitChange>,
         val optionalEntity: OptionalEntity<T>
 )

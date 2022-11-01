@@ -57,7 +57,7 @@ class GitRepository(
     private val gitRemoteUri: String? = null,
     private val writeBranchSelector: GitWriteBranchSelector,
     private val auth: Auth = Auth.NONE,
-    private val mainBranch: String = "master",
+    private val mainBranch: Branch = "master",
     private val gitTimeoutSeconds: Int = 30,
     private val strictSshHostKeyChecking: Boolean = false,
     private val dropLocalBranchesMissingOnRemote: Boolean = false,
@@ -327,7 +327,7 @@ class GitRepository(
             .call()
     }
 
-    fun mainBranch(): String = mainBranch
+    fun mainBranch(): Branch = mainBranch
 
     fun doRefreshRepository() {
         if (noRemote) {
@@ -484,11 +484,11 @@ class GitRepository(
         return BranchChanges(mainBranch, filesChanges)
     }
 
-    fun listMainBranchHistory(count: Int? = null, skip: Int = 0, subDir: String? = null): List<CommitChanges> {
+    fun listMainBranchHistory(count: Int? = null, skip: Int = 0, subDir: String? = null): List<CommitFileChanges> {
         return listMainBranchHistory(range = CommitsRange(count, skip), subDir)
     }
 
-    fun listMainBranchHistory(range: CommitsRange = CommitsRange.ALL, subDir: String? = null): List<CommitChanges> {
+    fun listMainBranchHistory(range: CommitsRange = CommitsRange.ALL, subDir: String? = null): List<CommitFileChanges> {
         val mainBranchRef = mainBranchRef()
         return RevWalk(repository).use { walk ->
             val latestMasterCommit = walk.parseCommit(mainBranchRef.objectId)
@@ -515,7 +515,7 @@ class GitRepository(
         }
     }
 
-    fun commitChanges(commitId: String, subDirFilter: String? = null): CommitChanges {
+    fun commitChanges(commitId: String, subDirFilter: String? = null): CommitFileChanges {
         val commitObjectId = repository.resolve("$commitId^{commit}")
                 ?: throw KafkistryGitException("Commit id '$commitId' not found")
         return RevWalk(repository).use { walk ->
@@ -531,7 +531,7 @@ class GitRepository(
         return currentCommit.affectedFiles(this).mapNotNull { it.filterFilePath(subDirFilter) }
     }
 
-    private fun RevWalk.commitChanges(subDirFilter: String? = null, currentCommit: RevCommit, prevCommit: RevCommit?): CommitChanges {
+    private fun RevWalk.commitChanges(subDirFilter: String? = null, currentCommit: RevCommit, prevCommit: RevCommit?): CommitFileChanges {
         val affectedFiles = commitAffectedFiles(subDirFilter, currentCommit)
         val files = affectedFiles
                 .map { (subDir, name) ->
@@ -546,7 +546,7 @@ class GitRepository(
                     )
                 }
                 .filter { it.oldContent != null || it.newContent != null }
-        return CommitChanges(commit = currentCommit.toCommit(), files = files)
+        return CommitFileChanges(commit = currentCommit.toCommit(), files = files)
     }
 
     fun reCloneRepository() {
@@ -895,7 +895,7 @@ class GitRepository(
     )
 
     data class BranchChanges(
-            val branchName: String,
+            val branchName: Branch,
             val filesChanges: List<FileChange>
     )
 

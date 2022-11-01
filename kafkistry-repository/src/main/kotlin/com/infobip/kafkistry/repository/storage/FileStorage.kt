@@ -17,8 +17,10 @@ interface FileStorage {
     fun listChangingFile(name: String): List<ChangeBranch>
     fun deleteAllFiles(writeContext: WriteContext)
     fun listFileChanges(name: String): List<FileChange>
-    fun listCommits(range: CommitsRange): List<CommitChanges>
+    fun listCommits(range: CommitsRange): List<CommitFileChanges>
 }
+
+typealias Branch = String
 
 data class StoredFile(
         val name: String,
@@ -31,7 +33,7 @@ data class ChangingFile(
 )
 
 data class ChangeBranch(
-        val name: String,
+        val name: Branch,
         val changeType: ChangeType,
         val oldContent: String?,
         val newContent: String?,
@@ -57,12 +59,25 @@ data class CommitChange(
         val newContent: String?
 )
 
-data class FileChange(
-        val branch: String,
-        val commitChange: CommitChange
+fun CommitChange.toContentChange() = ContentChange(type, oldContent, newContent)
+
+data class ContentChange(
+    val type: ChangeType,
+    val oldContent: String?,
+    val newContent: String?,
 )
 
 data class CommitChanges(
+    val commit: Commit,
+    val changes: List<ContentChange>
+)
+
+data class FileChange(
+        val branch: Branch,
+        val commitChange: CommitChange
+)
+
+data class CommitFileChanges(
         val commit: Commit,
         val files: List<FileCommitChange>
 )

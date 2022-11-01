@@ -1,19 +1,17 @@
 package com.infobip.kafkistry.service.history
 
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.repository.storage.ChangeType
-import com.infobip.kafkistry.repository.storage.Commit
-import com.infobip.kafkistry.repository.storage.CommitChange
+import com.infobip.kafkistry.repository.storage.*
 
 interface PendingRequest {
-    val branch: String
+    val branch: Branch
     val commitChanges: List<CommitChange>
     val type: ChangeType
     val errorMsg: String?
 }
 
 data class TopicRequest(
-    override val branch: String,
+    override val branch: Branch,
     override val commitChanges: List<CommitChange>,
     override val type: ChangeType,
     val topicName: TopicName,
@@ -22,7 +20,7 @@ data class TopicRequest(
 ) : PendingRequest
 
 data class ClusterRequest(
-    override val branch: String,
+    override val branch: Branch,
     override val commitChanges: List<CommitChange>,
     override val type: ChangeType,
     val identifier: KafkaClusterIdentifier,
@@ -31,7 +29,7 @@ data class ClusterRequest(
 ) : PendingRequest
 
 data class AclsRequest(
-    override val branch: String,
+    override val branch: Branch,
     override val commitChanges: List<CommitChange>,
     override val type: ChangeType,
     override val errorMsg: String?,
@@ -77,3 +75,9 @@ data class AclsChange(
     val principal: PrincipalId,
     val principalAcls: PrincipalAclRules?
 ) : Change
+
+data class BranchRequests<PR : PendingRequest>(
+    val branch: Branch,
+    val requests: List<PR>,
+    val commits: List<CommitChanges>,
+)

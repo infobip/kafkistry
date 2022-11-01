@@ -3,10 +3,11 @@ package com.infobip.kafkistry.service
 import com.infobip.kafkistry.events.EventPublisher
 import com.infobip.kafkistry.events.RepositoryEvent
 import com.infobip.kafkistry.repository.*
+import com.infobip.kafkistry.repository.storage.Branch
+import com.infobip.kafkistry.repository.storage.CommitChanges
 import com.infobip.kafkistry.repository.storage.CommitsRange
-import com.infobip.kafkistry.service.history.Change
-import com.infobip.kafkistry.service.history.ChangeCommit
-import com.infobip.kafkistry.service.history.PendingRequest
+import com.infobip.kafkistry.repository.storage.toContentChange
+import com.infobip.kafkistry.service.history.*
 import com.infobip.kafkistry.repository.RequestingKeyValueRepository as Repository
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 
@@ -91,10 +92,33 @@ abstract class AbstractRegistryService<ID : Any, T : Any, R : Repository<ID, T>,
 
     fun findPendingRequests(id: ID): List<PR> = repository.findPendingRequestsById(id).map { mapChangeRequest(id, it) }
 
-    fun pendingRequest(id: ID, branch: String): PR {
+    fun pendingRequest(id: ID, branch: Branch): PR {
         return findPendingRequests(id)
                 .firstOrNull { it.branch == branch }
                 ?: throw KafkistryIntegrityException("Entity of type ${type.simpleName} with id '${id}' does not have changes in branch '$branch'")
+    }
+
+    fun pendingBranchRequests(branch: Branch): List<PR> {
+        return findAllPendingRequests()
+                .flatMap { (_, requests) -> requests }
+                .filter { it.branch == branch }
+    }
+
+    fun pendingBranches(): List<BranchRequests<PR>> {
+        return repository.findPendingRequests()
+            .flatMap { (id, changes) ->
+                changes.map { mapChangeRequest(id, it) }
+            }
+            .groupBy { it.branch }
+            .map { (branch, requests) ->
+                val commits = requests
+                    .flatMap { it.commitChanges }
+                    .groupBy { it.commit }
+                    .map { (commit, changes) ->
+                        CommitChanges(commit, changes.map { it.toContentChange() })
+                    }
+                BranchRequests(branch, requests, commits)
+            }
     }
 
     protected fun listAll(): List<T> = repository.findAll().sortedBy { it.id.toString() }
