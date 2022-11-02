@@ -6,6 +6,7 @@ import com.infobip.kafkistry.service.KafkistryException
 import com.infobip.kafkistry.service.RuleViolation
 import com.infobip.kafkistry.service.cluster.inspect.ClusterInspectIssue
 import com.infobip.kafkistry.service.eachCountDescending
+import com.infobip.kafkistry.service.sortedByValueDescending
 import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.ACLS_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.CLUSTER_STATS
@@ -13,6 +14,7 @@ import com.infobip.kafkistry.webapp.url.MainUrls.Companion.CONSUMER_GROUPS_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.HOME
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.PENDING_REQUESTS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.QUOTAS_STATS
+import com.infobip.kafkistry.webapp.url.MainUrls.Companion.TAGS_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.TOPIC_STATS
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
@@ -71,14 +73,22 @@ class MainPageController(
             }
             .groupingBy { it.copy(violation = it.violation.copy(message = "", placeholders = emptyMap())) }
             .eachCountDescending()
-        val tagsCounts = clustersStatuses
-            .flatMap { it.cluster.tags }
-            .groupingBy { it }
-            .eachCountDescending()
         return ModelAndView(
             "home/clustersStats", mutableMapOf(
                 "clustersStats" to clustersStats,
                 "issuesStats" to issuesStats,
+            )
+        )
+    }
+
+    @GetMapping(TAGS_STATS)
+    fun showTagsStats(): ModelAndView {
+        val allTags = clustersApi.allTags()
+        val tagsCounts = allTags
+            .associate { (tag, clusters) -> tag to clusters.size }
+            .sortedByValueDescending()
+        return ModelAndView(
+            "home/tagsStats", mutableMapOf(
                 "tagsCounts" to tagsCounts,
             )
         )

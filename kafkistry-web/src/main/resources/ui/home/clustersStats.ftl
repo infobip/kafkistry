@@ -49,22 +49,4 @@
             </tr>
         </#list>
     </table>
-    <table class="table table-sm m-0">
-        <thead class="thead-light">
-        <tr>
-            <th colspan="2">Tags</th>
-        </tr>
-        </thead>
-        <#list tagsCounts as tag, count>
-            <tr>
-                <td>
-                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
-                       href="${appUrl.clusters().showClusters()}#${tag}" title="Click to filter clusters...">
-                        <span class="badge badge-secondary">${tag}</span>
-                    </a>
-                </td>
-                <td class="text-right">${count}</td>
-            </tr>
-        </#list>
-    </table>
 </#if>

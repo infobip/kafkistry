@@ -28,8 +28,9 @@
 
     <hr/>
     <h3 class="text-center">Status counts / quick navigate</h3>
-    <div class="form-row">
-        <div class="col">
+
+    <div class="form-row mb-2">
+        <div class="col-4">
             <div class="card">
                 <div class="card-header">
                     <span class="h5">Clusters</span>
@@ -40,6 +41,19 @@
                 </div>
             </div>
         </div>
+        <div class="col-8">
+            <div class="card">
+                <div class="card-header">
+                    <span class="h5">Tags</span>
+                </div>
+                <div class="card-body p-0" id="tags-stats-container" style="max-height: 400px !important; overflow-y: auto;">
+                    <#assign statusId = "tags-stats">
+                    <#include "../common/serverOpStatus.ftl">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-row">
         <div class="col">
             <div class="card">
                 <div class="card-header">
@@ -72,8 +86,7 @@
                     <#include "../common/serverOpStatus.ftl">
                 </div>
             </div>
-            <br/>
-            <div class="card">
+            <div class="card mt-2">
                 <div class="card-header">
                     <span class="h5">Quotas</span>
                 </div>

@@ -7,6 +7,9 @@ $(document).ready(function () {
             "main.showClustersStats", "clusters-stats", "#clusters-stats-container"
         )
         fetchStats(
+            "main.showTagsStats", "tags-stats", "#tags-stats-container"
+        )
+        fetchStats(
             "main.showTopicsStats", "topics-stats", "#topics-stats-container"
         )
         fetchStats(
