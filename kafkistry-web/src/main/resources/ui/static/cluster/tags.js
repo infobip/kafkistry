@@ -47,7 +47,10 @@ function addNewTag() {
     let autocompleteTags = {};
     $("#tags-table .tag-row").get().forEach(function (row) {
         let tag = $(row).attr("data-tag");
-        autocompleteTags[tagPrefixOf(tag)] = true;
+        let prefix = tagPrefixOf(tag);
+        if (prefix) {
+            autocompleteTags[prefix] = true;
+        }
     });
     initAutocomplete(Object.keys(autocompleteTags), tagInput);
 }
