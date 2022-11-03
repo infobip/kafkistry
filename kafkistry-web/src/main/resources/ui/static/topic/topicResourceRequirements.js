@@ -1,5 +1,4 @@
 $(document).ready(function () {
-    $.fn.selectpicker.Constructor.DEFAULTS.whiteList.span.push('title');
     $("#add-messages-rate-override-btn").click(addMessagesRateOverride);
     $(".messagesRateOverrides").on("click", ".remove-messages-rate-override-btn", null, removeMessagesRateOverride);
     initSelectLocationPickers(".requirements-message-rate");

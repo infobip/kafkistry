@@ -1,10 +1,10 @@
 $(document).ready(function () {
-    $.fn.selectpicker.Constructor.DEFAULTS.whiteList.span.push('title');
     $(document).on("change", "input[name=presenceType]", null, adjustPresenceButtonsVisibility);
     $(".presence select").each(function (){
         let presence = $(this);
         if (presence.closest(".template").length === 0) {
-            presence.selectpicker();    //don't do this init if it's under template
+            //don't do this init if it's under template
+            initSelectPicker(presence)
         }
     });
 });

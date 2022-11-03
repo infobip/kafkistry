@@ -7,7 +7,7 @@ $(document).ready(function () {
     $("#dry-run-inspect-acls-btn").click(dryRunInspectAcls);
 
     initAutocompleteOwners(true);
-    initSelectPickers();
+    initAclSelectPickers();
     initResourceNameAutocomplete();
     resolveInitialYaml();
     refreshYaml();
@@ -19,13 +19,14 @@ function addRule() {
     let template = $("#rule-template").html();
     $("#rules").append(template);
     let rule = $("#rules .rule:last-child");
-    initSelectPicker(rule.find("select").get());
+    registerAllInfoTooltipsIn(rule);
+    initAclSelectPicker(rule.find("select").get());
     refreshYaml();
 }
 
-function initSelectPickers() {
+function initAclSelectPickers() {
     $("#rules select").each(function () {
-        initSelectPicker(this);
+        initAclSelectPicker(this);
     });
 }
 
@@ -35,9 +36,9 @@ function initResourceNameAutocomplete() {
     });
 }
 
-function initSelectPicker(select) {
+function initAclSelectPicker(select) {
     let picker = $(select);
-    picker.selectpicker();
+    initSelectPicker(picker);
     picker.on('changed.bs.select', refreshYaml);
     picker.on('changed.bs.select', function () {
         let select = $(this);

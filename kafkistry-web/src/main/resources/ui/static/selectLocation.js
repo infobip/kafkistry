@@ -7,7 +7,7 @@ function initSelectLocationPickers(selector) {
 
 function initChildSelectPickers(container) {
     container.find("select[name=overrideWhere]").each(function () {
-        $(this).selectpicker();
+        initSelectPicker($(this));
     });
 }
 

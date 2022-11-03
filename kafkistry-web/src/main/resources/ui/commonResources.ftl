@@ -37,6 +37,7 @@
     </#list>
 </#if>
 
+<script src="static/selectPicker.js?ver=${lastCommit}"></script>
 <script src="static/urlManager.js?ver=${lastCommit}"></script>
 <script src="static/globalErrorHandler.js?ver=${lastCommit}"></script>
 <script src="static/ajaxCsrfRegister.js?ver=${lastCommit}"></script>
