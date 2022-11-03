@@ -7,7 +7,7 @@ import com.infobip.kafkistry.api.BackgroundIssuesApi
 import com.infobip.kafkistry.appinfo.ModulesBuildInfoLoader
 import com.infobip.kafkistry.repository.config.GitBrowseProperties
 import com.infobip.kafkistry.repository.config.GitRepositoriesProperties
-import com.infobip.kafkistry.webapp.hostname.HostnameResolver
+import com.infobip.kafkistry.hostname.HostnameResolver
 import com.infobip.kafkistry.webapp.jira.JiraProperties
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import com.infobip.kafkistry.webapp.security.WebSecurityProperties

@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.webapp.hostname
 
+import com.infobip.kafkistry.hostname.HostnameResolver
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.GenericFilterBean
 import javax.servlet.FilterChain

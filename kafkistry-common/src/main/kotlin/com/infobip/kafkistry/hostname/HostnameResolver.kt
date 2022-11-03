@@ -1,4 +1,4 @@
-package com.infobip.kafkistry.webapp.hostname
+package com.infobip.kafkistry.hostname
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
