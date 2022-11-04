@@ -33,6 +33,7 @@ app:
   ui:
     caching: true
     custom-js-scripts-csv: ${CUSTOM_JS_SCRIPTS_CSV:}
+    force-tag-for-presence: ${FORCE_TAG_FOR_PRESENCE:false}
   consume:
     enabled: ${CONSUME_ENABLED:true}
     max-records: ${CONSUME_MAX_RECORDS:5000}

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit
 class WebUIProperties {
     var caching = true
     var customJsScriptsCsv = ""
+    var forceTagForPresence = false
 
     @NestedConfigurationProperty
     val image = ImageProperties()

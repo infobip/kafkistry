@@ -116,6 +116,7 @@ class PropertiesInjectingInterceptor(
             addObject("backgroundJobIssueGroups", issuesApi.currentGroupedIssues())
             addObject("hostname", hostnameResolver.hostname)
             addObject("lastCommit", latestBuildCommit)
+            addObject("forceTagForPresence", webUIProperties.forceTagForPresence)
         }
     }
 

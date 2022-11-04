@@ -7,6 +7,7 @@ $(document).ready(function () {
             initSelectPicker(presence)
         }
     });
+    $(document).on("click", ".bypass-only-tag-presence-btn", null, enableAllPresenceTypes);
 });
 
 function adjustPresenceButtonsVisibility() {
@@ -52,4 +53,12 @@ function extractPresenceData(dom) {
         kafkaClusterIdentifiers: clusters,
         tag: tag
     };
+}
+
+function enableAllPresenceTypes() {
+    let presence = $(this).closest(".presence");
+    presence.find("label.disabled").each(function () {
+        $(this).removeClass("disabled");
+        $(this).find("input").prop("disabled", false);
+    });
 }

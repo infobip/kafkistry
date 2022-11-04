@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="forceTag" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="forceTagForPresence" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="enums"  type="java.util.Map<java.lang.String, java.util.Map<java.lang.String, ? extends java.lang.Object>>" -->
 
@@ -8,7 +8,7 @@
 <#import "infoIcon.ftl" as info>
 <#import "documentation.ftl" as doc>
 
-<#assign tagOnly = forceTag!false>
+<#assign tagOnly = forceTagForPresence!false>
 <#assign disabledPresenceTypeDoc>
     <#if tagOnly>
         <span class='badge badge-danger'>DISABLED</span>:
@@ -18,9 +18,26 @@
 </#assign>
 
 <div class="presence">
+    <#if tagOnly && user?? && user.role.name == "ADMIN">
+        <div class="form-row">
+            <div class="col form-inline">
+                <button class="btn btn-sm btn-outline-dark bypass-only-tag-presence-btn">
+                    &#10004; I'm admin, I don't need "tag-only" restriction, I know what am I doing
+                </button>
+            </div>
+        </div>
+    </#if>
     <div class="form-row">
         <div class="col form-inline">
-            <#assign presenceType = (presence.type.name())!(tagOnly?then("TAGGED_CLUSTERS", "ALL_CLUSTERS"))>
+            <#if (presence.type.name())??>
+                <#if presence.type == "INCLUDED_CLUSTERS" && presence.kafkaClusterIdentifiers?size == 0 && tagOnly>
+                    <#assign presenceType = "TAGGED_CLUSTERS">
+                <#else>
+                    <#assign presenceType = presence.type.name()>
+                </#if>
+            <#else>
+                <#assign presenceType = tagOnly?then("TAGGED_CLUSTERS", "ALL_CLUSTERS")>
+            </#if>
             <label class="btn btn-outline-primary form-control m-1 <#if presenceType == 'ALL_CLUSTERS'>active</#if>
                     <#if tagOnly>disabled</#if>">
                 <input type="radio" name="presenceType" value="ALL_CLUSTERS"
