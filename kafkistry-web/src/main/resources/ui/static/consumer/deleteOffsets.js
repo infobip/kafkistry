@@ -15,12 +15,30 @@ function extractTopicPartitionsToDelete() {
     });
     return topicPartitions;
 }
+
+function selectedTopicPartitionsMsg(topicPartitions) {
+    let topics = Object.keys(topicPartitions);
+    let extractedPartitionsMsg = "Topics (" + topics.length + "):\n";
+    if (topics.length === 0) {
+        extractedPartitionsMsg += " (none)\n";
+    }
+    topics.forEach(function (topic) {
+        extractedPartitionsMsg += " - " + topic + "\n";
+        let partitions = topicPartitions[topic];
+        extractedPartitionsMsg += "   - partitions (" + partitions.length + "): " + partitions.join(", ") + "\n";
+    });
+    return extractedPartitionsMsg;
+}
+
 function deleteOffsets() {
     showOpProgress("Deleting consumer group offsets...");
     let clusterIdentifier = $(this).attr("data-cluster");
     let consumerGroupId = $(this).attr("data-consumer-group");
     let topicPartitions = extractTopicPartitionsToDelete();
-    showOpSuccess("Extracted", "DC: "+clusterIdentifier+"\nGroup: "+consumerGroupId+"\n"+JSON.stringify(topicPartitions, null, 4))
+    let extractedPartitionsMsg = selectedTopicPartitionsMsg(topicPartitions);
+    showOpProgress("Deleting consumer group offsets...",
+        "Kafka cluster: " + clusterIdentifier + "\nGroup: " + consumerGroupId + "\n" + extractedPartitionsMsg
+    );
     $
         .ajax("api/consumers/clusters/" + encodeURI(clusterIdentifier) + "/groups/" + encodeURI(consumerGroupId) + "/offsets/delete", {
             method: "PUT",
