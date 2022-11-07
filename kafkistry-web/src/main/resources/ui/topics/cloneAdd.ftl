@@ -1,8 +1,11 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="topic" type="com.infobip.kafkistry.model.TopicDescription" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
+<#-- @ftlvariable name="forceTagForPresence" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="enums"  type="java.util.Map<java.lang.String, java.util.Map<java.lang.String, ? extends java.lang.Object>>" -->
 
-<html>
+
+<html lang="en">
 
 <head>
     <#include "../commonResources.ftl"/>
@@ -24,6 +27,25 @@
     <h1><#include  "../common/backBtn.ftl"> Create new topic by clone</h1>
     <hr>
     <p>Cloning from topic: ${topic.name}</p>
+
+    <#assign tagOnly = forceTagForPresence!false>
+    <#if tagOnly && topic.presence.type != "TAGGED_CLUSTERS">
+        <div class="alert alert-warning">
+            <strong>Not allowed clone a topic exactly</strong><br/>
+            <span>Source topic uses presence type <code>${topic.presence.type}</code> which is not allowed.</span><br/>
+            <span>Please switch to using cluster tags for defining topic's presence.</span><br/>
+            <span>Defaulting to presence type <code>TAGGED_CLUSTERS</code></span><br/>
+            <span>Source topic's presence was:</span> <code>${topic.presence.toString()}</code>
+        </div>
+        <#assign presenceTypes = enums["com.infobip.kafkistry.model.PresenceType"]>
+        <#list presenceTypes as presenceType, enum>
+            <#if presenceType.toString() == "TAGGED_CLUSTERS">
+                <#assign taggedClustersEnum = presenceType>
+            </#if>
+        </#list>
+        <#assign topic = topic + {'presence': {'type':taggedClustersEnum}}>
+    </#if>
+
     <#assign newName = "">
     <#include "form/topicForm.ftl">
     <br/>
