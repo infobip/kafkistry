@@ -1,4 +1,4 @@
-
+<#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="title" type="java.lang.String" -->
 <#-- @ftlvariable name="aclsRequest" type="com.infobip.kafkistry.service.history.AclsRequest" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
@@ -8,10 +8,10 @@
 
 <head>
     <#include "../../commonResources.ftl"/>
-    <script src="static/acls-js/principalAclsForm.js"></script>
-    <script src="static/acls-js/createPrincipal.js"></script>
-    <script src="static/acls-js/editPrincipal.js"></script>
-    <script src="static/presenceForm.js"></script>
+    <script src="static/acls-js/principalAclsForm.js?ver=${lastCommit}"></script>
+    <script src="static/acls-js/createPrincipal.js?ver=${lastCommit}"></script>
+    <script src="static/acls-js/editPrincipal.js?ver=${lastCommit}"></script>
+    <script src="static/presenceForm.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Edit principal ACLs</title>
 </head>
 

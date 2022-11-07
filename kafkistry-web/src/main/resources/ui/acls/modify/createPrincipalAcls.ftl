@@ -1,13 +1,13 @@
-
+<#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 
 <html lang="en">
 
 <head>
     <#include "../../commonResources.ftl"/>
-    <script src="static/acls-js/principalAclsForm.js"></script>
-    <script src="static/acls-js/createPrincipal.js"></script>
-    <script src="static/presenceForm.js"></script>
+    <script src="static/acls-js/principalAclsForm.js?ver=${lastCommit}"></script>
+    <script src="static/acls-js/createPrincipal.js?ver=${lastCommit}"></script>
+    <script src="static/presenceForm.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Create new principal ACLs</title>
 </head>
 

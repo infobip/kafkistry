@@ -1,3 +1,4 @@
+<#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="principalAcls" type="com.infobip.kafkistry.model.PrincipalAclRules" -->
 
@@ -5,7 +6,7 @@
 
 <head>
     <#include "../../commonResources.ftl"/>
-    <script src="static/acls-js/deletePrincipal.js"></script>
+    <script src="static/acls-js/deletePrincipal.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Delete principal</title>
 </head>
 

@@ -1,4 +1,4 @@
-
+<#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="principalAcls" type="com.infobip.kafkistry.model.PrincipalAclRules" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 
@@ -6,9 +6,9 @@
 
 <head>
     <#include "../../commonResources.ftl"/>
-    <script src="static/acls-js/principalAclsForm.js"></script>
-    <script src="static/acls-js/createPrincipal.js"></script>
-    <script src="static/presenceForm.js"></script>
+    <script src="static/acls-js/principalAclsForm.js?ver=${lastCommit}"></script>
+    <script src="static/acls-js/createPrincipal.js?ver=${lastCommit}"></script>
+    <script src="static/presenceForm.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Import new principal ACLs</title>
 </head>
 
