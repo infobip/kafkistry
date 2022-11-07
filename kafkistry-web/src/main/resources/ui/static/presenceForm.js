@@ -67,4 +67,5 @@ function enableAllPresenceTypes() {
         $(this).removeClass("disabled");
         $(this).find("input").prop("disabled", false);
     });
+    presence.find(".bypass-only-tag-presence-container").hide();
 }
