@@ -28,7 +28,7 @@ class BackgroundJobIssuesRegistry {
                 jobExecution.succeededSoftly()
             }
             Result.success(result)
-        } catch (ex: Exception) {
+        } catch (ex: Throwable) {
             jobExecution.failed(ex.deepToString())
             log.error("{} failed with exception", job, ex)
             Result.failure(ex)
@@ -59,19 +59,6 @@ class BackgroundJobIssuesRegistry {
         }
 
     }
-
-//    fun reportIssue(job: BackgroundJob, durationMs: Long, failMessage: String) {
-//        issues[job.key] = BackgroundJobIssue(job, failMessage, System.currentTimeMillis(), durationMs)
-//    }
-
-//    fun clearIssue(job: BackgroundJob) {
-//        issues.remove(job.key)
-//        reportSuccess(job)
-//    }
-
-//    private fun reportSuccess(job: BackgroundJob, durationMs: Long) {
-//        lastSuccesses[job.key] = job.toSuccessStatus(System.currentTimeMillis(), durationMs)
-//    }
 
     fun clearJob(job: BackgroundJob) {
         issues.remove(job.key)
