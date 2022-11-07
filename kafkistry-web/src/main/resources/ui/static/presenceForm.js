@@ -7,6 +7,7 @@ $(document).ready(function () {
             initSelectPicker(presence)
         }
     });
+    $(document).on("click", ".opt-in-bypass-only-tag-presence-btn", null, optInEnableAllPresenceTypes);
     $(document).on("click", ".bypass-only-tag-presence-btn", null, enableAllPresenceTypes);
 });
 
@@ -53,6 +54,11 @@ function extractPresenceData(dom) {
         kafkaClusterIdentifiers: clusters,
         tag: tag
     };
+}
+
+function optInEnableAllPresenceTypes() {
+    $(this).closest(".presence").find(".bypass-only-tag-presence-container").show();
+    $(this).hide();
 }
 
 function enableAllPresenceTypes() {

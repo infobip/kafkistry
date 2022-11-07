@@ -18,8 +18,9 @@
 </#assign>
 
 <div class="presence">
-    <#if tagOnly && user?? && user.role.name == "ADMIN">
-        <div class="form-row">
+    <#assign showAdminForceTagBypass = tagOnly && user?? && user.role.name == "ADMIN">
+    <#if showAdminForceTagBypass>
+        <div class="form-row bypass-only-tag-presence-container" style="display: none;">
             <div class="col form-inline">
                 <button class="btn btn-sm btn-outline-dark bypass-only-tag-presence-btn">
                     &#10004; I'm admin, I don't need "tag-only" restriction, I know what am I doing
@@ -29,6 +30,11 @@
     </#if>
     <div class="form-row">
         <div class="col form-inline">
+            <#if showAdminForceTagBypass>
+                <label class="btn btn-outline-danger opt-in-bypass-only-tag-presence-btn" title="Bypass tag presence forcing...">
+                    &#128293;
+                </label>
+            </#if>
             <#if (presence.type.name())??>
                 <#if presence.type == "INCLUDED_CLUSTERS" && presence.kafkaClusterIdentifiers?size == 0 && tagOnly>
                     <#assign presenceType = "TAGGED_CLUSTERS">
