@@ -12,17 +12,7 @@
     <dependencies>
         <dependency>
             <groupId>com.infobip.kafkistry</groupId>
-            <artifactId>kafkistry-service-logic</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.infobip.kafkistry</groupId>
-            <artifactId>kafkistry-sql</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.infobip.kafkistry</groupId>
-            <artifactId>kafkistry-prometheus-metrics-export</artifactId>
+            <artifactId>kafkistry-web-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
