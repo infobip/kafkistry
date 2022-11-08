@@ -73,3 +73,8 @@ Kafkistry is monolithic service which:
 
 ## Demo screenshots
 See some [demo screenshots](demo-screenshoots/preview-demo.md) preview.
+
+## Background story
+### Presentation @ Infobip Shift conference
+
+[![Kafkistry @ Infobip Shift Conference](https://img.youtube.com/vi/fVgmmngKnwo/0.jpg)](https://www.youtube.com/watch?v=fVgmmngKnwo)
