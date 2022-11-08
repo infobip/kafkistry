@@ -4,7 +4,6 @@ import com.infobip.kafkistry.api.BackgroundIssuesApi
 import com.infobip.kafkistry.api.BuildInfoApi
 import com.infobip.kafkistry.api.ScrapingStatusApi
 import com.infobip.kafkistry.api.WebSessionsApi
-import com.infobip.kafkistry.service.sortedByValueDescending
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.ABOUT
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.BACKGROUND_JOBS
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.BUILD_INFO
