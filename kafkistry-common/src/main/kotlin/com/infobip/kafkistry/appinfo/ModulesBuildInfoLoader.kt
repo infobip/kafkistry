@@ -34,6 +34,6 @@ class ModulesBuildInfoLoader {
                 log.warn("Failed to load module build info from '{}'", resource, ex)
                 null
             }
-        }
+        }.sortedByDescending { it.git.build.time }
     }
 }
