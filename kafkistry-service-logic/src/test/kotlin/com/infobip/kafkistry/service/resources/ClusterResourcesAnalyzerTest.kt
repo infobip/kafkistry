@@ -25,7 +25,6 @@ import io.kotlintest.mock.mock
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import java.util.*
 
 internal class ClusterResourcesAnalyzerTest {
 
@@ -220,6 +219,34 @@ internal class ClusterResourcesAnalyzerTest {
     }
 
     @Test
+    fun `test missing topic`() {
+        val cluster = newCluster("myCluster")
+        val topics = listOf(
+            newTopic(
+                name = "missingTopic",
+                properties = TopicProperties(3, 2),
+                config = mapOf("retention.bytes" to "40000"),
+            ),
+        )
+        mockClusterRegistry(cluster)
+        mockTopicsRegistry(topics)
+        mockClusterState(cluster.newState(numBrokers = 3))  //no existing topic
+        mockReplicas(cluster.identifier, emptyList())   //no existing topic replicas
+        mockDiskMetrics(cluster.identifier, 3, 10_000_000, 5_000_000)
+        val usage = analyzer.clusterDiskUsage("myCluster")
+        assertThat(usage.combined.usage).isEqualTo(
+            BrokerDiskUsage.ZERO.copy(
+                replicasCount = 3 * 2,
+                totalUsedBytes = 0,
+                boundedReplicasCount = 3 * 2,
+                boundedSizePossibleUsedBytes = 6 * 40_000L,
+                totalCapacityBytes = 30_000_000,
+                freeCapacityBytes = 15_000_000,
+            )
+        )
+    }
+
+    @Test
     fun `test dry run adding tag which implies new topic`() {
         val cluster = newCluster("myCluster")
         val topic = newTopic(
@@ -245,7 +272,7 @@ internal class ClusterResourcesAnalyzerTest {
         assertThat(usage.combined.usage).isEqualTo(
             BrokerDiskUsage.ZERO.copy(
                 replicasCount = 20,
-                totalUsedBytes = 20 * 10_000L,
+                totalUsedBytes = 0L,
                 boundedReplicasCount = 20,
                 boundedSizePossibleUsedBytes = 20 * 10_000L,
                 totalCapacityBytes = 2_000_000,

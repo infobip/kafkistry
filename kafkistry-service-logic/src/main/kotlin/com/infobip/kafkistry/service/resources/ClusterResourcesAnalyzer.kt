@@ -73,7 +73,7 @@ class ClusterResourcesAnalyzer(
             .mapValues { (brokerId, topicsDisks) ->
                 val usage = BrokerDiskUsage(
                     replicasCount = topicsDisks.sumOf { it.replicasCount },
-                    totalUsedBytes = topicsDisks.sumOf { it.actualUsedBytes ?: it.retentionBoundedBytes ?: 0L },
+                    totalUsedBytes = topicsDisks.sumOf { it.actualUsedBytes ?: 0L },
                     boundedReplicasCount = topicsDisks.sumOf { if (it.retentionBoundedBytes != null) it.replicasCount else 0 },
                     boundedSizePossibleUsedBytes = topicsDisks.sumOf { it.retentionBoundedBytes ?: 0L },
                     unboundedReplicasCount = topicsDisks.sumOf { if (it.unboundedUsageBytes != null && it.unboundedUsageBytes > 0) it.replicasCount else 0 },
@@ -112,14 +112,18 @@ class ClusterResourcesAnalyzer(
             .valueOrNull()
             ?.brokersMetrics
             .orEmpty()
+        val topicsExpectedToExist = topicStatuses.asSequence()
+            .filter {
+                topicsRegistry.findTopic(it.topicName)
+                    ?.presence?.needToBeOnCluster(clusterRef ?: clusterStatuses.cluster.ref())
+                    ?: false
+            }
+            .map { it.topicName }
+            .toSet()
         val topicNames = if (clusterRef != null) {
-            topicStatuses
-                .filter {
-                    topicsRegistry.findTopic(it.topicName)?.presence?.needToBeOnCluster(clusterRef) ?: false
-                }
-                .map { it.topicName }
+            topicsExpectedToExist
         } else {
-            replicaDirs.replicas.keys.distinct()
+            topicsExpectedToExist + replicaDirs.replicas.keys
         }
         val topicsDisks = topicNames.associateWith { topicName ->
             try {
