@@ -14,6 +14,14 @@ class DiskUsageIssuesChecker(
     private val clusterResourcesAnalyzer: ClusterResourcesAnalyzer,
 ) : ClusterIssueChecker {
 
+    companion object {
+        const val HAVING_ERRORS_ANALYZING_DISK_USAGE = "HAVING_ERRORS_ANALYZING_DISK_USAGE"
+        const val DISK_USAGE_SIGNIFICANT = "DISK_USAGE_SIGNIFICANT"
+        const val DISK_USAGE_HIGH = "DISK_USAGE_HIGH"
+        const val DISK_USAGE_OVERFLOW = "DISK_USAGE_OVERFLOW"
+        const val OVER_PROMISED_RETENTION = "OVER_PROMISED_RETENTION"
+    }
+
     override fun checkIssues(clusterIdentifier: KafkaClusterIdentifier): List<ClusterInspectIssue> {
         val clusterDiskUsage = clusterResourcesAnalyzer.clusterDiskUsage(clusterIdentifier)
         return buildList {
@@ -41,7 +49,7 @@ class DiskUsageIssuesChecker(
             }
             if (clusterDiskUsage.errors.isNotEmpty()) {
                 ClusterInspectIssue(
-                    name = "HAVING_ERRORS_ANALYZING_DISK_USAGE",
+                    name = HAVING_ERRORS_ANALYZING_DISK_USAGE,
                     violation = RuleViolation(
                         ruleClassName = checkerClassName,
                         severity = RuleViolation.Severity.CRITICAL,
@@ -67,7 +75,7 @@ class DiskUsageIssuesChecker(
         return when (portions.usageLevel) {
             UsageLevel.NONE, UsageLevel.LOW -> null
             UsageLevel.MEDIUM -> ProblematicDisk(
-                issueName = "DISK_USAGE_SIGNIFICANT",
+                issueName = DISK_USAGE_SIGNIFICANT,
                 usageBytes = usedBytes,
                 capacityBytes = capacityBytes,
                 portionOfCapacity = usedPercent,
@@ -75,7 +83,7 @@ class DiskUsageIssuesChecker(
                 doc = "Indicates that disk usage is reaching limits of total capacity available."
             )
             UsageLevel.HIGH -> ProblematicDisk(
-                issueName = "DISK_USAGE_HIGH",
+                issueName = DISK_USAGE_HIGH,
                 usageBytes = usedBytes,
                 capacityBytes = capacityBytes,
                 portionOfCapacity = usedPercent,
@@ -83,7 +91,7 @@ class DiskUsageIssuesChecker(
                 doc = "Indicates that used disk is almost full."
             )
             UsageLevel.OVERFLOW -> ProblematicDisk(
-                issueName = "DISK_USAGE_OVERFLOW",
+                issueName = DISK_USAGE_OVERFLOW,
                 usageBytes = usedBytes,
                 capacityBytes = capacityBytes,
                 portionOfCapacity = usedPercent,
@@ -100,7 +108,7 @@ class DiskUsageIssuesChecker(
             return null
         }
         return ProblematicDisk(
-            issueName = "OVER_PROMISED_RETENTION",
+            issueName = OVER_PROMISED_RETENTION,
             usageBytes = usage.boundedSizePossibleUsedBytes,
             capacityBytes = capacityBytes,
             portionOfCapacity = usedPercent,
