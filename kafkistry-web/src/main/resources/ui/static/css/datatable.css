@@ -11,3 +11,18 @@ span.highlight {
     width: 350px !important;
 }
 
+.dataTable tbody tr:has(.dt-control) {
+    cursor: pointer;
+}
+.dataTable tbody tr:not(.child-shown) .when-not-collapsed {
+    display: none;
+}
+.dataTable tbody tr.child-shown .when-collapsed {
+    display: none;
+}
+
+td.child-detail {
+    padding: 0 !important;
+}
+
+

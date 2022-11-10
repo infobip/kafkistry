@@ -14,11 +14,14 @@ function initDatatablesIn(container) {
 }
 
 function initDatatable(table) {
-    let sortingEnabled = !table.hasClass("datatable-no-sort");
-    table.DataTable({
+    let opts = extractDataTableOptions(table);
+    table.css("width", "100%"); //columns.adjust() after initialized while being hidden and then shown
+    let dTable = table.DataTable({
         pageLength: 10,
-        bSort : sortingEnabled,
+        bSort : opts.sortingEnabled,
         lengthMenu: [5, 10, 20, 200, 1000],
+        columnDefs: opts.columnDefs,
+        order: opts.orderDef.length === 0 ? undefined : opts.orderDef,
         oLanguage: {
             sLengthMenu: "Display _MENU_",
             sInfoEmpty: "No data to show",
@@ -31,22 +34,118 @@ function initDatatable(table) {
             element: 'span',
             className: 'highlight'
         },
-        stateSave: true,    //remember filter, sort, pagination when re-opening page
-        fnInitComplete: function () {
-            let dataTableId = table.attr("id");
-            if (dataTableId) {
-                $(".loading[data-table-id=" + dataTableId + "]").hide();
-            } else {
-                $(".loading").hide();
+        stateSave: opts.saveStateEnabled,    //remember filter, sort, pagination when re-opening page
+        initComplete: function () {
+            hideLoader(table);
+            let api = this.api();
+            if (opts.hasChildDetails) {
+                api.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
+                    let detailsHtml = opts.formatDetailsRow(api, rowIdx);
+                    this.child(detailsHtml, 'child-detail no-hover');
+                    registerAllInfoTooltipsIn(this.child());
+                } );
             }
             table.show();
+            api.columns.adjust();
             datatableInitialized(table.attr("id"));
         },
     });
+
+    if (opts.hasChildDetails) {
+        setupChildDetailsToggle(table, dTable);
+        setupChildDetailsSearchHighlight(dTable);
+    }
 }
 
 let initializedTables = [];
 let initializedTablesListeners = [];
+
+function extractDataTableOptions(table) {
+    let columnDefs = generateDatatableColumnDefs(table);
+    let detailsCellIndexes = columnDefs
+        .filter(function (def) { return def.detailsCol; })
+        .map(function (def) { return def.targets; });
+    return {
+        sortingEnabled: !table.hasClass("datatable-no-sort"),
+        saveStateEnabled: !table.hasClass("datatable-no-save-state"),
+        columnDefs: columnDefs,
+        orderDef: generateDatatableOrderDefs(table),
+        hasChildDetails: detailsCellIndexes.length > 0,
+        formatDetailsRow: function (dTable, rowIdx) {
+            return detailsCellIndexes
+                .map(function (cellIdx) {
+                    let cell = dTable.cell(rowIdx, cellIdx).node();
+                    return $(cell).html();
+                })
+                .join("\n");
+        },
+    };
+}
+
+function generateDatatableColumnDefs(table) {
+    return table.find("> thead > tr > th").map(function (index, th){
+        let detailsCol = $(th).hasClass("details-column");
+        let detailsControl = $(th).hasClass("details-toggle-column");
+        return {
+            className: (detailsControl ? "dt-control" : ""),
+            detailsCol: detailsCol,
+            targets: index,
+            visible: !detailsCol,
+            orderable: !$(th).hasClass("no-sort-column"),
+        }
+    }).get()
+}
+
+function generateDatatableOrderDefs(table) {
+    return table.find("> thead > tr > th").map(function (index, th){
+        let sortAsc = $(th).hasClass("default-sort-asc");
+        let sortDsc = $(th).hasClass("default-sort-dsc");
+        if (sortAsc) {
+            return [index, "asc"];
+        } else if (sortDsc) {
+            return [index, "dsc"];
+        }
+        return null;
+    }).get().filter(function (order) {
+        return order != null;
+    })
+}
+
+function hideLoader(table) {
+    let dataTableId = table.attr("id");
+    if (dataTableId) {
+        $(".loading[data-table-id=" + dataTableId + "]").hide();
+    } else {
+        $(".loading").hide();
+    }
+}
+
+function setupChildDetailsToggle(table, dTable) {
+    table.find('tbody').on('click', 'tr', function () {
+        let tr = $(this).closest('tr');
+        let row = dTable.row(tr);
+        if (row.child.isShown()) {
+            row.child.hide();
+            tr.removeClass('child-shown');
+        }
+        else {
+            row.child.show();
+            let markOptions = dTable.init().mark;
+            row.child().unmark(markOptions).mark(dTable.search(), markOptions);
+            tr.addClass('child-shown');
+        }
+    });
+}
+
+function setupChildDetailsSearchHighlight(dTable) {
+    dTable.on( 'search.dt', function () {
+        let markOptions = dTable.init().mark;
+        let searchQuery = dTable.search();
+        dTable.rows('.child-shown').every( function ( rowIdx, tableLoop, rowLoop ) {
+            this.child().unmark(markOptions).mark(searchQuery, markOptions);
+        } );
+    } );
+}
 
 function datatableInitialized(tableId) {
     initializedTables.push(tableId);
@@ -72,7 +171,7 @@ function whenDatatableInitialized(tableId, callback) {
 function urlHashSearch() {
     if(!window.location.hash)
         return null
-    let hash = window.location.hash.substring(1);
+    let hash = decodeURIComponent(window.location.hash.substring(1));
     let separatorAt = hash.indexOf("|");
     if (separatorAt === -1) {
         return {search: hash};
