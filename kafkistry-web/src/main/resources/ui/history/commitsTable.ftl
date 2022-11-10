@@ -4,11 +4,13 @@
 <#-- @ftlvariable name="gitEmbeddedBrowse"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="jiraBaseUrl"  type="java.lang.String" -->
 
+<#-- @ftlvariable name="datatableId"  type="java.lang.String" -->
 <#-- @ftlvariable name="useDatatable"  type="java.lang.Boolean" -->
 
 <#import "../common/util.ftl" as util>
 
 <table class="table table-bordered m-0 <#if useDatatable>datatable datatable-no-sort</#if>"
+        <#if useDatatable && (datatableId??)>id="${datatableId}"</#if>
        <#if useDatatable>style="display: none;"</#if>>
     <thead class="thead-dark">
     <tr>

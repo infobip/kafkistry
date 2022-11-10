@@ -29,6 +29,7 @@
         </div>
 
         <div class="card-body pl-0 pr-0">
+            <#assign datatableId = "commits-table">
             <#include "../common/loading.ftl">
             <#assign useDatatable = true>
             <#include "commitsTable.ftl">
