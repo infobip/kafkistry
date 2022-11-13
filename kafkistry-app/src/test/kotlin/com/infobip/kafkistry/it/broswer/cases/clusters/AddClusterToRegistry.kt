@@ -26,7 +26,7 @@ abstract class AddClusterToRegistry(contextSupplier: () -> Context) : UITestCase
         browser.findElementById("connection").sendKeys(kafkaConnection)
         browser.findElementById("test-btn").click()
 
-        await("to test connection completes", timeoutSecs = 10) {
+        await("to test connection completes") {
             assertThat(browser.findElementByCssSelector("input[name=clusterIdentifier]"))
                     .extracting { it.isDisplayed }
                     .isEqualTo(true)
@@ -58,7 +58,7 @@ abstract class AddClusterToRegistry(contextSupplier: () -> Context) : UITestCase
         browser.findElementById("connection").sendKeys("not.kafka:1234")
         browser.findElementById("test-btn").click()
 
-        await("to test connection fails", timeoutSecs = 10) {
+        await("to test connection fails") {
             browser.assertPageText().contains("Connection test failed", "KafkaException")
         }
     }

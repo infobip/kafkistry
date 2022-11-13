@@ -70,7 +70,7 @@ abstract class UITestCase(
         }
     }
 
-    fun await(what: String? = null, timeoutSecs: Int = 5, assertCheck: () -> Unit) {
+    fun await(what: String? = null, timeoutSecs: Int = 15, assertCheck: () -> Unit) {
         Awaitility.await(what)
                 .atMost(timeoutSecs.toLong(), TimeUnit.SECONDS)
                 .untilAsserted(assertCheck)

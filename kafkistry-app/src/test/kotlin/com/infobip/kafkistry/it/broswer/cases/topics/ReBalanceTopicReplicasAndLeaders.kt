@@ -87,8 +87,7 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
             )
         }
 
-        //wait for sync on new replicas
-        await(timeoutSecs = 15) {
+        await("wait for sync on new replicas") {
             browser.findElementWithText("Execute verify re-assignments").scrollIntoView().click()
             await {
                 browser.assertPageText().contains("Verified")
@@ -107,7 +106,7 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
 
         browser.assertPageText().contains("NEEDS_LEADER_ELECTION")
         browser.findElementById("run-preferred-replica-election-btn").scrollIntoView().click()
-        await(timeoutSecs = 10) {
+        await("for election completion") {
             browser.assertPageText().contains("Elections completed")
         }
 
