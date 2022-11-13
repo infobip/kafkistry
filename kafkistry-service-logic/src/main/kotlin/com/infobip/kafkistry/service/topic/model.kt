@@ -74,6 +74,8 @@ data class TopicClusterStatus(
     }
 }
 
+fun TopicClusterStatus.clusterRef() = ClusterRef(clusterIdentifier, clusterTags)
+
 data class ValueInspection(
     val valid: Boolean,
     val currentValue: String?,
