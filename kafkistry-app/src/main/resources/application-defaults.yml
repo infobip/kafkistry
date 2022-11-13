@@ -138,11 +138,12 @@ app.kafka:
     client.id: "kafkistry"
   cluster-concurrency: ${CLUSTER_POOL_CONCURRENCY_PER_CLUSTER:30}
 
-logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-logging.level.org.apache.kafka.common.utils.AppInfoParser: ERROR
-logging.level.org.apache.kafka.clients.admin.AdminClientConfig: WARN
-logging.level.org.apache.kafka.clients.consumer.ConsumerConfig: WARN
-logging.level.org.apache.kafka.clients.Metadata: WARN
+logging.level:
+  org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+  org.apache.kafka.common.utils.AppInfoParser: ERROR
+  org.apache.kafka.clients.admin.AdminClientConfig: WARN
+  org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+  org.apache.kafka.clients.Metadata: WARN
 
 spring.autoconfigure.exclude:
   - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
