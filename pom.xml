@@ -53,6 +53,7 @@
         <module>kafkistry-sql</module>
         <module>kafkistry-prometheus-metrics-export</module>
         <module>kafkistry-web-api</module>
+        <module>kafkistry-autopilot</module>
         <module>kafkistry-web</module>
         <module>kafkistry-auditing</module>
         <module>kafkistry-app</module>

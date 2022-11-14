@@ -34,7 +34,10 @@ class TestDirsPathInitializer : ApplicationContextInitializer<ConfigurableApplic
         } else {
             "LOCAL_GIT_DIR"
         }
-        val allDirProps = listOf(repositoryDirProp, "SQLITE_DB_DIR", "RECORD_ANALYZER_STORAGE_DIR")
+        val allDirProps = listOf(repositoryDirProp)
+            .plus("SQLITE_DB_DIR")
+            .plus("RECORD_ANALYZER_STORAGE_DIR")
+            .plus("AUTOPILOT_STORAGE_DIR")
             .plus(ctx.environment.getProperty("EXTRA_TEST_DIR_PROPERTIES")?.split(",").orEmpty())
             .associateWith { newTestFolder(it) }
         ctx.environment.propertySources.addFirst(MapPropertySource("test-dirs", allDirProps))
