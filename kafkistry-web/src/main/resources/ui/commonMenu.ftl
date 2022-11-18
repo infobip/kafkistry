@@ -43,6 +43,9 @@
         <a id="nav-consumer-groups" class="nav-link" href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}">Consumer groups<span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
+        <a id="nav-autopilot" class="nav-link" href="${appUrl.autopilot().showAutopilotPage()}">Autopilot<span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
         <a id="nav-consume" class="nav-link" href="${appUrl.consumeRecords().showConsumePage()}">Consume<span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">

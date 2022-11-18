@@ -138,4 +138,19 @@ class ExistingValuesService(
         )
     }
 
+    fun allExistingTopics(): List<TopicName> {
+        val topics = topicsRegistry.listTopics()
+        val clusterStates = kafkaClustersStateProvider.listAllLatestClusterStates()
+        return allTopics(topics, clusterStates)
+    }
+
+    fun allExistingConsumerGroups(): List<ConsumerGroupId> {
+        val consumersGroupsStates = consumersGroupsProvider.listAllLatestStates()
+        return allConsumerGroups(consumersGroupsStates)
+    }
+
+    fun allExistingClusterRefs(): List<ClusterRef> {
+        return clustersRegistry.listClustersRefs()
+    }
+
 }

@@ -5,6 +5,7 @@ import com.infobip.kafkistry.api.ClustersApi
 import com.infobip.kafkistry.api.InspectApi
 import com.infobip.kafkistry.api.TopicsApi
 import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.it.broswer.cases.autopilot.AutopilotCreateTopic
 import com.infobip.kafkistry.it.broswer.cases.clusters.AddClusterToRegistry
 import com.infobip.kafkistry.it.broswer.cases.clusters.RemoveClusterFromRegistry
 import com.infobip.kafkistry.it.broswer.cases.sql.PerformSqlQuery
@@ -199,5 +200,8 @@ class BrowserItTestSuite {
 
     @Nested
     inner class PerformSqlQueryTest : PerformSqlQuery({ context() })
+
+    @Nested
+    inner class AutopilotUiTest : AutopilotCreateTopic({ context() })
 
 }

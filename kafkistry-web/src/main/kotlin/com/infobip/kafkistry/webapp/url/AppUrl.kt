@@ -4,6 +4,7 @@ import com.infobip.kafkistry.webapp.WebHttpProperties
 import com.infobip.kafkistry.webapp.menu.MenuItem
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.ABOUT
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS
+import com.infobip.kafkistry.webapp.url.AutopilotUrls.Companion.AUTOPILOT
 import com.infobip.kafkistry.webapp.url.ClustersManagementUrls.Companion.CLUSTERS_MANAGEMENT
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS
 import com.infobip.kafkistry.webapp.url.CompareUrls.Companion.COMPARE
@@ -42,6 +43,7 @@ class AppUrl(
     private val recordsStructure = RecordsStructureUrls("$base$RECORDS_STRUCTURE")
     private val quotas = QuotasUrls("$base$QUOTAS")
     private val kStream = KStreamUrls("$base$KSTREAM_APPS")
+    private val autopilot = AutopilotUrls("$base$AUTOPILOT")
     private val extraUrls: MutableMap<String, BaseUrls> = ConcurrentHashMap()
 
     fun basePath() = base
@@ -62,6 +64,7 @@ class AppUrl(
     fun recordsStructure() = recordsStructure
     fun quotas() = quotas
     fun kStream() = kStream
+    fun autopilot() = autopilot
 
     fun menuItem(menuItem: MenuItem): String = basePath() + menuItem.urlPath
 

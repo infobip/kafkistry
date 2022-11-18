@@ -9,6 +9,10 @@ app:
       type: NONE
   http:
     root-path: "/kafkistry"
+  autopilot:
+    cycle:
+      after-startup-delay-ms: 0
 
+AUTOPILOT_ENABLED: false
 HTTP_REQUESTS_LOGGING_ENABLED: true
 

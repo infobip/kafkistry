@@ -101,6 +101,11 @@ app:
         enabled: ${ACL_GROUP_CONFLICT_ENABLED:true}
       transactional-ids:
         enabled: ${ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED:true}
+  autopilot:
+    actions:
+      enabled: ${AUTOPILOT_ENABLED:false}
+    repository:
+      storage-dir: ${AUTOPILOT_STORAGE_DIR:kafkistry/autopilot}
 
 app.repository:
   git:

@@ -48,6 +48,7 @@
  - [Cluster inspection](#cluster-inspection)
  - [SQL querying - SQLite](#sql-metadata-querying---sqlite)
    + [ClickHouseDB-like API](#clickhousedb-like-rest-api)
+ - [Autopilot](#autopilot)
  - [Slack integration](#slack-integration---auditing)
  - [Jira integration](#jira-integration)
  - [Miscellaneous UI Settings](#miscellaneous-ui-settings)
@@ -1196,7 +1197,7 @@ where value is list of fully qualified class names to disable/exclude from evalu
 ### Custom cluster-level issue checkers
 
 Custom checker can be implemented via interface [ClusterIssueChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterIssueChecker.kt)
-and being picked up by Spring Framework as bean. (see more on [Writing custom plugins](#writing-custom-plugins)v)
+and being picked up by Spring Framework as bean. (see more on [Writing custom plugins](#writing-custom-plugins))
 
 
 ## SQL metadata querying - SQLite
@@ -1256,6 +1257,57 @@ This endpoint serves as integration adapter for other tools such as Grafana or R
      * Url: `http://<your-kr-host>:8080/<your-http-root-path>/api/sql/click-house`
      * Username and password can be blank when Kafkistry is deployed with `SQL_CLICKHOUSE_OPEN_SECURITY: true`
      * Database: `kr`
+
+
+
+## Autopilot
+
+Autopilot is functionality that Kafkistry performs some actions on Kafka clusters on its own without being externally
+triggered by user through UI or API call.
+
+There are various aut actions implemented, for example:
+ - `CreateMissingTopicAction` - will be triggered immediately when autopilot detects that topic should exist but it doesn't exist on kafka
+ - `DeleteUnwantdACLAction` - will be triggered immediately when autopilot detects that some existing ACL rule shouldn't exist
+ - _..._
+
+### WARNING / disclaimer
+
+Autopilot is _beta_ feature, and it's recommended to be **disabled**. Reason is that we need to gain confidence 
+in correctness of action being blocked checkers. Even though, thr are multiple checkers in place there is still possibility
+that something is overlooked and that autopilot will perform some action even though it should wait. 
+(for example: new topic shouldn't be created if some kafka broker is in maintenance)
+
+If you want to **enable** autopilot, it's recommended to do so only if your state on cluster exactly matches whatever is
+defined in Kafkistry's repository. Otherwise, autopilot might start to create/delete/alter many things.
+
+### Configuration options
+
+| Property                                                                   | Default               | Description                                                                                                                                                                                                                         |
+|----------------------------------------------------------------------------|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `AUTOPILOT_ENABLED`                                                        | `false`               | Enable/disable all autopilot actions. When `false` no actions will be executed, when `true` other filters may apply.                                                                                                                |
+| `app.autopilot.actions.action-type.enabled-classes`                        | _all_                 | List of **enabled** implementations of [AutopilotAction](kafkistry-autopilot/src/main/kotlin/com/infobip/kafkistry/autopilot/binding/model.kt) class names. When _empty_, any action is enabled.                                    |
+| `app.autopilot.actions.action-type.disabled-classes`                       | _none_                | List of **disabled** implementations of [AutopilotAction](kafkistry-autopilot/src/main/kotlin/com/infobip/kafkistry/autopilot/binding/model.kt) class names. When _empty_, any action is enabled.                                   |
+| `app.autopilot.actions.target-type.enabled-values`                         | _all_                 | List of **enabled** target types for particular action. Known target types are: [`TOPIC`, `ACL`]. When _empty_, then any target type is enabled.                                                                                    |
+| `app.autopilot.actions.target-type.disabled-values`                        | _none_                | List of **disabled** target types for particular action. Known target types are: [`TOPIC`, `ACL`]. When _empty_, then any target type is enabled.                                                                                   |
+| `app.autopilot.actions.binding-type.enabled-classes`                       | _all_                 | List of **enabled** implementations of [AutopilotBinding](kafkistry-autopilot/src/main/kotlin/com/infobip/kafkistry/autopilot/binding/AutopilotBinding.kt) class names. When _empty_, actions coming from any binding are enabled.  |
+| `app.autopilot.actions.binding-type.disabled-classes`                      | _none_                | List of **disabled** implementations of [AutopilotBinding](kafkistry-autopilot/src/main/kotlin/com/infobip/kafkistry/autopilot/binding/AutopilotBinding.kt) class names. When _empty_, actions coming from any binding are enabled. |
+| `app.autopilot.actions.cluster.<...filter options...>`                     | _all_                 | Actions targeting which clusters to enable. See [filtering options](#filter-options)                                                                                                                                                |
+| `app.autopilot.actions.attribute.<...action attribute...>.enabled-values`  | _all_                 | List of **enabled** attribute values for actions that have attribute named `<...action attribute>`.                                                                                                                                 |
+| `app.autopilot.actions.attribute.<...action attribute...>.disabled-values` | _all_                 | List of **disabled** attribute values for actions that have attribute named `<...action attribute>`.                                                                                                                                |
+| `AUTOPILOT_STORAGE_DIR`                                                    | `kafkistry/autopilot` | Path to directory where Kafkistry will store information about Autopilot actions and their outcomes.                                                                                                                                |
+| `app.autopilot.repository.limits.max-count`                                | `1000`                | Maximal number of different action executions to keep in storage.                                                                                                                                                                   |
+| `app.autopilot.repository.limits.retention-ms`                             | `604800000` (7 days)  | Delete older action outcomes than specified retention.                                                                                                                                                                              |
+| `app.autopilot.repository.limits.max-per-action`                           | `50`                  | Maximal number of stored state changes per each different action.                                                                                                                                                                   |
+| `app.autopilot.cycle.repeat-delay-ms`                                      | `10000` _(10 sec)_    | How often to execute one cycle/round of autopilots discovery/checking/execution of actions.                                                                                                                                         |
+| `app.autopilot.cycle.after-startup-delay-ms`                               | `60000` _(1 min)_     | How long after application startup should autopilot start periodic executions.                                                                                                                                                      |
+| `app.autopilot.execution.attempt-delay-ms`                                 | `60000` _(1 min)_     | Once action is tried to execute, how long to wait for re-attempot in case of failure.                                                                                                                                               |
+
+### Writing custom actions
+
+Custom actions can be implemented via interface [AutopilotBinding](kafkistry-autopilot/src/main/kotlin/com/infobip/kafkistry/autopilot/binding/AutopilotBinding.kt).
+Such implementation needs to be exposed as Spring bean to b picked up by Autopilot, and it will be handled in the same way as built-in implementations.
+(see more on [Writing custom plugins](#writing-custom-plugins))
+
 
 
 
