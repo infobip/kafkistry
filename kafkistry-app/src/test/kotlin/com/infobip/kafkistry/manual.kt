@@ -392,7 +392,7 @@ class DataStateInitializer(
                         } else {
                             "this is not a json $it"
                         }
-                        ProducerRecord(name, partition, "key_$it", value)
+                        ProducerRecord(name, "key_$it", value)
                     }
                     .map { producer.send(it) }
                     .also { producer.flush() }

@@ -23,6 +23,7 @@
     <#include "../commonResources.ftl"/>
     <script src="static/consume/consume.js?ver=${lastCommit}"></script>
     <script src="static/consume/consumeFilter.js?ver=${lastCommit}"></script>
+    <script src="static/consume/consumeKeyPartition.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Consume</title>
     <meta name="current-nav" content="nav-consume"/>
 </head>
@@ -82,16 +83,6 @@
             <input type="number" value="${(numRecords?c)!'20'}" name="numRecords" class="form-control form-control-sm mr-sm-1">
         </label>
         <label>
-            Partitions:
-            <input value="${partitions!''}" name="partitions" placeholder="2,3,5,7... or blank"
-                   class="form-control form-control-sm mr-sm-1">
-        </label>
-        <label>
-            Not partitions:
-            <input value="${notPartitions!''}" name="notPartitions" placeholder="2,3,5,7,... or blank"
-                   class="form-control form-control-sm mr-sm-1">
-        </label>
-        <label>
             Max wait time ms:
             <input type="number" value="${(maxWaitMs?c)!'10000'}" name="maxWaitMs" class="form-control form-control-sm mr-sm-1">
         </label>
@@ -106,10 +97,72 @@
                 </option>
             </select>
         </label>
+        <div class="clearfix"></div>
+
+        <label>
+            Partitions:
+            <input value="${partitions!''}" name="partitions" placeholder="2,3,5,7... or blank"
+                   class="form-control form-control-sm mr-sm-1">
+        </label>
+        <label>
+            Not partitions:
+            <input value="${notPartitions!''}" name="notPartitions" placeholder="2,3,5,7,... or blank"
+                   class="form-control form-control-sm mr-sm-1">
+        </label>
+        <label>
+            <br/>
+            <button id="determine-partition-btn" class="btn btn-sm btn-outline-secondary" type="button">
+                Determine partition for key...
+            </button>
+        </label>
+
+
+        <div id="determine-partition-form" style="display: none;" class="bg-light rounded border p-1">
+            <div class="clearfix"></div>
+            <label>
+                Key:
+                <input value="" name="messageKey" placeholder="enter message key..." class="form-control form-control-sm">
+            </label>
+            <label>
+                Interpret key as:
+                <select name="keySerializer" class="form-control form-control-sm" title="Interpret key as:">
+                    <option value="STRING" selected>String</option>
+                    <option value="BASE64">Base 64</option>
+                    <option value="INTEGER">Integer</option>
+                    <option value="LONG">Long</option>
+                    <option value="FLOAT">Float</option>
+                    <option value="DOUBLE">Double</option>
+                    <option value="SHORT">Short</option>
+                </select>
+            </label>
+            <label>
+                <br/>
+                <#assign resolveTooltip>
+                    Resolve in which partition message with given key would be produced into.
+                    Resolution is determined by <code>hash</code><i>(murmur2)</i> of message key <code>%</code><i>(modulo)</i> number of partitions in topic.<br/>
+                    <strong>NOTE:</strong> this is correct only if:
+                    <ul>
+                        <li>message was produced with non-<code>null</code> key</li>
+                        <li>default built-in partitioner is used on producer side</li>
+                        <li>no new partitions were added to the topic</li>
+                    </ul>
+                </#assign>
+                <button id="resolve-partition-for-key-btn" class="btn btn-sm btn-outline-secondary" type="button">
+                    Resolve <@info.icon tooltip=resolveTooltip/>
+                </button>
+                &nbsp;
+                <span id="resolved-partition-for-key-result" class="text-monospace"></span>
+            </label>
+            <div class="clearfix"></div>
+            <#assign statusId = "resolve-partition">
+            <#include "../common/serverOpStatus.ftl">
+            <#assign statusId = "">
+        </div>
 
         <div class="clearfix"></div>
-        <label class="form-inline">
+        <label>
             <span class="mr-sm-1">Read starting from: </span>
+            <label class="form-inline">
             <select name="offsetType" class="form-control form-control-sm mr-sm-1">
                 <option value="LATEST" <#if ((offsetType.name())!'') == 'LATEST'>selected</#if>>Latest minus</option>
                 <option value="EARLIEST" <#if ((offsetType.name())!'') == 'EARLIEST'>selected</#if>>Earliest plus</option>
@@ -117,6 +170,7 @@
                 <option value="TIMESTAMP" <#if ((offsetType.name())!'') == 'TIMESTAMP'>selected</#if>>UTC timestamp milliseconds</option>
             </select>
             <input name="offset" type="number" value="${(offset?c)!'100'}" class="form-control form-control-sm mr-sm-1">
+            </label>
         </label>
 
         <div class="clearfix"></div>
