@@ -4,12 +4,14 @@ import com.infobip.kafkistry.autopilot.binding.AutopilotActionIdentifier
 import com.infobip.kafkistry.autopilot.repository.ActionFlow
 import com.infobip.kafkistry.autopilot.service.AutopilotService
 import com.infobip.kafkistry.autopilot.service.AutopilotStatus
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 @RequestMapping("\${app.http.root-path}/api/autopilot")
 class AutopilotApi(
     private val autopilotService: AutopilotService,

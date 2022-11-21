@@ -7,6 +7,7 @@ import com.infobip.kafkistry.events.EventPublisher
 import com.infobip.kafkistry.events.KafkistryEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 
@@ -25,6 +26,7 @@ private object ActionOutcomeMapper {
 }
 
 @Component
+@ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 class EventPublishingAutopilotReporter(
     private val eventPublisher: EventPublisher,
 ): AutopilotReporter {
@@ -38,6 +40,7 @@ class EventPublishingAutopilotReporter(
 }
 
 @Component
+@ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 class ActionOutcomeEventListener(
     @Lazy private val actionsRepository: ActionsRepository,
 ) : EventListener<AutopilotActionOutcomeEvent> {

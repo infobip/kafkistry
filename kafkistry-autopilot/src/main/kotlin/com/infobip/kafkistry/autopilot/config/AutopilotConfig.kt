@@ -7,6 +7,7 @@ import com.infobip.kafkistry.autopilot.fencing.LocalActionAcquireFencing
 import com.infobip.kafkistry.autopilot.repository.*
 import com.infobip.kafkistry.events.EventPublisher
 import org.springframework.beans.factory.ObjectProvider
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.context.annotation.Bean
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 @Configuration
+@ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 class AutopilotConfig {
 
     @Bean
@@ -52,6 +54,12 @@ class AutopilotConfig {
     @ConfigurationProperties("app.autopilot.cycle")
     fun autopilotCycle() = ActionsCycleProperties()
 
+}
+
+@Component
+@ConfigurationProperties("app.autopilot")
+class AutopilotRootProperties {
+    var enabled = true
 }
 
 @Component

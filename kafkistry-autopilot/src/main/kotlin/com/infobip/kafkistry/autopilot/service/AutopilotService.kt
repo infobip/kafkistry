@@ -8,9 +8,11 @@ import com.infobip.kafkistry.autopilot.enabled.AutopilotEnabledFilterProperties
 import com.infobip.kafkistry.autopilot.repository.ActionFlow
 import com.infobip.kafkistry.autopilot.repository.ActionsRepository
 import com.infobip.kafkistry.service.KafkistryIntegrityException
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service
+@ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 class AutopilotService(
     private val actionsRepository: ActionsRepository,
     private val cycleProperties: ActionsCycleProperties,

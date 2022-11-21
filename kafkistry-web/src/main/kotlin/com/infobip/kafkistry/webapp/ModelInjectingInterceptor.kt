@@ -5,6 +5,7 @@ import freemarker.ext.beans.BeansWrapper
 import freemarker.template.Configuration
 import com.infobip.kafkistry.api.BackgroundIssuesApi
 import com.infobip.kafkistry.appinfo.ModulesBuildInfoLoader
+import com.infobip.kafkistry.autopilot.config.AutopilotRootProperties
 import com.infobip.kafkistry.repository.config.GitBrowseProperties
 import com.infobip.kafkistry.repository.config.GitRepositoriesProperties
 import com.infobip.kafkistry.hostname.HostnameResolver
@@ -81,6 +82,7 @@ class PropertiesInjectingInterceptor(
     private val issuesApi: BackgroundIssuesApi,
     private val hostnameResolver: HostnameResolver,
     private val securityProperties: WebSecurityProperties,
+    private val autopilotProperties: AutopilotRootProperties,
     private val gitRepositoriesProperties: GitRepositoriesProperties?,
     private val gitBrowseProperties: GitBrowseProperties?,
     private val webUIProperties: WebUIProperties,
@@ -111,6 +113,7 @@ class PropertiesInjectingInterceptor(
                 addObject("gitCommitBaseUrl", appUrl.git().showCommit(""))
                 addObject("gitEmbeddedBrowse", true)
             }
+            addObject("autopilotEnabled", autopilotProperties.enabled)
             addObject("gitStorageEnabled", gitRepositoriesProperties?.enabled ?: false)
             addObject("securityEnabled", securityProperties.enabled)
             addObject("backgroundJobIssueGroups", issuesApi.currentGroupedIssues())

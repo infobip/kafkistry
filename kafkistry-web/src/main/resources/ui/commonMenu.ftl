@@ -2,6 +2,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="user"  type="com.infobip.kafkistry.webapp.security.User" -->
 <#-- @ftlvariable name="_csrf" type="org.springframework.security.web.csrf.CsrfToken" -->
+<#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="securityEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="menuItems"  type="java.util.List<com.infobip.kafkistry.webapp.menu.MenuItem>" -->
@@ -42,9 +43,11 @@
       <li class="nav-item">
         <a id="nav-consumer-groups" class="nav-link" href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}">Consumer groups<span class="sr-only">(current)</span></a>
       </li>
-      <li class="nav-item">
-        <a id="nav-autopilot" class="nav-link" href="${appUrl.autopilot().showAutopilotPage()}">Autopilot<span class="sr-only">(current)</span></a>
-      </li>
+      <#if autopilotEnabled>
+          <li class="nav-item">
+            <a id="nav-autopilot" class="nav-link" href="${appUrl.autopilot().showAutopilotPage()}">Autopilot<span class="sr-only">(current)</span></a>
+          </li>
+      </#if>
       <li class="nav-item">
         <a id="nav-consume" class="nav-link" href="${appUrl.consumeRecords().showConsumePage()}">Consume<span class="sr-only">(current)</span></a>
       </li>

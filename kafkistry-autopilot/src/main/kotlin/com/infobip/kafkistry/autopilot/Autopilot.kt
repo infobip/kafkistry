@@ -10,10 +10,12 @@ import com.infobip.kafkistry.autopilot.repository.ActionsRepository
 import com.infobip.kafkistry.service.background.BackgroundJob
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import com.infobip.kafkistry.utils.deepToString
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 class Autopilot(
     private val bindings: List<AutopilotBinding<out AutopilotAction>>,
     private val enabledFilter: AutopilotEnabledFilter,
