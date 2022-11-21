@@ -13,6 +13,6 @@ app:
     cycle:
       after-startup-delay-ms: 0
 
-AUTOPILOT_ENABLED: false
+AUTOPILOT_ACTIONS_ENABLED: false
 HTTP_REQUESTS_LOGGING_ENABLED: true
 
