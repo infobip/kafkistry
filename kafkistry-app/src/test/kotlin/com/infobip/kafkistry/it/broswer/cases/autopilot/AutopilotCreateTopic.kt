@@ -34,7 +34,7 @@ abstract class AutopilotCreateTopic(contextSupplier: () -> Context) : UITestCase
         await("for auto-creation") {
             browser.navigate().refresh()
             await {
-                browser.assertPageText().contains("Autopilot actions")
+                browser.assertPageText().contains("Actions")
             }
             browser.assertPageText().contains("autopilot-missing-1", "SUCCESSFUL")
         }
