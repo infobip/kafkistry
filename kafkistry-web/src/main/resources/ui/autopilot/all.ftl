@@ -111,7 +111,7 @@
                 </#macro>
                 <thead class="thead-dark">
                 <tr>
-                    <th colspan="2" class="text-center">Enabled filter</th>
+                    <th colspan="2" class="text-center">Enabled actions filter</th>
                 </tr>
                 <tr>
                     <th>What</th>
@@ -141,7 +141,7 @@
                     <th>Allowed target type</th>
                     <td>
                         <@enablesDisabledValues
-                            what = "targt types"
+                            what = "target types"
                             enabledValues = autopilotStatus.enableFilter.targetType.enabledValues
                             disabledValues = autopilotStatus.enableFilter.targetType.disabledValues/>
                     </td>
