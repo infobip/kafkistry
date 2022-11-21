@@ -22,7 +22,11 @@ data class AclInspectionResultType(
         val SECURITY_DISABLED = AclInspectionResultType("SECURITY_DISABLED", WARNING, false, "Can't get ACLs fro kafka due to security/authorizer being disabled")
         val UNAVAILABLE = AclInspectionResultType("UNAVAILABLE", IGNORE, false,  NamedTypeDoc.UNAVAILABLE)
         val CONFLICT = AclInspectionResultType("CONFLICT", WARNING, false, "ACL rule is in conflict/clash with another ACL rule")
+        val DETACHED = AclInspectionResultType("DETACHED", WARNING, false, "ACL rule that references a resource that doesn't exist (ok for new consumer groups)")
     }
+
+    override fun toString(): String = "AclInspectionResultType($name)"
+
 }
 
 data class AclStatus(
