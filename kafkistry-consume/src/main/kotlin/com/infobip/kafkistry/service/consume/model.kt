@@ -123,4 +123,5 @@ data class PartitionReadStatus(
     val read: Long,
     val matching: Int,
     val reachedEnd: Boolean,
+    val remaining: Long,
 )

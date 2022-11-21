@@ -54,6 +54,11 @@
                         <#else>
                             <span class="badge badge-secondary">NO</span>
                         </#if>
+                        <#if partitionStatus.remaining gt 0>
+                            <span title="Remaining to end" class="small">
+                                (${partitionStatus.remaining})
+                            </span>
+                        </#if>
                     </td>
                 </tr>
             </#list>

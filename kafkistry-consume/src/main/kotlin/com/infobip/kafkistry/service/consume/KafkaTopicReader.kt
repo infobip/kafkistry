@@ -163,18 +163,21 @@ class KafkaTopicReader(
             reachedEnd = endOffsets.all { position(it.key) >= it.value },
             partitions = initialPositions.mapValues { (partition, offset) ->
                 val stats = partitionsReadStatuses[partition]
+                val endOffset = endOffsets[TopicPartition(topicName, partition)] ?: 0L
                 if (stats != null) {
                     PartitionReadStatus(
                         startedAt = stats.first,
                         endedAt = stats.last + 1,
                         read = stats.last - stats.first + 1,
                         matching = stats.matching,
-                        reachedEnd = stats.last + 1 >= (endOffsets[TopicPartition(topicName, partition)] ?: 0L)
+                        reachedEnd = stats.last + 1 >= endOffset,
+                        remaining = (endOffset - stats.last - 1).coerceAtLeast(0),
                     )
                 } else {
-                    val reachedEnd = offset >= (endOffsets[TopicPartition(topicName, partition)] ?: 0L)
                     PartitionReadStatus(
-                        startedAt = offset, endedAt = offset, read = 0, matching = 0, reachedEnd = reachedEnd
+                        startedAt = offset, endedAt = offset, read = 0, matching = 0,
+                        reachedEnd = offset >= endOffset,
+                        remaining = (endOffset - offset).coerceAtLeast(0),
                     )
                 }
             },
