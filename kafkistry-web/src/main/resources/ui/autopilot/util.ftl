@@ -8,6 +8,7 @@
         <#case "DISABLED">
             <#assign badgeClass = "badge-secondary">
             <#break>
+        <#case "CLUSTER_UNSTABLE">
         <#case "BLOCKED">
             <#assign badgeClass = "badge-warning">
             <#break>

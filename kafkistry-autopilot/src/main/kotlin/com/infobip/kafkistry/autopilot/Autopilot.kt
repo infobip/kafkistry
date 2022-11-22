@@ -3,10 +3,12 @@ package com.infobip.kafkistry.autopilot
 import com.infobip.kafkistry.autopilot.binding.*
 import com.infobip.kafkistry.autopilot.enabled.AutopilotEnabledFilter
 import com.infobip.kafkistry.autopilot.fencing.ActionAcquireFencing
+import com.infobip.kafkistry.autopilot.fencing.ClusterStableFencing
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcome
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcome.OutcomeType.*
 import com.infobip.kafkistry.autopilot.reporting.AutopilotReporter
 import com.infobip.kafkistry.autopilot.repository.ActionsRepository
+import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.background.BackgroundJob
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import com.infobip.kafkistry.utils.deepToString
@@ -22,6 +24,7 @@ class Autopilot(
     private val checkingCache: CheckingCache,
     private val autopilotUser: AutopilotUser,
     private val backgroundIssues: BackgroundJobIssuesRegistry,
+    private val clusterStableFencing: ClusterStableFencing,
     private val fencing: ActionAcquireFencing,
     private val reporter: AutopilotReporter,
     private val repository: ActionsRepository,
@@ -36,9 +39,11 @@ class Autopilot(
         initialDelayString = "#{autopilotCycle.afterStartupDelayMs()}"
     )
     fun cycle() = backgroundIssues.doCapturingException(backgroundJob) {
-        val actions = bindings.flatMap { it.discover() }
+        clusterStableFencing.refresh()
+        val discoveredActions = bindings.flatMap { it.discover() }
+        val actions = discoveredActions.filterStableClustersActions()
         actions.forEach { it.handle().also(reporter::reportOutcome) }   //report ASAP as handing is completed
-        alreadyResolved(actions).forEach(reporter::reportOutcome)
+        alreadyResolved(discoveredActions).forEach(reporter::reportOutcome)
     }
 
     private fun <A : AutopilotAction> AutopilotBinding<A>.discover(): List<ActionCtx<A>> =
@@ -47,6 +52,20 @@ class Autopilot(
                 ActionCtx(it, this, enabledFilter.isEnabled(this, it), checkBlockers(it))
             }
         }
+
+    private fun ClusterRef.unstableStates(): List<ClusterUnstable> =
+        clusterStableFencing.recentUnstableStates(identifier)
+
+    private fun List<ActionCtx<out AutopilotAction>>.filterStableClustersActions(): List<ActionCtx<out AutopilotAction>> {
+        return filter {
+            val unstableStates = it.action.metadata.clusterRef?.unstableStates()
+                ?: return@filter true //action not specific to cluster
+            if (unstableStates.isNotEmpty()) {
+                reporter.reportOutcome(it.outcome(CLUSTER_UNSTABLE, unstable = unstableStates))
+            }
+            unstableStates.isEmpty()
+        }
+    }
 
     private fun <A : AutopilotAction> ActionCtx<A>.handle(): ActionOutcome {
         if (!enabled) {
@@ -72,6 +91,7 @@ class Autopilot(
         return repository.findAll().asSequence()
             .filter { it.actionIdentifier !in activeActions }
             .filter { it.outcomeType != SUCCESSFUL && it.outcomeType != RESOLVED }
+            .filter { it.metadata.clusterRef?.unstableStates().orEmpty().isEmpty() }
             .map {
                 ActionOutcome(
                     actionMetadata = it.metadata,
@@ -99,12 +119,14 @@ class Autopilot(
         fun outcome(
             outcomeType: ActionOutcome.OutcomeType,
             failedCause: Throwable? = null,
+            unstable: List<ClusterUnstable> = emptyList(),
         ) = ActionOutcome(
             actionMetadata = action.metadata,
             outcome = ActionOutcome.Outcome(
                 type = outcomeType,
                 sourceAutopilot = thisAutopilot(),
                 timestamp = System.currentTimeMillis(),
+                unstable = unstable,
                 blockers = blockers,
                 executionError = failedCause?.deepToString(),
             )

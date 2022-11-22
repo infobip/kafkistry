@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.autopilot.binding
 
+import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.Placeholder
 import kotlin.reflect.KClass
@@ -59,5 +60,11 @@ data class ActionMetadata(
 data class AutopilotActionBlocker(
     val message: String,
     val placeholders: Map<String, Placeholder> = emptyMap(),
+)
+
+data class ClusterUnstable(
+    val stateType: StateType,
+    val stateTypeName: String,
+    val timestamp: Long,
 )
 

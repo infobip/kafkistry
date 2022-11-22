@@ -263,6 +263,23 @@
                                             <@autopilotUtil.outcomeBadge outcomeType=outcomeItem.type/>
                                         </td>
                                         <td>
+                                            <#if outcomeItem.unstable?size gt 0>
+                                                <div class="alert alert-warning">
+                                                    <strong>Unstable cluster</strong>:<br/>
+                                                    <table class="table table-sm">
+                                                        <#list outcomeItem.unstable as unstable>
+                                                            <tr>
+                                                                <td title="Name of state provider/scraper">
+                                                                    <code>${unstable.stateTypeName}</code>
+                                                                </td>
+                                                                <td title="Last seen issue time, status: ${unstable.stateType.name()}">
+                                                                    <span class="small time" data-time="${unstable.timestamp?c}"></span>
+                                                                </td>
+                                                            </tr>
+                                                        </#list>
+                                                    </table>
+                                                </div>
+                                            </#if>
                                             <#list outcomeItem.blockers as blocker>
                                                 <div class="alert alert-warning">
                                                     <strong>Blocker</strong>:<br/>
@@ -276,7 +293,7 @@
                                                     <pre class="pre-message">${outcomeItem.executionError}</pre>
                                                 </div>
                                             </#if>
-                                            <#if outcomeItem.blockers?size == 0 && !(outcomeItem.executionError??)>
+                                            <#if outcomeItem.unstable?size == 0 && outcomeItem.blockers?size == 0 && !(outcomeItem.executionError??)>
                                                 ---
                                             </#if>
                                         </td>

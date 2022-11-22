@@ -2,10 +2,15 @@ package com.infobip.kafkistry.autopilot.config
 
 import com.hazelcast.core.HazelcastInstance
 import com.infobip.kafkistry.autopilot.fencing.ActionAcquireFencing
+import com.infobip.kafkistry.autopilot.fencing.ClusterStableFencing
 import com.infobip.kafkistry.autopilot.fencing.HazelcastSyncedActionAcquireFencing
 import com.infobip.kafkistry.autopilot.fencing.LocalActionAcquireFencing
 import com.infobip.kafkistry.autopilot.repository.*
 import com.infobip.kafkistry.events.EventPublisher
+import com.infobip.kafkistry.kafkastate.AbstractKafkaStateProvider
+import com.infobip.kafkistry.kafkastate.BrokerDiskMetricsStateProvider.Companion.BROKERS_DISK_METRICS
+import com.infobip.kafkistry.kafkastate.KafkaRecordSamplerProvider.Companion.RECORDS_SAMPLING
+import com.infobip.kafkistry.utils.FilterProperties
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -30,6 +35,12 @@ class AutopilotConfig {
             else -> HazelcastSyncedActionAcquireFencing(hazelcastInstance, fencingProperties.attemptDelayMs)
         }
     }
+
+    @Bean
+    fun clusterStableFencing(
+        stateProviders: List<AbstractKafkaStateProvider<*>>,
+        fencingProperties: ActionsFencingProperties,
+    ) = ClusterStableFencing(fencingProperties.clusterRequirements, stateProviders)
 
     @Bean
     fun actionsRepository(
@@ -66,6 +77,21 @@ class AutopilotRootProperties {
 @ConfigurationProperties("app.autopilot.execution")
 class ActionsFencingProperties {
     var attemptDelayMs = 60_000L
+
+    @NestedConfigurationProperty
+    var clusterRequirements = ClusterStableRequirementProperties()
+
+    class ClusterStableRequirementProperties {
+        var stableForLastMs = 10 * 60 * 1000L
+
+        @NestedConfigurationProperty
+        val usedStateProviders = FilterProperties().apply {
+            excluded = setOf(
+                BROKERS_DISK_METRICS,
+                RECORDS_SAMPLING,
+            )
+        }
+    }
 }
 
 @Component

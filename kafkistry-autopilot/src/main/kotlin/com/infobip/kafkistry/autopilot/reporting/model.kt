@@ -2,6 +2,7 @@ package com.infobip.kafkistry.autopilot.reporting
 
 import com.infobip.kafkistry.autopilot.binding.ActionMetadata
 import com.infobip.kafkistry.autopilot.binding.AutopilotActionBlocker
+import com.infobip.kafkistry.autopilot.binding.ClusterUnstable
 
 data class ActionOutcome(
     val actionMetadata: ActionMetadata,
@@ -11,6 +12,7 @@ data class ActionOutcome(
         val order: Int,
         val doc: String,
     ) {
+        CLUSTER_UNSTABLE(0, "Cluster is not fully stable recently."),
         DISABLED(1, "Particular action is disabled by Kafkistry's configuration. Won't attempt execution."),
         BLOCKED(2, "Pre-check phase detected some blockers. Won't attempt execution."),
         NOT_ACQUIRED(3, "Didn't acquire permission to execute action. Either previous acquiring did not yet expire or other instance of Kafkistry won acquirement race before. Won't attempt execution."),
@@ -23,6 +25,7 @@ data class ActionOutcome(
         val type: OutcomeType,
         val sourceAutopilot: String,
         val timestamp: Long,
+        val unstable: List<ClusterUnstable> = emptyList(),
         val blockers: List<AutopilotActionBlocker> = emptyList(),
         val executionError: String? = null,
     )

@@ -46,6 +46,7 @@ class InMemoryActionsRepository(
         val digit = Regex("\\d")
         fun ActionOutcome.Outcome.distinctionKey(): Any = listOf(
             type, sourceAutopilot,
+            unstable.map { it.stateTypeName }.toSet(),
             blockers.map { it.copy(placeholders = emptyMap()) },
             executionError?.replace(digit, "_"),
         )
