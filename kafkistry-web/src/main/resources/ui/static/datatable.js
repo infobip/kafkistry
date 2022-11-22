@@ -122,13 +122,18 @@ function hideLoader(table) {
 
 function setupChildDetailsToggle(table, dTable) {
     table.find('tbody').on('click', 'tr', function () {
-        let tr = $(this).closest('tr');
+        let tr = $(this);
+        if (tr.closest("table").get()[0] !== table.get()[0]) {
+            return; //ignore clicks in nested tables
+        }
+        if (tr.hasClass("child-detail")) {
+            return; //click on child row
+        }
         let row = dTable.row(tr);
         if (row.child.isShown()) {
             row.child.hide();
             tr.removeClass('child-shown');
-        }
-        else {
+        } else {
             row.child.show();
             let markOptions = dTable.init().mark;
             row.child().unmark(markOptions).mark(dTable.search(), markOptions);
