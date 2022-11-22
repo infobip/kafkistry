@@ -27,7 +27,11 @@ class KafkaClustersStateProvider(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
 ) {
 
-    override val stateTypeName = "cluster_state"
+    companion object {
+        const val CLUSTER_STATE = "cluster_state"
+    }
+
+    override val stateTypeName = CLUSTER_STATE
 
     fun getLatestClusterState(kafkaClusterIdentifier: KafkaClusterIdentifier) = getLatestState(kafkaClusterIdentifier)
     fun getLatestClusterStateValue(kafkaClusterIdentifier: KafkaClusterIdentifier) = getLatestStateValue(kafkaClusterIdentifier)

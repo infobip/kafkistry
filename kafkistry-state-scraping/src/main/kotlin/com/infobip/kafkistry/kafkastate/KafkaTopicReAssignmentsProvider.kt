@@ -20,7 +20,11 @@ class KafkaTopicReAssignmentsProvider(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
 ) {
 
-    override val stateTypeName = "topic_re_assignments"
+    companion object {
+        const val TOPIC_RE_ASSIGNMENTS = "topic_re_assignments"
+    }
+
+    override val stateTypeName = TOPIC_RE_ASSIGNMENTS
 
     override fun fetchState(kafkaCluster: KafkaCluster): TopicPartitionReAssignments {
         val topicPartitionReAssignments = clientProvider.doWithClient(kafkaCluster) {

@@ -20,7 +20,11 @@ class KafkaQuotasProvider(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
 ) {
 
-    override val stateTypeName = "client_quotas"
+    companion object {
+        const val CLIENT_QUOTAS = "client_quotas"
+    }
+
+    override val stateTypeName = CLIENT_QUOTAS
 
     override fun fetchState(kafkaCluster: KafkaCluster): ClusterQuotas {
         val quotas = clientProvider.doWithClient(kafkaCluster) {

@@ -21,10 +21,13 @@ class BrokerDiskMetricsStateProvider(
 ) : AbstractKafkaStateProvider<ClusterBrokerMetrics>(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry
 ) {
+    companion object {
+        const val BROKERS_DISK_METRICS = "brokers_disk_metrics"
+    }
 
-    override val stateTypeName = "brokers_disk_metrics"
+    override val stateTypeName = BROKERS_DISK_METRICS
+
     private val brokerDiskMetricsProviders = brokerDiskMetricsProviders.orElse(emptyList())
-
     override fun fetchState(kafkaCluster: KafkaCluster): ClusterBrokerMetrics {
         val clusterState = clustersStateProvider.getLatestClusterState(kafkaCluster.identifier)
         if (clusterState.stateType == StateType.UNKNOWN) {

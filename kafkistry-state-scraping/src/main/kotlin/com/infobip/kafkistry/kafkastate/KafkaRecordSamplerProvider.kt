@@ -26,8 +26,11 @@ class KafkaRecordSamplerProvider(
 ) : AbstractKafkaStateProvider<Unit>(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
 ) {
+    companion object {
+        const val RECORDS_SAMPLING = "records_sampling"
+    }
 
-    override val stateTypeName = "records_sampling"
+    override val stateTypeName = RECORDS_SAMPLING
 
     @Scheduled(
         fixedRateString = "#{poolingProperties.recordSamplingIntervalMs()}",

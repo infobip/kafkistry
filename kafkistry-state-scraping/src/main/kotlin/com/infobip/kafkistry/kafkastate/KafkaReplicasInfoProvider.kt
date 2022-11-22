@@ -22,7 +22,11 @@ class KafkaReplicasInfoProvider(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
 ) {
 
-    override val stateTypeName = "dir_replicas"
+    companion object {
+        const val DIR_REPLICAS = "dir_replicas"
+    }
+
+    override val stateTypeName = DIR_REPLICAS
 
     override fun fetchState(kafkaCluster: KafkaCluster): ReplicaDirs {
         val replicas = clientProvider.doWithClient(kafkaCluster) {

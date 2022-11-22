@@ -21,7 +21,11 @@ class KafkaConsumerGroupsProvider(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
 ) {
 
-    override val stateTypeName = "consumer_groups"
+    companion object {
+        const val CONSUMER_GROUPS = "consumer_groups"
+    }
+
+    override val stateTypeName = CONSUMER_GROUPS
 
     private val ignoreConsumerGroup = poolingProperties.ignoredConsumerPattern
         .takeIf { it.isNotEmpty() }

@@ -22,7 +22,11 @@ class KafkaTopicOffsetsProvider(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
 ) {
 
-    override val stateTypeName = "topic_offsets"
+    companion object {
+        const val TOPIC_OFFSETS = "topic_offsets"
+    }
+
+    override val stateTypeName = TOPIC_OFFSETS
 
     override fun fetchState(kafkaCluster: KafkaCluster): ClusterTopicOffsets {
         val topicNames = clientProvider.doWithClient(kafkaCluster) { it.listAllTopicNames().get() }
