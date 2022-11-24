@@ -1,5 +1,7 @@
 <#-- @ftlvariable name="recordsResult" type="com.infobip.kafkistry.service.consume.KafkaRecordsResult" -->
 
+<#import "../common/util.ftl" as util>
+
 <#assign records = recordsResult.records>
 
 <#if records?size == 0>
@@ -41,12 +43,37 @@
             </tr>
             </thead>
             <#list recordsResult.partitions as partition, partitionStatus>
-                <tr class="partition-read-status" data-partition="${partition?c}" data-ended-at-offset="${partitionStatus.endedAt?c}">
+                <tr class="partition-read-status" data-partition="${partition?c}" data-ended-at-offset="${partitionStatus.endedAtOffset?c}">
                     <td>${partition}</td>
                     <td>
-                        <code>${partitionStatus.startedAt}</code> &rarr; <code>${partitionStatus.endedAt}</code>
+                        <div class="row">
+                            <div class="col">
+                                <code title="Started at offset">${partitionStatus.startedAtOffset}</code>
+                                <#if partitionStatus.startedAtTimestamp??>
+                                    <br/>
+                                    <span class="small time" data-time="${partitionStatus.startedAtTimestamp?c}"
+                                          title="Started at timestamp"></span>
+                                </#if>
+                            </div>
+                            <div class="col-">&rarr;</div>
+                            <div class="col">
+                                <code title="Ended at offset">${partitionStatus.endedAtOffset}</code>
+                                <#if partitionStatus.endedAtTimestamp??>
+                                    <br/>
+                                    <span class="small time" data-time="${partitionStatus.endedAtTimestamp?c}"
+                                          title="Ended at timestamp"></span>
+                                </#if>
+                            </div>
+                        </div>
                     </td>
-                    <td>${partitionStatus.read}</td>
+                    <td>
+                        <span title="Number of records: endOffset-startOffset">${partitionStatus.read}</span>
+                        <#if partitionStatus.startedAtTimestamp?? && partitionStatus.endedAtTimestamp??>
+                            <br/>
+                            <#assign timeRange = partitionStatus.endedAtTimestamp - partitionStatus.startedAtTimestamp>
+                            <span class="small" title="Read time range: endTime - startTime">${util.prettyDuration(timeRange/1000.0)}</span>
+                        </#if>
+                    </td>
                     <td>${partitionStatus.matching}</td>
                     <td>
                         <#if partitionStatus.reachedEnd>

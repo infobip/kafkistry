@@ -45,7 +45,9 @@ interface ReadMonitor {
 
     data class PartitionStats(
         var first: Long,
+        var firstTimestamp: Long,
         var last: Long = first,
+        var lastTimestamp: Long = firstTimestamp,
         var matching: Int = 0,
     )
 }
@@ -63,13 +65,14 @@ class ReadMonitorImpl(
 
     override fun receivedRecord(record: ConsumerRecord<ByteArray, ByteArray>) {
         totalRecords.incrementAndGet()
-        val offsets = partitionOffsets(record.partition(), record.offset())
+        val offsets = partitionOffsets(record.partition(), record.offset(), record.timestamp())
         offsets.last = record.offset()
+        offsets.lastTimestamp = record.timestamp()
     }
 
     override fun gotFilteredRecord(record: KafkaRecord) {
         filteredRecords.incrementAndGet()
-        partitionOffsets(record.partition, record.offset).matching++
+        partitionOffsets(record.partition, record.offset, record.timestamp).matching++
     }
 
     override fun needToReadMore(): Boolean {
@@ -88,9 +91,9 @@ class ReadMonitorImpl(
 
     override fun partitionsReadStatus(): Map<Partition, ReadMonitor.PartitionStats> = partitionsOffsets.toMap()
 
-    private fun partitionOffsets(partition: Partition, offset: Long) =
+    private fun partitionOffsets(partition: Partition, offset: Long, timestamp: Long) =
         partitionsOffsets.computeIfAbsent(partition) {
-            ReadMonitor.PartitionStats(offset)
+            ReadMonitor.PartitionStats(first = offset, firstTimestamp = timestamp)
         }
 
     private fun timeExceeded()  = (System.currentTimeMillis() - startTime) > maxWaitTimeMs

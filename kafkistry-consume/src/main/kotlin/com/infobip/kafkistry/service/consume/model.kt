@@ -118,8 +118,10 @@ data class KafkaRecordsResult(
 )
 
 data class PartitionReadStatus(
-    val startedAt: Long,
-    val endedAt: Long,
+    val startedAtOffset: Long,
+    val startedAtTimestamp: Long?,
+    val endedAtOffset: Long,
+    val endedAtTimestamp: Long?,
     val read: Long,
     val matching: Int,
     val reachedEnd: Boolean,
