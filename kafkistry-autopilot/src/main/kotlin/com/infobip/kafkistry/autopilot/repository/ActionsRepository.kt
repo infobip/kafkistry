@@ -53,6 +53,14 @@ data class ActionFlow(
     val flow: List<ActionOutcome.Outcome>,
 )
 
+fun ActionOutcome.toActonFlow() = ActionFlow(
+    actionIdentifier = actionMetadata.actionIdentifier,
+    metadata = actionMetadata,
+    lastTimestamp = outcome.timestamp,
+    outcomeType = outcome.type,
+    flow = listOf(outcome),
+)
+
 /**
  * Extension of [ActionsRepository] which is capable of syncing with other instances/deployment of Kafkistry
  * (if there are any at all) during application startup.

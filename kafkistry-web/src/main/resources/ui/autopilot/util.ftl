@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 
 <#macro outcomeBadge outcomeType>
-<#-- @ftlvarable name="outcomeType" type="com.infobip.kafkistry.autopilot.reporting.ActionOutcome.OutcomeType" -->
+<#-- @ftlvariable name="outcomeType" type="com.infobip.kafkistry.autopilot.reporting.ActionOutcome.OutcomeType" -->
     <#import "../common/infoIcon.ftl" as info>
     <#assign badgeClass = "">
     <#switch outcomeType>
@@ -11,6 +11,9 @@
         <#case "CLUSTER_UNSTABLE">
         <#case "BLOCKED">
             <#assign badgeClass = "badge-warning">
+            <#break>
+        <#case "PENDING">
+            <#assign badgeClass = "badge-info">
             <#break>
         <#case "NOT_ACQUIRED">
             <#assign badgeClass = "badge-dark">
@@ -29,7 +32,7 @@
 </#macro>
 
 <#function resolveLink metadata>
-<#-- @ftlvarable name="metadata" type="com.infobip.kafkistry.autopilot.binding.ActionMetadata" -->
+<#-- @ftlvariable name="metadata" type="com.infobip.kafkistry.autopilot.binding.ActionMetadata" -->
     <#assign attributes = metadata.attributes>
     <#switch metadata.description.targetType>
         <#case "TOPIC">

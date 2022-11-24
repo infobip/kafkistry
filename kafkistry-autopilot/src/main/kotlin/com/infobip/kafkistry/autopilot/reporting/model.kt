@@ -15,10 +15,11 @@ data class ActionOutcome(
         CLUSTER_UNSTABLE(0, "Cluster is not fully stable recently."),
         DISABLED(1, "Particular action is disabled by Kafkistry's configuration. Won't attempt execution."),
         BLOCKED(2, "Pre-check phase detected some blockers. Won't attempt execution."),
-        NOT_ACQUIRED(3, "Didn't acquire permission to execute action. Either previous acquiring did not yet expire or other instance of Kafkistry won acquirement race before. Won't attempt execution."),
-        FAILED(4, "Action execution was attempted but resulted in failure."),
-        RESOLVED(5, "Action was resolved without execution. Either other Kafkistry performed action sooner, or something external resolved action, such as manual intervention."),
-        SUCCESSFUL(6, "Action was executed with success."),
+        PENDING(3, "Action is planned for execution, now waiting pending expire period."),
+        NOT_ACQUIRED(4, "Didn't acquire permission to execute action. Either previous acquiring did not yet expire or other instance of Kafkistry won acquirement race before. Won't attempt execution."),
+        FAILED(5, "Action execution was attempted but resulted in failure."),
+        RESOLVED(6, "Action was resolved without execution. Either other Kafkistry performed action sooner, or something external resolved action, such as manual intervention."),
+        SUCCESSFUL(7, "Action was executed with success."),
     }
 
     data class Outcome(

@@ -1,12 +1,14 @@
 package com.infobip.kafkistry.autopilot
 
 import com.infobip.kafkistry.autopilot.binding.*
+import com.infobip.kafkistry.autopilot.config.AutopilotRootProperties
 import com.infobip.kafkistry.autopilot.enabled.AutopilotEnabledFilter
 import com.infobip.kafkistry.autopilot.fencing.ActionAcquireFencing
 import com.infobip.kafkistry.autopilot.fencing.ClusterStableFencing
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcome
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcome.OutcomeType.*
 import com.infobip.kafkistry.autopilot.reporting.AutopilotReporter
+import com.infobip.kafkistry.autopilot.repository.ActionFlow
 import com.infobip.kafkistry.autopilot.repository.ActionsRepository
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.background.BackgroundJob
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Component
 @Component
 @ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 class Autopilot(
+    private val properties: AutopilotRootProperties,
     private val bindings: List<AutopilotBinding<out AutopilotAction>>,
     private val enabledFilter: AutopilotEnabledFilter,
     private val checkingCache: CheckingCache,
@@ -41,7 +44,12 @@ class Autopilot(
     fun cycle() = backgroundIssues.doCapturingException(backgroundJob) {
         clusterStableFencing.refresh()
         val discoveredActions = bindings.flatMap { it.discover() }
-        val actions = discoveredActions.filterStableClustersActions()
+        val actions = discoveredActions.asSequence()
+            .filter { it.checkEnabled() }
+            .filter { it.checkNoBlockers() }
+            .filter { it.checkClusterStable() }
+            .filter { it.checkPendingLongEnough() }
+            .toList()
         actions.forEach { it.handle().also(reporter::reportOutcome) }   //report ASAP as handing is completed
         alreadyResolved(discoveredActions).forEach(reporter::reportOutcome)
     }
@@ -49,32 +57,58 @@ class Autopilot(
     private fun <A : AutopilotAction> AutopilotBinding<A>.discover(): List<ActionCtx<A>> =
         checkingCache.withThreadLocalCache {
             actionsToProcess().map {
-                ActionCtx(it, this, enabledFilter.isEnabled(this, it), checkBlockers(it))
+                ActionCtx(
+                    action = it,
+                    binding = this,
+                    existingFlow = repository.find(it.actionIdentifier),
+                    enabled = enabledFilter.isEnabled(this, it),
+                    blockers = checkBlockers(it),
+                )
             }
         }
+
+    private fun ActionCtx<out AutopilotAction>.checkEnabled(): Boolean {
+        if (!enabled) reporter.reportOutcome(outcome(DISABLED))
+        return enabled
+    }
+
+    private fun ActionCtx<out AutopilotAction>.checkNoBlockers(): Boolean {
+        if (blockers.isNotEmpty()) reporter.reportOutcome(outcome(BLOCKED))
+        return blockers.isEmpty()
+    }
 
     private fun ClusterRef.unstableStates(): List<ClusterUnstable> =
         clusterStableFencing.recentUnstableStates(identifier)
 
-    private fun List<ActionCtx<out AutopilotAction>>.filterStableClustersActions(): List<ActionCtx<out AutopilotAction>> {
-        return filter {
-            val unstableStates = it.action.metadata.clusterRef?.unstableStates()
-                ?: return@filter true //action not specific to cluster
-            if (unstableStates.isNotEmpty()) {
-                reporter.reportOutcome(it.outcome(CLUSTER_UNSTABLE, unstable = unstableStates))
-            }
-            unstableStates.isEmpty()
+    private fun ActionCtx<out AutopilotAction>.checkClusterStable(): Boolean {
+        val unstableStates = action.metadata.clusterRef?.unstableStates()
+            ?: return true //action not specific to cluster
+        if (unstableStates.isNotEmpty()) {
+            reporter.reportOutcome(outcome(CLUSTER_UNSTABLE, unstable = unstableStates))
         }
+        return unstableStates.isEmpty()
+    }
+
+    private fun ActionCtx<out AutopilotAction>.checkPendingLongEnough(): Boolean {
+        val now = System.currentTimeMillis()
+        val pendingStart = existingFlow
+            ?.flow?.asSequence()
+            ?.filter { it.type == PENDING }
+            ?.minByOrNull { it.timestamp }
+            ?.timestamp
+        val pendingExpired = if (pendingStart != null) {
+            pendingStart < now - properties.pendingDelayMs
+        } else {
+            false
+        }
+        if (!pendingExpired) {
+            reporter.reportOutcome(outcome(PENDING))
+        }
+        return pendingExpired
     }
 
     private fun <A : AutopilotAction> ActionCtx<A>.handle(): ActionOutcome {
-        if (!enabled) {
-            return outcome(DISABLED)
-        }
-        if (blockers.isNotEmpty()) {
-            return outcome(BLOCKED)
-        }
-        val acquired = fencing.acquireActionExecution(action)
+        val acquired = fencing.acquireActionExecution(action) //this must happen right before execution
         if (!acquired) {
             return outcome(NOT_ACQUIRED)
         }
@@ -110,6 +144,7 @@ class Autopilot(
     private inner class ActionCtx<A : AutopilotAction>(
         val action: A,
         val binding: AutopilotBinding<A>,
+        val existingFlow: ActionFlow?,
         val enabled: Boolean,
         val blockers: List<AutopilotActionBlocker>,
     ) {

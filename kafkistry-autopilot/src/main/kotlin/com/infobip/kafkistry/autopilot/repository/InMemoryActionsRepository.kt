@@ -12,13 +12,7 @@ class InMemoryActionsRepository(
     private val all = ConcurrentHashMap<AutopilotActionIdentifier, ActionFlow>()
 
     override fun save(actionOutcome: ActionOutcome) {
-        val singularFlow = ActionFlow(
-            actionIdentifier = actionOutcome.actionMetadata.actionIdentifier,
-            metadata = actionOutcome.actionMetadata,
-            lastTimestamp = actionOutcome.outcome.timestamp,
-            outcomeType = actionOutcome.outcome.type,
-            flow = listOf(actionOutcome.outcome),
-        )
+        val singularFlow = actionOutcome.toActonFlow()
         save(singularFlow)
     }
 

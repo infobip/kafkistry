@@ -31,7 +31,15 @@ abstract class AutopilotCreateTopic(contextSupplier: () -> Context) : UITestCase
         await {
             assertThat(browser.currentUrl).endsWith("/autopilot")
         }
-        await("for auto-creation") {
+        await("for action to become pending") {
+            browser.navigate().refresh()
+            await {
+                browser.assertPageText().contains("Actions")
+            }
+            browser.assertPageText().contains("autopilot-missing-1", "PENDING")
+        }
+        Thread.sleep(10_000)
+        await("for pending action to complete") {
             browser.navigate().refresh()
             await {
                 browser.assertPageText().contains("Actions")
@@ -40,7 +48,7 @@ abstract class AutopilotCreateTopic(contextSupplier: () -> Context) : UITestCase
         }
         browser.findElementWithText("CreateMissingTopic").click()   //expand flow outcomes
         val hostname = appCtx.getBean(HostnameResolver::class.java).hostname
-        browser.assertPageText().contains("ago)", hostname)
+        browser.assertPageText().contains("ago)", hostname, "PENDING", "SUCCESSFUL")
     }
 
 }

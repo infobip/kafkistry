@@ -103,6 +103,7 @@ app:
         enabled: ${ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED:true}
   autopilot:
     enabled: ${AUTOPILOT_ENABLED:true}
+    pending-delay-ms: ${AUTOPILOT_PENDING_DELAY_MS:${CLUSTER_POOL_INTERVAL:10000}}
     actions:
       enabled: ${AUTOPILOT_ACTIONS_ENABLED:false}
     repository:

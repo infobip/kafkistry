@@ -71,6 +71,7 @@ class AutopilotConfig {
 @ConfigurationProperties("app.autopilot")
 class AutopilotRootProperties {
     var enabled = true
+    var pendingDelayMs = 20_000L
 }
 
 @Component
