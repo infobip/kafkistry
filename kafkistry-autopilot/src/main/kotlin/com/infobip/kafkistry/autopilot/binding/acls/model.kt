@@ -17,7 +17,7 @@ sealed interface AclAutopilotAction : AutopilotAction {
 
     override val metadata: ActionMetadata
         get() = ActionMetadata(
-            actionIdentifier = javaClass.name + ": " + aclStatus.rule.asString() + " @ " + clusterRef,
+            actionIdentifier = javaClass.name + ": " + aclStatus.rule.asString() + " @ " + clusterRef.identifier,
             description, clusterRef, mapOf(
                 "clusterIdentifier" to clusterRef.identifier,
                 "principal" to aclStatus.rule.principal,
