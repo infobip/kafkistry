@@ -6,8 +6,10 @@ import com.infobip.kafkistry.autopilot.reporting.ActionOutcome
 import java.util.concurrent.ConcurrentHashMap
 
 class InMemoryActionsRepository(
+    private val repeatWindowMs: Long,
     private val properties: ActionsRepositoryProperties.LimitsProperties,
 ) : ActionsRepository {
+
 
     private val all = ConcurrentHashMap<AutopilotActionIdentifier, ActionFlow>()
 
@@ -23,9 +25,15 @@ class InMemoryActionsRepository(
     }
 
     private infix fun ActionFlow.merge(newFlow: ActionFlow): ActionFlow {
+        val resultingFlow = when {
+            newFlow.lastTimestamp > lastTimestamp + repeatWindowMs -> newFlow
+            newFlow.outcomeType.order > outcomeType.order -> newFlow
+            newFlow.outcomeType == outcomeType -> maxOf(newFlow, this, Comparator.comparingLong { it.lastTimestamp })
+            else -> this
+        }
         return copy(
-            lastTimestamp = maxOf(lastTimestamp, newFlow.lastTimestamp),
-            outcomeType = maxOf(outcomeType, newFlow.outcomeType, Comparator.comparingInt { it.order }),
+            lastTimestamp = resultingFlow.lastTimestamp,
+            outcomeType = resultingFlow.outcomeType,
             flow = (flow + newFlow.flow).distinct().sortedBy { it.timestamp }.maybeCollapse(),
         )
     }

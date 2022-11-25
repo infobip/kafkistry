@@ -28,29 +28,33 @@ class AutopilotConfig {
     @Bean
     fun actionExecutionFencing(
         hazelcast: ObjectProvider<HazelcastInstance>,
-        fencingProperties: ActionsFencingProperties,
+        properties: AutopilotRootProperties,
     ): ActionAcquireFencing {
         return when (val hazelcastInstance = hazelcast.ifAvailable) {
-            null -> LocalActionAcquireFencing(fencingProperties.attemptDelayMs)
-            else -> HazelcastSyncedActionAcquireFencing(hazelcastInstance, fencingProperties.attemptDelayMs)
+            null -> LocalActionAcquireFencing(properties.attemptDelayMs)
+            else -> HazelcastSyncedActionAcquireFencing(hazelcastInstance, properties.attemptDelayMs)
         }
     }
 
     @Bean
     fun clusterStableFencing(
         stateProviders: List<AbstractKafkaStateProvider<*>>,
-        fencingProperties: ActionsFencingProperties,
-    ) = ClusterStableFencing(fencingProperties.clusterRequirements, stateProviders)
+        properties: AutopilotClusterStableRequirementProperties,
+    ) = ClusterStableFencing(properties, stateProviders)
 
     @Bean
     fun actionsRepository(
-        properties: ActionsRepositoryProperties,
+        properties: AutopilotRootProperties,
+        repositoryProperties: ActionsRepositoryProperties,
         eventPublisher: EventPublisher,
     ): EventInitializingActionsRepository {
         return EventInitializingActionsRepositoryImpl(
             delegate = DiskPersistedActionsRepository(
-                delegate = InMemoryActionsRepository(properties.limits),
-                storageDir = properties.storageDir,
+                delegate = InMemoryActionsRepository(
+                    repeatWindowMs = properties.attemptDelayMs,
+                    properties = repositoryProperties.limits,
+                ),
+                storageDir = repositoryProperties.storageDir,
             ),
             eventPublisher = eventPublisher,
         )
@@ -72,26 +76,21 @@ class AutopilotConfig {
 class AutopilotRootProperties {
     var enabled = true
     var pendingDelayMs = 20_000L
+    var attemptDelayMs = 60_000L
 }
 
 @Component
-@ConfigurationProperties("app.autopilot.execution")
-class ActionsFencingProperties {
-    var attemptDelayMs = 60_000L
+@ConfigurationProperties("app.autopilot.cluster-requirements")
+class AutopilotClusterStableRequirementProperties {
+
+    var stableForLastMs = 10 * 60 * 1000L
 
     @NestedConfigurationProperty
-    var clusterRequirements = ClusterStableRequirementProperties()
-
-    class ClusterStableRequirementProperties {
-        var stableForLastMs = 10 * 60 * 1000L
-
-        @NestedConfigurationProperty
-        val usedStateProviders = FilterProperties().apply {
-            excluded = setOf(
-                BROKERS_DISK_METRICS,
-                RECORDS_SAMPLING,
-            )
-        }
+    val usedStateProviders = FilterProperties().apply {
+        excluded = setOf(
+            BROKERS_DISK_METRICS,
+            RECORDS_SAMPLING,
+        )
     }
 }
 

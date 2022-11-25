@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.autopilot.fencing
 
-import com.infobip.kafkistry.autopilot.config.ActionsFencingProperties.ClusterStableRequirementProperties
+import com.infobip.kafkistry.autopilot.config.AutopilotClusterStableRequirementProperties
 import com.infobip.kafkistry.kafkastate.AbstractKafkaStateProvider
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.kafkastate.StateType
@@ -73,7 +73,7 @@ internal class ClusterStableFencingTest {
     }
 
     private fun newFencing(mocking: FencingMocker.() -> Unit = {}): ClusterStableFencing {
-        val properties = ClusterStableRequirementProperties()
+        val properties = AutopilotClusterStableRequirementProperties()
             .apply { stableForLastMs = 10_000L }
         val providers = mutableListOf<AbstractKafkaStateProvider<*>>()
         return ClusterStableFencing(properties, providers).apply {
@@ -83,11 +83,11 @@ internal class ClusterStableFencingTest {
 
     private class FencingMocker(
         private val fencing: ClusterStableFencing,
-        private val properties: ClusterStableRequirementProperties,
+        private val properties: AutopilotClusterStableRequirementProperties,
         private val providers: MutableList<AbstractKafkaStateProvider<*>>,
     ) {
 
-        fun properties(configurer: ClusterStableRequirementProperties.() -> Unit) {
+        fun properties(configurer: AutopilotClusterStableRequirementProperties.() -> Unit) {
             properties.apply(configurer)
         }
 

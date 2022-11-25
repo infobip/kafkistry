@@ -93,6 +93,8 @@ class Autopilot(
         val now = System.currentTimeMillis()
         val pendingStart = existingFlow
             ?.flow?.asSequence()
+            ?.sortedByDescending { it.timestamp }
+            ?.takeWhile { it.type !in setOf(SUCCESSFUL) }
             ?.filter { it.type == PENDING }
             ?.minByOrNull { it.timestamp }
             ?.timestamp

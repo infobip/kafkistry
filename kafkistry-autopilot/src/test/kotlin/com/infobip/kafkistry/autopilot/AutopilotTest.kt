@@ -37,7 +37,10 @@ class AutopilotTest {
         private val mockStableFencing = mock<ClusterStableFencing>()
 
         private val autopilot = Autopilot(
-            properties = AutopilotRootProperties().apply { pendingDelayMs = 5_000L },
+            properties = AutopilotRootProperties().apply {
+                pendingDelayMs = 5_000L
+                attemptDelayMs = 15_000L
+            },
             bindings = listOf(mockBinding),
             enabledFilter = mockFilter,
             checkingCache = CheckingCache(),

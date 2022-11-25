@@ -24,10 +24,11 @@ internal class ActionsRepositoryTest {
 
     private fun newRepo(
         dir: String? = null,
+        repeatWindow: Long = 60_000,
         properties: ActionsRepositoryProperties.LimitsProperties.() -> Unit = {},
     ): ActionsRepository {
         val limitsProperties = ActionsRepositoryProperties.LimitsProperties().apply(properties)
-        val inMemory = InMemoryActionsRepository(limitsProperties)
+        val inMemory = InMemoryActionsRepository(repeatWindow, limitsProperties)
         if (dir == null) {
             return inMemory
         }
@@ -132,7 +133,7 @@ internal class ActionsRepositoryTest {
                     ActionFlow(
                         actionIdentifier = "merge",
                         metadata = actionOutcome1.actionMetadata,
-                        lastTimestamp = actionOutcome3.outcome.timestamp,
+                        lastTimestamp = actionOutcome2.outcome.timestamp,
                         outcomeType = SUCCESSFUL,
                         flow = listOf(actionOutcome1.outcome, actionOutcome2.outcome, actionOutcome3.outcome),
                     )
@@ -156,7 +157,7 @@ internal class ActionsRepositoryTest {
                     ActionFlow(
                         actionIdentifier = "failing",
                         metadata = newOutcome("failing", FAILED).actionMetadata,
-                        lastTimestamp = 99L,
+                        lastTimestamp = 98L,
                         outcomeType = FAILED,
                         flow = listOf(
                             newOutcome("failing", FAILED, time = 94).outcome,
@@ -220,6 +221,39 @@ internal class ActionsRepositoryTest {
                         flow = listOf(actionOutcome.outcome),
                     )
                 )
+        }
+
+        @Test
+        fun `test same action needs repetition`() {
+            val repo = newRepo()
+
+            //first time
+            repo.save(newOutcome("repeat", PENDING, time = 1000))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(PENDING)
+            repo.save(newOutcome("repeat", PENDING, time = 1001))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(PENDING)
+            repo.save(newOutcome("repeat", NOT_ACQUIRED, time = 2000))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(NOT_ACQUIRED)
+            repo.save(newOutcome("repeat", SUCCESSFUL, time = 2100))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(SUCCESSFUL)
+            repo.save(newOutcome("repeat", NOT_ACQUIRED, time = 2010))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(SUCCESSFUL)
+            repo.save(newOutcome("repeat", RESOLVED, time = 2110))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(SUCCESSFUL)
+
+            //after some time
+            repo.save(newOutcome("repeat", BLOCKED, time = 100_000))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(BLOCKED)
+            repo.save(newOutcome("repeat", BLOCKED, time = 100_100))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(BLOCKED)
+            repo.save(newOutcome("repeat", PENDING, time = 105_000))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(PENDING)
+            repo.save(newOutcome("repeat", PENDING, time = 105_100))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(PENDING)
+            repo.save(newOutcome("repeat", SUCCESSFUL, time = 110_000))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(SUCCESSFUL)
+            repo.save(newOutcome("repeat", RESOLVED, time = 111_000))
+            assertThat(repo.find("repeat")?.outcomeType).isEqualTo(SUCCESSFUL)
         }
 
     }

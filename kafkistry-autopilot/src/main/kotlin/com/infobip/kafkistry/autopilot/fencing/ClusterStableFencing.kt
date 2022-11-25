@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.autopilot.fencing
 
 import com.infobip.kafkistry.autopilot.binding.ClusterUnstable
-import com.infobip.kafkistry.autopilot.config.ActionsFencingProperties
+import com.infobip.kafkistry.autopilot.config.AutopilotClusterStableRequirementProperties
 import com.infobip.kafkistry.kafkastate.AbstractKafkaStateProvider
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.kafkastate.StateType
@@ -10,7 +10,7 @@ import com.infobip.kafkistry.utils.Filter
 import java.util.concurrent.ConcurrentHashMap
 
 class ClusterStableFencing(
-    private val properties: ActionsFencingProperties.ClusterStableRequirementProperties,
+    private val properties: AutopilotClusterStableRequirementProperties,
     private val stateProviders: List<AbstractKafkaStateProvider<*>>,
 ) {
 
