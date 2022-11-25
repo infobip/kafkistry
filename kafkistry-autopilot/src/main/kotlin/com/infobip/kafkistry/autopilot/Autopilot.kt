@@ -127,6 +127,7 @@ class Autopilot(
         return repository.findAll().asSequence()
             .filter { it.actionIdentifier !in activeActions }
             .filter { it.outcomeType != SUCCESSFUL && it.outcomeType != RESOLVED }
+            .filter { it.flow.any { flowStep -> flowStep.sourceAutopilot == thisAutopilot() } }
             .filter { it.metadata.clusterRef?.unstableStates().orEmpty().isEmpty() }
             .map {
                 ActionOutcome(

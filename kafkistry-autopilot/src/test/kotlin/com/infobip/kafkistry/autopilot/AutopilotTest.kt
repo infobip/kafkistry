@@ -12,7 +12,6 @@ import com.infobip.kafkistry.autopilot.reporting.AutopilotReporter
 import com.infobip.kafkistry.autopilot.repository.ActionFlow
 import com.infobip.kafkistry.autopilot.repository.ActionsRepository
 import com.infobip.kafkistry.autopilot.repository.toActonFlow
-import com.infobip.kafkistry.hostname.HostnameProperties
 import com.infobip.kafkistry.hostname.HostnameResolver
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.ClusterRef
@@ -29,6 +28,9 @@ import java.util.concurrent.atomic.AtomicReference
 class AutopilotTest {
 
     companion object {
+        private val mockHostnameResolver = mock<HostnameResolver>().apply {
+            whenever(hostname).thenReturn("this-test-autopilot")
+        }
         private val mockBinding = mock<AutopilotBinding<AutopilotAction>>()
         private val mockFilter = mock<AutopilotEnabledFilter>()
         private val mockFencing = AtomicReference<ActionAcquireFencing>()
@@ -45,7 +47,7 @@ class AutopilotTest {
             enabledFilter = mockFilter,
             checkingCache = CheckingCache(),
             autopilotUser = AutopilotUser(
-                hostnameResolver = HostnameResolver(HostnameProperties()),
+                hostnameResolver = mockHostnameResolver,
                 userResolver = CurrentRequestUserResolver(),
             ),
             backgroundIssues = BackgroundJobIssuesRegistry(),
@@ -62,7 +64,7 @@ class AutopilotTest {
 
     @BeforeEach
     fun resetMocks() {
-        reset(mockBinding, mockFilter, mockReporting, mockRepository, mockStableFencing)
+        reset(mockHostnameResolver, mockBinding, mockFilter, mockReporting, mockRepository, mockStableFencing)
         mockFencing.set(LocalActionAcquireFencing(1_000))
         whenever(mockRepository.findAll()).thenReturn(emptyList())
         whenever(mockStableFencing.recentUnstableStates(any())).thenReturn(emptyList())
@@ -90,12 +92,13 @@ class AutopilotTest {
     private fun AutopilotAction.mockActionFlow(
         outcomeType: ActionOutcome.OutcomeType,
         timestampBefore: Long = 0,
+        autopilot: String = "this-test-autopilot",
     ): ActionFlow {
         val outcome = ActionOutcome(
             actionMetadata = metadata,
             outcome = ActionOutcome.Outcome(
                 type = outcomeType,
-                sourceAutopilot = "test-autopilot",
+                sourceAutopilot = autopilot,
                 timestamp = System.currentTimeMillis() - timestampBefore,
             )
         )
@@ -199,21 +202,27 @@ class AutopilotTest {
     fun `resolved action without active execution`() {
         val action = testAction()
         whenever(mockBinding.actionsToProcess()).thenReturn(emptyList())
-        whenever(mockRepository.findAll()).thenReturn(listOf(
-            ActionFlow(action.actionIdentifier, action.metadata, 1, DISABLED, emptyList())
-        ))
+        whenever(mockRepository.findAll()).thenReturn(listOf(action.mockActionFlow(DISABLED)))
         autopilot.cycle()
         verify(mockBinding, never()).processAction(action)
         verify(mockReporting).reportOutcome(argThat { outcome.type == RESOLVED })
     }
 
     @Test
+    fun `don't prematurely resolve other autopilot's action`() {
+        val action = testAction()
+        whenever(mockBinding.actionsToProcess()).thenReturn(emptyList())
+        whenever(mockRepository.findAll()).thenReturn(listOf(action.mockActionFlow(PENDING, autopilot = "other")))
+        autopilot.cycle()
+        verify(mockBinding, never()).processAction(action)
+        verify(mockReporting, never()).reportOutcome(any())
+    }
+
+    @Test
     fun `don't mark resolved action that's successfully completed`() {
         val action = testAction()
         whenever(mockBinding.actionsToProcess()).thenReturn(emptyList())
-        whenever(mockRepository.findAll()).thenReturn(listOf(
-            ActionFlow(action.actionIdentifier, action.metadata, 1, SUCCESSFUL, emptyList())
-        ))
+        whenever(mockRepository.findAll()).thenReturn(listOf(action.mockActionFlow(SUCCESSFUL)))
         autopilot.cycle()
         verify(mockBinding, never()).processAction(any())
         verify(mockReporting, never()).reportOutcome(any())
@@ -257,9 +266,7 @@ class AutopilotTest {
         whenever(mockStableFencing.recentUnstableStates("unstable-cluster")).thenReturn(unstableReasons)
         whenever(mockBinding.actionsToProcess()).thenReturn(listOf(action))
         whenever(mockFilter.isEnabled(mockBinding, action)).thenReturn(true)
-        whenever(mockRepository.findAll()).thenReturn(listOf(
-            ActionFlow(action.actionIdentifier, action.metadata, 1, DISABLED, emptyList())
-        ))
+        whenever(mockRepository.findAll()).thenReturn(listOf(action.mockActionFlow(DISABLED)))
         autopilot.cycle()
         verify(mockReporting).reportOutcome(argThat {
             outcome.type == CLUSTER_UNSTABLE && outcome.unstable == unstableReasons
@@ -271,9 +278,7 @@ class AutopilotTest {
     fun `don't auto resolve unstable cluster and non-reported action`() {
         val action = testAction("down-cluster")
         whenever(mockBinding.actionsToProcess()).thenReturn(emptyList())
-        whenever(mockRepository.findAll()).thenReturn(listOf(
-            ActionFlow(action.actionIdentifier, action.metadata, 1, DISABLED, emptyList())
-        ))
+        whenever(mockRepository.findAll()).thenReturn(listOf(action.mockActionFlow(DISABLED)))
         whenever(mockStableFencing.recentUnstableStates("down-cluster")).thenReturn(
             listOf(ClusterUnstable(StateType.UNREACHABLE, "mock", 123L))
         )
