@@ -53,7 +53,7 @@
 <#import "../common/documentation.ftl" as doc>
 
 <div class="container">
-    <form class="mb-1">
+    <div class="mb-1">
         <label>
             <#if !clusterIdentifier?? && allClusters?size == 1>
                 <#assign clusterIdentifier = allClusters?first>
@@ -229,7 +229,7 @@
         <button type="button" class="btn btn-primary form-control" id="consume-btn">
             Start reading
         </button>
-    </form>
+    </div>
 
     <br/>
     <#include "../common/serverOpStatus.ftl">
