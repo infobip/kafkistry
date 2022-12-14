@@ -35,7 +35,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.net.InetAddress
 import java.util.*
-import javax.annotation.Resource
+import jakarta.annotation.Resource
 
 class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverContainer>()
 

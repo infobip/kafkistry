@@ -10,9 +10,9 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.servlet.ModelAndView
-import javax.servlet.RequestDispatcher
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.RequestDispatcher
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 @Controller
 abstract class BaseController {
@@ -35,7 +35,7 @@ abstract class BaseController {
         val httpStatus = HttpStatus.resolve(response.status)
             .takeIf { it != HttpStatus.OK }
             ?: HttpStatus.INTERNAL_SERVER_ERROR
-        val servletException = request.getAttribute("javax.servlet.error.exception") as? Exception
+        val servletException = request.getAttribute("jakarta.servlet.error.exception") as? Exception
         val error = exception.takeUnless {
             it.javaClass == java.lang.Exception::class.java && it.cause == null && it.message == null
         } ?: servletException ?: exception

@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.core.session.SessionRegistryImpl
 import org.springframework.session.SessionRepository
-import org.springframework.session.hazelcast.Hazelcast4IndexedSessionRepository
+import org.springframework.session.hazelcast.HazelcastIndexedSessionRepository
 
 @Configuration
 class SessionRegistryConfig {
@@ -14,8 +14,8 @@ class SessionRegistryConfig {
     fun sessionRegistry(
         sessionRepository: SessionRepository<*>
     ): SessionRegistry {
-        return if (sessionRepository is Hazelcast4IndexedSessionRepository) {
-            SpringSessionHazelcast4BackedSessionRegistry(sessionRepository)
+        return if (sessionRepository is HazelcastIndexedSessionRepository) {
+            SpringSessionHazelcastBackedSessionRegistry(sessionRepository)
         } else {
             SessionRegistryImpl()
         }

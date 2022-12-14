@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.webapp.security.auth.preauth
 
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 class PreAuthenticatedUserProcessingFiler(
         private val resolvers: List<PreAuthUserResolver>

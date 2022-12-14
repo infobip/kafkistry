@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.webapp.security.auth.preauth
 
 import com.infobip.kafkistry.webapp.security.User
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 interface PreAuthUserResolver {
 

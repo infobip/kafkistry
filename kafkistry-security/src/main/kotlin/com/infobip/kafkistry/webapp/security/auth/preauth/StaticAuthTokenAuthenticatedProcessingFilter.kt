@@ -3,7 +3,7 @@ package com.infobip.kafkistry.webapp.security.auth.preauth
 import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.auth.StaticUsers
 import org.springframework.stereotype.Component
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 const val ACCESS_TOKEN = "X-Auth-Token"
 

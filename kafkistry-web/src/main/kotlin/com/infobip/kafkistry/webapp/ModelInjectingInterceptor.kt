@@ -16,8 +16,8 @@ import com.infobip.kafkistry.webapp.url.AppUrl
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.servlet.ModelAndView
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 
 @Component
 class CompositeRequestInterceptor(
@@ -59,6 +59,7 @@ class RequestInjectingInterceptor : ModelInjectingInterceptor {
 
     override fun inject(modelAndView: ModelAndView, request: HttpServletRequest) {
         modelAndView.addObject("request", request)
+        request.getAttribute("_csrf")?.also { modelAndView.addObject("_csrf", it) }
     }
 }
 

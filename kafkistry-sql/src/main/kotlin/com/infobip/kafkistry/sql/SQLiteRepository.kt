@@ -5,6 +5,7 @@ import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import com.infobip.kafkistry.yaml.YamlMapper
 import com.infobip.kafkistry.service.KafkistrySQLException
+import org.hibernate.community.dialect.SQLiteDialect
 import org.slf4j.LoggerFactory
 import org.sqlite.SQLiteJDBCLoader
 import java.io.File
@@ -52,7 +53,7 @@ class SQLiteRepository(
         .setProperty("hibernate.dialect", SQLiteDialect::class.java.name)
         .setProperty("hibernate.show_sql", "false")
         .setProperty("hibernate.hdm2ddl.auto", "create-drop")
-        .setProperty("javax.persistence.schema-generation.database.action", "drop-and-create")
+        .setProperty("jakarta.persistence.schema-generation.database.action", "drop-and-create")
         .buildSessionFactory()
 
     private val nonJoinColumnNames = setOf(
@@ -207,7 +208,7 @@ class SQLiteRepository(
             return null
         }
         val sqlNoLimit = sql.replace(Regex("""\s+LIMIT\s+\d+(\s*,\s*\d+)?(?=$|\s)""", RegexOption.IGNORE_CASE)) { "" }
-        return session.doReturningWork { connection ->
+        return doReturningWork { connection ->
             connection.prepareStatement("SELECT count(*) AS count FROM ($sqlNoLimit)").use { statement ->
                 val resultSet = statement.executeQuery()
                 resultSet.next()

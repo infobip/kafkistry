@@ -9,7 +9,7 @@ import com.infobip.kafkistry.sql.SqlDataSource
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.Tag
 import org.springframework.stereotype.Component
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Component
 class RegistryTopicsDataSource(

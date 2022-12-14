@@ -14,6 +14,7 @@ import org.springframework.http.client.OkHttp3ClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestClientResponseException
+import java.util.function.Supplier
 
 @Component
 @ConfigurationProperties("app.kafka.metrics.prometheus")
@@ -46,26 +47,25 @@ class PrometheusBrokerDiskMetricsProvider(
             }
             execution.execute(request, body)
         })
-        .requestFactory {
+        .requestFactory(Supplier {
             OkHttp3ClientHttpRequestFactory(
                 OkHttpClient.Builder().followRedirects(false).build()
             )
-        }
-        .errorHandler(object: ResponseErrorHandler {
+        })
+        .errorHandler(object : ResponseErrorHandler {
             override fun hasError(response: ClientHttpResponse): Boolean = response.statusCode != HttpStatus.OK
 
             override fun handleError(response: ClientHttpResponse) {
                 val responseBody = response.body.readAllBytes()
-                throw RestClientResponseException(
-                    "Prometheus API call failed: Http:${response.rawStatusCode} ${response.statusText}; " +
-                            "Headers:${response.headers}; Body:${responseBody.decodeToString()}",
-                    response.rawStatusCode, response.statusText, response.headers,
-                    responseBody, null
-                )
+                with(response) {
+                    throw RestClientResponseException(
+                        "Prometheus API call failed: Http:${statusCode.value()} $statusText; " +
+                                "Headers:$headers; Body:${responseBody.decodeToString()}",
+                        statusCode.value(), statusText, headers, responseBody, null
+                    )
+                }
             }
-
         })
-        .basicAuthentication("atomac", "LovelyDay-3222")
         .build()
 
     private lateinit var brokerPattern: Regex

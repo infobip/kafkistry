@@ -13,7 +13,7 @@ import com.infobip.kafkistry.service.cluster.inspect.ClusterIssuesInspectorServi
 import com.infobip.kafkistry.service.renderMessage
 import com.infobip.kafkistry.sql.*
 import org.springframework.stereotype.Component
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Component
 class ClustersDataSource(

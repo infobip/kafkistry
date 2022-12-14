@@ -6,9 +6,8 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.quotas.QuotasRegistryService
 import com.infobip.kafkistry.sql.SqlDataSource
-import com.infobip.kafkistry.model.*
 import org.springframework.stereotype.Component
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Component
 class RegistryQuotaEntitiesDataSource(

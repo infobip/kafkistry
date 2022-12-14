@@ -68,7 +68,7 @@ class WebSecurityConfig(
                     .maximumSessions(10)
                     .sessionRegistry(sessionRegistry)
                 addFilterBefore(preAuthUserFilter(), AbstractPreAuthenticatedProcessingFilter::class.java)
-                with(authorizeRequests()) {
+                with(authorizeHttpRequests()) {
                     authorizationConfigurers.forEach { it.configure(this) }
                 }
                 formLogin().loginPage("${httpProperties.rootPath}/login")
@@ -89,7 +89,7 @@ class WebSecurityConfig(
             }
         } else {
             with(http) {
-                authorizeRequests().anyRequest().permitAll()
+                authorizeHttpRequests().anyRequest().permitAll()
                 csrf().disable()
             }
         }

@@ -47,7 +47,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(

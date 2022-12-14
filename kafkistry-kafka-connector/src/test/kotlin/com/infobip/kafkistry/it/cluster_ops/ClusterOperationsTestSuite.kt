@@ -307,7 +307,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             }
         }.isInstanceOf(KafkaClusterManagementException::class.java)
             .hasMessageContaining("verify reassignments used brokers")
-            .rootCause
+            .rootCause()
             .isInstanceOf(KafkaClusterManagementException::class.java)
             .hasMessageContaining("Unknown broker(s) used in assignments")
 
@@ -322,7 +322,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             }
         }.isInstanceOf(KafkaClusterManagementException::class.java)
             .hasMessageContaining("verify reassignments partitions")
-            .rootCause
+            .rootCause()
             .isInstanceOf(KafkaClusterManagementException::class.java)
             .hasMessageContaining("Trying to reassign non-existent topic partitions")
 
@@ -890,7 +890,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         }
         assertThatThrownBy {
             doOnKafka { it.setBrokerConfig(0, mapOf("auto.leader.rebalance.enable" to "true")).get() }
-        }.rootCause.isInstanceOf(InvalidRequestException::class.java)
+        }.rootCause().isInstanceOf(InvalidRequestException::class.java)
     }
 
     @Test

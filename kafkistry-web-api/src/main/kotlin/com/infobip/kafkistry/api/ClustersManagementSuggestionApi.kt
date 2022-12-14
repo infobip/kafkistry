@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import javax.servlet.http.HttpSession
+import jakarta.servlet.http.HttpSession
 
 /**
  * API for submitting data into http session to be used for future requests

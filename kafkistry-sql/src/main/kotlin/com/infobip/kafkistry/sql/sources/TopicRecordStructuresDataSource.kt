@@ -12,7 +12,7 @@ import com.infobip.kafkistry.sql.SqlDataSource
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import java.util.Base64
-import javax.persistence.*
+import jakarta.persistence.*
 import com.infobip.kafkistry.model.RecordsStructure as RecordsStructureModel
 import com.infobip.kafkistry.model.RecordField as RecordFieldModel
 

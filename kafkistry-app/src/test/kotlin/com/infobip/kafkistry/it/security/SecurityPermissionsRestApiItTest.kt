@@ -33,8 +33,8 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.web.client.RestClientResponseException
 import java.util.*
-import javax.annotation.PostConstruct
-import javax.servlet.http.HttpServletRequest
+import jakarta.annotation.PostConstruct
+import jakarta.servlet.http.HttpServletRequest
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(
@@ -559,11 +559,11 @@ class SecurityPermissionsRestApiItTest {
                 OpResult.NO_CONTENT
             }
         } catch (e: RestClientResponseException) {
-            when (e.rawStatusCode) {
+            when (e.statusCode.value()) {
                 HttpStatus.FORBIDDEN.value() -> OpResult.FORBIDDEN
                 HttpStatus.UNAUTHORIZED.value() -> OpResult.UNAUTHORIZED
                 HttpStatus.NOT_FOUND.value() -> OpResult.NOT_FOUND
-                else -> OpResult.other(e.rawStatusCode, e.statusText)
+                else -> OpResult.other(e.statusCode.value(), e.statusText)
             }
         }
     }

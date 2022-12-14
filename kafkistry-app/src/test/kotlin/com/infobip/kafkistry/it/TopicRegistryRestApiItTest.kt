@@ -18,7 +18,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.apache.kafka.common.config.TopicConfig as KafkaConfigKey
 
 @RunWith(SpringRunner::class)

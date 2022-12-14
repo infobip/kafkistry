@@ -41,7 +41,7 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.time.Duration
 import java.util.*
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 import kotlin.random.Random
 
 /**
@@ -383,10 +383,8 @@ class DataStateInitializer(
             )
             log.info("Producing to topic {}", name)
             KafkaProducer(producerConfig, StringSerializer(), StringSerializer()).use { producer ->
-                val selector = PartitionSelector(properties.partitionCount, 0.5)
                 (0..500_000)
                     .map {
-                        val partition = selector.nextPartition()
                         val value = if (it % 10 != 0) {
                             """{"id":$it,"msg":"Dummy message $it","secret":$it}"""
                         } else {

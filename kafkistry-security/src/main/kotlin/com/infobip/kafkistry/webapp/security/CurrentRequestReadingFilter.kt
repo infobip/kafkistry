@@ -1,12 +1,12 @@
 package com.infobip.kafkistry.webapp.security
 
+import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletRequest
+import jakarta.servlet.ServletResponse
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.GenericFilterBean
 import java.lang.UnsupportedOperationException
-import javax.servlet.FilterChain
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
 
 @Component
 class CurrentRequestReadingFilter(

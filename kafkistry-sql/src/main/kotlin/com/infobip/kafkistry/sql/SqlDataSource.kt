@@ -3,7 +3,7 @@ package com.infobip.kafkistry.sql
 interface SqlDataSource<T : Any> {
 
     /**
-     * [javax.persistence.Entity] annotated class, which instances will be supplied by [supplyEntities]
+     * [jakarta.persistence.Entity] annotated class, which instances will be supplied by [supplyEntities]
      * It will be used to create table(s) where supplied instances wil be stored into.
      */
     fun modelAnnotatedClass(): Class<T>

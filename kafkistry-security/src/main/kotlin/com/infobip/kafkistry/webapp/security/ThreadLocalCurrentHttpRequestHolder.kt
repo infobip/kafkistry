@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.webapp.security
 
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Component
-import javax.servlet.http.HttpServletRequest
 
 @Component
 class ThreadLocalCurrentHttpRequestHolder {

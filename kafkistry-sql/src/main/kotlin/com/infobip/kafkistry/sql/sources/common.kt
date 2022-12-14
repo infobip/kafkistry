@@ -5,10 +5,10 @@ package com.infobip.kafkistry.sql.sources
 import org.apache.kafka.clients.admin.ConfigEntry
 import com.infobip.kafkistry.kafka.ConfigValue
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import javax.persistence.Column
-import javax.persistence.Embeddable
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
+import jakarta.persistence.Column
+import jakarta.persistence.Embeddable
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 
 fun Map.Entry<String, String?>.toKafkaConfigEntry() = KafkaConfigEntry().apply {
     key = this@toKafkaConfigEntry.key

@@ -7,10 +7,10 @@ import com.infobip.kafkistry.service.acl.AclsInspectionService
 import com.infobip.kafkistry.service.acl.PrincipalAclsInspection
 import com.infobip.kafkistry.sql.SqlDataSource
 import org.springframework.stereotype.Component
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.Table
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 
 @Component
 class AclPrincipalsDataSource(

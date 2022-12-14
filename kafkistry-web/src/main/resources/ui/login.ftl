@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="_csrf" type="org.springframework.security.web.csrf.CsrfToken" -->
 <#-- @ftlvariable name="SPRING_SECURITY_LAST_EXCEPTION" type="java.lang.Exception" -->
+<#-- @ftlvariable name="request" type="jakarta.servlet.http.HttpServletRequest" -->
 
 <html lang="en">
 
@@ -20,9 +21,9 @@
             <div class="card-header">
                 <span class="float-left"><b>Kafkistry</b></span>
 
-                <#if RequestParameters.logout??>
+                <#if (request.parameterMap.logout)??>
                     <span style="color: green" class="float-right">You have been logged out</span>
-                <#elseif RequestParameters.error??>
+                <#elseif (request.parameterMap.error)??>
                     <span style="color: red" class="float-right">
                         Login failed<#if SPRING_SECURITY_LAST_EXCEPTION??>, reason: ${SPRING_SECURITY_LAST_EXCEPTION.message}</#if>
                     </span>
@@ -35,14 +36,15 @@
                         <label for="username" class="col-md-4 col-form-label text-md-right">Username</label>
                         <div class="col-md-6">
                             <input type="text" id="email_address" class="form-control" name="username" required
-                                   autofocus>
+                                   autofocus title="Enter your username">
                         </div>
                     </div>
 
                     <div class="form-group row">
                         <label for="password" class="col-md-4 col-form-label text-md-right">Password</label>
                         <div class="col-md-6">
-                            <input type="password" id="password" class="form-control" name="password" required>
+                            <input type="password" id="password" class="form-control" name="password" required
+                                   title="Enter your password">
                         </div>
                     </div>
 

@@ -30,7 +30,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
 import java.util.*
-import javax.servlet.http.HttpSession
+import jakarta.servlet.http.HttpSession
 
 @Controller
 @RequestMapping("\${app.http.root-path}$TOPICS")

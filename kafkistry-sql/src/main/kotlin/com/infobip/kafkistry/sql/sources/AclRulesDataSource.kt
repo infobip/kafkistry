@@ -13,7 +13,7 @@ import com.infobip.kafkistry.service.acl.toKafkaAclRule
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Component
 class AclRulesDataSource(

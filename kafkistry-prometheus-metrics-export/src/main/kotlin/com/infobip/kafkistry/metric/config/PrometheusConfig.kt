@@ -20,7 +20,13 @@ class PrometheusConfigs(
 ) {
 
     companion object {
-        var initialized = AtomicBoolean(false)
+        private var initialized = AtomicBoolean(false)
+
+        //static instance which is re-used when separate ApplicationContext-s spin up within same JVM
+        // to avoid duplicate meters registrations into same prometheus CollectorRegistry.defaultRegistry
+        private val prometheusRegistry = PrometheusMeterRegistry(
+            PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry, Clock.SYSTEM
+        )
     }
 
     init {
@@ -35,12 +41,6 @@ class PrometheusConfigs(
     }
 
     @Bean
-    fun prometheusRegistry(): PrometheusMeterRegistry {
-        return PrometheusMeterRegistry(
-            PrometheusConfig.DEFAULT,
-            CollectorRegistry.defaultRegistry,
-            Clock.SYSTEM
-        )
-    }
+    fun prometheusRegistry(): PrometheusMeterRegistry = prometheusRegistry
 
 }

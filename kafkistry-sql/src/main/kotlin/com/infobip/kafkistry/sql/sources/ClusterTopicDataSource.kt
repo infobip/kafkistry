@@ -21,7 +21,7 @@ import com.infobip.kafkistry.sql.*
 import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.util.*
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Component
 class ClusterTopicDataSource(

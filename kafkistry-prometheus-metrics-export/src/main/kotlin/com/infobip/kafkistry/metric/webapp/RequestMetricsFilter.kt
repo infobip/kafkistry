@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.GenericFilterBean
 import org.springframework.web.servlet.HandlerMapping
 import java.util.concurrent.TimeUnit
-import javax.servlet.FilterChain
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletRequest
+import jakarta.servlet.ServletResponse
+import jakarta.servlet.http.HttpServletRequest
 
 private val httpRequestLatenciesHolder = MetricHolder { prefix ->
     //default name: kafkistry_http_latencies

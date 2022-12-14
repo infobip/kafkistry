@@ -11,14 +11,14 @@ import com.infobip.kafkistry.webapp.security.UserAuthority.Companion.REQUEST_CLU
 import com.infobip.kafkistry.webapp.security.UserAuthority.Companion.REQUEST_QUOTA_UPDATES
 import com.infobip.kafkistry.webapp.security.UserAuthority.Companion.REQUEST_TOPIC_UPDATES
 import com.infobip.kafkistry.webapp.security.UserAuthority.Companion.VIEW_DATA
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.stereotype.Component
-import javax.servlet.http.HttpServletRequest
 
 @Component
 @Order(0)
@@ -26,7 +26,7 @@ class StaticResourcesAuthorizationConfigurer(
     private val metricsProperties: PrometheusMetricsProperties,
 ) : AbstractRequestAuthorizationPermissionsConfigurer() {
 
-    override fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() {
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         antMatchers(
             "$rootPath/login",
             "$rootPath/static/**",
@@ -40,7 +40,7 @@ class StaticResourcesAuthorizationConfigurer(
 @Order(100)
 class ApiGetResourcesAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
-    override fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() {
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         antMatchers(HttpMethod.GET, "$rootPath/api/clusters/**").hasAuthority(VIEW_DATA)
         antMatchers(HttpMethod.GET, "$rootPath/api/topics/**").hasAuthority(VIEW_DATA)
         antMatchers(HttpMethod.GET, "$rootPath/api/acls/**").hasAuthority(VIEW_DATA)
@@ -51,7 +51,7 @@ class ApiGetResourcesAuthorizationConfigurer : AbstractRequestAuthorizationPermi
 @Order(200)
 class ApiNonGetResourcesAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
-    override fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() {
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         allMethodsExcept(HttpMethod.GET, "$rootPath/api/clusters/**") { hasAuthority(REQUEST_CLUSTER_UPDATES) }
         allMethodsExcept(HttpMethod.GET, "$rootPath/api/topics/**") { hasAuthority(REQUEST_TOPIC_UPDATES) }
         allMethodsExcept(HttpMethod.GET, "$rootPath/api/topic-wizard/**") { hasAuthority(REQUEST_TOPIC_UPDATES) }
@@ -66,7 +66,7 @@ class ApiNonGetResourcesAuthorizationConfigurer : AbstractRequestAuthorizationPe
 @Order(300)
 class ApiAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
-    override fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() {
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         antMatchers("$rootPath/api/inspect/**").hasAuthority(VIEW_DATA)
         antMatchers("$rootPath/api/management/**").hasAuthority(MANAGE_KAFKA)
         antMatchers("$rootPath/api/acls-management/**").hasAuthority(MANAGE_KAFKA)
@@ -91,7 +91,7 @@ class ClickhouseSQLNoSessionAuthorizationConfigurer(
 
     override fun matches(request: HttpServletRequest) = enabled && matcher.matches(request)
 
-    override fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() {
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         if (enabled) {
             requestMatchers(matcher).permitAll()
         }
@@ -102,7 +102,7 @@ class ClickhouseSQLNoSessionAuthorizationConfigurer(
 @Order(400)
 class UsesSessionsAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
-    override fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() {
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         antMatchers("$rootPath/api/web-sessions/**").hasRole(UserRole.ADMIN.name)
         antMatchers("$rootPath/about/users-sessions").hasRole(UserRole.ADMIN.name)
     }

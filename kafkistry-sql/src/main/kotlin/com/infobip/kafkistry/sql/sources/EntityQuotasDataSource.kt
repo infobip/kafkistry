@@ -10,7 +10,7 @@ import com.infobip.kafkistry.service.quotas.QuotasInspectionService
 import com.infobip.kafkistry.sql.SqlDataSource
 import org.springframework.stereotype.Component
 import java.io.Serializable
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Component
 class EntityQuotasDataSource(

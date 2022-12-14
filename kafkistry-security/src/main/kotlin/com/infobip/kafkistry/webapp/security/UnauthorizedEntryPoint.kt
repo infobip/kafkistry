@@ -9,16 +9,14 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.authentication.InsufficientAuthenticationException
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.AuthenticationEntryPoint
-import org.springframework.security.web.WebAttributes
 import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.security.web.csrf.InvalidCsrfTokenException
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher
-import org.springframework.security.web.util.matcher.ELRequestMatcher
-import org.springframework.security.web.util.matcher.OrRequestMatcher
-import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.stereotype.Component
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.HttpMethod
+import org.springframework.security.web.access.AccessDeniedHandlerImpl
+import org.springframework.security.web.util.matcher.*
 
 @Component
 class UnauthorizedEntryPoint(
@@ -26,13 +24,20 @@ class UnauthorizedEntryPoint(
     private val objectMapper: ObjectMapper,
 ) : AuthenticationEntryPoint, AccessDeniedHandler {
 
-    private var apiCallMatcher: RequestMatcher = OrRequestMatcher(
+    private val errorPage: String = "${httpProperties.rootPath}/error"
+    private val loginPage: String = "${httpProperties.rootPath}/login"
+
+    private val loginCallMatcher = AntPathRequestMatcher.antMatcher(HttpMethod.POST, loginPage)
+
+    private val apiCallMatcher: RequestMatcher = OrRequestMatcher(
         //don't redirect to /login when not authenticated using rest /api/** or rendered ajax calls
         AntPathRequestMatcher("${httpProperties.rootPath}/api/**"),
-        ELRequestMatcher("hasHeader('ajax', 'true')")
+        ELRequestMatcher("hasHeader('ajax', 'true')"),
     )
 
-    private var errorPage: String = "${httpProperties.rootPath}/error"
+    private val defaultDeniedHandler = AccessDeniedHandlerImpl().apply {
+        setErrorPage(errorPage)
+    }
 
     fun apiCallMatcher(): RequestMatcher = apiCallMatcher
 
@@ -47,14 +52,11 @@ class UnauthorizedEntryPoint(
         response: HttpServletResponse,
         accessDeniedException: AccessDeniedException
     ) {
-        if (!apiCallMatcher.matches(request)) {
-            // Put exception into request scope (perhaps of use to a view)
-            request.setAttribute(WebAttributes.ACCESS_DENIED_403, accessDeniedException)
-            response.status = HttpStatus.FORBIDDEN.value()
-            request.getRequestDispatcher(errorPage).forward(request, response)
-            return
+        if (apiCallMatcher.matches(request) || loginCallMatcher.matches(request)) {
+            sendErrorResponse(HttpStatus.FORBIDDEN, response, accessDeniedException)
+        } else {
+            defaultDeniedHandler.handle(request, response, accessDeniedException)
         }
-        sendErrorResponse(HttpStatus.FORBIDDEN, response, accessDeniedException)
     }
 
     private fun sendErrorResponse(

@@ -2,32 +2,45 @@ package com.infobip.kafkistry.webapp.security
 
 import com.infobip.kafkistry.webapp.WebHttpProperties
 import com.infobip.kafkistry.webapp.security.UserAuthority.Companion.VIEW_DATA
+import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.stereotype.Component
-import javax.annotation.PostConstruct
 
 interface RequestAuthorizationPermissionsConfigurer {
 
-    fun configure(registry: ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry) {
+    fun configure(registry: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry) {
         registry.configureWith()
     }
 
-    fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() = Unit
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() = Unit
 
-    fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.allMethodsExcept(
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.antMatchers(
+        vararg antPatterns: String,
+    ): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl = antMatchers(method = null, *antPatterns)
+
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.antMatchers(
+        method: HttpMethod? = null,
+        vararg antPatterns: String,
+    ): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl = run {
+        val matchers = antPatterns.map { AntPathRequestMatcher(it, method?.name()) }
+        requestMatchers(*matchers.toTypedArray())
+    }
+
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.allMethodsExcept(
         httpMethod: HttpMethod,
         antPattern: String,
-        configurer: ExpressionUrlAuthorizationConfigurer<HttpSecurity>.AuthorizedUrl.() -> Unit
+        configurer: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl.() -> Unit
     ) {
         HttpMethod.values().filter { it != httpMethod }.forEach { configurer(antMatchers(it, antPattern)) }
     }
 
-    fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.AuthorizedUrl.hasAuthority(authority: UserAuthority) {
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl.hasAuthority(authority: UserAuthority) {
         hasAuthority(authority.authority)
     }
 
@@ -49,7 +62,7 @@ abstract class AbstractRequestAuthorizationPermissionsConfigurer : RequestAuthor
 @Order(Ordered.LOWEST_PRECEDENCE - 1000)
 class DefaultsAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
-    override fun ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry.configureWith() {
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         antMatchers("$rootPath/**").hasAuthority(VIEW_DATA)
         anyRequest().fullyAuthenticated()
     }

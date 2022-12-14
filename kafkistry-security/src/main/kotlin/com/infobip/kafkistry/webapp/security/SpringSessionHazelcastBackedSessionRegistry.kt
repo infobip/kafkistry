@@ -6,17 +6,17 @@ import org.springframework.session.FindByIndexNameSessionRepository
 import org.springframework.session.MapSession
 import org.springframework.session.Session
 import org.springframework.session.SessionRepository
-import org.springframework.session.hazelcast.Hazelcast4IndexedSessionRepository
+import org.springframework.session.hazelcast.HazelcastIndexedSessionRepository
 import org.springframework.session.security.SpringSessionBackedSessionRegistry
 import java.util.concurrent.atomic.AtomicReference
 
-class SpringSessionHazelcast4BackedSessionRegistry private constructor(
+class SpringSessionHazelcastBackedSessionRegistry private constructor(
     private val sessionRepo: SessionsRepo,
 ) : SpringSessionBackedSessionRegistry<Session>(sessionRepo) {
 
-    constructor(hazelcast4SessionRepository: Hazelcast4IndexedSessionRepository) : this(
+    constructor(hazelcastSessionRepository: HazelcastIndexedSessionRepository) : this(
         @Suppress("UNCHECKED_CAST")
-        SessionsRepo(hazelcast4SessionRepository as FindByIndexNameSessionRepository<Session>)
+        SessionsRepo(hazelcastSessionRepository as FindByIndexNameSessionRepository<Session>)
     )
 
     companion object {
@@ -29,7 +29,7 @@ class SpringSessionHazelcast4BackedSessionRegistry private constructor(
             // - another problem with event based approach is restarting node in cluster,
             //   such node would have no state from previous events, so yet another mechanism would be needed for
             //   initialization of sessions state
-            return Hazelcast4IndexedSessionRepository::class.java
+            return HazelcastIndexedSessionRepository::class.java
                 .getDeclaredField("sessions")
                 .apply { trySetAccessible() }
                 .get(hazelcast4SessionRepository)
