@@ -60,30 +60,37 @@
     </modules>
 
     <properties>
-        <jdk.version>18</jdk.version>
-        <java.version>18</java.version>
-        <kotlin.jvm.target>17</kotlin.jvm.target>
+        <!-- PROJECT -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <jdk.version>18</jdk.version>
+        <java.version>18</java.version>
         <maven.compiler.source>18</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <kotlin.version>1.7.20</kotlin.version>
+        <kotlin.jvm.target>17</kotlin.jvm.target>
+        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+
+        <!-- PLUGIN -->
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <dokka-maven-plugin.version>1.6.21</dokka-maven-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <gpg-sign-skip>false</gpg-sign-skip>
+        <enforcerSkip>true</enforcerSkip>
+        <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
+        <git-commit-id-maven-plugin.skip>false</git-commit-id-maven-plugin.skip>
+
+        <!-- DOCKER -->
+        <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
         <jib-maven-plugin.goal>dockerBuild</jib-maven-plugin.goal>
         <docker.skip-build>true</docker.skip-build>
         <docker.from-image>openjdk:18-jdk</docker.from-image>
         <docker.to-image>infobip/kafkistry</docker.to-image>
-        <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
-        <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
-        <git-commit-id-maven-plugin.skip>false</git-commit-id-maven-plugin.skip>
-        <kotlin.version>1.7.20</kotlin.version>
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+
+        <!-- DEPENDENCIES -->
         <org.eclipse.jgit.version>6.3.0.202209071007-r</org.eclipse.jgit.version>
         <jsoup.version>1.15.3</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
-        <enforcerSkip>true</enforcerSkip>
         <zookeeper.version>3.8.0</zookeeper.version>
         <sqlite-jdbc.version>3.28.0</sqlite-jdbc.version>
         <hibernate-validator.version>8.0.0.Final</hibernate-validator.version>
