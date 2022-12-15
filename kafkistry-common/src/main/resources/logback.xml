@@ -10,7 +10,7 @@
                 <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
                 <file>${SERVICE_LOG_ROOT}/output.log</file>
                 <encoder>
-                    <pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p %t %c - %m%n</pattern>
+                    <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %p %t %c - %m%n</pattern>
                 </encoder>
                 <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                     <level>DEBUG</level>
@@ -30,7 +30,7 @@
                 <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
                 <file>${SERVICE_LOG_ROOT}/error.log</file>
                 <encoder>
-                    <pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p %t %c - %m%n</pattern>
+                    <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %p %t %c - %m%n</pattern>
                 </encoder>
                 <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                     <level>ERROR</level>
