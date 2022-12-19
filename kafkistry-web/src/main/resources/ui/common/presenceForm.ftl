@@ -1,4 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
+<#-- @ftlvariable name="kafkistryUser"  type="com.infobip.kafkistry.webapp.security.User" -->
 <#-- @ftlvariable name="forceTagForPresence" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="enums"  type="java.util.Map<java.lang.String, java.util.Map<java.lang.String, ? extends java.lang.Object>>" -->
@@ -18,7 +19,7 @@
 </#assign>
 
 <div class="presence">
-    <#assign showAdminForceTagBypass = tagOnly && user?? && user.role.name == "ADMIN">
+    <#assign showAdminForceTagBypass = tagOnly && kafkistryUser?? && kafkistryUser.role.name == "ADMIN">
     <#if showAdminForceTagBypass>
         <div class="form-row bypass-only-tag-presence-container" style="display: none;">
             <div class="col form-inline">

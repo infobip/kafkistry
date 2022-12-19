@@ -49,7 +49,7 @@ class UserModelInjectingInterceptor(
 
     override fun inject(modelAndView: ModelAndView, request: HttpServletRequest) {
         userResolver.resolveUser()?.also {
-            modelAndView.addObject("user", it)
+            modelAndView.addObject("kafkistryUser", it)
         }
     }
 }

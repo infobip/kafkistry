@@ -1,6 +1,6 @@
 
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="user"  type="com.infobip.kafkistry.webapp.security.User" -->
+<#-- @ftlvariable name="kafkistryUser"  type="com.infobip.kafkistry.webapp.security.User" -->
 <#-- @ftlvariable name="_csrf" type="org.springframework.security.web.csrf.CsrfToken" -->
 <#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
@@ -76,24 +76,24 @@
 
     </ul>
 
-    <#if user??>
+    <#if kafkistryUser??>
       <div>
-        <strong>${user.fullName}</strong>
+        <strong>${kafkistryUser.fullName}</strong>
         <#assign userTooltip>
             <table class='table mb-0'>
               <tr>
-                <td><strong>Username</strong>: ${user.username}</td>
+                <td><strong>Username</strong>: ${kafkistryUser.username}</td>
               </tr>
               <tr>
-                <td><strong>Email</strong>: ${user.email}</td>
+                <td><strong>Email</strong>: ${kafkistryUser.email}</td>
               </tr>
               <tr>
-                <td><strong>Role</strong>: <code>${user.role.authority}</code></td>
+                <td><strong>Role</strong>: <code>${kafkistryUser.role.authority}</code></td>
               </tr>
               <tr>
                 <td><strong>Authorities</strong>:
                   <br/>
-                  <#list user.authorities as authority>
+                  <#list kafkistryUser.authorities as authority>
                     <code>${authority.authority}</code> <#if !authority?is_last><br/></#if>
                   </#list>
                 </td>
