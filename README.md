@@ -29,15 +29,30 @@ See complete [documentation](DOCUMENTATION.md) for configurable properties and p
 
 To run Kafkistry locally with minimal setup:
 ```bash
-docker run -p 8080:8080 --hostname "kr.local" infobip/kafkistry:latest \
-    --USERS_PASSWORDS="foo|bar|Admy|Adminsky|admin@kafkistry.local|ADMIN|" \
-    --OWNER_GROUPS="Test_Group|foo" \
-    --GIT_COMMIT_TO_MASTER_BY_DEFAULT=true  
+docker run -p 8080:8080 --hostname "kr.local" \
+    -e USERS_PASSWORDS="foo|bar|Admy|Adminsky|admin@kafkistry.local|ADMIN|" \
+    -e OWNER_GROUPS="Test_Group|foo" \
+    -e GIT_COMMIT_TO_MASTER_BY_DEFAULT=true \
+    infobip/kafkistry:latest
 ```
 Once container starts open [http://localhost:8080](http://localhost:8080) and login with username: `foo` password: `bar`.
 
 From there you can add kafka cluster to be tracked and check features.
 
+Docker run example with security for connecting to kafka:
+
+```bash
+docker run -p 8080:8080 --hostname "kr.local" \
+    -e USERS_PASSWORDS="foo|bar|Admy|Adminsky|admin@kafkistry.local|ADMIN|" \
+    -e OWNER_GROUPS="Test_Group|foo" \
+    -e GIT_COMMIT_TO_MASTER_BY_DEFAULT=true \
+    -e APP_KAFKA_PROPERTIES_SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username='kafkistry' password='pass';" \
+    -e APP_KAFKA_PROPERTIES_SASL_MECHANISM=PLAIN \
+    -e APP_KAFKA_PROPERTIES_SSL_TRUSTSTORE_LOCATION=/opt/ca/truststore.pem \
+    -e APP_KAFKA_PROPERTIES_SSL_TRUSTSTORE_TYPE=PEM \
+    -v /host/path/to/ssl/ca/dir/:/opt/ca/ \
+    infobip/kafkistry:latest
+```
 
 ## Build (without tests and GPG signing)
 ```
