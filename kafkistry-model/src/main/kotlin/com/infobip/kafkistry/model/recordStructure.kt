@@ -1,7 +1,5 @@
 package com.infobip.kafkistry.model
 
-import com.infobip.kafkistry.model.RecordField as RecordField
-
 enum class PayloadType {
     UNKNOWN, NULL, JSON;
 }

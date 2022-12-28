@@ -2,7 +2,6 @@ package com.infobip.kafkistry.service.consume
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.model.ClusterRef
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryPermissionException
 import org.apache.kafka.clients.consumer.ConsumerRecord

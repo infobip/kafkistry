@@ -32,6 +32,7 @@ class DiskDisbalanceProperties {
     var maxAcceptablePercent: Double = 20.0
     var minUsageThreshold: Double = 10.0
 }
+
 class LogCountDisbalanceProperties {
     var enabled = true
     var maxAcceptablePercent: Double = 10.0
@@ -49,46 +50,48 @@ class ClusterDisbalanceIssuesChecker(
             return emptyList()
         }
         val balanceStatus = globalBalancerService.getCurrentBalanceStatus(clusterIdentifier)
+        return balanceStatus.issues(clusterIdentifier)
+    }
+
+    private fun ClusterBalanceStatus.issues(clusterIdentifier: KafkaClusterIdentifier): List<ClusterInspectIssue> {
         return buildList {
-            with(balanceStatus) {
-                with(properties.diskUsage) {
-                    fun satisfiesThreshold() = maxCurrentDiskUsageOfCapacity(clusterIdentifier)?.let { maxUsage ->
-                        100.0 * maxUsage >= minUsageThreshold
-                    } ?: true
-                    if (enabled && loadDiffPortion.size > maxAcceptablePercent && satisfiesThreshold()) {
-                        disbalanceIssue(
-                            name = "DISK_USAGE_DISBALANCE",
-                            resourceName = "Disk usage",
-                            valueName = "usage.bytes",
-                            acceptableDisbalance = maxAcceptablePercent,
-                            resourceValue = { it.size },
-                            resourceValueBrokers = { it.size },
-                        ).also { add(it) }
-                    }
+            with(properties.diskUsage) {
+                fun satisfiesThreshold() = maxCurrentDiskUsageOfCapacity(clusterIdentifier)?.let { maxUsage ->
+                    100.0 * maxUsage >= minUsageThreshold
+                } ?: true
+                if (enabled && loadDiffPortion.size > maxAcceptablePercent && satisfiesThreshold()) {
+                    disbalanceIssue(
+                        name = "DISK_USAGE_DISBALANCE",
+                        resourceName = "Disk usage",
+                        valueName = "usage.bytes",
+                        acceptableDisbalance = maxAcceptablePercent,
+                        resourceValue = { it.size },
+                        resourceValueBrokers = { it.size },
+                    ).also { add(it) }
                 }
-                with(properties.replicaCount) {
-                    if (enabled && loadDiffPortion.replicas > maxAcceptablePercent) {
-                        disbalanceIssue(
-                            name = "REPLICAS_COUNT_DISBALANCE",
-                            resourceName = "Replica count",
-                            valueName = "replica.count",
-                            acceptableDisbalance = maxAcceptablePercent,
-                            resourceValue = { it.replicas },
-                            resourceValueBrokers = { it.replicas },
-                        ).also { add(it) }
-                    }
+            }
+            with(properties.replicaCount) {
+                if (enabled && loadDiffPortion.replicas > maxAcceptablePercent) {
+                    disbalanceIssue(
+                        name = "REPLICAS_COUNT_DISBALANCE",
+                        resourceName = "Replica count",
+                        valueName = "replica.count",
+                        acceptableDisbalance = maxAcceptablePercent,
+                        resourceValue = { it.replicas },
+                        resourceValueBrokers = { it.replicas },
+                    ).also { add(it) }
                 }
-                with(properties.leadersCount) {
-                    if (enabled && loadDiffPortion.leaders > maxAcceptablePercent) {
-                        disbalanceIssue(
-                            name = "LEADERS_COUNT_DISBALANCE",
-                            resourceName = "Leaders count",
-                            valueName = "leaders.count",
-                            acceptableDisbalance = maxAcceptablePercent,
-                            resourceValue = { it.leaders },
-                            resourceValueBrokers = { it.leaders },
-                        ).also { add(it) }
-                    }
+            }
+            with(properties.leadersCount) {
+                if (enabled && loadDiffPortion.leaders > maxAcceptablePercent) {
+                    disbalanceIssue(
+                        name = "LEADERS_COUNT_DISBALANCE",
+                        resourceName = "Leaders count",
+                        valueName = "leaders.count",
+                        acceptableDisbalance = maxAcceptablePercent,
+                        resourceValue = { it.leaders },
+                        resourceValueBrokers = { it.leaders },
+                    ).also { add(it) }
                 }
             }
         }
