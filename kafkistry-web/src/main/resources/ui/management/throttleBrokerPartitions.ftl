@@ -57,7 +57,7 @@
                 <#if (throttleBrokerTopicPartitionsSuggestion.topicThrottleConfigs[topic])??>
                     <#assign throttleConfigs = throttleBrokerTopicPartitionsSuggestion.topicThrottleConfigs[topic]>
                     <div class="topic-throttle" data-topic="${topic}">
-                        <p><strong>Topic:</strong> <a href="${topicUrl}">${topic}</a></p>
+                        <p><strong>Topic (${topic?index + 1}):</strong> <a href="${topicUrl}">${topic}</a></p>
                         <ul>
                             <#list throttleConfigs as configKey, configValue>
                                 <li class="config-entry" data-configKey="${configKey}" data-configValue="${configValue}">
@@ -70,7 +70,7 @@
                     </div>
                 <#else>
                     <div class="no-topic-throttle" data-topic="${topic}">
-                        <p><strong>Topic:</strong> <a href="${topicUrl}">${topic}</a></p>
+                        <p><strong>Topic (${topic?index + 1}):</strong> <a href="${topicUrl}">${topic}</a></p>
                         <div class="alert alert-secondary">
                             Nothing to throttle
                             <#assign noThrotteTooltip>
