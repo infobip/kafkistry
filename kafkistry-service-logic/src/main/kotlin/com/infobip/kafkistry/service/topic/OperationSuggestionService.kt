@@ -280,9 +280,7 @@ class OperationSuggestionService(
         fun ClusterTopicStatus.usesExcludedBroker(): Boolean {
             if (options.excludedBrokerIds.isEmpty()) return false
             val assignments = existingTopicInfo?.partitionsAssignments
-                ?: throw KafkistryIllegalStateException(
-                    "No fo about existing assignments of topic '$topicName', status is ${status.types.map { it.name }}"
-                )
+                ?: return false
             val usedBrokerIds = assignments.asSequence()
                 .flatMap { it.replicasAssignments }
                 .map { it.brokerId }
