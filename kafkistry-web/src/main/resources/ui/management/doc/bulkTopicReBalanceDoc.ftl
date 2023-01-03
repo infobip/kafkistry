@@ -37,9 +37,17 @@
                 <li>
                     Strategy when having large number of "dis-balanced" topics:
                     <ul>
-                        <li>Select a "batch" of topics to re-balance at once</li>
+                        <li>Select a "batch" of topics to re-assign at once</li>
                         <li>Wait for re-assignments to complete and do verify re-assignments completion (which will remove generated throttles)</li>
                         <li>Repeat with new batch of topics until all topics are "balanced"</li>
+                    </ul>
+                </li>
+                <li>
+                    Downscaling cluster:
+                    <ul>
+                        <li>One might want to reduce number of nodes in cluster</li>
+                        <li>Use bulk re-assignment of topic replicas with specifying which broker-ids not to include in assignments</li>
+                        <li>Once all topics have been re-assigned that particular broker(s) have no topic partition replicas, then such broke(s) can be decommissioned</li>
                     </ul>
                 </li>
             </#if>

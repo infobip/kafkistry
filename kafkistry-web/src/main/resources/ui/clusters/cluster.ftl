@@ -84,7 +84,7 @@
             </a>
             <a href="${appUrl.topicsManagement().showBulkReBalanceTopicsForm(clusterIdentifier)}"
                class="dropdown-item text-info">
-                Bulk re-balance topics...
+                Bulk re-assign/re-balance topics...
             </a>
 
         </div>

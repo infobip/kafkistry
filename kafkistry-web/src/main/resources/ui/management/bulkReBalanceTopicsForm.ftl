@@ -34,7 +34,7 @@
     <div class="form">
 
        <div class="form-row form-group">
-            <label class="col-2">Topic(s) name filter:</label>
+            <label class="col-">Topic(s) name filter:</label>
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-append">
@@ -80,57 +80,57 @@
         </div>
 
         <div class="form-row form-group">
-            <label class="col-2">Topics to re-balance selection order:</label>
-            <div class="col input-group">
-                <div class="input-group-append">
-                    <#assign defaultTopicSelectOrder = "TOP">
-                    <select name="topicSelectOrder" class="form-control" data-style="alert-secondary" title="Topics select order">
-                        <#assign topicSelectOrders = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicSelectOrder"]>
-                        <#list topicSelectOrders as topicSelectOrder, enum>
-                            <#assign selected = topicSelectOrder == defaultTopicSelectOrder>
-                            <option value="${topicSelectOrder}" <#if selected>selected</#if>>${topicSelectOrder} BY</option>
+            <div class="col">
+                <label>Topics to re-balance selection order:</label>
+                <div class="input-group">
+                    <div class="input-group-append">
+                        <#assign defaultTopicSelectOrder = "TOP">
+                        <select name="topicSelectOrder" class="form-control" data-style="alert-secondary" title="Topics select order">
+                            <#assign topicSelectOrders = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicSelectOrder"]>
+                            <#list topicSelectOrders as topicSelectOrder, enum>
+                                <#assign selected = topicSelectOrder == defaultTopicSelectOrder>
+                                <option value="${topicSelectOrder}" <#if selected>selected</#if>>${topicSelectOrder} BY</option>
+                            </#list>
+                        </select>
+                    </div>
+                    <#assign defaultTopicBy = "MIGRATION_BYTES">
+                    <select name="topicBy" class="form-control" title="Topics select by">
+                        <#assign topicByTypes = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicBy"]>
+                        <#list topicByTypes as topicBy, enum>
+                            <#assign selected = topicBy == defaultTopicBy>
+                            <option <#if selected>selected</#if>>${topicBy}</option>
                         </#list>
                     </select>
                 </div>
-                <#assign defaultTopicBy = "MIGRATION_BYTES">
-                <select name="topicBy" class="form-control" title="Topics select by">
-                    <#assign topicByTypes = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicBy"]>
-                    <#list topicByTypes as topicBy, enum>
-                        <#assign selected = topicBy == defaultTopicBy>
-                        <option <#if selected>selected</#if>>${topicBy}</option>
-                    </#list>
-                </select>
             </div>
-        </div>
-
-        <div class="form-row form-group">
-            <label class="col-2">Re-balance mode:</label>
             <div class="col">
-                <#assign defaultReBalanceMode = "REPLICAS_THEN_LEADERS">
-                <select name="reBalanceMode" class="form-control" title="Re-balance mode">
-                    <#assign reBalanceModes = enums["com.infobip.kafkistry.service.topic.ReBalanceMode"]>
-                    <#list reBalanceModes as reBalanceMode, enum>
-                        <#assign selected = reBalanceMode == defaultReBalanceMode>
-                        <option <#if selected>selected</#if>>${reBalanceMode}</option>
-                    </#list>
-                </select>
+                <label>Re-balance mode:</label>
+                <div>
+                    <#assign defaultReBalanceMode = "REPLICAS_THEN_LEADERS">
+                    <select name="reBalanceMode" class="form-control" title="Re-balance mode">
+                        <#assign reBalanceModes = enums["com.infobip.kafkistry.service.topic.ReBalanceMode"]>
+                        <#list reBalanceModes as reBalanceMode, enum>
+                            <#assign selected = reBalanceMode == defaultReBalanceMode>
+                            <option <#if selected>selected</#if>>${reBalanceMode}</option>
+                        </#list>
+                    </select>
+                </div>
             </div>
-        </div>
-
-        <div class="form-row form-group">
-            <label class="col-2">Excluded brokers</label>
             <div class="col">
-                <select name="excludedBrokerIds" class="form-control" title="Broker ids to exclude from assignments" multiple>
-                    <#list clusterInfo.nodeIds as brokerId>
-                        <option>${brokerId?c}</option>
-                    </#list>
-                </select>
+                <label>Excluded brokers:</label>
+                <div>
+                    <select name="excludedBrokerIds" class="form-control" title="Broker ids to exclude from assignments" multiple>
+                        <#list clusterInfo.nodeIds as brokerId>
+                            <option>${brokerId?c}</option>
+                        </#list>
+                    </select>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <div class="row">
+    <div class="form-row">
         <a id="bulkReBalanceUrl" class="btn btn-primary width-full" href="#">
             Propose re-assignments for re-balance
         </a>
