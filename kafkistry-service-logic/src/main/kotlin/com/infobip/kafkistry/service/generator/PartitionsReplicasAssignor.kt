@@ -106,7 +106,9 @@ class PartitionsReplicasAssignor {
             reBalanceAssignments(excludedBrokers = excludedBrokers)
             buildChanges()
         }.newAssignments
-        val finalAssignments = reBalancePreferredLeaders(newAssignments, allBrokers.minus(excludedBrokers)).newAssignments
+        val finalAssignments = reBalancePreferredLeaders(
+            newAssignments, allBrokers.minus(excludedBrokers.toSet())
+        ).newAssignments
         return computeChangeDiff(existingAssignments, finalAssignments)
     }
 

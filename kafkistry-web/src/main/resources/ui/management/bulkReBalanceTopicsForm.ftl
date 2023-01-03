@@ -2,6 +2,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="topicNames" type="java.util.List<java.lang.String>" -->
+<#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
 
 <html lang="en">
 <head>
@@ -111,6 +112,17 @@
                     <#list reBalanceModes as reBalanceMode, enum>
                         <#assign selected = reBalanceMode == defaultReBalanceMode>
                         <option <#if selected>selected</#if>>${reBalanceMode}</option>
+                    </#list>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row form-group">
+            <label class="col-2">Excluded brokers</label>
+            <div class="col">
+                <select name="excludedBrokerIds" class="form-control" title="Broker ids to exclude from assignments" multiple>
+                    <#list clusterInfo.nodeIds as brokerId>
+                        <option>${brokerId?c}</option>
                     </#list>
                 </select>
             </div>

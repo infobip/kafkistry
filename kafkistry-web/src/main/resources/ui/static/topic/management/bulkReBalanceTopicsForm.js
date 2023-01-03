@@ -82,5 +82,8 @@ function extractBulkReBalanceOptions() {
         topicCountLimit: $("input[name=topicCountLimit]").val(),
         topicPartitionCountLimit: $("input[name=topicPartitionCountLimit]").val(),
         totalMigrationBytesLimit: totalMigrationBytesLimit,
+        excludedBrokerIds: $("select[name=excludedBrokerIds]").val().map(function (brokerIdStr) {
+            return parseInt(brokerIdStr);
+        }),
     };
 }

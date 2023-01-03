@@ -132,12 +132,15 @@ class TopicsManagementController(
     fun showBulkReBalanceTopics(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
-        val topicNames = inspectApi.inspectTopicsOnCluster(clusterIdentifier).statusPerTopics
-            ?.map { it.topicName }
-            ?: emptyList()
+        val topicsStatuses = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
+        val clusterInfo = topicsStatuses.clusterInfo ?: throw KafkistryIllegalStateException(
+            "Can't show re-assign form since cluster '$clusterIdentifier' has state: '${topicsStatuses.clusterState}'"
+        )
+        val topicNames = topicsStatuses.statusPerTopics.orEmpty().map { it.topicName }
         return ModelAndView("management/bulkReBalanceTopicsForm", mutableMapOf(
             "clusterIdentifier" to clusterIdentifier,
             "topicNames" to topicNames,
+            "clusterInfo" to clusterInfo,
         ))
     }
 
@@ -152,6 +155,7 @@ class TopicsManagementController(
         @RequestParam(name = "topicCountLimit", required = false) topicCountLimit: Int?,
         @RequestParam(name = "topicPartitionCountLimit", required = false) topicPartitionCountLimit: Int?,
         @RequestParam(name = "totalMigrationBytesLimit", required = false) totalMigrationBytesLimit: Long?,
+        @RequestParam(name = "excludedBrokerIds", required = false) excludedBrokerIds: List<BrokerId>? = null,
     ): ModelAndView {
         val bulkReBalanceTopics = suggestionApi.bulkReBalanceTopics(
             clusterIdentifier, BulkReAssignmentOptions(
@@ -162,7 +166,8 @@ class TopicsManagementController(
                 topicBy = topicBy ?: BulkReAssignmentOptions.TopicBy.MIGRATION_BYTES,
                 topicCountLimit = topicCountLimit?.takeIf { it >= 0 } ?: Int.MAX_VALUE,
                 topicPartitionCountLimit = topicPartitionCountLimit?.takeIf { it >= 0 } ?: Int.MAX_VALUE,
-                totalMigrationBytesLimit = totalMigrationBytesLimit?.takeIf { it >= 0 } ?: Long.MAX_VALUE
+                totalMigrationBytesLimit = totalMigrationBytesLimit?.takeIf { it >= 0 } ?: Long.MAX_VALUE,
+                excludedBrokerIds = excludedBrokerIds.orEmpty(),
             )
         )
         val clusterTopicsReplicas = topicReplicasApi.getClusterTopicsReplicas(clusterIdentifier)

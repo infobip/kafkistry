@@ -588,6 +588,7 @@ data class BulkReAssignmentOptions(
     val topicCountLimit: Int,
     val topicPartitionCountLimit: Int,
     val totalMigrationBytesLimit: Long,
+    val excludedBrokerIds: List<BrokerId>,
 ) {
     enum class TopicBy {
         MIGRATION_BYTES,

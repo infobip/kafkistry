@@ -18,7 +18,10 @@ open class KafkaClusterManagementException : KafkistryException {
 
 open class KafkistryIntegrityException(msg: String) : KafkistryException(msg)
 
-open class KafkistryIllegalStateException(msg: String) : KafkistryException(msg)
+open class KafkistryIllegalStateException : KafkistryException {
+    constructor(msg: String) : super(msg)
+    constructor(msg: String, cause: Throwable) : super(msg, cause)
+}
 
 open class KafkistryUnsupportedOperationException(msg: String) : KafkistryException(msg) {
     override val httpStatus: Int = HttpStatus.METHOD_NOT_ALLOWED.value()

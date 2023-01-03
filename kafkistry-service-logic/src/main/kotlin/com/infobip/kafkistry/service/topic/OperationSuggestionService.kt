@@ -142,10 +142,15 @@ class OperationSuggestionService(
     fun reBalanceTopicAssignments(
         topicName: TopicName,
         clusterIdentifier: KafkaClusterIdentifier,
-        reBalanceMode: ReBalanceMode
+        reBalanceMode: ReBalanceMode,
+        excludedBrokerIds: List<BrokerId> = emptyList(),
     ): ReBalanceSuggestion {
         return reAssignTopicSuggestion(topicName, clusterIdentifier) {
-            when (reBalanceMode) {
+            if (excludedBrokerIds.isNotEmpty() && reBalanceMode != ROUND_ROBIN) {
+                partitionsAssignor.reAssignWithoutBrokers(
+                    existingAssignments, allClusterBrokers, excludedBrokerIds, partitionLoads
+                )
+            } else when (reBalanceMode) {
                 REPLICAS -> partitionsAssignor.reBalanceReplicasAssignments(
                     existingAssignments, allClusterBrokers, partitionLoads
                 )
@@ -159,7 +164,7 @@ class OperationSuggestionService(
                     existingAssignments, allClusterBrokers, partitionLoads
                 )
                 ROUND_ROBIN -> partitionsAssignor.reBalanceRoundRobin(
-                    existingAssignments, allClusterBrokers
+                    existingAssignments, allClusterBrokers - excludedBrokerIds.toSet()
                 )
             }
         }
@@ -182,8 +187,7 @@ class OperationSuggestionService(
                 allBrokers = allClusterBrokers,
                 excludedBrokers = excludedBrokers,
                 existingPartitionLoads = partitionLoads,
-
-                )
+            )
         }
     }
 
@@ -269,14 +273,36 @@ class OperationSuggestionService(
             }
         }
 
+        fun ClusterTopicStatus.hasDisbalance() = status.types.any {
+            it == PARTITION_REPLICAS_DISBALANCE || it == PARTITION_LEADERS_DISBALANCE
+        }
+
+        fun ClusterTopicStatus.usesExcludedBroker(): Boolean {
+            if (options.excludedBrokerIds.isEmpty()) return false
+            val assignments = existingTopicInfo?.partitionsAssignments
+                ?: throw KafkistryIllegalStateException(
+                    "No fo about existing assignments of topic '$topicName', status is ${status.types.map { it.name }}"
+                )
+            val usedBrokerIds = assignments.asSequence()
+                .flatMap { it.replicasAssignments }
+                .map { it.brokerId }
+                .toSet()
+            return options.excludedBrokerIds.any { it in usedBrokerIds }
+        }
+
         val topicsReBalanceSuggestions = statusPerTopics.asSequence()
-            .filter { topic ->
-                topic.status.types.any { it == PARTITION_REPLICAS_DISBALANCE || it == PARTITION_LEADERS_DISBALANCE }
-            }
+            .filter { it.usesExcludedBroker() || it.hasDisbalance() }
             .map { it.topicName }
             .filter(includeTopicFilter.recordFilteredOut(inclusionLimited))
             .filter(excludeTopicFilter.recordFilteredOut(exclusionLimited))
-            .map { it to reBalanceTopicAssignments(it, clusterIdentifier, options.reBalanceMode) }
+            .map {
+                it to try {
+                    reBalanceTopicAssignments(it, clusterIdentifier, options.reBalanceMode, options.excludedBrokerIds)
+                } catch (ex: KafkistryValidationException) {
+                    throw KafkistryIllegalStateException("Can't re-assign topic: '$it'", ex)
+                }
+            }
+            .filter { (_, suggestion) -> suggestion.assignmentsChange.hasChange }
             .sortedByDescending { (_, suggestion) ->
                 val factor = when (options.topicSelectOrder) {
                     BulkReAssignmentOptions.TopicSelectOrder.TOP -> 1

@@ -89,6 +89,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
             "includeTopicNamePattern", "excludeTopicNamePattern",
             "topicSelectOrder", "topicBy",
             "topicCountLimit", "topicPartitionCountLimit", "totalMigrationBytesLimit",
+            "excludedBrokerIds",
         )
     )
     private val showThrottleBrokerPartitionsForm = Url(
@@ -144,6 +145,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
         topicCountLimit: Int,
         topicPartitionCountLimit: Int,
         totalMigrationBytesLimit: Long,
+        excludedBrokerIds: String,
     ) = showBulkReBalanceTopics.render("clusterIdentifier" to clusterIdentifier,
         "reBalanceMode" to reBalanceMode,
         "includeTopicNamePattern"  to includeTopicNamePattern,
@@ -153,6 +155,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
         "topicCountLimit" to topicCountLimit.toString(),
         "topicPartitionCountLimit" to topicPartitionCountLimit.toString(),
         "totalMigrationBytesLimit" to totalMigrationBytesLimit.toString(),
+        "excludedBrokerIds" to excludedBrokerIds,
     )
 
     fun showThrottleBrokerPartitionsForm(

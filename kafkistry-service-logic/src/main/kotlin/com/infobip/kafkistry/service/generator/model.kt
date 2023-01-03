@@ -12,7 +12,9 @@ data class AssignmentsChange(
         val newLeaders: Map<Partition, BrokerId>,
         val exLeaders: Map<Partition, BrokerId>,
         val reAssignedPartitionsCount: Int,
-)
+) {
+    val hasChange: Boolean get() = reAssignedPartitionsCount > 0
+}
 
 data class AssignmentsValidation(
         val valid: Boolean,

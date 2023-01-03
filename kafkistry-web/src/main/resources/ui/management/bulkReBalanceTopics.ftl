@@ -58,6 +58,7 @@
                 <div class="float-left">
                     <span class="if-collapsed">▼</span>
                     <span class="if-not-collapsed">△</span>
+                    <strong>${topicName?index + 1})</strong>
                     <span>${topicName}</span>
                     <span>
                         <a href="${appUrl.topics().showInspectTopicOnCluster(topicName, clusterIdentifier)}">
