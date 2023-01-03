@@ -383,7 +383,7 @@ class DataStateInitializer(
             )
             log.info("Producing to topic {}", name)
             KafkaProducer(producerConfig, StringSerializer(), StringSerializer()).use { producer ->
-                (0..500_000)
+                (0..5_000)
                     .map {
                         val value = if (it % 10 != 0) {
                             """{"id":$it,"msg":"Dummy message $it","secret":$it}"""
@@ -435,7 +435,7 @@ class DataStateInitializer(
             log.info("Producing to topic {}", name)
             KafkaProducer(producerConfig, StringSerializer(), StringSerializer()).use { producer ->
                 val selector = PartitionSelector(6, 0.5)
-                (0..1_000_000)
+                (0..10_000)
                     .map {
                         val partition = selector.nextPartition()
                         ProducerRecord(
