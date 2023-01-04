@@ -3,6 +3,7 @@ package com.infobip.kafkistry.it.broswer.cases.topics
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.it.broswer.Context
 import com.infobip.kafkistry.it.broswer.UITestCase
+import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.newTopic
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -12,6 +13,7 @@ abstract class AlterTopicConfig(contextSupplier: () -> Context) : UITestCase(con
 
     private val topicBefore = newTopic(
             name = "my-alter-1",
+            properties = TopicProperties(1, 2),
             config = mapOf(
                     "retention.bytes" to "2147483648",
                     "retention.ms" to "600000"
@@ -19,6 +21,7 @@ abstract class AlterTopicConfig(contextSupplier: () -> Context) : UITestCase(con
     )
     private val topicAfter = newTopic(
             name = "my-alter-1",
+            properties = TopicProperties(1, 2),
             config = mapOf(
                     "retention.bytes" to "4294967296",
                     "retention.ms" to "1200000"

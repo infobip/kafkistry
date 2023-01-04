@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(contextSupplier) {
 
-    private val topic = newTopic("my-edit-1")
+    private val topic = newTopic("my-edit-1", properties = TopicProperties(1, 2))
 
     @BeforeEach
     fun prepareClusterAndMissingTopic() {

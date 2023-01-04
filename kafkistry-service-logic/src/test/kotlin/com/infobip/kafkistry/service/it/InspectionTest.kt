@@ -39,7 +39,11 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.util.function.Function
 
 @RunWith(SpringRunner::class)
-@SpringBootTest
+@SpringBootTest(
+    properties = [
+        "app.topic-validation.disabled-rules=com.infobip.kafkistry.service.topic.validation.rules.ReplicationFactorOneRule",
+    ],
+)
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
 @ActiveProfiles("it", "dir")
 class InspectionTest {

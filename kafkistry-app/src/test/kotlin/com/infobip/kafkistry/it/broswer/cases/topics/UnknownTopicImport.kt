@@ -3,6 +3,7 @@ package com.infobip.kafkistry.it.broswer.cases.topics
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.it.broswer.Context
 import com.infobip.kafkistry.it.broswer.UITestCase
+import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.newTopic
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -12,7 +13,7 @@ abstract class UnknownTopicImport(contextSupplier: () -> Context) : UITestCase(c
 
     @BeforeEach
     fun prepareClusterAndUnknownTopic() {
-        createTopicOnKafka(newTopic("my-unknown-1"))
+        createTopicOnKafka(newTopic("my-unknown-1", properties = TopicProperties(1, 2)))
         addKafkaClusterToRegistry() //add cluster after creation of topic to get aware that topic exist right away
     }
 

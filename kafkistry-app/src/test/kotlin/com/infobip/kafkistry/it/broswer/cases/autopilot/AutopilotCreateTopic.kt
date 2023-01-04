@@ -5,6 +5,7 @@ import com.infobip.kafkistry.hostname.HostnameResolver
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.it.broswer.Context
 import com.infobip.kafkistry.it.broswer.UITestCase
+import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.newTopic
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -16,7 +17,7 @@ abstract class AutopilotCreateTopic(contextSupplier: () -> Context) : UITestCase
     fun prepareClusterAndMissingTopic() {
         appCtx.getBean(AutopilotEnabledFilterProperties::class.java).enabled = true
         addKafkaClusterToRegistry()
-        addTopicToRegistry(newTopic("autopilot-missing-1"))
+        addTopicToRegistry(newTopic("autopilot-missing-1", properties = TopicProperties(1, 2)))
     }
 
     @AfterEach

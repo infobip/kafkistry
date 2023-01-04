@@ -41,8 +41,9 @@ import jakarta.servlet.http.HttpServletRequest
         classes = [Kafkistry::class, SecurityPermissionsRestApiItTest.MockSecurityConfig::class],
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = [
-            "app.security.enabled=true"
-        ]
+            "app.security.enabled=true",
+            "app.topic-validation.disabled-rules=com.infobip.kafkistry.service.topic.validation.rules.ReplicationFactorOneRule",
+        ],
 )
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
 @ActiveProfiles("defaults", "it", "dir")
