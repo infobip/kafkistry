@@ -14,6 +14,9 @@ class ReplicationFactorOneRule : ValidationRule {
         if (topicDescriptionView.properties.replicationFactor > 1) {
             return valid()
         }
+        if (!topicDescriptionView.presentOnCluster) {
+            return valid()
+        }
         val clusterNodes = clusterMetadata.info?.nodeIds ?: return valid()
         if (clusterNodes.size < 2) {
             return valid()
