@@ -121,6 +121,7 @@
                     <tr>
                         <th>Cluster</th>
                         <th>Tags</th>
+                        <th>Status</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -146,6 +147,9 @@
                                 <#else>
                                     ---
                                 </#if>
+                            </td>
+                            <td>
+                                <@util.namedTypeStatusAlert type=clusterStatus.clusterState/>
                             </td>
                         </tr>
                     </#list>
