@@ -43,6 +43,7 @@
     </div>
     <div class="card-body p-0 pt-2 pb-2">
 
+    <#assign disabledCount = 0>
     <table id="clusters" class="table datatable table-bordered m-0">
         <thead class="thead-dark">
         <tr>
@@ -55,6 +56,10 @@
         </thead>
         <tbody>
         <#list clustersStatuses as clusterStatus>
+            <#if clusterStatus.clusterState == "DISABLED">
+                <#assign disabledCount++>
+                <#continue>
+            </#if>
             <#assign cluster = clusterStatus.cluster>
             <#assign clusterIdentifier = cluster.identifier>
             <tr class="cluster-row table-row no-hover"
@@ -101,6 +106,54 @@
 
     </div>
     </div>
+
+    <#if disabledCount gt 0>
+        <br/>
+        <div class="card">
+            <div  class="card-header collapsed" data-toggle="collapsing" data-target="#disabled-clusters-card-body">
+                <span class="when-collapsed" title="expand...">▼</span>
+                <span class="when-not-collapsed" title="collapse...">△</span>
+                <span class="h5">Disabled clusters (${disabledCount})</span>
+            </div>
+            <div id="disabled-clusters-card-body" class="card-body p-0 pt-2 pb-2 collapseable">
+                <table id="disabled-clusters" class="table datatable table-bordered m-0">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>Cluster</th>
+                        <th>Tags</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <#list clustersStatuses as clusterStatus>
+                        <#if clusterStatus.clusterState != "DISABLED">
+                            <#continue>
+                        </#if>
+                        <#assign cluster = clusterStatus.cluster>
+                        <#assign clusterIdentifier = cluster.identifier>
+                        <tr class="cluster-row table-row no-hover"
+                            data-clusterIdentifier="${clusterIdentifier}"
+                            data-clusterState="${clusterStatus.clusterState}">
+                            <td>
+                                <a class="btn btn-sm btn-outline-dark" href="${appUrl.clusters().showCluster(clusterIdentifier)}">
+                                    ${clusterIdentifier}
+                                </a>
+                            </td>
+                            <td>
+                                <#if cluster.tags?size gt 0>
+                                    <#list cluster.tags as tag>
+                                        <span class="mb-1 badge badge-secondary">${tag}</span>
+                                    </#list>
+                                <#else>
+                                    ---
+                                </#if>
+                            </td>
+                        </tr>
+                    </#list>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </#if>
 </div>
 
 <#include "../common/pageBottom.ftl">
