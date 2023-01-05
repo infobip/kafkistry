@@ -134,11 +134,22 @@
                     </p>
                 <#else>
                     <#if topicActions?seq_contains("IMPORT_TOPIC")>
-                        <a href="${appUrl.topics().showImportTopic(topicName)}"
-                            class="text-nowrap btn btn-outline-primary btn-sm m-1">
-                            Import topic... <@info.icon tooltip=doc.importTopicBtn/>
-                        </a>
+                        <p class="float-left mr-2">
+                            <a href="${appUrl.topics().showImportTopic(topicName)}">
+                                <button class="btn btn-outline-primary btn-sm">
+                                    Import topic... <@info.icon tooltip=doc.importTopicBtn/>
+                                </button>
+                            </a>
+                        </p>
                     </#if>
+                </#if>
+
+                <#if topicActions?seq_contains("DELETE_TOPIC_ON_KAFKA")>
+                    <p class="float-left mr-2">
+                        <a href="${appUrl.topicsManagement().showBulkDeleteUnwantedTopicOnClusters(topicName)}">
+                            <button class="btn btn-outline-danger btn-sm">Delete where unwanted...</button>
+                        </a>
+                    </p>
                 </#if>
             </td>
         </tr>

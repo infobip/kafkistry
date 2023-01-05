@@ -15,6 +15,7 @@ import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MA
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING_ON_CLUSTERS
+import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTERS
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_RE_BALANCE
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_RE_BALANCE_FORM
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_RE_ELECT_REPLICA_LEADERS
@@ -94,6 +95,27 @@ class TopicsManagementController(
         return ModelAndView("management/missingTopicBulkCreationOnClusters", mutableMapOf(
                 "topic" to topic,
                 "clusterExpectedTopicInfos" to clusterExpectedTopicInfos
+        ))
+    }
+
+    @GetMapping(TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTERS)
+    fun showBulkDeleteUnwantedTopicOnClusters(
+        @RequestParam("topicName") topicName: TopicName
+    ): ModelAndView {
+        val unwantedTopicClusters = inspectApi.inspectTopic(topicName).statusPerClusters
+            .filter { AvailableAction.DELETE_TOPIC_ON_KAFKA in it.status.availableActions }
+            .map { it.clusterIdentifier }
+        val clusterConsumerGroups = unwantedTopicClusters.associateWith {
+            consumersApi.clusterTopicConsumers(it, topicName)
+        }
+        val clusterTopicOffsets = unwantedTopicClusters.associateWith {
+            topicOffsetsApi.getTopicOffsets(topicName, it)
+        }
+        return ModelAndView("management/unwantedTopicBulkDeletionOnClusters", mutableMapOf(
+            "topicName" to topicName,
+            "unwantedTopicClusters" to unwantedTopicClusters,
+            "clusterConsumerGroups" to clusterConsumerGroups,
+            "clusterTopicOffsets" to clusterTopicOffsets,
         ))
     }
 

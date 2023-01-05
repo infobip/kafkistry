@@ -33,68 +33,8 @@
     </div>
 
     <#assign clusterIdentifier = clusterInfo.identifier>
-
     <table class="table">
-        <tr>
-            <th>Cluster</th>
-            <td>
-                <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a>
-            </td>
-        </tr>
-        <tr>
-            <th>Topic</th>
-            <td>
-                <a href="${appUrl.topics().showTopic(topicName)}">${topicName}</a>
-            </td>
-        </tr>
-        <tr>
-            <th>Producing</th>
-            <td>
-                <#if topicOffsets??>
-                    <#include "../topics/topicOffsetsStatus.ftl">
-                <#else>
-                    <i>N/A</i>
-                </#if>
-            </td>
-        </tr>
-        <tr>
-            <th>Consumers</th>
-            <td>
-                <#if topicConsumerGroups?size == 0>
-                    <i>(no consumer groups reading from this topic)</i>
-                <#else>
-                    <table class="table table-sm mb-0">
-                        <thead class="thead-dark">
-                        <tr>
-                            <th style="width: 60%">Group</th>
-                            <th>Status</th>
-                            <th>Lag</th>
-                        </tr>
-                        </thead>
-                        <#list topicConsumerGroups as consumerGroup>
-                            <tr>
-                                <td>
-                                    <a href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, consumerGroup.groupId, topicName)}">
-                                        ${consumerGroup.groupId}
-                                    </a>
-                                </td>
-                                <td>
-                                    <@util.namedTypeStatusAlert type=consumerGroup.status/>
-                                </td>
-                                <#list consumerGroup.topicMembers as topicMember>
-                                    <#if topicMember.topicName == topicName>
-                                        <td>
-                                            <@util.namedTypeStatusAlert type=topicMember.lag.status/>
-                                        </td>
-                                    </#if>
-                                </#list>
-                            </tr>
-                        </#list>
-                    </table>
-                </#if>
-
-            </td>
-        </tr>
+        <#include "unwantedTopicInfo.ftl">
     </table>
 
     <div class="card">
