@@ -15,6 +15,7 @@ import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MA
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_CREATE_MISSING_ON_CLUSTERS
+import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTER
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTERS
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_RE_BALANCE
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT_BULK_RE_BALANCE_FORM
@@ -116,6 +117,28 @@ class TopicsManagementController(
             "unwantedTopicClusters" to unwantedTopicClusters,
             "clusterConsumerGroups" to clusterConsumerGroups,
             "clusterTopicOffsets" to clusterTopicOffsets,
+        ))
+    }
+
+    @GetMapping(TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTER)
+    fun showBulkDeleteUnwantedTopicsOnCluster(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
+    ): ModelAndView {
+        val unwantedTopics = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
+            .statusPerTopics.orEmpty()
+            .filter { AvailableAction.DELETE_TOPIC_ON_KAFKA in it.status.availableActions }
+            .map { it.topicName }
+        val topicsConsumerGroups = unwantedTopics.associateWith {
+            consumersApi.clusterTopicConsumers(clusterIdentifier, it)
+        }
+        val topicsTopicOffsets = unwantedTopics.associateWith {
+            topicOffsetsApi.getTopicOffsets(it, clusterIdentifier)
+        }
+        return ModelAndView("management/unwantedTopicsBulkDeletionOnCluster", mutableMapOf(
+            "clusterIdentifier" to clusterIdentifier,
+            "unwantedTopics" to unwantedTopics,
+            "topicsConsumerGroups" to topicsConsumerGroups,
+            "topicsTopicOffsets" to topicsTopicOffsets,
         ))
     }
 

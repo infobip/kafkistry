@@ -22,6 +22,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
         const val TOPICS_MANAGEMENT_BULK_CREATE_MISSING = "/bulk-create-missing-topics"
         const val TOPICS_MANAGEMENT_BULK_CREATE_MISSING_ON_CLUSTERS = "/bulk-create-missing-topic-on-clusters"
         const val TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTERS = "/bulk-delete-unwanted-topic-on-clusters"
+        const val TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTER = "/bulk-delete-unwanted-topics-on-cluster"
         const val TOPICS_MANAGEMENT_BULK_RE_ELECT_REPLICA_LEADERS = "/bulk-re-elect-replica-leaders"
         const val TOPICS_MANAGEMENT_BULK_CONFIG_UPDATES = "/bulk-topics-config-updates"
         const val TOPICS_MANAGEMENT_BULK_VERIFY_RE_ASSIGNMENTS = "/bulk-verify-re-assignments"
@@ -74,6 +75,9 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
     private val showBulkDeleteUnwantedTopicOnClusters = Url(
         "$base$TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTERS", listOf("topicName")
     )
+    private val showBulkDeleteUnwantedTopicsOnCluster = Url(
+        "$base$TOPICS_MANAGEMENT_BULK_DELETE_UNWANTED_ON_CLUSTER", listOf("clusterIdentifier")
+    )
     private val showBulkReElectReplicaLeaders = Url(
         "$base$TOPICS_MANAGEMENT_BULK_RE_ELECT_REPLICA_LEADERS", listOf("clusterIdentifier")
     )
@@ -125,6 +129,10 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
     fun showBulkDeleteUnwantedTopicOnClusters(
             topicName: TopicName
     ) = showBulkDeleteUnwantedTopicOnClusters.render("topicName" to topicName)
+
+    fun showBulkDeleteUnwantedTopicsOnCluster(
+            clusterIdentifier: KafkaClusterIdentifier
+    ) = showBulkDeleteUnwantedTopicsOnCluster.render("clusterIdentifier" to clusterIdentifier)
 
     fun showBulkReElectReplicaLeaders(
             clusterIdentifier: KafkaClusterIdentifier

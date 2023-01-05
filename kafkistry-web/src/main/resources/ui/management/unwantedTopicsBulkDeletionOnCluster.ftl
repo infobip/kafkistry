@@ -1,9 +1,9 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="topicName" type="java.lang.String" -->
-<#-- @ftlvariable name="unwantedTopicClusters" type="java.util.List<java.lang.String>" -->
-<#-- @ftlvariable name="clusterConsumerGroups" type="java.util.Map<com.infobip.kafkistry.service.consumers.KafkaConsumerGroup>" -->
-<#-- @ftlvariable name="clusterTopicOffsets" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.offsets.TopicOffsets>" -->
+<#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
+<#-- @ftlvariable name="unwantedTopics" type="java.util.List<java.lang.String>" -->
+<#-- @ftlvariable name="topicsConsumerGroups" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.consumers.KafkaConsumerGroup>" -->
+<#-- @ftlvariable name="topicsTopicOffsets" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.offsets.TopicOffsets>" -->
 
 <html lang="en">
 
@@ -11,7 +11,7 @@
     <#include "../commonResources.ftl"/>
     <script src="static/topic/management/unwantedTopicsBulkDeletion.js?ver=${lastCommit}"></script>
     <script src="static/bulkUtil.js?ver=${lastCommit}"></script>
-    <title>Kafkistry: Unwanted topic bulk deletion</title>
+    <title>Kafkistry: Unwanted topics bulk deletion</title>
 </head>
 
 <body>
@@ -20,25 +20,25 @@
 
 <div class="container">
 
-    <h1>Unwanted topic bulk deletion</h1>
+    <h1>Unwanted topics bulk deletion</h1>
     <hr>
-    <h3>You are about to delete topic from multiple clusters</h3>
+    <h3>You are about to delete multiple topics from cluster</h3>
     <br>
 
-    <p><strong>Topic</strong>: <a href="${appUrl.topics().showTopic(topicName)}">${topicName}</a>
+    <p><strong>Cluster</strong>: <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a>
     </p>
-    <p>There are ${unwantedTopicClusters?size} cluster(s) on which this topic will be deleted</p>
+    <p>There are ${unwantedTopics?size} topics(s) on cluster which will be deleted</p>
 
     <div class="alert alert-danger">
         <strong>WARNING</strong>: <span style="color: red;">this operation causes data loss</span>
     </div>
 
-    <#assign bulkIterateBy = "CLUSTER">
+    <#assign bulkIterateBy = "TOPIC">
     <table class="table">
-        <#list unwantedTopicClusters as clusterIdentifier>
-            <#assign topicConsumerGroups = clusterConsumerGroups[clusterIdentifier]>
-            <#if (clusterTopicOffsets[clusterIdentifier])??>
-                <#assign topicOffsets = clusterTopicOffsets[clusterIdentifier]>
+        <#list unwantedTopics as topicName>
+            <#assign topicConsumerGroups = topicsConsumerGroups[topicName]>
+            <#if (topicsTopicOffsets[topicName])??>
+                <#assign topicOffsets = topicsTopicOffsets[topicName]>
             <#else>
                 <#assign topicOffsets = "">
             </#if>
@@ -55,8 +55,8 @@
     </div>
     <br/>
 
-    <button id="bulk-delete-where-unwanted-btn" class="btn btn-danger btn-sm" data-topic-name="${topicName}">
-        Delete unwanted topic on clusters (${unwantedTopicClusters?size})
+    <button id="bulk-delete-unwanted-topics-btn" class="btn btn-danger btn-sm" data-cluster-identifier="${clusterIdentifier}">
+        Delete unwanted topics on cluster (${unwantedTopics?size})
     </button>
     <#include "../common/cancelBtn.ftl">
 

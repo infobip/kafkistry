@@ -86,6 +86,10 @@
                class="dropdown-item text-info">
                 Bulk re-assign/re-balance topics...
             </a>
+            <a href="${appUrl.topicsManagement().showBulkDeleteUnwantedTopicsOnCluster(clusterIdentifier)}"
+               class="dropdown-item text-info">
+                Bulk delete unwanted topics...
+            </a>
 
         </div>
     </div>
