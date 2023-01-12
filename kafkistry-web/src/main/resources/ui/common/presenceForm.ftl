@@ -89,7 +89,7 @@
          <#if presenceType == 'ALL_CLUSTERS' || presenceType == 'TAGGED_CLUSTERS'>style="display: none;"</#if>>
         <#assign selectedClusters = (presence.kafkaClusterIdentifiers)![]>
         <select name="selectedClusters" multiple title="Select cluster(s)..." class="float-left form-control"
-                data-live-search="true" data-size="8">
+                data-live-search="true" data-size="8" <#if tagOnly>disabled</#if>>
             <#list existingValues.clusterRefs as clusterRef>
                 <#assign cluster = clusterRef.identifier>
                 <#assign tags = clusterRef.tags>

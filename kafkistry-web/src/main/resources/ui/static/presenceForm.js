@@ -68,4 +68,7 @@ function enableAllPresenceTypes() {
         $(this).find("input").prop("disabled", false);
     });
     presence.find(".bypass-only-tag-presence-container").hide();
+    let clusterSelectPicker = presence.find(".selected-clusters select");
+    clusterSelectPicker.prop("disabled", false);
+    clusterSelectPicker.selectpicker('refresh');
 }
