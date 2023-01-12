@@ -6,6 +6,8 @@
 <#-- @ftlvariable name="selectedCluster"  type="java.lang.String" -->
 <#-- @ftlvariable name="pendingPrincipalRequests"  type="java.util.List<com.infobip.kafkistry.service.history.AclsRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autopilotActions"  type="java.util.List<com.infobip.kafkistry.autopilot.repository.ActionFlow>" -->
 
 <html lang="en">
 
@@ -70,6 +72,15 @@
             <tr>
                 <th>Description</th>
                 <td style="white-space: pre-wrap;" id="description" class="text-links">${principalRuleClusters.principalAcls.description}</td>
+            </tr>
+        </#if>
+        <#if autopilotEnabled>
+            <tr class="<#if autopilotActions?size gt 0>no-hover</#if>">
+                <th>Autopilot</th>
+                <td>
+                    <#assign actionsSearchTerm = principal>
+                    <#include "../autopilot/relatedActions.ftl">
+                </td>
             </tr>
         </#if>
         <tr>

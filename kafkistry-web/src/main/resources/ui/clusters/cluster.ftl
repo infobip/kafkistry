@@ -4,6 +4,8 @@
 <#-- @ftlvariable name="pendingClusterRequests"  type="java.util.List<com.infobip.kafkistry.service.history.ClusterRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="brokerConfigDoc" type="java.util.Map<java.lang.String, java.lang.String>" -->
+<#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autopilotActions"  type="java.util.List<com.infobip.kafkistry.autopilot.repository.ActionFlow>" -->
 
 <html lang="en">
 
@@ -126,7 +128,7 @@
 
     <br/>
 
-    <table class="table table-sm fixed-layout mt-3">
+    <table class="table table-sm mt-3">
         <tr>
             <th>Cluster identifier</th>
             <td>${clusterIdentifier}</td>
@@ -171,6 +173,15 @@
             <th>Last refresh</th>
             <td class="time" data-time="${clusterStatus.lastRefreshTime?c}"></td>
         </tr>
+        <#if autopilotEnabled>
+            <tr class="<#if autopilotActions?size gt 0>no-hover</#if>">
+                <th>Autopilot</th>
+                <td>
+                    <#assign actionsSearchTerm = clusterIdentifier>
+                    <#include "../autopilot/relatedActions.ftl">
+                </td>
+            </tr>
+        </#if>
         <#if gitStorageEnabled>
             <tr>
                 <th>Pending changes</th>

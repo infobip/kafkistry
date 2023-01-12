@@ -37,6 +37,11 @@ interface ActionsRepository {
     fun find(actionIdentifier: AutopilotActionIdentifier): ActionFlow?
 
     /**
+     * Finds and return [List] of [ActionFlow] matching given [filter].
+     */
+    fun findBy(filter: (ActionMetadata) -> Boolean): List<ActionFlow>
+
+    /**
      * Periodically called to perform cleanup.
      * Repository is intended to store limited amount of data with limited time retention.
      * This function deletes data which is too old or evicted because of count limit.

@@ -49,6 +49,7 @@ class TopicsController(
     private val topicOldestRecordAgeApiOpt: Optional<TopicOldestRecordAgeApi>,
     private val resourceAnalyzerApi: ResourceAnalyzerApi,
     private val kStreamAppsApi: KStreamAppsApi,
+    private val autopilotApi: AutopilotApi,
     private val clusterEnabledFilter: ClusterEnabledFilter,
 ) : BaseController() {
 
@@ -156,13 +157,15 @@ class TopicsController(
 
     @GetMapping(TOPICS_INSPECT)
     fun showTopic(
-            @RequestParam("topicName") topicName: TopicName
+        @RequestParam("topicName") topicName: TopicName
     ): ModelAndView {
         val topicStatuses = inspectApi.inspectTopic(topicName)
         val pendingTopicRequests = topicsApi.pendingTopicRequests(topicName)
+        val autopilotActions = autopilotApi.findTopicActions(topicName)
         return ModelAndView("topics/topic", mutableMapOf(
-                "topic" to topicStatuses,
-                "pendingTopicRequests" to pendingTopicRequests,
+            "topic" to topicStatuses,
+            "pendingTopicRequests" to pendingTopicRequests,
+            "autopilotActions" to autopilotActions,
         ))
     }
 
@@ -216,6 +219,7 @@ class TopicsController(
             null
         }
         val kStreamsInvolvement = kStreamAppsApi.topicKStreamApps(topicName, clusterIdentifier)
+        val autopilotActions = autopilotApi.findTopicOnClusterActions(topicName, clusterIdentifier)
         return ModelAndView("topics/inspect", mutableMapOf(
             "topicName" to topicName,
             "clusterIdentifier" to clusterIdentifier,
@@ -234,6 +238,7 @@ class TopicsController(
             "kStreamsInvolvement" to kStreamsInvolvement,
             "topicConfigDoc" to existingValuesApi.all().topicConfigDoc,
             "inspectExtensionProperties" to topicInspectExtensionProperties,
+            "autopilotActions" to autopilotActions,
         ))
     }
 

@@ -1,15 +1,13 @@
 package com.infobip.kafkistry.autopilot.binding.topics
 
-import com.infobip.kafkistry.autopilot.binding.ActionDescription
-import com.infobip.kafkistry.autopilot.binding.ActionMetadata
-import com.infobip.kafkistry.autopilot.binding.ActionTargetType
-import com.infobip.kafkistry.autopilot.binding.AutopilotAction
+import com.infobip.kafkistry.autopilot.binding.*
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicConfigMap
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.TopicOnClusterInspectionResult
 
 const val TOPIC_TARGET_TYPE: ActionTargetType = "TOPIC"
+const val TOPIC_NAME_ATTR: String = "topicName"
 
 sealed interface TopicAutopilotAction : AutopilotAction {
     val topicName: TopicName
@@ -21,8 +19,8 @@ sealed interface TopicAutopilotAction : AutopilotAction {
         get() = ActionMetadata(
             actionIdentifier = javaClass.name + ": " + topicName +  "@ " + clusterRef.identifier,
             description, clusterRef, mapOf(
-                "clusterIdentifier" to clusterRef.identifier,
-                "topicName" to topicName,
+                CLUSTER_IDENTIFIER_ATTR to clusterRef.identifier,
+                TOPIC_NAME_ATTR to topicName,
             )
         )
 }

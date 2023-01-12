@@ -36,6 +36,7 @@ class ClustersController(
     private val topicsApi: TopicsApi,
     private val inspectApi: InspectApi,
     private val consumersApi: ConsumersApi,
+    private val autopilotApi: AutopilotApi,
     private val clusterBalancingApi: ClusterBalancingApi,
     private val resourcesAnalyzerApi: ResourceAnalyzerApi,
     private val existingValuesApi: ExistingValuesApi,
@@ -96,10 +97,12 @@ class ClustersController(
     ): ModelAndView {
         val clusterStatus = inspectApi.inspectClusterStatus(clusterIdentifier)
         val pendingClusterRequests = clustersApi.pendingClustersRequests(clusterIdentifier)
+        val autopilotActions = autopilotApi.findClusterActions(clusterIdentifier)
         return ModelAndView("clusters/cluster", mutableMapOf(
             "clusterStatus" to clusterStatus,
             "pendingClusterRequests" to pendingClusterRequests,
             "brokerConfigDoc" to existingValuesApi.all().brokerConfigDoc,
+            "autopilotActions" to autopilotActions,
         ))
     }
 

@@ -5,6 +5,8 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.Placeholder
 import kotlin.reflect.KClass
 
+const val CLUSTER_IDENTIFIER_ATTR: String = "clusterIdentifier"
+
 /**
  * Globally unique identifier for some [AutopilotAction].
  * Two equal [AutopilotAction]s must have equal [AutopilotActionIdentifier]s.

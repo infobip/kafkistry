@@ -3,6 +3,7 @@ package com.infobip.kafkistry.autopilot.repository
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.infobip.kafkistry.autopilot.binding.ActionMetadata
 import com.infobip.kafkistry.autopilot.binding.AutopilotActionIdentifier
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcome
 import org.slf4j.LoggerFactory
@@ -64,6 +65,10 @@ class DiskPersistedActionsRepository(
 
     override fun find(actionIdentifier: AutopilotActionIdentifier): ActionFlow? {
         return delegate.find(actionIdentifier)
+    }
+
+    override fun findBy(filter: (ActionMetadata) -> Boolean): List<ActionFlow> {
+        return delegate.findBy(filter)
     }
 
     override fun cleanup() {

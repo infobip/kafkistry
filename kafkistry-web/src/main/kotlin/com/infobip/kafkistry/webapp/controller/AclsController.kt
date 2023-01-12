@@ -1,9 +1,6 @@
 package com.infobip.kafkistry.webapp.controller
 
-import com.infobip.kafkistry.api.AclsApi
-import com.infobip.kafkistry.api.ExistingValuesApi
-import com.infobip.kafkistry.api.InspectApi
-import com.infobip.kafkistry.api.SuggestionApi
+import com.infobip.kafkistry.api.*
 import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalAclRules
@@ -35,7 +32,8 @@ class AclsController(
         private val inspectApi: InspectApi,
         private val suggestionApi: SuggestionApi,
         private val aclsApi: AclsApi,
-        private val existingValuesApi: ExistingValuesApi
+        private val autopilotApi: AutopilotApi,
+        private val existingValuesApi: ExistingValuesApi,
 ) : BaseController() {
 
     @GetMapping
@@ -59,12 +57,14 @@ class AclsController(
         val principalInspectionClusterRules = inspectApi.inspectPrincipalAcls(principal)
         val principalInspectionRuleClusters = principalInspectionClusterRules.transpose()
         val pendingPrincipalAclsRequests = aclsApi.pendingPrincipalRequests(principal)
+        val autopilotActions = autopilotApi.findPrincipalActions(principal)
         return ModelAndView("acls/principal", mapOf(
-                "principalRuleClusters" to principalInspectionRuleClusters,
-                "principalClusterRules" to principalInspectionClusterRules,
-                "selectedRule" to selectedRule,
-                "selectedCluster" to selectedClusterIdentifier,
-                "pendingPrincipalRequests" to pendingPrincipalAclsRequests
+            "principalRuleClusters" to principalInspectionRuleClusters,
+            "principalClusterRules" to principalInspectionClusterRules,
+            "selectedRule" to selectedRule,
+            "selectedCluster" to selectedClusterIdentifier,
+            "pendingPrincipalRequests" to pendingPrincipalAclsRequests,
+            "autopilotActions" to autopilotActions,
         ))
     }
 

@@ -3,6 +3,8 @@
 <#-- @ftlvariable name="topic"  type="com.infobip.kafkistry.service.topic.TopicStatuses" -->
 <#-- @ftlvariable name="pendingTopicRequests"  type="java.util.List<com.infobip.kafkistry.service.history.PendingRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autopilotActions"  type="java.util.List<com.infobip.kafkistry.autopilot.repository.ActionFlow>" -->
 
 <html lang="en">
 
@@ -79,6 +81,15 @@
                 <td>
                     <#assign pendingRequests = (pendingTopicRequests![]) >
                     <#include "../common/pendingChanges.ftl" >
+                </td>
+            </tr>
+        </#if>
+        <#if autopilotEnabled>
+            <tr class="<#if autopilotActions?size gt 0>no-hover</#if>">
+                <th>Autopilot</th>
+                <td>
+                    <#assign actionsSearchTerm = topicName>
+                    <#include "../autopilot/relatedActions.ftl">
                 </td>
             </tr>
         </#if>

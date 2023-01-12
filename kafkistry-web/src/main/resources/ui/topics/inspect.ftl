@@ -14,6 +14,8 @@
 <#-- @ftlvariable name="topicResources" type="com.infobip.kafkistry.service.resources.TopicDiskUsage" -->
 <#-- @ftlvariable name="kStreamsInvolvement" type="com.infobip.kafkistry.service.kafkastreams.TopicKStreamsInvolvement" -->
 <#-- @ftlvariable name="inspectExtensionProperties" type="com.infobip.kafkistry.webapp.TopicInspectExtensionProperties" -->
+<#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autopilotActions"  type="java.util.List<com.infobip.kafkistry.autopilot.repository.ActionFlow>" -->
 
 <html lang="en">
 
@@ -73,6 +75,15 @@
                 <#include "../common/topicOnClusterStatus.ftl">
             </td>
         </tr>
+        <#if autopilotEnabled>
+            <tr class="<#if autopilotActions?size gt 0>no-hover</#if>">
+                <th>Autopilot</th>
+                <td>
+                    <#assign actionsSearchTerm = topicName>
+                    <#include "../autopilot/relatedActions.ftl">
+                </td>
+            </tr>
+        </#if>
         <tr>
             <th>Action</th>
             <td>

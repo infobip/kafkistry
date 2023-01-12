@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.autopilot.repository
 
+import com.infobip.kafkistry.autopilot.binding.ActionMetadata
 import com.infobip.kafkistry.autopilot.binding.AutopilotActionIdentifier
 import com.infobip.kafkistry.autopilot.config.ActionsRepositoryProperties
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcome
@@ -77,6 +78,12 @@ class InMemoryActionsRepository(
 
     override fun find(actionIdentifier: AutopilotActionIdentifier): ActionFlow? {
         return all[actionIdentifier]
+    }
+
+    override fun findBy(filter: (ActionMetadata) -> Boolean): List<ActionFlow> {
+        return all.values
+            .filter { filter(it.metadata) }
+            .sortedByDescending { it.lastTimestamp }
     }
 
     override fun cleanup() {
