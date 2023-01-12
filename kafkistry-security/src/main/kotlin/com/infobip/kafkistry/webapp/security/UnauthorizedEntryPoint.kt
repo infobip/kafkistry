@@ -28,6 +28,7 @@ class UnauthorizedEntryPoint(
     private val loginPage: String = "${httpProperties.rootPath}/login"
 
     private val loginCallMatcher = AntPathRequestMatcher.antMatcher(HttpMethod.POST, loginPage)
+    private val errorCallMatcher = AntPathRequestMatcher.antMatcher(errorPage)
 
     private val apiCallMatcher: RequestMatcher = OrRequestMatcher(
         //don't redirect to /login when not authenticated using rest /api/** or rendered ajax calls
@@ -52,7 +53,7 @@ class UnauthorizedEntryPoint(
         response: HttpServletResponse,
         accessDeniedException: AccessDeniedException
     ) {
-        if (apiCallMatcher.matches(request) || loginCallMatcher.matches(request)) {
+        if (apiCallMatcher.matches(request) || loginCallMatcher.matches(request) || errorCallMatcher.matches(request)) {
             sendErrorResponse(HttpStatus.FORBIDDEN, response, accessDeniedException)
         } else {
             defaultDeniedHandler.handle(request, response, accessDeniedException)
