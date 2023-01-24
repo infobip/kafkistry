@@ -153,7 +153,11 @@
                 </#if>
 
                 <#assign brokerUsageLevelClass = rUtil.usageLevelToHtmlClass(brokerPortions.usageLevel)>
-                <td class="${brokerUsageLevelClass}">
+                <td class="${brokerUsageLevelClass}"
+                    <#if brokerPortions.usedPercentOfCapacity??>
+                        title="${rUtil.prettyNumber(brokerPortions.usedPercentOfCapacity)}%"
+                    </#if>
+                >
                     <#if brokerUsage.totalUsedBytes??>
                         ${rUtil.prettyDataSize(brokerUsage.totalUsedBytes)}
                     <#else>
@@ -162,7 +166,11 @@
                 </td>
                 <#if hasPossible>
                     <#assign possibleUsageLevelClass = rUtil.usageLevelToHtmlClass(portions.possibleClusterUsageLevel)>
-                    <td class="${possibleUsageLevelClass}">
+                    <td class="${possibleUsageLevelClass}"
+                        <#if portions.retentionBoundedBrokerTotalBytesPercentOfCapacity??>
+                            title="${rUtil.prettyNumber(portions.retentionBoundedBrokerTotalBytesPercentOfCapacity)}%"
+                        </#if>
+                    >
                         <#if usage.retentionBoundedBrokerTotalBytes??>
                             ${rUtil.prettyDataSize(usage.retentionBoundedBrokerTotalBytes)}
                         <#else>
@@ -170,7 +178,11 @@
                         </#if>
                     </td>
                     <#assign totalPossibleUsageLevelClass = rUtil.usageLevelToHtmlClass(portions.totalPossibleClusterUsageLevel)>
-                    <td class="${totalPossibleUsageLevelClass}">
+                    <td class="${totalPossibleUsageLevelClass}"
+                        <#if portions.retentionBoundedBrokerPossibleBytesPercentOfCapacity??>
+                            title="${rUtil.prettyNumber(portions.retentionBoundedBrokerPossibleBytesPercentOfCapacity)}%"
+                        </#if>
+                    >
                         <#if usage.retentionBoundedBrokerPossibleBytes??>
                             ${rUtil.prettyDataSize(usage.retentionBoundedBrokerPossibleBytes)}
                         <#else>
