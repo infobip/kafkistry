@@ -7,14 +7,11 @@ import com.infobip.kafkistry.kafka.TopicPartitionReplica
 import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
 import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.acl.AclLinkResolver
-import com.infobip.kafkistry.service.asTopicConfigValue
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.newState
-import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
-import com.infobip.kafkistry.service.toOkPartitionAssignments
 import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.topic.validation.TopicConfigurationValidator
 import com.infobip.kafkistry.service.topic.validation.TopicValidationProperties
@@ -23,6 +20,7 @@ import com.nhaarman.mockitokotlin2.reset
 import com.nhaarman.mockitokotlin2.whenever
 import io.kotlintest.mock.mock
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 
@@ -93,6 +91,7 @@ internal class ClusterResourcesAnalyzerTest {
         reset(clustersRegistry)
         whenever(clustersRegistry.findCluster(cluster.identifier)).thenReturn(cluster)
         whenever(clustersRegistry.getCluster(cluster.identifier)).thenReturn(cluster)
+        whenever(clustersRegistry.listClustersRefs()).thenReturn(listOf(cluster.ref()))
     }
 
     private fun mockTopicsRegistry(topics: List<TopicDescription>) {
@@ -325,5 +324,108 @@ internal class ClusterResourcesAnalyzerTest {
         )
     }
 
+    @Nested
+    inner class TopicDryRunTest {
+
+        private val topicResourcesAnalyzer = TopicResourcesAnalyzer(
+            clusterResourcesAnalyzer = analyzer,
+            topicsRegistryService = topicsRegistry,
+            clustersRegistryService = clustersRegistry,
+            enabledFilter = ClusterEnabledFilter(KafkaEnabledClustersProperties()),
+            usageLevelClassifier = usageLevelClassifier,
+            topicDiskAnalyzer = topicDiskAnalyzer,
+        )
+
+        private val cluster = newCluster("myCluster", listOf("myTag"))
+        private val testTopic = newTopic(
+            name = "test-topic",
+            properties = TopicProperties(partitionCount = 1, replicationFactor = 1),
+            config = mapOf("retention.bytes" to "10000"),
+        )
+        private val otherTopic = newTopic(
+            name = "other-topic",
+            properties = TopicProperties(partitionCount = 1, replicationFactor = 1),
+            config = mapOf("retention.bytes" to "20001"),
+        )
+
+        init {
+            mockClusterRegistry(cluster)
+            mockDiskMetrics(cluster.identifier, 3, 1_000_000, 900_000)
+        }
+
+        @Test
+        fun `test dry run on missing topic`() {
+            mockTopicsRegistry(listOf(testTopic, otherTopic))
+            mockClusterState(cluster.newState(otherTopic, numBrokers = 3))
+            mockReplicas(
+                cluster.identifier, listOf(
+                    newReplica("other-topic", 1, 0, 9_010),
+                )
+            )
+            val clusterUsage = topicResourcesAnalyzer.topicDryRunDiskUsage(testTopic)
+            clusterUsage["myCluster"]?.value!!.assertUsage(9_010, 9_010 + 10_000, 20_001 + 10_000)
+        }
+
+        @Test
+        fun `test dry run configs changes on missing topic`() {
+            mockTopicsRegistry(listOf(testTopic, otherTopic))
+            mockClusterState(cluster.newState(otherTopic, numBrokers = 3))
+            mockReplicas(
+                cluster.identifier, listOf(
+                    newReplica("other-topic", 1, 0, 9_010),
+                )
+            )
+            val clusterUsage = topicResourcesAnalyzer.topicDryRunDiskUsage(
+                testTopic.copy(perTagConfigOverrides = mapOf("myTag" to mapOf("retention.bytes" to "500")))
+            )
+            clusterUsage["myCluster"]?.value!!.assertUsage(9_010, 9_010 + 500, 20_001 + 500)
+        }
+
+        @Test
+        fun `test dry run configs changes on existing topic`() {
+            mockTopicsRegistry(listOf(testTopic, otherTopic))
+            mockClusterState(cluster.newState(testTopic, otherTopic, numBrokers = 3))
+            mockReplicas(
+                cluster.identifier, listOf(
+                    newReplica("test-topic", 1, 0, 8_500),
+                    newReplica("other-topic", 1, 0, 9_010),
+                )
+            )
+            val clusterUsage = topicResourcesAnalyzer.topicDryRunDiskUsage(
+                testTopic.copy(config = mapOf("retention.bytes" to "500"))
+            )
+            clusterUsage["myCluster"]?.value!!.assertUsage(9_010 + 8_500, 9_010 + 500, 20_001 + 500)
+        }
+
+        @Test
+        fun `test dry run configs on unknown topic`() {
+            mockTopicsRegistry(listOf(otherTopic))
+            mockClusterState(cluster.newState(testTopic, otherTopic, numBrokers = 3))
+            mockReplicas(
+                cluster.identifier, listOf(
+                    newReplica("test-topic", 1, 0, 8_500),
+                    newReplica("other-topic", 1, 0, 9_010),
+                )
+            )
+            val clusterUsage = topicResourcesAnalyzer.topicDryRunDiskUsage(testTopic)
+            clusterUsage["myCluster"]?.value!!.assertUsage(9_010 + 8_500, 9_010 + 10_000, 20_001 + 10_000)
+        }
+
+        private fun TopicClusterDiskUsageExt.assertUsage(
+            currentUsage: Long,  possibleUsage: Long, maxUsage: Long
+        ) {
+            assertAll {
+                assertThat(clusterDiskUsage.combined.usage.totalUsedBytes)
+                    .`as`("current usage")
+                    .isEqualTo(currentUsage)
+                assertThat(combined.retentionBoundedBrokerTotalBytes)
+                    .`as`("possible usage")
+                    .isEqualTo(possibleUsage)
+                assertThat(combined.retentionBoundedBrokerPossibleBytes)
+                    .`as`("max usage")
+                    .isEqualTo(maxUsage)
+            }
+        }
+    }
 
 }

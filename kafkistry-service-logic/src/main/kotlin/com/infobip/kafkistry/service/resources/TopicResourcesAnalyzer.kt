@@ -1,16 +1,16 @@
 package com.infobip.kafkistry.service.resources
 
-import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.*
+import com.infobip.kafkistry.service.OptionalValue
+import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.generator.balance.percentageOf
 import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
-import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
+import com.infobip.kafkistry.utils.deepToString
 import org.springframework.stereotype.Service
 
 @Service
@@ -55,27 +55,33 @@ class TopicResourcesAnalyzer(
         clusterRef: ClusterRef,
         preferUsingDescriptionProps: Boolean,
     ): TopicClusterDiskUsageExt {
-        val topicClusterDiskUsage = topicDiskAnalyzer.analyzeTopicDiskUsage(
+        val inRegistryTopicDescription = topicsRegistryService.findTopic(topic)
+        val dryRunTopicClusterDiskUsage = topicDiskAnalyzer.analyzeTopicDiskUsage(
             topic, topicDescription, clusterRef, preferUsingDescriptionProps
         )
+        val inRegistryTopicClusterDiskUsage = topicDiskAnalyzer.analyzeTopicDiskUsage(
+            topic, inRegistryTopicDescription, clusterRef, preferUsingDescriptionProps = false
+        )
         val clusterDiskUsage = clusterResourcesAnalyzer.clusterDiskUsage(clusterRef.identifier)
-        val brokerUsages = topicClusterDiskUsage.brokerUsages.mapValues { (it, diskUsage) ->
-            val brokerTotalUsedBytes = clusterDiskUsage.brokerUsages[it]?.usage?.totalUsedBytes
-            val brokerPossibleUsedBytes = clusterDiskUsage.brokerUsages[it]?.usage?.boundedSizePossibleUsedBytes
-            TopicDiskUsageExt(
-                usage = diskUsage,
-                retentionBoundedBrokerTotalBytes = diskUsage.retentionBoundedBytes
-                        plusNullable -diskUsage.actualUsedBytes.orElse(0)
-                        plusNullable brokerTotalUsedBytes,
-                retentionBoundedBrokerPossibleBytes = diskUsage.retentionBoundedBytes
-                        plusNullable -diskUsage.existingRetentionBoundedBytes.orElse(0)
-                        plusNullable brokerPossibleUsedBytes,
-            )
-        }
+        val brokerUsages = dryRunTopicClusterDiskUsage.brokerUsages
+            .mapValues { (brokerId, dryRunDiskUsage) ->
+                val brokerTotalUsedBytes = clusterDiskUsage.brokerUsages[brokerId]?.usage?.totalUsedBytes
+                val brokerPossibleUsedBytes = clusterDiskUsage.brokerUsages[brokerId]?.usage?.boundedSizePossibleUsedBytes
+                val inRegistryDiskUsage = inRegistryTopicClusterDiskUsage.brokerUsages[brokerId]
+                TopicDiskUsageExt(
+                    usage = dryRunDiskUsage,
+                    retentionBoundedBrokerTotalBytes = dryRunDiskUsage.retentionBoundedBytes
+                            plusNullable -dryRunDiskUsage.actualUsedBytes.orElse(0)
+                            plusNullable brokerTotalUsedBytes,
+                    retentionBoundedBrokerPossibleBytes = dryRunDiskUsage.retentionBoundedBytes
+                            plusNullable -inRegistryDiskUsage?.retentionBoundedBytes.orElse(0)
+                            plusNullable brokerPossibleUsedBytes,
+                )
+            }
         val combinedUsage = brokerUsages.values.reduce(TopicDiskUsageExt::plus)
         return TopicClusterDiskUsageExt(
-            unboundedSizeRetention = topicClusterDiskUsage.unboundedSizeRetention,
-            configuredReplicaRetentionBytes = topicClusterDiskUsage.configuredReplicaRetentionBytes,
+            unboundedSizeRetention = dryRunTopicClusterDiskUsage.unboundedSizeRetention,
+            configuredReplicaRetentionBytes = dryRunTopicClusterDiskUsage.configuredReplicaRetentionBytes,
             combined = combinedUsage,
             combinedPortions = combinedUsage.portionOf(clusterDiskUsage.combined.usage),
             brokerUsages = brokerUsages,
