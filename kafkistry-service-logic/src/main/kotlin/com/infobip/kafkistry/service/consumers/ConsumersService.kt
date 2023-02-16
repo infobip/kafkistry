@@ -97,11 +97,7 @@ class ConsumersService(
     fun clusterTopicConsumers(
         clusterIdentifier: KafkaClusterIdentifier,
         topicName: TopicName
-    ): List<KafkaConsumerGroup> {
-        return consumersInspector.inspectClusterConsumerGroups(clusterIdentifier)
-                .consumerGroups
-                .filter { group -> group.topicMembers.any { it.topicName == topicName } }
-    }
+    ): List<KafkaConsumerGroup> = consumersInspector.inspectClusterConsumerGroups(clusterIdentifier, topicName)
 
     private fun KafkaConsumerGroup.toClusterConsumerGroup(
             clusterIdentifier: KafkaClusterIdentifier

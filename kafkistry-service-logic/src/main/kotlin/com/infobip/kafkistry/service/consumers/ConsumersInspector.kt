@@ -29,6 +29,14 @@ class ConsumersInspector(
         return clusterConsumerGroups.allConsumerGroupIds()
     }
 
+    fun inspectClusterConsumerGroups(clusterIdentifier: KafkaClusterIdentifier, topicName: TopicName): List<KafkaConsumerGroup> {
+        val clusterConsumerGroups = consumerGroupsProvider.getLatestState(clusterIdentifier)
+        val clusterTopicOffsets = topicOffsetsProvider.getLatestState(clusterIdentifier)
+        return clusterConsumerGroups
+            .allConsumerGroupIdsForTopic(topicName)
+            .mapNotNull { it.inspectGroup(clusterIdentifier, clusterConsumerGroups, clusterTopicOffsets) }
+    }
+
     fun inspectClusterConsumerGroups(clusterIdentifier: KafkaClusterIdentifier): ClusterConsumerGroups {
         val clusterConsumerGroups = consumerGroupsProvider.getLatestState(clusterIdentifier)
         val clusterTopicOffsets = topicOffsetsProvider.getLatestState(clusterIdentifier)
@@ -128,6 +136,9 @@ class ConsumersInspector(
 
     private fun StateData<ClusterConsumerGroupsState>.allConsumerGroupIds(): List<ConsumerGroupId> {
         return valueOrNull()?.consumerGroups?.keys?.toList().orEmpty()
+    }
+    private fun StateData<ClusterConsumerGroupsState>.allConsumerGroupIdsForTopic(topicName: TopicName): List<ConsumerGroupId> {
+        return valueOrNull()?.topicConsumerGroups?.get(topicName)?.keys?.toList().orEmpty()
     }
 
 }

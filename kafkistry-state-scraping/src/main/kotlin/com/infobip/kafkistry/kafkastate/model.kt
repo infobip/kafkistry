@@ -60,7 +60,21 @@ data class KafkaClusterState(
 
 data class ClusterConsumerGroups(
     val consumerGroups: Map<ConsumerGroupId, Maybe<ConsumerGroup>>,
+    val topicConsumerGroups: Map<TopicName, Map<ConsumerGroupId, ConsumerGroup>> = consumerGroups.toTopicGroups(),
 )
+
+private fun Map<ConsumerGroupId, Maybe<ConsumerGroup>>.toTopicGroups(): Map<TopicName, Map<ConsumerGroupId, ConsumerGroup>> {
+    return values.asSequence()
+        .mapNotNull { it.getOrNull() }
+        .flatMap { group ->
+            sequence {
+                yieldAll(group.offsets.map { it.topic })
+                yieldAll(group.assignments.map { it.topic })
+            }.distinct().map { it to group }
+        }
+        .groupBy ({ it.first }, { it.second })
+        .mapValues { (_, groups) -> groups.associateBy { it.id } }
+}
 
 data class ClusterTopicOffsets(
         val topicsOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>

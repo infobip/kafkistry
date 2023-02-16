@@ -54,6 +54,7 @@ import jakarta.annotation.PostConstruct
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = [
         "app.topic-validation.disabled-rules=com.infobip.kafkistry.service.topic.validation.rules.ReplicationFactorOneRule",
+        "app.topic-inspect.disabled-inspectors[0]=com.infobip.kafkistry.service.topic.inspectors.TopicNoConsumersInspector",
     ],
 )
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
