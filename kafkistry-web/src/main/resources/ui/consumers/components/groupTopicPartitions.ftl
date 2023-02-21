@@ -47,7 +47,7 @@
                         </td>
                         <td class="small">
                             <#if (partitionMember.member)??>
-                                ${partitionMember.member.clientId}
+                                <span title="MemberID: ${partitionMember.member.memberId}">${partitionMember.member.clientId}</span>
                             <#else>
                                 <i>(unassigned)</i>
                             </#if>

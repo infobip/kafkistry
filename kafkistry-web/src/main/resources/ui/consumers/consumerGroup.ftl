@@ -163,7 +163,7 @@
                                         </#if>
                                     </td>
                                     <#if (partition.member)??>
-                                        <td>${partition.member.clientId}</td>
+                                        <td title="MemberID: ${partition.member.memberId}">${partition.member.clientId}</td>
                                         <td>${partition.member.host}</td>
                                     <#else>
                                         <td><i>(unassigned)</i></td>
