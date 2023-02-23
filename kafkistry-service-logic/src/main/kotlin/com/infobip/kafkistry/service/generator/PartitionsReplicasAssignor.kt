@@ -126,7 +126,7 @@ class PartitionsReplicasAssignor {
         return computeChangeDiff(existingAssignments, newAssignments)
     }
 
-    private fun Map<Partition, List<BrokerId>>.detectReplicationFactor(): Int = values.map { it.size }.maxOrNull() ?: 0
+    private fun Map<Partition, List<BrokerId>>.detectReplicationFactor(): Int = values.maxOfOrNull { it.size } ?: 0
 
     /**
      * Disbalance (Int) is measure how much are assignments out of balance.
@@ -409,51 +409,68 @@ class PartitionsReplicasAssignor {
             fromDepth: Int = 0,
             partitionFilter: (Partition) -> Boolean = { true }
     ) {
-        val replicationFactor = partitionsBrokers.values.map { it.size }.minOrNull() ?: 0
+        val replicationFactor = partitionsBrokers.values.minOfOrNull { it.size } ?: 0
         for (depth in (fromDepth until replicationFactor)) {
             doReBalancePreferredLeadersForDepth(depth, partitionFilter)
         }
     }
 
     private fun AssignmentContext.doReBalancePreferredLeadersForDepth(
-            depthRank: Int,
-            partitionFilter: (Partition) -> Boolean
+        depthRank: Int,
+        partitionFilter: (Partition) -> Boolean,
     ) {
         val leadersDisbalance = leadersDeepDisbalance(partitionsBrokers.toImmutableAssignments(), allBrokers)[depthRank]
         val leadersPerBrokerAvgCeil = (partitionsBrokers.size + allBrokers.size - 1) / allBrokers.size
-        var iteration = 0   //fail-safe for inf loop
+        val leadersPerBrokerAvg = partitionsBrokers.size.toDouble() / allBrokers.size
+        var iteration = -1   //fail-safe for inf loop
         while (true) {
+            iteration++
             val brokerLeaders = brokersLeaders(depthRank)
             val minLoad = brokerLeaders.values.minOf { it.size }
             val maxLoad = brokerLeaders.values.maxOf { it.size }
             if (minLoad + 1 >= maxLoad || iteration > leadersDisbalance * 2) {
                 break
             }
-            val overloadedBrokers = brokerLeaders
-                    .filterValues { it.size > leadersPerBrokerAvgCeil }
-                    .takeIf { it.isNotEmpty() }
-                    ?: brokerLeaders.filterValues { it.size == leadersPerBrokerAvgCeil }
-            val partitionsWithLeaderOnOverloadedBrokers = overloadedBrokers.values.flatten().filter(partitionFilter).distinct()
-            iteration++
+            val numStrictlyOverloadedBrokers = brokerLeaders.count { it.value.size >= leadersPerBrokerAvg + 1 }
+            val numStrictlyUnderloadedBrokers = brokerLeaders.count { it.value.size <= leadersPerBrokerAvg - 1 }
+            val (overloadedFilter, underloadedFilter) = when {
+                numStrictlyOverloadedBrokers > 0 && numStrictlyUnderloadedBrokers > 0 -> {
+                    brokerFilter { it > leadersPerBrokerAvgCeil } to brokerFilter { it <= leadersPerBrokerAvg - 1 }
+                }
+                numStrictlyOverloadedBrokers > 0 && numStrictlyUnderloadedBrokers == 0 -> {
+                    brokerFilter { it > leadersPerBrokerAvgCeil } to brokerFilter { it <= leadersPerBrokerAvgCeil }
+                }
+                numStrictlyOverloadedBrokers == 0 && numStrictlyUnderloadedBrokers > 0 -> {
+                    brokerFilter { it >= leadersPerBrokerAvgCeil } to brokerFilter { it <= leadersPerBrokerAvg - 1 }
+                }
+                else -> {
+                    brokerFilter { it >= leadersPerBrokerAvgCeil } to brokerFilter { it < leadersPerBrokerAvgCeil }
+                }
+            }
+            val overloadedBrokers = brokerLeaders.asSequence()
+                .filter(overloadedFilter)
+                .sortedByDescending { it.value.size } //prioritize transfer leadership from broker with most leaders
+                .associate { it.toPair() }
             val underloadedBrokers = brokerLeaders.asSequence()
-                    .filter { it.value.size < leadersPerBrokerAvgCeil }
-                    .sortedBy { it.value.size } //prioritize transfer leadership to broker with least leaders
-                    .map { it.key }
-                    .toList()
+                .filter(underloadedFilter)
+                .sortedBy { it.value.size } //prioritize transfer leadership to broker with least leaders
+                .map { it.key }
+                .toList()
+            val partitionsWithLeaderOnOverloadedBrokers = overloadedBrokers.values.flatten().filter(partitionFilter).distinct()
             val newLeader = findAvailablePartitionLeaderBroker(
-                    partitionsWithLeaderOnOverloadedBrokers, underloadedBrokers, depthRank
+                partitionsWithLeaderOnOverloadedBrokers, underloadedBrokers, depthRank
             )
             if (newLeader != null) {
                 setPreferredLeader(newLeader.first, newLeader.second, depthRank)
             } else {
                 val possibleUnderloadedSinks = underloadedBrokers
-                        .map { underloadedBrokerId ->
-                            (brokersPartitions[underloadedBrokerId] ?: emptyList())
-                                    .filter(partitionFilter)
-                                    .filter { partitionsBrokers[it]!!.indexOf(underloadedBrokerId) >= depthRank }
-                                    .map { BrokerPartition(underloadedBrokerId, it) }
-                        }
-                        .flatten()
+                    .map { underloadedBrokerId ->
+                        (brokersPartitions[underloadedBrokerId] ?: emptyList())
+                            .filter(partitionFilter)
+                            .filter { partitionsBrokers[it]!!.indexOf(underloadedBrokerId) >= depthRank }
+                            .map { BrokerPartition(underloadedBrokerId, it) }
+                    }
+                    .flatten()
                 for (underloadedBrokerPartition in possibleUnderloadedSinks) {
                     val newLeaderSwapRoute = findSwapRoute(
                         FindRouteCtx(
@@ -473,6 +490,10 @@ class PartitionsReplicasAssignor {
             }
         }
     }
+
+    private fun brokerFilter(
+        filter: (Int) -> Boolean
+    ): (Map.Entry<BrokerId, List<Partition>>) -> Boolean = { filter(it.value.size) }
 
     private data class FindRouteCtx(
         val partitionFilter: (Partition) -> Boolean,
@@ -676,6 +697,7 @@ private data class AssignmentContext(
         var lastSelected: BrokerId,
         val existingPartitionLoads: Map<Partition, PartitionLoad>
 ) {
+    //init { prettyPrint() }
 
     fun addBrokerForPartition(broker: BrokerId, partition: Partition) {
         lastSelected = broker
@@ -740,29 +762,43 @@ private data class AssignmentContext(
     }
 
     fun prettyPrint() {
-        val result = StringBuilder()
-        result.append(" ".repeat(3)).append("|")
-        allBrokers.forEach {
-            result.append("%2d ".format(it))
-        }
-        result.append("\n")
-        result.append("---+")
-        result.append("---".repeat(allBrokers.size))
-        result.append("\n")
-        val numPartitions = partitionsBrokers.size
-        for (partition: Partition in (0 until numPartitions)) {
-            result.append("%2d ".format(partition)).append("|")
-            allBrokers.forEach { broker ->
-                val leader = partitionsBrokers[partition]?.takeIf { it.isNotEmpty() }?.get(0) == broker
-                val assigned = partitionsBrokers[partition]?.run { broker in this } ?: false
-                val wasAssigned = oldAssignments[partition]?.run { broker in this } ?: false
-                val mark = if (leader) "L" else "x"
-                result.append(when (assigned) {
-                    true -> if (wasAssigned) " $mark " else "($mark)"
-                    false -> "   "
-                })
+        val result = StringBuilder().apply {
+            append("    |")
+            allBrokers.forEach {append("%3d ".format(it)) }
+            append("\n")
+            append("----+").append("----".repeat(allBrokers.size)).append("\n")
+            val numPartitions = partitionsBrokers.size
+            for (partition: Partition in (0 until numPartitions)) {
+                append("%3d ".format(partition)).append("|")
+                allBrokers.forEach { broker ->
+                    val leader = partitionsBrokers[partition]?.takeIf { it.isNotEmpty() }?.get(0) == broker
+                    val assigned = partitionsBrokers[partition]?.run { broker in this } ?: false
+                    val wasAssigned = oldAssignments[partition]?.run { broker in this } ?: false
+                    val mark = if (leader) "L" else "x"
+                    append(
+                        when (assigned) {
+                            true -> if (wasAssigned) "  $mark " else " ($mark)"
+                            false -> "    "
+                        }
+                    )
+                }
+                append(" ").append(partitionsBrokers[partition]).append("\n")
             }
-            result.append(" ").append(partitionsBrokers[partition]).append("\n")
+            append("----+").append("----".repeat(allBrokers.size)).append("\n")
+            append("BrId|")
+            allBrokers.forEach { append("%3d ".format(it)) }
+            append("\n")
+            append(" #R |")
+            allBrokers.forEach { broker ->
+                append("%3d ".format(brokersPartitions[broker].orEmpty().size))
+            }
+            append("\n")
+            append(" #L |")
+            allBrokers.forEach { broker ->
+                val numLeaders = partitionsBrokers.count { (_, brokers) -> broker == brokers[0] }
+                append("%3d ".format(numLeaders))
+            }
+            append("\n")
         }
         println(result)
     }

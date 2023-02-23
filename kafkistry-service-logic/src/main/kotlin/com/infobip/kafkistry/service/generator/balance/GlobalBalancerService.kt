@@ -77,7 +77,7 @@ class GlobalBalancerService(
                 .sortedBy { it.key }
                 .map { (partition, replicas) ->
                     val sizeBytes = topicReplicaInfos?.partitionBrokerReplicas?.get(partition)
-                        ?.let { replicas.mapNotNull { replica -> it[replica] }.firstOrNull() }
+                        ?.let { replicas.firstNotNullOfOrNull { replica -> it[replica] } }
                         ?.sizeBytes ?: 0L
                     val msgRate = topicOffsets?.partitionMessageRate?.get(partition)?.upTo24HRate ?: 0.0
                     PartitionLoad(size = sizeBytes, rate = msgRate, consumers = numberOfConsumers)
@@ -130,9 +130,9 @@ class GlobalBalancerService(
             //record changes
             val (newGlobalState, assignmentChanges) = currentGlobalState.applyMigrations(migrations)
             allIterationMigrations.add(assignmentChanges.toPartitionMigrations())
-            val iterationMigrationBytes = migrations.partitions
-                .map { it.toTopicPartitionMigration(currentGlobalState).toDataMigration().totalAddBytes }
-                .sum()
+            val iterationMigrationBytes = migrations.partitions.sumOf {
+                it.toTopicPartitionMigration(currentGlobalState).toDataMigration().totalAddBytes
+            }
 
             //iteration updates
             currentGlobalState = newGlobalState
@@ -163,8 +163,8 @@ class GlobalBalancerService(
             ?.partitionLoads?.get(topicPartition.partition)
             ?: PartitionLoad.ZERO
         return TopicPartitionMigration(topicPartition,
-            fromBrokerIds = oldReplicas.minus(newReplicas),
-            toBrokerIds = newReplicas.minus(oldReplicas),
+            fromBrokerIds = oldReplicas.minus(newReplicas.toSet()),
+            toBrokerIds = newReplicas.minus(oldReplicas.toSet()),
             oldLeader = oldReplicas.first(),
             newLeader = newReplicas.first(),
             load

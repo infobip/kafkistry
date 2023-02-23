@@ -1568,5 +1568,71 @@ class PartitionsReplicasAssignorTest {
         assertThat(assignor.leadersDisbalance(assignmentsChange.newAssignments, allBrokers))
             .`as`("leaders disbalance after").isEqualTo(0)
     }
+    
+    @Test
+    fun `actual leaders disbalance example`() {
+        val allBrokers: List<BrokerId> = (1..24).toList()
+        val existingAssignments = mapOf(
+            0 to listOf(7, 1, 3, 15),
+            1 to listOf(2, 4, 6, 8),
+            2 to listOf(3, 5, 7, 9),
+            3 to listOf(2, 4, 6, 8),
+            4 to listOf(5, 7, 9, 11),
+            5 to listOf(6, 8, 10, 12),
+            6 to listOf(7, 9, 11, 13),
+            7 to listOf(8, 10, 12, 14),
+            8 to listOf(15, 11, 13, 10),
+            9 to listOf(10, 12, 14, 16),
+            10 to listOf(11, 13, 15, 17),
+            11 to listOf(22, 14, 16, 18),
+            12 to listOf(13, 15, 17, 19),
+            13 to listOf(14, 16, 18, 20),
+            14 to listOf(17, 21, 19, 5),
+            15 to listOf(16, 18, 20, 22),
+            16 to listOf(17, 19, 21, 23),
+            17 to listOf(18, 20, 22, 24),
+            18 to listOf(19, 21, 23, 1),
+            19 to listOf(20, 22, 24, 2),
+            20 to listOf(3, 21, 23, 1),
+            21 to listOf(22, 24, 2, 4),
+            22 to listOf(23, 1, 3, 5),
+            23 to listOf(10, 2, 4, 6),
+            24 to listOf(1, 3, 5, 7),
+            25 to listOf(4, 6, 8, 24),
+            26 to listOf(3, 5, 7, 9),
+            27 to listOf(4, 6, 8, 10),
+            28 to listOf(5, 7, 9, 11),
+            29 to listOf(6, 8, 10, 12),
+            30 to listOf(19, 9, 11, 13),
+            31 to listOf(8, 10, 12, 14),
+            32 to listOf(9, 11, 13, 15),
+            33 to listOf(9, 12, 14, 16),
+            34 to listOf(11, 13, 15, 17),
+            35 to listOf(12, 14, 16, 18),
+            36 to listOf(13, 15, 17, 19),
+            37 to listOf(14, 16, 18, 20),
+            38 to listOf(15, 17, 19, 21),
+            39 to listOf(16, 18, 20, 22),
+            40 to listOf(17, 19, 21, 23),
+            41 to listOf(18, 20, 22, 24),
+            42 to listOf(21, 23, 1, 7),
+            43 to listOf(20, 22, 24, 2),
+            44 to listOf(21, 23, 1, 3),
+            45 to listOf(12, 24, 2, 4),
+            46 to listOf(23, 1, 3, 5),
+            47 to listOf(24, 2, 4, 6),
+            48 to listOf(1, 3, 5, 7),
+            49 to listOf(2, 4, 6, 8),
+        )
+        assertThat(assignor.replicasDisbalance(existingAssignments, allBrokers))
+            .`as`("replicas disbalance before").isEqualTo(0)
+        assertThat(assignor.leadersDisbalance(existingAssignments, allBrokers))
+            .`as`("leaders disbalance before").isEqualTo(1)
+        val assignmentsChange = assignor.reBalancePreferredLeaders(existingAssignments, allBrokers)
+        assertThat(assignor.replicasDisbalance(assignmentsChange.newAssignments, allBrokers))
+            .`as`("replicas disbalance after").isEqualTo(0)
+        assertThat(assignor.leadersDisbalance(assignmentsChange.newAssignments, allBrokers))
+            .`as`("leaders disbalance after").isEqualTo(0)
+    }
 
 }
