@@ -18,6 +18,7 @@ import com.infobip.kafkistry.service.topic.merge
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsets
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
+import com.infobip.kafkistry.service.topic.TopicNameFilter
 import org.springframework.stereotype.Service
 
 @Service
@@ -104,6 +105,9 @@ class GlobalBalancerService(
         initialGlobalState: GlobalState,
         balanceSettings: BalanceSettings
     ): ProposedMigrations {
+        val topicNameFilter = TopicNameFilter(
+            balanceSettings.includeTopicNamePattern, balanceSettings.excludeTopicNamePattern
+        )
         var remainingBytesToMigrate = balanceSettings.maxMigrationBytes.takeIf { it > 0 } ?: Long.MAX_VALUE
         var remainingIterations = balanceSettings.maxIterations
         var currentGlobalState = initialGlobalState
@@ -120,8 +124,9 @@ class GlobalBalancerService(
 
         while (remainingBytesToMigrate > 0 && remainingIterations > 0 && System.currentTimeMillis() <= timeoutDeadline) {
             //computation
-            val migrations = balancer.findRebalanceAction(
+            val migrations = balancer.findReBalanceAction(
                 globalState = currentGlobalState,
+                topicNameFilter = topicNameFilter,
                 balanceObjective = balanceSettings.objective,
                 migrationSizeLimitBytes = remainingBytesToMigrate,
                 timeoutLimitMs = balanceSettings.timeLimitIterationMs

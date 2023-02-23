@@ -195,9 +195,15 @@ class ClustersController(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
         val balanceStatus = clusterBalancingApi.getStatus(clusterIdentifier)
+        val topicNames =  inspectApi.inspectTopicsOnCluster(clusterIdentifier)
+            .statusPerTopics
+            ?.filter { it.existingTopicInfo != null }
+            ?.map { it.topicName }
+            .orEmpty()
         return ModelAndView("clusters/incrementalBalancing", mutableMapOf(
                 "clusterIdentifier" to clusterIdentifier,
                 "balanceStatus" to balanceStatus,
+                "topicNames" to topicNames,
         ))
     }
 

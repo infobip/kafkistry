@@ -241,16 +241,7 @@ class OperationSuggestionService(
         clusterIdentifier: KafkaClusterIdentifier,
         options: BulkReAssignmentOptions,
     ): BulkReAssignmentSuggestion {
-        val includeTopicFilter = options.includeTopicNamePattern
-            ?.takeIf { it.isNotEmpty() }
-            ?.toRegex()
-            ?.let { regex -> { topic: TopicName -> regex.containsMatchIn(topic) } }
-            ?: { true }
-        val excludeTopicFilter = options.excludeTopicNamePattern
-            ?.takeIf { it.isNotEmpty() }
-            ?.toRegex()
-            ?.let { regex -> { topic: TopicName -> !regex.containsMatchIn(topic) } }
-            ?: { true }
+        val topicNameFilter = TopicNameFilter(options.includeTopicNamePattern, options.excludeTopicNamePattern)
         val (clusterInfo, statusPerTopics) = inspectionService.inspectClusterTopics(clusterIdentifier)
             .run {
                 if (statusPerTopics != null && clusterInfo != null) clusterInfo to statusPerTopics
@@ -291,8 +282,8 @@ class OperationSuggestionService(
         val topicsReBalanceSuggestions = statusPerTopics.asSequence()
             .filter { it.usesExcludedBroker() || it.hasDisbalance() }
             .map { it.topicName }
-            .filter(includeTopicFilter.recordFilteredOut(inclusionLimited))
-            .filter(excludeTopicFilter.recordFilteredOut(exclusionLimited))
+            .filter(topicNameFilter.includeFilter.recordFilteredOut(inclusionLimited))
+            .filter(topicNameFilter.excludeFilter.recordFilteredOut(exclusionLimited))
             .map {
                 it to try {
                     reBalanceTopicAssignments(it, clusterIdentifier, options.reBalanceMode, options.excludedBrokerIds)

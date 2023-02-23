@@ -7,6 +7,7 @@ import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.generator.balance.BalancePriority.*
 import com.infobip.kafkistry.service.generator.balance.ChangeMode.*
+import com.infobip.kafkistry.service.topic.TopicNameFilter
 import kotlin.math.*
 
 operator fun PartitionLoad.plus(other: PartitionLoad) = PartitionLoad(
@@ -304,13 +305,14 @@ fun BalanceObjective.classifyLoadDiffType(
     }
 }
 
-fun GlobalState.createGlobalContext(): GlobalContext {
+fun GlobalState.createGlobalContext(topicNameFilter: TopicNameFilter): GlobalContext {
     val brokersLoad = brokerLoads()
     val topicPartitionsLoad = topicPartitionsLoad()
     val brokersAssignments = brokerAssignments()
     val brokerTopicPartitionLoads = brokerTopicPartitionLoads(brokerIds, brokersAssignments, topicPartitionsLoad)
     return GlobalContext(
         state = this,
+        topicNameFilter = topicNameFilter,
         topicsAssignments = assignments,
         brokersLoad = brokersLoad,
         topicPartitionsLoad = topicPartitionsLoad,

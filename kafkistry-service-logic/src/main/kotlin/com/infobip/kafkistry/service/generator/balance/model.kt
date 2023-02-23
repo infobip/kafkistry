@@ -102,6 +102,8 @@ data class BalanceSettings(
         val maxMigrationBytes: Long,
         val timeLimitIterationMs: Long,
         val timeLimitTotalMs: Long,
+        val includeTopicNamePattern: String?,
+        val excludeTopicNamePattern: String?,
 )
 
 

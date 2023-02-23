@@ -250,8 +250,10 @@ class BalancerTest {
     ): ProposedMigrations {
         val totalTimeLimitMs = (iterationTimeoutMs * iterations).takeIf { it > 0 } ?: Long.MAX_VALUE
         val proposeMigrations = balancerService.proposeMigrations(
-            state, BalanceSettings(
-                objective, iterations, maxMigrationBytes, iterationTimeoutMs, totalTimeLimitMs
+            state,
+            BalanceSettings(
+                objective, iterations, maxMigrationBytes, iterationTimeoutMs, totalTimeLimitMs,
+                includeTopicNamePattern = null, excludeTopicNamePattern = null,
             )
         )
         with(proposeMigrations) {

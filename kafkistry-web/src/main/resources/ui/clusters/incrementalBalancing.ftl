@@ -2,6 +2,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier"  type="java.lang.String" -->
 <#-- @ftlvariable name="balanceStatus"  type="com.infobip.kafkistry.service.generator.balance.ClusterBalanceStatus" -->
+<#-- @ftlvariable name="topicNames" type="java.util.List<java.lang.String>" -->
 
 <html lang="en">
 
@@ -10,6 +11,7 @@
     <title>Kafkistry: Cluster balance</title>
     <meta name="cluster-identifier" content="${clusterIdentifier}">
     <script src="static/cluster/incrementalBalance.js?ver=${lastCommit}"></script>
+    <script src="static/regexInspector.js?ver=${lastCommit}"></script>
     <script src="static/topic/management/replicationThrottle.js?ver=${lastCommit}"></script>
     <script src="static/topic/management/assignmentsData.js?ver=${lastCommit}"></script>
     <script src="static/topic/management/reAssignTopicPartitionReplicas.js?ver=${lastCommit}"></script>
@@ -39,6 +41,21 @@
     <hr/>
 
     <div class="form">
+        <div class="form-row form-group">
+            <label class="col-">Topic(s) name filter:</label>
+            <div class="col">
+                <div class="input-group">
+                    <div class="input-group-append">
+                        <select class="form-control" name="patternFilterType" title="Include/Exclude" data-style="alert-secondary">
+                            <option value="INCLUDE" data-content="<span class='text-success'>Include</span>" selected></option>
+                            <option value="EXCLUDE" data-content="<span class='text-danger'>Exclude</span>"></option>
+                        </select>
+                    </div>
+                    <input class="form-control" name="topicNamePattern" type="text"
+                           placeholder="enter optional /pattern/..." title="Topic name regex">
+                </div>
+            </div>
+        </div>
         <div class="form-row">
             <div class="form-group col-3">
                 <label for="balance-objective">
@@ -120,6 +137,12 @@
     </div>
     <#assign statusId = "">
     <#include "../common/serverOpStatus.ftl">
+
+    <div id="topic-names" style="display: none;">
+        <#list topicNames as topic>
+            <div class="topic-name" data-topic-name="${topic}"></div>
+        </#list>
+    </div>
 
 </div>
 

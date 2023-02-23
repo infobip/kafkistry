@@ -1,9 +1,20 @@
 $(document).ready(function () {
+    initSelectPicker($("select[name=patternFilterType]"));
+    topicNames = $("#topic-names .topic-name").map(function (){
+        return $(this).attr("data-topic-name");
+    }).get();
+    initPatternAutocomplete();
     initBalanceObjectivePicker($("select#balance-objective"));
     $("#incremental-migrations-btn").click(suggestIncrementalBalance);
     $("#re-assign-migrations-btn").click(performSuggestedReAssignmentMigrations);
     $(document).on("click", "input[name=migrations-display-type]", null, adjustMigrationsDisplayType);
 });
+
+function initPatternAutocomplete() {
+    regexInspector($("input[name=topicNamePattern]"), {
+        source: topicNames
+    })
+}
 
 function getClusterIdentifier() {
     return $("meta[name=cluster-identifier]").attr("content");
@@ -59,12 +70,26 @@ function extractBalanceSettings() {
     } else {
         priorities = selectedBalancePriorities;
     }
+    let topicNamePattern = $("input[name=topicNamePattern]").val();
+    let topicNameFilterType = $("select[name=patternFilterType]").val();
+    let includeTopicNamePattern = "";
+    let excludeTopicNamePattern = "";
+    switch (topicNameFilterType) {
+        case "INCLUDE":
+            includeTopicNamePattern = topicNamePattern;
+            break;
+        case "EXCLUDE":
+            excludeTopicNamePattern = topicNamePattern;
+            break;
+    }
     return {
         objective: {priorities: priorities},
         maxIterations: maxIterations,
         maxMigrationBytes: parseInt($("input[name=max-migration-size]").val()) * factor,
         timeLimitIterationMs: timeoutTotal / maxIterations,
         timeLimitTotalMs: timeoutTotal,
+        includeTopicNamePattern: includeTopicNamePattern,
+        excludeTopicNamePattern: excludeTopicNamePattern,
     };
 }
 

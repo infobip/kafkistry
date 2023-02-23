@@ -1,15 +1,17 @@
 package com.infobip.kafkistry.service.generator.balance
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.service.topic.TopicNameFilter
 
 class Balancer {
 
-    fun findRebalanceAction(
+    fun findReBalanceAction(
         globalState: GlobalState, balanceObjective: BalanceObjective,
+        topicNameFilter: TopicNameFilter,
         migrationSizeLimitBytes: Long = Long.MAX_VALUE,
         timeoutLimitMs: Long = 5_000
     ): Migrations? {
-        val globalContext = globalState.createGlobalContext()
+        val globalContext = globalState.createGlobalContext(topicNameFilter)
         val avgLoad = globalContext.brokersLoad.average
         val initialLoadDiff = globalContext.brokersLoad.brokersLoadDiff()
         val normalizedDeviation = globalContext.brokersLoad.normalizedLoadDeviation(balanceObjective)
@@ -99,8 +101,12 @@ class Balancer {
     private fun GlobalContext.findMigrations(
         fromBroker: BrokerId, intoBroker: BrokerId, initialLoadDiff: BrokerLoad
     ): List<Migrations> {
-        val fromTopicPartitionsLoads = brokerTopicPartitionLoads[fromBroker] ?: return emptyList()
-        val intoTopicPartitionsLoads = brokerTopicPartitionLoads[intoBroker] ?: return emptyList()
+        val fromTopicPartitionsLoads = brokerTopicPartitionLoads[fromBroker]
+            ?.filterKeys { topicNameFilter(it.topic) }
+            ?: return emptyList()
+        val intoTopicPartitionsLoads = brokerTopicPartitionLoads[intoBroker]
+            ?.filterKeys { topicNameFilter(it.topic) }
+            ?: return emptyList()
 
         val migrations = fromTopicPartitionsLoads
             .filter { it.key !in intoTopicPartitionsLoads.keys }    //can't move partition which is already there

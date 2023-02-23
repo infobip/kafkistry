@@ -3,6 +3,7 @@ package com.infobip.kafkistry.service.generator.balance
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.topic.TopicNameFilter
 
 data class CollectionLoad<K, L>(
         val elements: Map<K, L>,
@@ -28,6 +29,7 @@ data class BrokerAssignments(
 
 data class GlobalContext(
         val state: GlobalState,
+        val topicNameFilter: TopicNameFilter,
         val topicsAssignments: Map<TopicName, TopicAssignments>,
         val brokersLoad: CollectionLoad<BrokerId, BrokerLoad>,
         val topicPartitionsLoad: Map<TopicName, CollectionLoad<Partition, PartitionLoad>>,
