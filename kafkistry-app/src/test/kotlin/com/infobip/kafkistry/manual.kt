@@ -42,6 +42,8 @@ import java.net.NetworkInterface
 import java.time.Duration
 import java.util.*
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import kotlin.random.Random
 
 /**
@@ -99,14 +101,19 @@ fun ConfigurableApplicationContext.createAdminApiClient(): ApiClient {
     return ApiClient("localhost", serverPort, rootPath, "mock-role=ADMIN")
 }
 
+abstract class OrderedApplicationRunner(private val order: Int = 0) : ApplicationRunner, Ordered {
+    override fun getOrder(): Int = order
+}
+
 @Configuration
+@Order(0)
 @Profile("manual")
 class DataStateInitializer(
     private val ctx: ConfigurableApplicationContext,
     private val kafkaClientProvider: KafkaClientProvider,
     private val partitionsReplicasAssignor: PartitionsReplicasAssignor,
     private val consumerGroupsProvider: KafkaConsumerGroupsProvider
-) : ApplicationRunner {
+) : OrderedApplicationRunner() {
 
     private val log = LoggerFactory.getLogger("manual-init")
     private lateinit var api: ApiClient
@@ -303,7 +310,11 @@ class DataStateInitializer(
             newTopic(
                 name = "topic-example-1",
                 properties = TopicProperties(1, 3),
-                description = "Task: add 5 more partitions to this topic"
+                description = "Task: add 5 more partitions to this topic",
+                labels = listOf(
+                    Label("area", "51"),
+                    Label("product", "military"),
+                )
             )
         ) {
             log.info("Adding topic {}", this)

@@ -7,6 +7,7 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.sql.SqlDataSource
 import com.infobip.kafkistry.model.ClusterRef
+import com.infobip.kafkistry.model.Label
 import com.infobip.kafkistry.model.Tag
 import org.springframework.stereotype.Component
 import jakarta.persistence.*
@@ -34,6 +35,12 @@ class RegistryTopicsDataSource(
             owner = topicDescription.owner
             producer = topicDescription.producer
             description = topicDescription.description
+            labels = topicDescription.labels.map {
+                TopicLabel().apply {
+                    category = it.category
+                    name = it.name
+                }
+            }
             presenceType = topicDescription.presence.type
             presenceClusters = allClusters
                 .filter { topicDescription.presence.needToBeOnCluster(it) }
@@ -55,6 +62,10 @@ class RegistryTopic {
     lateinit var owner: String
     lateinit var description: String
 
+    @ElementCollection
+    @JoinTable(name = "RegistryTopics_Labels")
+    lateinit var labels: List<TopicLabel>
+
     @Enumerated(EnumType.STRING)
     lateinit var presenceType: PresenceType
 
@@ -63,6 +74,12 @@ class RegistryTopic {
     lateinit var presenceClusters: List<PresenceCluster>
 
     var presenceTag: Tag? = null
+}
+
+@Embeddable
+class TopicLabel {
+    lateinit var category: LabelCategory
+    lateinit var name: LabelName
 }
 
 

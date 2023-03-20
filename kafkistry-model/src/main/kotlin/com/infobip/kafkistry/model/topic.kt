@@ -9,6 +9,7 @@ data class TopicDescription(
     val name: TopicName,
     val owner: String,
     val description: String,
+    val labels: List<Label> = emptyList(),
     val resourceRequirements: ResourceRequirements?,
     val producer: String,
     val presence: Presence,
@@ -75,3 +76,13 @@ enum class PresenceType {
     EXCLUDED_CLUSTERS,
     TAGGED_CLUSTERS,
 }
+
+typealias LabelCategory = String
+typealias LabelName = String
+typealias LabelExternalId = String
+
+data class Label(
+    val category: LabelCategory,
+    val name: LabelName,
+    val externalId: LabelExternalId? = null,
+) : Serializable

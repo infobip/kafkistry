@@ -108,6 +108,7 @@ function extractTopicCreationWizardAnswers() {
     return {
         purpose: purpose,
         teamName: teamName,
+        labels: extractTopicLabels(),
         producerServiceName: producerServiceName,
 
         topicNameMetadata: extractTopicNameMetadata(),

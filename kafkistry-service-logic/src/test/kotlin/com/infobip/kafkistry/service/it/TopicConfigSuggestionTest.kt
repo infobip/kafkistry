@@ -61,16 +61,15 @@ class TopicConfigSuggestionTest {
     fun `test import one source topic`() {
         val cluster = newCluster()
         clusters.addCluster(cluster)
-        val topic = newTopic(emptyOwnerDescriptionProducer = true)
+        val topic = newTopic()
         whenever(stateProvider.getLatestClusterState(cluster.identifier)).thenReturn(cluster.newState(topic))
         val importTopicDescription = suggestionService.suggestTopicImport(topic.name)
-        assertThat(importTopicDescription).isEqualTo(topic)
+        assertThat(importTopicDescription).isEqualTo(topic.withEmptyOwnerDescriptionProducer())
     }
 
     @Test
     fun `test import presence on all`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.ALL_CLUSTERS, null)
         )
         repeat(3) {
@@ -79,13 +78,12 @@ class TopicConfigSuggestionTest {
             whenever(stateProvider.getLatestClusterState(cluster.identifier)).thenReturn(cluster.newState(topic))
         }
         val importTopicDescription = suggestionService.suggestTopicImport(topic.name)
-        assertThat(importTopicDescription).isEqualTo(topic)
+        assertThat(importTopicDescription).isEqualTo(topic.withEmptyOwnerDescriptionProducer())
     }
 
     @Test
     fun `test import presence inclusion`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.INCLUDED_CLUSTERS, listOf("kfk_0"))
         )
         repeat(3) {
@@ -95,13 +93,12 @@ class TopicConfigSuggestionTest {
             whenever(stateProvider.getLatestClusterState(cluster.identifier)).thenReturn(cluster.newState(*topics))
         }
         val importTopicDescription = suggestionService.suggestTopicImport(topic.name)
-        assertThat(importTopicDescription).isEqualTo(topic)
+        assertThat(importTopicDescription).isEqualTo(topic.withEmptyOwnerDescriptionProducer())
     }
 
     @Test
     fun `test import presence exclusion`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.EXCLUDED_CLUSTERS, listOf("kfk_2"))
         )
         repeat(3) {
@@ -111,17 +108,15 @@ class TopicConfigSuggestionTest {
             whenever(stateProvider.getLatestClusterState(cluster.identifier)).thenReturn(cluster.newState(*topics))
         }
         val importTopicDescription = suggestionService.suggestTopicImport(topic.name)
-        assertThat(importTopicDescription).isEqualTo(topic)
+        assertThat(importTopicDescription).isEqualTo(topic.withEmptyOwnerDescriptionProducer())
     }
 
     @Test
     fun `test partitions&replication different for 1 of 3 clusters will result in per cluster override`() {
         val topic1 = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 properties = TopicProperties(24, 2)
         )
         val topic2and3 = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 properties = TopicProperties(3, 3)
         )
         val cluster1 = newCluster(clusterId = "id_1", identifier = "kfk_1").also { clusters.addCluster(it) }
@@ -133,10 +128,9 @@ class TopicConfigSuggestionTest {
         val importTopicDescription = suggestionService.suggestTopicImport(topic1.name)
         assertThat(importTopicDescription).isEqualTo(
             newTopic(
-                emptyOwnerDescriptionProducer = true,
                 properties = TopicProperties(3, 3),
                 perClusterProperties = mapOf("kfk_1" to TopicProperties(24, 2))
-        )
+            ).withEmptyOwnerDescriptionProducer()
         )
     }
 
@@ -154,23 +148,23 @@ class TopicConfigSuggestionTest {
                 "in-sync" to "2"
         )
         val state1 = cluster1.newState(
-                newTopic(emptyOwnerDescriptionProducer = true, config = mapOf("letter" to "b", "number" to "2", "operator" to "-")),
+                newTopic(config = mapOf("letter" to "b", "number" to "2", "operator" to "-")),
                 nonDefaultConfig = nonDefaultConfig.plus("retention" to "30d")
         )
         val state2 = cluster2.newState(
-                newTopic(emptyOwnerDescriptionProducer = true, config = mapOf("letter" to "a", "number" to "3", "operator" to "+")),
+                newTopic(config = mapOf("letter" to "a", "number" to "3", "operator" to "+")),
                 nonDefaultConfig = nonDefaultConfig.plus("foo" to "bar")
         )
         val state3 = cluster3.newState(
-                newTopic(emptyOwnerDescriptionProducer = true, config = mapOf("letter" to "a", "number" to "2", "operator" to "+", "special" to "word")),
+                newTopic(config = mapOf("letter" to "a", "number" to "2", "operator" to "+", "special" to "word")),
                 nonDefaultConfig = nonDefaultConfig.plus("foo" to "baz")
         )
         val state4 = cluster4.newState(
-                newTopic(emptyOwnerDescriptionProducer = true, config = mapOf("letter" to "a", "number" to "2", "operator" to "-")),
+                newTopic(config = mapOf("letter" to "a", "number" to "2", "operator" to "-")),
                 nonDefaultConfig = nonDefaultConfig
         )
         val state5 = cluster5.newState(
-                newTopic(emptyOwnerDescriptionProducer = true, config = mapOf("letter" to "c", "number" to "2", "operator" to "-")),
+                newTopic(config = mapOf("letter" to "c", "number" to "2", "operator" to "-")),
                 nonDefaultConfig = nonDefaultConfig.plus("foo" to "baz")
         )
         whenever(stateProvider.getLatestClusterState("kfk_1")).thenReturn(state1)
@@ -181,7 +175,6 @@ class TopicConfigSuggestionTest {
         val importTopicDescription = suggestionService.suggestTopicImport(newTopic().name)
         assertThat(importTopicDescription).isEqualTo(
             newTopic(
-                emptyOwnerDescriptionProducer = true,
                 config = mapOf("letter" to "a", "number" to "2", "retention" to "24h", "in-sync" to "2", "operator" to "-"),
                 perClusterConfigOverrides = mapOf(
                         "kfk_1" to mapOf("letter" to "b", "retention" to "30d"),
@@ -189,7 +182,7 @@ class TopicConfigSuggestionTest {
                         "kfk_3" to mapOf("foo" to "baz", "operator" to "+", "special" to "word"),
                         "kfk_5" to mapOf("letter" to "c", "foo" to "baz")    //letter needs to be overridden back to c
                 )
-        )
+            ).withEmptyOwnerDescriptionProducer()
         )
         whenever(stateProvider.listAllLatestClusterStates()).thenReturn(listOf(state1, state2, state3, state4, state5))
         assertThat(existingValuesService.allExistingValues().commonTopicConfig).containsAllEntriesOf(mapOf(
@@ -208,7 +201,6 @@ class TopicConfigSuggestionTest {
     @Test
     fun `test update for new cluster with small num brokers and violating replication factor rule`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 properties = TopicProperties(6, 3),
                 config = mapOf("min.insync.replicas" to "4")
         )
@@ -222,21 +214,19 @@ class TopicConfigSuggestionTest {
         val fixedTopicDescription = suggestionService.suggestFixRuleViolations(topic.name)
         assertThat(fixedTopicDescription).isEqualTo(
             newTopic(
-                emptyOwnerDescriptionProducer = true,
                 properties = TopicProperties(6, 3),
                 perClusterProperties = mapOf("kfk_3" to TopicProperties(6, 2)),
                 config = mapOf("min.insync.replicas" to "2"),
                 perClusterConfigOverrides = mapOf(
                         "kfk_3" to mapOf("min.insync.replicas" to "1")
                 )
-        )
+            )
         )
     }
 
     @Test
     fun `test don't include message-format if clusters config is non-default`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 config = mapOf("retention.ms" to "1234")
         )
         val cluster = newCluster(clusterId = "id", identifier = "kfk_id").also { clusters.addCluster(it) }
@@ -247,13 +237,12 @@ class TopicConfigSuggestionTest {
                 )
         ))
         val importTopicDescription = suggestionService.suggestTopicImport(topic.name)
-        assertThat(importTopicDescription).isEqualTo(topic)
+        assertThat(importTopicDescription).isEqualTo(topic.withEmptyOwnerDescriptionProducer())
     }
 
     @Test
     fun `test include message-format if clusters config is differs from actual`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 config = mapOf("retention.ms" to "1234")
         )
         val cluster = newCluster(clusterId = "id", identifier = "kfk_id").also { clusters.addCluster(it) }
@@ -264,13 +253,16 @@ class TopicConfigSuggestionTest {
                 )
         ))
         val importTopicDescription = suggestionService.suggestTopicImport(topic.name)
-        assertThat(importTopicDescription).isEqualTo(topic.copy(config = topic.config.plus("message.format.version" to "2.1-IV")))
+        assertThat(importTopicDescription).isEqualTo(
+            topic
+                .copy(config = topic.config.plus("message.format.version" to "2.1-IV"))
+                .withEmptyOwnerDescriptionProducer()
+        )
     }
 
     @Test
     fun `test suggest update - no changes`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 config = mapOf("retention.ms" to "1234")
         )
         val cluster = newCluster(clusterId = "id", identifier = "kfk_id").also { clusters.addCluster(it) }
@@ -283,7 +275,6 @@ class TopicConfigSuggestionTest {
     @Test
     fun `test suggest update - fix properties and config`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 properties = TopicProperties(2, 2),
                 config = mapOf("retention.ms" to "1234")
         )
@@ -295,17 +286,15 @@ class TopicConfigSuggestionTest {
         val updateTopicDescription = suggestionService.suggestTopicUpdate(topic.name)
         assertThat(updateTopicDescription).isEqualTo(
             newTopic(
-                emptyOwnerDescriptionProducer = true,
                 properties = TopicProperties(3, 3),
                 config = mapOf("retention.ms" to "5678")
-        )
+            )
         )
     }
 
     @Test
     fun `test suggest update - no update - preserve config on disabled clusters`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 config = mapOf("retention.ms" to "1234")
         )
         val clusterVisible = newCluster(clusterId = "id_v", identifier = "kfk_id_v").also { clusters.addCluster(it) }
@@ -320,7 +309,6 @@ class TopicConfigSuggestionTest {
     @Test
     fun `test suggest update - preserve config on disabled clusters`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.INCLUDED_CLUSTERS, listOf("id_1", "id_2", "id_4", "id_d1")),
                 config = mapOf("retention.ms" to "1234", "flush.ms" to "555"),
                 perClusterConfigOverrides = mapOf(
@@ -341,18 +329,18 @@ class TopicConfigSuggestionTest {
         whenever(stateProvider.getLatestClusterState("id_1")).thenReturn(cluster1.newState(
             newTopic(
                 config = mapOf("retention.ms" to "1111", "flush.ms" to "555")
-        )
+            )
         ))
         whenever(stateProvider.getLatestClusterState("id_2")).thenReturn(cluster2.newState())
         whenever(stateProvider.getLatestClusterState("id_3")).thenReturn(cluster3.newState(
             newTopic(
                 config = mapOf("retention.ms" to "1234", "flush.ms" to "555")
-        )
+            )
         ))
         whenever(stateProvider.getLatestClusterState("id_4")).thenReturn(cluster4.newState(
             newTopic(
                 config = mapOf("retention.ms" to "1234", "flush.ms" to "555", "x" to "y")
-        )
+            )
         ))
         whenever(stateProvider.getLatestClusterState("id_d1")).thenReturn(clusterDis1.newState(stateType = StateType.DISABLED))
         whenever(stateProvider.getLatestClusterState("id_d2")).thenReturn(clusterDis2.newState(stateType = StateType.DISABLED))
@@ -361,7 +349,6 @@ class TopicConfigSuggestionTest {
         val updateTopicDescription = suggestionService.suggestTopicUpdate(topic.name)
         assertThat(updateTopicDescription).isEqualTo(
             newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.INCLUDED_CLUSTERS, listOf("id_1", "id_3", "id_4", "id_d1")),
                 config = mapOf("retention.ms" to "1234", "flush.ms" to "555"),
                 perClusterConfigOverrides = mapOf(
@@ -369,14 +356,13 @@ class TopicConfigSuggestionTest {
                         "id_d1" to mapOf("foo" to "bar"),
                         "id_4" to mapOf("x" to "y")
                 )
-        )
+            )
         )
     }
 
     @Test
     fun `test suggest update - add cluster with existing topic1`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.INCLUDED_CLUSTERS, listOf("id_d")),
                 config = mapOf("retention.ms" to "1234", "flush.ms" to "555")
         )
@@ -392,21 +378,19 @@ class TopicConfigSuggestionTest {
         val updateTopicDescription = suggestionService.suggestTopicUpdate(topic.name)
         assertThat(updateTopicDescription).isEqualTo(
             newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.ALL_CLUSTERS),
                 config = mapOf("retention.ms" to "1234"),
                 perClusterConfigOverrides = mapOf(
                         "id_d" to mapOf("flush.ms" to "555"),
                         "id_new" to mapOf("max.record.bytes" to "1024")
                 )
-        )
+            )
         )
     }
 
     @Test
     fun `test suggest update - add cluster with existing topic2`() {
         val topic = newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.INCLUDED_CLUSTERS, listOf("id_d")),
                 config = mapOf("retention.ms" to "1234", "flush.ms" to "555")
         )
@@ -418,13 +402,12 @@ class TopicConfigSuggestionTest {
         val updateTopicDescription = suggestionService.suggestTopicUpdate(topic.name)
         assertThat(updateTopicDescription).isEqualTo(
             newTopic(
-                emptyOwnerDescriptionProducer = true,
                 presence = Presence(PresenceType.ALL_CLUSTERS),
                 config = mapOf(),
                 perClusterConfigOverrides = mapOf(
                         "id_d" to mapOf("retention.ms" to "1234", "flush.ms" to "555")
                 )
-        )
+            )
         )
     }
 

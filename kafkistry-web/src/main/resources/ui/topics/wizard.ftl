@@ -9,6 +9,7 @@
     <#include "../commonResources.ftl"/>
     <script src="static/topic/createTopicWizard.js?ver=${lastCommit}"></script>
     <script src="static/presenceForm.js?ver=${lastCommit}"></script>
+    <script src="static/topic/topicLabels.js?ver=${lastCommit}"></script>
     <script src="static/topic/topicResourceRequirements.js?ver=${lastCommit}"></script>
     <script src="static/topic/${topicNameProperties.jsName}.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Create new topic from wizard</title>
@@ -78,6 +79,10 @@
                             <span>${producer}</span>
                         </#list>
                     </div>
+                </div>
+                <div class="form-group row">
+                    <#assign labels = topic.labels>
+                    <#include "form/topicLabelsForm.ftl">
                 </div>
             </div>
         </div>

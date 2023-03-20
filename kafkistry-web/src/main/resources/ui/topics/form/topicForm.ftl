@@ -47,6 +47,10 @@
                    class="form-control col-sm-10"/>
         </div>
         <div class="form-group row">
+            <#assign labels = topic.labels>
+            <#include "topicLabelsForm.ftl">
+        </div>
+        <div class="form-group row">
             <label class="col-sm-2 col-form-label" for="description-text">Description</label>
             <textarea id="description-text" class="form-control col-sm-10" name="description" rows="5"
                       placeholder="Description what is in the topic, JIRA...">${topic.description}</textarea>

@@ -90,6 +90,7 @@ function extractTopicDescription() {
         name: topicName,
         owner: owner,
         description: description,
+        labels: extractTopicLabels(),
         resourceRequirements: extractResourceRequirements(),
         producer: producer,
         presence: presence,

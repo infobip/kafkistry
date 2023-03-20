@@ -56,6 +56,20 @@
                 <td style="white-space: pre-wrap;" id="description" class="text-links">${topic.topicDescription.description}</td>
             </tr>
             <tr>
+                <th>Labels</th>
+                <td>
+                    <#if topic.topicDescription.labels?size == 0>
+                        ---
+                    <#else>
+                        <#list topic.topicDescription.labels as label>
+                            <span class="badge badge-secondary" title="Label category">${label.category}</span>
+                            <span class="text-monospace" title="Label name">${label.name}</span>
+                            &nbsp;
+                        </#list>
+                    </#if>
+                </td>
+            </tr>
+            <tr>
                 <th>Producer</th>
                 <td>${topic.topicDescription.producer}</td>
             </tr>

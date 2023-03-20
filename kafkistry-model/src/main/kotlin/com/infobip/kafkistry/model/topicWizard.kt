@@ -2,6 +2,7 @@ package com.infobip.kafkistry.model
 
 data class TopicCreationWizardAnswers(
     val purpose: String,
+    val labels: List<Label>,
     val teamName: String,
     val producerServiceName: String,
 

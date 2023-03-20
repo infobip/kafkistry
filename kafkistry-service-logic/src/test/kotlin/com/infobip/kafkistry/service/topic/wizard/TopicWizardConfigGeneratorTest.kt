@@ -189,7 +189,7 @@ class TopicWizardConfigGeneratorTest {
     ): TopicDescription {
         return generator.generateTopicDescription(
                 wizardAnswers = TopicCreationWizardAnswers(
-                        purpose, teamName, producerServiceName,
+                        purpose, emptyList(), teamName, producerServiceName,
                         TopicNameMetadata(
                                 attributes = mapOf("name" to "test-name")
                         ),

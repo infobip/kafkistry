@@ -7,31 +7,51 @@ import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.repository.ChangeRequest
 import com.infobip.kafkistry.repository.EntityCommitChange
 import com.infobip.kafkistry.repository.KafkaTopicsRepository
-import com.infobip.kafkistry.service.KafkistryIntegrityException
+import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.history.TopicChange
 import com.infobip.kafkistry.service.history.TopicRequest
-import com.infobip.kafkistry.service.AbstractRegistryService
-import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.service.topic.validation.NamingValidator
+import com.infobip.kafkistry.service.topic.validation.check.TopicPreSaveChecker
+import com.infobip.kafkistry.service.topic.validation.rules.ValidationRule
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
+
+
+@Component
+@ConfigurationProperties("app.topic-repository")
+class TopicsRegistryServiceProperties {
+    var enabledCheckers = mutableListOf<Class<in TopicPreSaveChecker>>()
+    var disabledCheckers = mutableListOf<Class<in TopicPreSaveChecker>>()
+}
 
 @Service
 class TopicsRegistryService(
-        topicsRepository: KafkaTopicsRepository,
-        userResolver: CurrentRequestUserResolver,
-        eventPublisher: EventPublisher,
-        private val namingValidator: NamingValidator
+    properties: TopicsRegistryServiceProperties,
+    topicsRepository: KafkaTopicsRepository,
+    userResolver: CurrentRequestUserResolver,
+    eventPublisher: EventPublisher,
+    private val namingValidator: NamingValidator,
+    allSaveCheckers: List<TopicPreSaveChecker>,
 ) : AbstractRegistryService<TopicName, TopicDescription, KafkaTopicsRepository, TopicRequest, TopicChange>(
         topicsRepository, userResolver, eventPublisher
 ) {
 
+    private val saveCheckers = allSaveCheckers
+        .filterEnabled(properties.enabledCheckers)
+        .filterDisabled(properties.disabledCheckers)
+
     override fun preCreateCheck(entity: TopicDescription) {
         namingValidator.validateTopicName(entity.name)
         entity.checkRedundantClusterOverrides()
+        saveCheckers.forEach { it.preCreateCheck(entity) }
     }
 
-    override fun preUpdateCheck(entity: TopicDescription) = entity.checkRedundantClusterOverrides()
+    override fun preUpdateCheck(entity: TopicDescription) {
+        entity.checkRedundantClusterOverrides()
+        saveCheckers.forEach { it.preUpdateCheck(entity) }
+    }
 
     override fun generateRepositoryEvent(id: TopicName?) = TopicsRepositoryEvent(id)
 

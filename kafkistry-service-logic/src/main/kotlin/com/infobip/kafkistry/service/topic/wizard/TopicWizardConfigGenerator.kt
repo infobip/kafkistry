@@ -63,6 +63,7 @@ class TopicWizardConfigGenerator(
                 name = generateName(wizardAnswers.topicNameMetadata),
                 properties = ignoredProperties(),
                 owner = wizardAnswers.teamName,
+                labels = wizardAnswers.labels,
                 producer = wizardAnswers.producerServiceName,
                 description = generateDescription(wizardAnswers),
                 resourceRequirements = wizardAnswers.resourceRequirements,

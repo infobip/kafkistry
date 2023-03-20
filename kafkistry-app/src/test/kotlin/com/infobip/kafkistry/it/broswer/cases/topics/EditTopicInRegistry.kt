@@ -76,6 +76,10 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
         browser.findElementByCssSelector("input[name=owner]").clearAndSendKeys("new owner")
         browser.findElementByCssSelector("textarea[name=description]").clearAndSendKeys("new description")
         browser.findElementByCssSelector("input[name=producer]").clearAndSendKeys("new producer")
+        browser.findElementWithText("Add label").scrollIntoView().click()
+        browser.findElementWithText("CREATE NEW").scrollIntoView().click()
+        browser.findElementByCssSelector(".labels input[name=label-category]").clearAndSendKeys("my-label-category")
+        browser.findElementByCssSelector(".labels input[name=label-name]").clearAndSendKeys("my-label-name")
 
         //presence
         browser.findElementByCssSelector("input[value=INCLUDED_CLUSTERS]").scrollIntoView().click()
@@ -159,6 +163,9 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
                 name = "my-edit-1",
                 owner = "new owner",
                 description = "new description",
+                labels = listOf(
+                    Label("my-label-category", "my-label-name"),
+                ),
                 producer = "new producer",
                 presence = Presence(PresenceType.INCLUDED_CLUSTERS, listOf(CLUSTER_IDENTIFIER)),
                 resourceRequirements = ResourceRequirements(

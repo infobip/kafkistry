@@ -74,6 +74,7 @@ data class ExistingValues(
     val owners: List<String>,
     val producers: List<String>,
     val topics: List<TopicName>,
+    val topicLabels: List<Label>,
     val consumerGroups: List<ConsumerGroupId>,
     val users: List<KafkaUser>,
 )

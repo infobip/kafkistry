@@ -27,6 +27,7 @@ fun newTopic(
     name: String = "test-topic-name",
     owner: String = "test-owner",
     description: String = "test-description",
+    labels: List<Label> = emptyList(),
     producer: String = "test-producer",
     presence: Presence = Presence(PresenceType.ALL_CLUSTERS, null),
     properties: TopicProperties = TopicProperties(1, 1),
@@ -35,13 +36,13 @@ fun newTopic(
     perClusterConfigOverrides: Map<KafkaClusterIdentifier, TopicConfigMap> = emptyMap(),
     perTagProperties: Map<Tag, TopicProperties> = emptyMap(),
     perTagConfigOverrides: Map<Tag, TopicConfigMap> = emptyMap(),
-    emptyOwnerDescriptionProducer: Boolean = false
 ) = TopicDescription(
         name,
-        if (emptyOwnerDescriptionProducer) "" else owner,
-        if (emptyOwnerDescriptionProducer) "" else description,
+        owner,
+        description,
+        labels,
         null,
-        if (emptyOwnerDescriptionProducer) "" else producer,
+        producer,
         presence,
         properties,
         config,
@@ -49,6 +50,12 @@ fun newTopic(
         perClusterConfigOverrides,
         perTagProperties,
         perTagConfigOverrides,
+)
+
+fun TopicDescription.withEmptyOwnerDescriptionProducer() = copy(
+    owner = "",
+    description = "",
+    producer = "",
 )
 
 fun newCluster(
@@ -232,6 +239,7 @@ fun wrongValueDefaultExpected(key: String, actual: String, expected: String) = W
 fun newWizardAnswers(
         topicNameSuffix: String = "test-name",
         purpose: String = "no test purpose",
+        labels: List<Label> = emptyList(),
         teamName: String = "Test_Team",
         producerServiceName: String = "test-produces",
         messagesPerDay: Long = 3600L * 24,
@@ -241,6 +249,7 @@ fun newWizardAnswers(
         presence: Presence = Presence(PresenceType.ALL_CLUSTERS)
 ) = TopicCreationWizardAnswers(
         purpose = purpose,
+        labels = labels,
         teamName = teamName,
         producerServiceName = producerServiceName,
         topicNameMetadata = TopicNameMetadata(attributes = mapOf("name" to topicNameSuffix)),
