@@ -27,11 +27,12 @@ function doAddLabelEntry(category, name, externalId) {
     labelEntry.find("input[name=label-category]").val(category);
     labelEntry.find("input[name=label-name]").val(name);
     labelEntry.find("input[name=label-external-id]").val(externalId);
+    maybeRefreshYaml();
 }
 
 function removeLabel() {
     $(this).closest(".label-entry").remove();
-    refreshYaml();
+    maybeRefreshYaml();
 }
 
 function moveLabelUp() {
@@ -41,7 +42,7 @@ function moveLabelUp() {
         return;
     }
     label.insertBefore(previous);
-    refreshYaml();
+    maybeRefreshYaml();
 }
 
 function moveLabelDown() {
@@ -51,9 +52,14 @@ function moveLabelDown() {
         return;
     }
     next.insertBefore(label);
-    refreshYaml();
+    maybeRefreshYaml();
 }
 
+function maybeRefreshYaml() {
+    if (typeof refreshYaml !== "undefined") {
+        refreshYaml();
+    }
+}
 
 function extractTopicLabels() {
     return $(".labels .label-entry").get()
