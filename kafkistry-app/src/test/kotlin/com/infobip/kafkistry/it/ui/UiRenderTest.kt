@@ -75,6 +75,7 @@ class UiRenderTest {
         val kafka1 = EmbeddedKafkaRule(1).apply {
             brokerProperty("log.retention.bytes", "102400")
             brokerProperty("log.segment.bytes", "10240")
+            brokerProperty("message.max.bytes", "1024")
         }
 
         @ClassRule
@@ -82,6 +83,7 @@ class UiRenderTest {
         val kafka2 = EmbeddedKafkaRule(3).apply {
             brokerProperty("log.retention.bytes", "102400")
             brokerProperty("log.segment.bytes", "10240")
+            brokerProperty("message.max.bytes", "1024")
         }
 
         val topic1 = newTopic(

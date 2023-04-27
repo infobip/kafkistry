@@ -212,7 +212,7 @@ private val defaultValues = mapOf(
         "retention.ms" to "604800000",
         "flush.messages" to "9223372036854775807",
         "file.delete.delay.ms" to "60000",
-        "max.message.bytes" to "1000012",
+        "max.message.bytes" to "100012",
         "min.compaction.lag.ms" to "0",
         "message.timestamp.type" to "CreateTime",
         "preallocate" to "false",
