@@ -28,6 +28,8 @@ class TopicWizardProperties {
 
     var defaultPartitionCount = 1
     var partitionThresholds = "{}"
+    var maxMessageToAvgRatio = 20.0
+    var maxMessageBytes = 10L * 1024 * 1024
 
     @NestedConfigurationProperty
     var segmentSize = SegmentSizeProperties()
@@ -112,8 +114,11 @@ class TopicWizardConfigGenerator(
                 clusterRef = clusterRef,
                 clusterInfo = clusterState.valueOrNull()?.clusterInfo
         )
-        val retentionBytes = resourceUsages.diskUsagePerPartitionReplica
-        val segmentBytes = determineSegmentBytes(retentionBytes)
+        val neededRetentionBytes = resourceUsages.diskUsagePerPartitionReplica
+        val proposedSegmentBytes = determineSegmentBytes(neededRetentionBytes)
+        val maxMessageBytes = determineMaxMessageSize(wizardAnswers.resourceRequirements.avgMessageSize.toBytes())
+        val segmentBytes = proposedSegmentBytes.coerceAtLeast(maxMessageBytes)
+        val retentionBytes = neededRetentionBytes.coerceAtLeast(segmentBytes)
         return GeneratedConfig(
                 properties = topicProperties,
                 config = mapOf(
@@ -121,6 +126,7 @@ class TopicWizardConfigGenerator(
                         RETENTION_MS_CONFIG to "$retentionMs",
                         MIN_IN_SYNC_REPLICAS_CONFIG to "$minInSyncReplicas",
                         SEGMENT_BYTES_CONFIG to "$segmentBytes",
+                        MAX_MESSAGE_BYTES_CONFIG to "$maxMessageBytes",
                 ),
                 resourceRequiredUsages = resourceUsages,
                 comments = listOf()
@@ -135,6 +141,14 @@ class TopicWizardConfigGenerator(
                 false -> retentionBytes.times(toRetentionRatioBig).toLong().coerceAtLeast(thresholdSegmentBytes)
             }.coerceAtMost(Int.MAX_VALUE.toLong())
         }
+    }
+
+    fun determineMaxMessageSize(avgMessageBytes: Long): Long {
+        return avgMessageBytes
+            .times(properties.maxMessageToAvgRatio)
+            .toLong()
+            .coerceAtMost(properties.maxMessageBytes)
+            .coerceAtLeast(avgMessageBytes)
     }
 
     fun determinePartitionCount(
