@@ -30,7 +30,7 @@ class MaxMessageBytesMoreThanSegmentBytesRule : ValidationRule {
                 severity = RuleViolation.Severity.ERROR,
             )
         } ?: return valid()
-        if (maxMessageBytes < segmentBytes) {
+        if (maxMessageBytes <= segmentBytes) {
             return valid()
         }
         return violated(
