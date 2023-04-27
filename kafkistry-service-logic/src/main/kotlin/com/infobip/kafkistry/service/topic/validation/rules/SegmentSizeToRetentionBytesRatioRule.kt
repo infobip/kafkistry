@@ -61,10 +61,11 @@ class SegmentSizeToRetentionBytesRatioRule(
             )
         }
 
+        val maxMessageBytes = config[TopicConfig.MAX_MESSAGE_BYTES_CONFIG]?.toLongOrNull() ?: 0L
         val ratio = segmentBytes.toDouble() / retentionBytes.toDouble()
         return with(properties) {
             when {
-                ratio > maxRatioToRetentionBytes -> violated(
+                ratio > maxRatioToRetentionBytes && maxMessageBytes < segmentBytes -> violated(
                     message = "Configured ${TopicConfig.SEGMENT_BYTES_CONFIG} %segmentBytes% is too big " +
                             "comparing to ${TopicConfig.RETENTION_BYTES_CONFIG} %retentionBytes%, having ratio %ratio% " +
                             "which is more than max configured ratio %maxRatio%. Topic's replicas might use more disk than expected.",
@@ -104,11 +105,18 @@ class SegmentSizeToRetentionBytesRatioRule(
         } catch (e: NumberFormatException) {
             null
         } ?: 0L
+        val maxMessageBytes = topicDescription
+            .configForCluster(clusterMetadata.ref)[TopicConfig.MAX_MESSAGE_BYTES_CONFIG]?.toLongOrNull()
+            ?: 0L
         val maxSegmentBytes = retentionBytes.times(properties.maxRatioToRetentionBytes).toLong()
         val minSegmentBytes = retentionBytes.times(properties.minRatioToRetentionBytes).toLong()
-        val fixedSegmentBytes = segmentBytes.coerceIn(minSegmentBytes, maxSegmentBytes).coerceAtMost(Int.MAX_VALUE.toLong())
-        return topicDescription.withClusterProperty(
-            clusterMetadata.ref.identifier, TopicConfig.SEGMENT_BYTES_CONFIG, fixedSegmentBytes.toString()
-        )
+        val fixedSegmentBytes = segmentBytes
+            .coerceIn(minSegmentBytes, maxSegmentBytes)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .coerceAtLeast(maxMessageBytes)
+        val fixedRetentionBytes = retentionBytes.coerceAtLeast(fixedSegmentBytes)
+        return topicDescription
+            .withClusterProperty(clusterMetadata.ref.identifier, TopicConfig.SEGMENT_BYTES_CONFIG, fixedSegmentBytes.toString())
+            .withClusterProperty(clusterMetadata.ref.identifier, TopicConfig.RETENTION_BYTES_CONFIG, fixedRetentionBytes.toString())
     }
 }

@@ -23,12 +23,14 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
     private fun newTopicDescriptionView(
         retentionBytes: String?,
         segmentBytes: String?,
+        maxMessageBytes: String? = null,
     ) = TopicDescriptionView(
         name = "test-segment-bytes-topic",
         properties = TopicProperties(1, 1),
         config = mapOf(
             TopicConfig.RETENTION_BYTES_CONFIG to retentionBytes,
             TopicConfig.SEGMENT_BYTES_CONFIG to segmentBytes,
+            TopicConfig.MAX_MESSAGE_BYTES_CONFIG to maxMessageBytes,
         ),
         presentOnCluster = true,
         originalDescription = newTopic("irrelevant"),
@@ -38,11 +40,13 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
     private fun newTopicDescription(
         retentionBytes: String?,
         segmentBytes: String?,
+        maxMessageBytes: String? = null,
     ) = newTopic(
         name = "test-segment-bytes-topic",
         config = mapOf(
             TopicConfig.RETENTION_BYTES_CONFIG to retentionBytes,
             TopicConfig.SEGMENT_BYTES_CONFIG to segmentBytes,
+            TopicConfig.MAX_MESSAGE_BYTES_CONFIG to maxMessageBytes,
         ),
     )
 
@@ -98,6 +102,15 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
     }
 
     @Test
+    fun `test above acceptable range - but restricted by max message bytes`() {
+        val topicDescriptionView = newTopicDescriptionView(
+            retentionBytes = 10_000_000.toString(), segmentBytes = 9_000_000.toString(), maxMessageBytes = 9_000_000.toString(),
+        )
+        val result = rule.check(topicDescriptionView, mock())
+        assertThat(result).isNull()
+    }
+
+    @Test
     fun `test fix above acceptable range`() {
         val topicDescription = newTopicDescription(
             retentionBytes = 10_000_000.toString(), segmentBytes = 9_000_000.toString()
@@ -105,6 +118,17 @@ internal class SegmentSizeToRetentionBytesRatioRuleTest {
         val fixedTopicDescription = rule.doFixConfig(topicDescription, clusterMetadata)
         assertThat(fixedTopicDescription.perClusterConfigOverrides["test-cluster"]).containsEntry(
             TopicConfig.SEGMENT_BYTES_CONFIG, 5_000_000.toString()
+        )
+    }
+
+    @Test
+    fun `test fix above acceptable range - but restricted by max message bytes`() {
+        val topicDescription = newTopicDescription(
+            retentionBytes = 10_000_000.toString(), segmentBytes = 9_000_000.toString(), maxMessageBytes = 6_000_000.toString(),
+        )
+        val fixedTopicDescription = rule.doFixConfig(topicDescription, clusterMetadata)
+        assertThat(fixedTopicDescription.perClusterConfigOverrides["test-cluster"]).containsEntry(
+            TopicConfig.SEGMENT_BYTES_CONFIG, 6_000_000.toString()
         )
     }
 
