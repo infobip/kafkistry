@@ -35,7 +35,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.6</version>
         <relativePath />
     </parent>
 
@@ -67,7 +67,7 @@
         <java.version>18</java.version>
         <maven.compiler.source>18</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <kotlin.version>1.7.20</kotlin.version>
+        <kotlin.version>1.8.10</kotlin.version>
         <kotlin.jvm.target>17</kotlin.jvm.target>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
@@ -88,8 +88,9 @@
         <docker.to-image>infobip/kafkistry</docker.to-image>
 
         <!-- DEPENDENCIES -->
+        <kafka.version>3.4.0</kafka.version>
         <org.eclipse.jgit.version>6.3.0.202209071007-r</org.eclipse.jgit.version>
-        <jsoup.version>1.15.3</jsoup.version>
+        <jsoup.version>1.15.4</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
         <zookeeper.version>3.8.0</zookeeper.version>
         <sqlite-jdbc.version>3.28.0</sqlite-jdbc.version>
@@ -128,6 +129,11 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-codec</artifactId>
                 <version>4.1.86.Final</version>  <!-- override version fix CVE vulnerability; org.apache.zookeeper:zookeeper@3.8.0 > io.netty:netty-handler@4.1.85.Final > io.netty:netty-codec@4.1.85.Final -->
+            </dependency>
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>2.0</version> <!-- override version to fix CWE vulnerability; com.fasterxml.jackson.dataformat:jackson-dataformat-yaml@2.14.2 pulls org.yaml:snakeyaml@1.33 -->
             </dependency>
         </dependencies>
     </dependencyManagement>

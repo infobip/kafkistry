@@ -19,7 +19,7 @@ class ClusterOpsKafkaEmbeddedTest : ClusterNoAclOperationsTestSuite() {
     }
 
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
-    override val expectedClusterVersion = Version.of("3.3")
+    override val expectedClusterVersion = Version.of("3.4")
 }
 
 class ClusterAclOpsKafkaEmbeddedTest : ClusterAclOperationsTestSuite() {
