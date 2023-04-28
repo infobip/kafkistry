@@ -135,6 +135,11 @@
                 <artifactId>snakeyaml</artifactId>
                 <version>2.0</version> <!-- override version to fix CWE vulnerability; com.fasterxml.jackson.dataformat:jackson-dataformat-yaml@2.14.2 pulls org.yaml:snakeyaml@1.33 -->
             </dependency>
+            <dependency>
+                <groupId>org.bitbucket.b_c</groupId>
+                <artifactId>jose4j</artifactId>
+                <version>0.9.3</version> <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-app@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-kafka-connector@0.4.3-SNAPSHOT › org.apache.kafka:kafka_2.13@3.4.0 › org.bitbucket.b_c:jose4j@0.7.9 -->
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
