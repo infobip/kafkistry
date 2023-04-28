@@ -141,6 +141,7 @@
                 <div class="col">
                     <span>Partition</span>: <code class="partition record-metadata-value">${record.partition}</code>
                     <span>Offset</span>: <code class="offset record-metadata-value">${record.offset?c}</code>
+                    <span>Leader epoch</span>: <code class="leader-epoch record-metadata-value">${(record.leaderEpoch?c)!'N/A'}</code>
                     <span>Topic</span>: <code class="topic record-metadata-value">${record.topic}</code>
                     <br/>
                     <span>Key size</span>: <code class="topic record-metadata-value">${record.keySize}</code>
@@ -149,6 +150,7 @@
                     <br/>
                     <span class="text-nowrap">
                         <span>Timestamp</span>:
+                        <span class="badge badge-secondary record-timestamp-type" data-timestamp-type="${record.timestampType.name()}">${record.timestampType}</span>
                         <code class="timestamp record-metadata-value" data-timestamp="${record.timestamp?c}">${record.timestamp?c}</code>
                         <code class="time" data-time="${record.timestamp?c}"></code>
                     </span>

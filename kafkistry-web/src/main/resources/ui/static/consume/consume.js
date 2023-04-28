@@ -422,8 +422,10 @@ function generateExportContent() {
                 topic: record.find(".topic").text(),
                 partition: parseInt(record.find(".partition").text()),
                 offset: parseInt(record.find(".offset").text()),
+                leaderEpoch: parseIntOrNull(record.find(".leader-epoch").text()),
                 key: kafkaValue(record.find(".key-row .kafka-value-container")),
                 timestamp: parseInt(record.find(".timestamp").attr("data-timestamp")),
+                timestampType: record.find(".record-timestamp-type").attr("data-timestamp-type"),
                 headers: record.find(".record-header").map(function () {
                     let header = $(this);
                     return {
@@ -452,9 +454,17 @@ function parseIntListOrUndefined(numbersText) {
 }
 
 function parseIntOrUndefined(numberText) {
+    return parseIntOrDefault(numberText, undefined);
+}
+
+function parseIntOrNull(numberText) {
+    return parseIntOrDefault(numberText, null);
+}
+
+function parseIntOrDefault(numberText, defaultValue) {
     let result = parseInt(numberText);
     if (isNaN(result)) {
-        return undefined;
+        return defaultValue;
     }
     return result;
 }

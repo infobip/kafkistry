@@ -2,6 +2,7 @@ package com.infobip.kafkistry.service.consume
 
 import com.infobip.kafkistry.service.consume.deserialize.DeserializerType
 import com.infobip.kafkistry.kafka.Partition
+import org.apache.kafka.common.record.TimestampType
 
 data class RecordHeader(
     val key: String,
@@ -100,7 +101,9 @@ data class KafkaRecord(
     val topic: String,
     val partition: Partition,
     val offset: Long,
+    val leaderEpoch: Int?,
     val timestamp: Long,
+    val timestampType: TimestampType,
     val key: KafkaValue,
     val headers: List<RecordHeader>,
     val value: KafkaValue,

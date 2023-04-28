@@ -18,6 +18,7 @@ import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.KafkistryConsumeException
+import org.apache.kafka.common.record.TimestampType
 import org.junit.After
 import org.junit.Before
 import org.junit.ClassRule
@@ -300,7 +301,9 @@ fun records(topic: String) = listOf(
                 topic = topic,
                 partition = 3,
                 offset = 235534424,
+                leaderEpoch = 0,
                 timestamp = System.currentTimeMillis(),
+                timestampType = TimestampType.CREATE_TIME,
                 key = KafkaValue.NULL,
                 headers = listOf(
                         RecordHeader("FOO", "bar".asValue()),
@@ -319,7 +322,9 @@ fun records(topic: String) = listOf(
                 topic = topic,
                 partition = 3,
                 offset = 235534424,
+                leaderEpoch = 0,
                 timestamp = System.currentTimeMillis(),
+                timestampType = TimestampType.CREATE_TIME,
                 key = "123_24325245".asValue(),
                 headers = listOf(),
                 value = """some random non json string""".asValue(),
@@ -329,7 +334,9 @@ fun records(topic: String) = listOf(
                 topic = topic,
                 partition = 3,
                 offset = 235534424,
+                leaderEpoch = 0,
                 timestamp = System.currentTimeMillis(),
+                timestampType = TimestampType.CREATE_TIME,
                 key = "123_24325245".asValue(),
                 headers = listOf(),
                 value = """ "foo bar baz" """.asValue(),
@@ -339,7 +346,9 @@ fun records(topic: String) = listOf(
                 topic = topic,
                 partition = 3,
                 offset = 235534424,
+                leaderEpoch = 0,
                 timestamp = System.currentTimeMillis(),
+                timestampType = TimestampType.CREATE_TIME,
                 key = "123_24325245".asValue(),
                 headers = listOf(),
                 value = """35432""".asValue(),
@@ -349,7 +358,9 @@ fun records(topic: String) = listOf(
                 topic = topic,
                 partition = 3,
                 offset = 235534424,
+                leaderEpoch = 0,
                 timestamp = System.currentTimeMillis(),
+                timestampType = TimestampType.CREATE_TIME,
                 key = "123_24325245".asValue(),
                 headers = listOf(RecordHeader("FOO", "bar".asValue())),
                 value = """{"x":"y","Time":2343222,"arr":[1233,24,3243]}""".asValue(),
@@ -359,7 +370,9 @@ fun records(topic: String) = listOf(
                 topic = topic,
                 partition = 4,
                 offset = 5633656,
+                leaderEpoch = 0,
                 timestamp = System.currentTimeMillis(),
+                timestampType = TimestampType.CREATE_TIME,
                 key = "453_56363".asValue(),
                 headers = listOf(RecordHeader("TYPE", "app/json".asValue())),
                 value = """{"SendDateTime":"24.55.43 44:43:3","Time":2343222,"arr":[1233,24,3243]}""".asValue(),
