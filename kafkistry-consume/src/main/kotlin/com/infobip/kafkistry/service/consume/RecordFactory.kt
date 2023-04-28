@@ -49,7 +49,7 @@ class RecordFactory(
                         timestamp = timestamp(),
                         timestampType = timestampType(),
                         offset = offset(),
-                        leaderEpoch = leaderEpoch().orElse(null)?.takeIf { System.currentTimeMillis() % 2 == 0L },
+                        leaderEpoch = leaderEpoch().orElse(null),
                         value = value,
                         headers = headers,
                         keySize = key()?.size ?: 0,
