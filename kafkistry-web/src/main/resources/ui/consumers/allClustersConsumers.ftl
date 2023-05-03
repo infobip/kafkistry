@@ -54,11 +54,52 @@
             <#include "../consumers/consumerGroupsCounts.ftl">
         </div>
     </div>
+    <br/>
+
     <div class="card">
         <div class="card-header">
-            <span class="h4">All clusters consumers</span>
+            <div class="row">
+                <div class="col">
+                    <span class="h4">All clusters consumers</span>
+                </div>
+                <div class="col-">
+                    <div id="preset-group-form-btn" class="btn btn-outline-primary"
+                         data-toggle="collapsing" data-target="#preset-group-form">Init-preset group...</div>
+                </div>
+            </div>
         </div>
         <div class="card-body pl-0 pr-0">
+            <div class="row mb-3 collapseable" id="preset-group-form">
+                <div class="col"></div>
+                <div class="col">
+                    <div class="form-row">
+                        <div class="col m-1">
+                            <select name="preset-cluster-identifier" class="form-control selectpicker"
+                                title="Custer Identifier">
+                                <option disabled selected value="">Select cluster...</option>
+                                <#list consumersData.clustersDataStatuses as clusterDataStatus>
+                                    <option>${clusterDataStatus.clusterIdentifier}</option>
+                                </#list>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col m-1">
+                            <input type="text" name="preset-consumer-group-id" class="form-control"
+                                   placeholder="Enter consumer group to init/preset offsets" title="Consumer group ID"/>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col m-1">
+                            <a class="btn btn-sm btn-primary form-control disabled"
+                               id="init-consumer-group-btn"
+                               data-base-href="${appUrl.consumerGroups().showPresetConsumerGroupOffsets("", "")}">
+                                Continue to preset offsets...</a>
+                        </div>
+                    </div>
+                    <hr/>
+                </div>
+            </div>
             <table id="consumer-groups" class="table table-bordered datatable display">
                 <thead class="thead-dark">
                 <tr>
@@ -71,7 +112,9 @@
                 </thead>
                 <#list consumersData.clustersGroups as clusterGroup>
                     <#assign consumerGroup = clusterGroup.consumerGroup>
-                    <tr>
+                    <tr class="consumer-group-row"
+                        data-consumer-group-id="${consumerGroup.groupId}"
+                        data-cluster-identifier="${clusterGroup.clusterIdentifier}">
                         <td>
                             <a href="${appUrl.consumerGroups().showConsumerGroup(clusterGroup.clusterIdentifier, consumerGroup.groupId)}"
                                class="btn btn-sm btn-outline-dark mb-1">

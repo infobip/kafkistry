@@ -18,7 +18,7 @@
         <th>Cluster</th>
         <td><a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a></td>
     </tr>
-    <#if (newConsumerGroup!false)>
+    <#if (newConsumerGroup!false) && !consumerGroup??>
         <tr>
             <td colspan="100">
                 <div class="alert alert-info">

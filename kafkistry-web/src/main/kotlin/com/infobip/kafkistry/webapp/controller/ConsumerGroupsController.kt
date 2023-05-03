@@ -13,6 +13,7 @@ import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GR
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_INSPECT
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_OFFSET_DELETE
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_OFFSET_RESET
+import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_OFFSET_PRESET
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -107,6 +108,25 @@ class ConsumerGroupsController(
                 "intoConsumerGroupId" to intoConsumerGroupId,
                 "intoConsumerGroup" to intoConsumerGroup,
                 "topicsOffsets" to topicsOffsets
+        ))
+    }
+
+    @GetMapping(CONSUMER_GROUPS_OFFSET_PRESET)
+    fun showPresetConsumerGroupOffsets(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+        @RequestParam("consumerGroupId") consumerGroupId: ConsumerGroupId,
+    ): ModelAndView {
+        val consumerGroup = consumersApi.clusterConsumerGroup(clusterIdentifier, consumerGroupId)
+        val topicsOffsets = consumerGroup?.topicMembers?.associate {
+            it.topicName to topicOffsetsApi.getTopicOffsets(it.topicName, clusterIdentifier)
+        } ?: emptyMap()
+        val allTopicsOffsets = topicOffsetsApi.getTopicsOffsets(clusterIdentifier)
+        return ModelAndView("consumers/consumerGroupPreset", mapOf(
+                "clusterIdentifier" to clusterIdentifier,
+                "consumerGroupId" to consumerGroupId,
+                "consumerGroup" to consumerGroup,
+                "topicsOffsets" to topicsOffsets,
+                "allTopicsOffsets" to allTopicsOffsets,
         ))
     }
 
