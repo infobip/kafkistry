@@ -64,8 +64,18 @@
                     <span class="h4">All clusters consumers</span>
                 </div>
                 <div class="col-">
+                    <#assign presetDoc>
+                        Use when need to prepare consumer group offsets to particular point
+                        (<code>begin</code>, <code>end</code>, <code>@ timestamp</code>,...)
+                        prior to first starting consumer so that it starts consuming at pre-specified offsets.<br/>
+                        Might be useful for example in situation when consumer group is planned to have
+                        <code>auto.offset.reset</code> = <code>earliest</code>, but for very first usage you'd like to
+                        start from <code>latest</code> or <code>(now-1h)</code>-corresponding offset.
+                    </#assign>
                     <div id="preset-group-form-btn" class="btn btn-outline-primary"
-                         data-toggle="collapsing" data-target="#preset-group-form">Init-preset group...</div>
+                         data-toggle="collapsing" data-target="#preset-group-form">
+                        Init-preset group... <@info.icon tooltip=presetDoc/>
+                    </div>
                 </div>
             </div>
         </div>
