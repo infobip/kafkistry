@@ -1,5 +1,5 @@
 $(document).ready(function (){
-    $(".topic-selector").change(topicSelectorChanged);
+    $(document).on("change", ".topic-selector", topicSelectorChanged);
     $("#preset-offsets-btn").click(presetConsumerOffsets);
 });
 
