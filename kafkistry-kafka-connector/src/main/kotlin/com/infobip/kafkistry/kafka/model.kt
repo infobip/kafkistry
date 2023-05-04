@@ -221,14 +221,16 @@ data class GroupOffsetResetChange(
     val groupId: ConsumerGroupId,
     val changes: List<TopicPartitionOffsetChange>,
     val totalSkip: Long,
-    val totalRewind: Long
+    val totalRewind: Long,
+    val totalLag: Long,
 ) : Serializable
 
 data class TopicPartitionOffsetChange(
         val topic: TopicName,
         val partition: Partition,
         val offset: Long,
-        val delta: Long?
+        val delta: Long?,
+        val lag: Long,
 ) : Serializable
 
 data class TopicPartitionReplica(

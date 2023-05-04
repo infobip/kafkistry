@@ -40,7 +40,7 @@ class ResetConsumerGroupOps(
                 .thenApply { ensureTargetOffsetsWithinBounds(it, topicsOffsets.get()) }
                 .thenCompose { targetOffsets -> doResetConsumerGroup(targetOffsets).thenApply { targetOffsets } }
                 .thenApply { targetOffsets ->
-                    constructResult(currentGroupOffsets, targetOffsets, consumerGroupFuture.get())
+                    constructResult(currentGroupOffsets, targetOffsets, topicsOffsets.get(), consumerGroupFuture.get())
                 }
         }
     }
@@ -228,26 +228,33 @@ class ResetConsumerGroupOps(
         fun constructResult(
             currentOffsets: Map<TopicPartition, Long>,
             targetOffsets: Map<TopicPartition, Long>,
+            topicsOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>,
             currentConsumerGroup: ConsumerGroup,
         ): GroupOffsetResetChange {
             val newlyInitialized = currentConsumerGroup.status in setOf(
                 ConsumerGroupStatus.DEAD, ConsumerGroupStatus.UNKNOWN
             )
             val changes = targetOffsets.map { (topicPartition, targetOffset) ->
+                val partitionEndOffset = topicsOffsets[topicPartition.topic()]
+                    ?.get(topicPartition.partition())
+                    ?.end
+                    ?: targetOffset
                 TopicPartitionOffsetChange(
                     topic = topicPartition.topic(),
                     partition = topicPartition.partition(),
                     offset = targetOffset,
                     delta = currentOffsets[topicPartition]
                         ?.takeUnless { newlyInitialized }
-                        ?.let { targetOffset - it }
+                        ?.let { targetOffset - it },
+                    lag = (partitionEndOffset - targetOffset).coerceAtLeast(0L),
                 )
             }.sortedBy { it.topic + it.partition }
             return GroupOffsetResetChange(
                 groupId = groupId,
                 changes = changes,
                 totalSkip = changes.mapNotNull { it.delta }.filter { it > 0 }.sum(),
-                totalRewind = -changes.mapNotNull { it.delta }.filter { it < 0 }.sum()
+                totalRewind = -changes.mapNotNull { it.delta }.filter { it < 0 }.sum(),
+                totalLag = changes.sumOf { it.lag },
             )
         }
     }

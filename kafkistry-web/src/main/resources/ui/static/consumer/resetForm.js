@@ -77,11 +77,17 @@ function formatOffsetsChange(change) {
     if (change.totalSkip > 0) {
         result += "Total skip forward: " + change.totalSkip + "\n";
     }
+    if (change.totalLag > 0) {
+        result += "Total lag on all " + change.changes.length + " affected partitions: " + change.totalLag + "\n";
+    } else if (change.changes.length) {
+        result += "No lag on all " + change.changes.length + " affected partitions\n";
+    }
     if (!(change.totalRewind > 0 || change.totalSkip > 0)) {
-        return "No offset seeks";
+        result += "No offset seeks\n";
     }
     change.changes.forEach(function (change) {
-        result += "    " + change.topic + " : " + change.partition + " : new-offset = " + change.offset + " : delta = " + change.delta + "\n";
+        let delta = change.delta === null ? "(none)" : change.delta;
+        result += "    " + change.topic + " : " + change.partition + " : new-offset = " + change.offset + " : delta = " + delta + " : lag = " + change.lag + "\n";
     });
     return result;
 }

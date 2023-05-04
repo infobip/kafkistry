@@ -1,8 +1,10 @@
 package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.api.ConsumersApi
+import com.infobip.kafkistry.api.ExistingValuesApi
 import com.infobip.kafkistry.api.KStreamAppsApi
 import com.infobip.kafkistry.api.TopicOffsetsApi
+import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
@@ -26,13 +28,19 @@ class ConsumerGroupsController(
     private val consumersApi: ConsumersApi,
     private val topicOffsetsApi: TopicOffsetsApi,
     private val kStreamAppsApi: KStreamAppsApi,
+    private val existingValuesApi: ExistingValuesApi,
+    private val clusterEnabledFilter: ClusterEnabledFilter,
 ) : BaseController() {
 
     @GetMapping
     fun showAllClustersConsumerGroups(): ModelAndView {
         val consumersData = consumersApi.allConsumersData()
+        val clusterIdentifiers = existingValuesApi.all().clusterRefs
+            .filter { clusterEnabledFilter.enabled(it) }
+            .map { it.identifier }
         return ModelAndView("consumers/allClustersConsumers", mapOf(
-                "consumersData" to consumersData
+                "consumersData" to consumersData,
+                "clusterIdentifiers" to clusterIdentifiers,
         ))
     }
 

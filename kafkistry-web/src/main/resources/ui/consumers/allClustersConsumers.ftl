@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="consumersData" type="com.infobip.kafkistry.service.consumers.AllConsumersData" -->
+<#-- @ftlvariable name="clusterIdentifiers" type="java.util.List<java.lang.String>" -->
 
 <html lang="en">
 
@@ -77,8 +78,8 @@
                             <select name="preset-cluster-identifier" class="form-control selectpicker"
                                 title="Custer Identifier">
                                 <option disabled selected value="">Select cluster...</option>
-                                <#list consumersData.clustersDataStatuses as clusterDataStatus>
-                                    <option>${clusterDataStatus.clusterIdentifier}</option>
+                                <#list clusterIdentifiers as clusterIdentifier>
+                                    <option>${clusterIdentifier}</option>
                                 </#list>
                             </select>
                         </div>
