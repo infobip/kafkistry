@@ -14,7 +14,7 @@ function adjustResetOptionVisibility() {
     $(".type").removeClass("legend-highlight");
     switch (resetType) {
         case "EARLIEST":
-            $("#begin-option").show();
+            $(".begin-option").show();
             if (offsetSeek.offset > 0) {
                 $(".type-begin-n").addClass("legend-highlight");
             } else {
@@ -22,7 +22,7 @@ function adjustResetOptionVisibility() {
             }
             break;
         case "LATEST":
-            $("#end-option").show();
+            $(".end-option").show();
             if (offsetSeek.offset > 0) {
                 $(".type-end-n").addClass("legend-highlight");
             } else {
@@ -30,7 +30,7 @@ function adjustResetOptionVisibility() {
             }
             break;
         case "RELATIVE":
-            $("#relative-option").show();
+            $(".relative-option").show();
             if (offsetSeek.offset > 0) {
                 $(".type-current-pn").addClass("legend-highlight");
             } else if (offsetSeek.offset < 0) {
@@ -40,11 +40,11 @@ function adjustResetOptionVisibility() {
             }
             break;
         case "TIMESTAMP":
-            $("#timestamp-option").show();
+            $(".timestamp-option").show();
             $(".type-timestamp").addClass("legend-highlight");
             break;
         case "EXPLICIT":
-            $("#explicit-option").show();
+            $(".explicit-option").show();
             $(".type-explicit").addClass("legend-highlight");
             break;
     }
@@ -55,15 +55,25 @@ function initDatePicker() {
     let minutesStep = 10;
     let timestampInput = $("input[name=timestamp]");
     timestampInput.val(Date.now().toString());
+    let timestampPicked = function (currTime, picker) {
+        let currTimestampMillis = currTime.getTime();
+        let roundedTimeMillis = currTimestampMillis - (currTimestampMillis % (1000 * 60 * minutesStep));
+        picker.val(roundedTimeMillis.toString());
+    };
     timestampInput.datetimepicker({
         format: 'x',
         step: minutesStep,
-        onShow: function (currTime, picker) {
-            let currTimestampMillis = currTime.getTime();
-            let roundedTimeMillis = currTimestampMillis - (currTimestampMillis % (1000 * 60 * minutesStep));
-            picker.val(roundedTimeMillis.toString())
-        }
+        onSelectTime: timestampPicked,
+        onSelectDate: timestampPicked,
     });
+    timestampInput.change(updatePickedTime);
+    updatePickedTime();
+}
+
+function updatePickedTime() {
+    let timestampInput = $("input[name=timestamp]");
+    $("#picked-time-indicator").attr("data-time", timestampInput.val());
+    formatTimestampIn($(".timestamp-option"));
 }
 
 function extractOffsetSeek() {

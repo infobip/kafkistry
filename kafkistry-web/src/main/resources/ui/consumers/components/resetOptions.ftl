@@ -20,32 +20,58 @@
         <div class="h4 m-0">Choose reset options</div>
     </div>
     <div class="card-body">
-        <select name="resetType">
-            <option value="EARLIEST">To begining (earliest)</option>
-            <option value="LATEST">To end (latest)</option>
-            <option value="TIMESTAMP">At timestamp</option>
-            <option value="RELATIVE">Relative seek</option>
-            <option value="EXPLICIT">To offset</option>
-        </select>
-        <label id="begin-option" class="reset-option" style="display: none;">
-            plus <input type="number" name="begin-offset" value="0">
-        </label>
-        <label id="end-option" class="reset-option" style="display: none;">
-            minus <input type="number" name="end-offset" value="0">
-        </label>
-        <label id="timestamp-option" class="reset-option" style="display: none;">
-            <input type="number" name="timestamp">
-            <i>(seek to offset of first record with greater or equal timestamp, NOTE: using your browser timezone in date/time picker)</i>
-        </label>
-        <label id="relative-option" class="reset-option" style="display: none;">
-            current consumer position shifted by
-            <input type="number" name="relative-offset" value="0">
-            <i>(positive=skip forward, negative=rewind backward)</i>
-        </label>
-        <label id="explicit-option" class="reset-option" style="display: none;">
-            with offset value of <input type="number" name="explicit-offset">
-        </label>
-        <div>
+        <div class="form-row">
+
+            <div class="col-">
+                <select name="resetType" class="form-control" title="Reference type">
+                    <option value="EARLIEST">To beginning (earliest)</option>
+                    <option value="LATEST">To end (latest)</option>
+                    <option value="TIMESTAMP">At timestamp</option>
+                    <option value="RELATIVE">Relative seek</option>
+                    <option value="EXPLICIT">To offset</option>
+                </select>
+            </div>
+
+            <div class="begin-option reset-option col-" style="display: none;">plus</div>
+            <div class="begin-option reset-option col-2" style="display: none;">
+                <input type="number" name="begin-offset" value="0" class="form-control" title="seek by">
+            </div>
+
+            <div class="end-option reset-option col-" style="display: none;">minus</div>
+            <div class="end-option reset-option col-2" style="display: none;">
+                <input type="number" name="end-offset" value="0" class="form-control" title="seek by">
+            </div>
+
+            <div class="timestamp-option reset-option col-3" style="display: none;">
+                <input type="number" name="timestamp" class="form-control" title="seek to timestamp">
+                <span id="picked-time-indicator" class="time text-primary small">---</span>
+            </div>
+            <div class="timestamp-option reset-option col" style="display: none;">
+                <i>(seek to offset of first record with greater or equal timestamp, NOTE: using your browser timezone in date/time picker)</i>
+            </div>
+
+            <div class="relative-option reset-option col-" style="display: none;">
+                current consumer <br/>position shifted by
+            </div>
+            <div class="relative-option reset-option col-2" style="display: none;">
+                <input type="number" name="relative-offset" value="0" class="form-control" title="seek by">
+            </div>
+            <div class="relative-option reset-option col-" style="display: none;">
+                <i>(positive=skip forward, negative=rewind backward)</i>
+            </div>
+
+            <div class="explicit-option reset-option col-" style="display: none;">
+                with offset value of
+            </div>
+            <div class="explicit-option reset-option col-2" style="display: none;">
+                <input type="number" name="explicit-offset" class="form-control" title="offset">
+            </div>
+            <div class="explicit-option reset-option col-" style="display: none;">
+                <i>(makes sense to use only when targeting ony single partition)</i>
+            </div>
+        </div>
+
+        <div class="row">
             <table class="table table-borderless table-sm small mt-4 mb-0">
                 <tr class="no-hover">
                     <th colspan="10">Help legend:</th>
