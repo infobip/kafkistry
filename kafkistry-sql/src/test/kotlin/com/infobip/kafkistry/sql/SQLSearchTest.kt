@@ -36,7 +36,9 @@ class SQLSearchTest {
             )
         ))
         repository.updateAll(topicsDataSource.supplyEntities())
-        val result = repository.query("select * from RegistryTopics")
+        val result = repository.query(
+            "select topic, description, owner, presenceTag, presenceType, producer from RegistryTopics"
+        )
         assertThat(result).isEqualTo(
                 QueryResult(
                         count = 1,
