@@ -40,6 +40,7 @@ $(document).ready(function () {
     });
     topicInput.change(adjustTopicChange);
     offsetTypeInput.change(adjustDatePicker);
+    updatePickedTimeIndicator();
     setupInspectTopicButton();
     $(document).on("click", ".kafka-value-copy-btn", null, copyKafkaValueToClipboard);
 });
@@ -89,6 +90,8 @@ function adjustTopicNamesDropdown() {
 }
 
 function initDatePicker() {
+    $.datetimepicker.setDateFormatter("moment");
+    let minutesStep = 10;
     let offsetInput = $("input[name=offset]");
     let currentVal = parseInt(offsetInput.val());
     //use now time if timestamp is more than year difference from now
@@ -96,17 +99,19 @@ function initDatePicker() {
         prevOffsetVal = currentVal;
         offsetInput.val(Date.now().toString());
     }
-    $.datetimepicker.setDateFormatter("moment");
-    let minutesStep = 10;
+    let timestampPicked = function (currTime, picker) {
+        let currTimestampMillis = currTime.getTime();
+        let roundedTimeMillis = currTimestampMillis - (currTimestampMillis % (1000 * 60 * minutesStep));
+        picker.val(roundedTimeMillis.toString());
+    };
     offsetInput.datetimepicker({
         format: 'x',
         step: minutesStep,
-        onShow: function (currTime, picker) {
-            let currTimestampMillis = currTime.getTime();
-            let roundedTimeMillis = currTimestampMillis - (currTimestampMillis % (1000 * 60 * minutesStep));
-            picker.val(roundedTimeMillis.toString())
-        }
+        onSelectTime: timestampPicked,
+        onSelectDate: timestampPicked,
     });
+    offsetInput.change(updatePickedTimeIndicator);
+    updatePickedTimeIndicator();
 }
 
 function adjustDatePicker() {
@@ -120,6 +125,18 @@ function adjustDatePicker() {
             prevOffsetVal = null;
         }
         offsetInput.datetimepicker("destroy");
+    }
+}
+
+function updatePickedTimeIndicator() {
+    let timeIndicator = $("#picked-time-indicator");
+    if (readFormData().readConfig.fromOffset.type === 'TIMESTAMP') {
+        let timestampInput = $("input[name=offset]");
+        timeIndicator.attr("data-time", timestampInput.val());
+        formatTimestampIn($(".offset-type-form"));
+        timeIndicator.show();
+    } else {
+        timeIndicator.hide();
     }
 }
 

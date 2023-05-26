@@ -160,16 +160,17 @@
         </div>
 
         <div class="clearfix"></div>
-        <label>
+        <label class="offset-type-form">
             <span class="mr-sm-1">Read starting from: </span>
             <label class="form-inline">
             <select name="offsetType" class="form-control form-control-sm mr-sm-1">
                 <option value="LATEST" <#if ((offsetType.name())!'') == 'LATEST'>selected</#if>>Latest minus</option>
                 <option value="EARLIEST" <#if ((offsetType.name())!'') == 'EARLIEST'>selected</#if>>Earliest plus</option>
                 <option value="EXPLICIT" <#if ((offsetType.name())!'') == 'EXPLICIT'>selected</#if>>Explicit offset of</option>
-                <option value="TIMESTAMP" <#if ((offsetType.name())!'') == 'TIMESTAMP'>selected</#if>>UTC timestamp milliseconds</option>
+                <option value="TIMESTAMP" <#if ((offsetType.name())!'') == 'TIMESTAMP'>selected</#if>>UNIX timestamp</option>
             </select>
             <input name="offset" type="number" value="${(offset?c)!'100'}" class="form-control form-control-sm mr-sm-1">
+            <span id="picked-time-indicator" class="time text-primary small" style="display: none;">---</span>
             </label>
         </label>
 
