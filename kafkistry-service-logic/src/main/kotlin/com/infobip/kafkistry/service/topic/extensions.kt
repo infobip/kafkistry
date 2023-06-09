@@ -140,7 +140,7 @@ fun PartitionAssignments.resolveReplicationFactor(partitionReAssignments: Map<Pa
 fun PartitionAssignments.needsReElection() = replicasAssignments.any { it.leader xor it.preferredLeader }
 fun List<PartitionAssignments>.partitionsToReElectLeader(): List<Partition> = filter { it.needsReElection() }.map { it.partition }
 fun TopicDescription.withClusterProperty(
-    clusterIdentifier: KafkaClusterIdentifier, key: String, value: String
+    clusterIdentifier: KafkaClusterIdentifier, key: TopicConfigKey, value: TopicConfigValue
 ): TopicDescription {
     val entry = Pair(key, value)
     val clusterConfigOverrides = perClusterConfigOverrides[clusterIdentifier] ?: emptyMap()

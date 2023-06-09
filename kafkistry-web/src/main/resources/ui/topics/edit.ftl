@@ -3,14 +3,11 @@
 <#-- @ftlvariable name="topic" type="com.infobip.kafkistry.model.TopicDescription" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 
-<html>
+<html lang="en">
 
 <head>
     <#include "../commonResources.ftl"/>
-    <script src="static/topic/topicForm.js?ver=${lastCommit}"></script>
-    <script src="static/topic/topicResourceRequirements.js?ver=${lastCommit}"></script>
-    <script src="static/presenceForm.js?ver=${lastCommit}"></script>
-    <script src="static/topic/topicLabels.js?ver=${lastCommit}"></script>
+    <#include "form/topicFormResources.ftl">
     <script src="static/topic/editTopic.js?ver=${lastCommit}"></script>
     <title>Kafkistry: ${title}</title>
     <meta name="current-nav" content="nav-topics"/>

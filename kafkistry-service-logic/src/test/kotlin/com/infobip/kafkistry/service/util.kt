@@ -36,6 +36,7 @@ fun newTopic(
     perClusterConfigOverrides: Map<KafkaClusterIdentifier, TopicConfigMap> = emptyMap(),
     perTagProperties: Map<Tag, TopicProperties> = emptyMap(),
     perTagConfigOverrides: Map<Tag, TopicConfigMap> = emptyMap(),
+    freezeDirectives: List<FreezeDirective> = emptyList(),
 ) = TopicDescription(
         name,
         owner,
@@ -50,6 +51,7 @@ fun newTopic(
         perClusterConfigOverrides,
         perTagProperties,
         perTagConfigOverrides,
+        freezeDirectives,
 )
 
 fun TopicDescription.withEmptyOwnerDescriptionProducer() = copy(

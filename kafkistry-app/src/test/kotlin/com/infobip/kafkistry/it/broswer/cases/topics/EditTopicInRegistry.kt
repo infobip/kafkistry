@@ -146,6 +146,17 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
 
         browser.findElementByCssSelector("input#update-message").sendKeys("try update all")
 
+        //freeze config
+        browser.findElementWithText("Add freeze directive").scrollIntoView().click()
+        browser.findElementByCssSelector(".freeze-directives input[name=freezeReason]").clearAndSendKeys("just to have it")
+        browser.findElementByCssSelector(".freeze-directives input[name=freezePartitionCount]").click()
+        browser.findElementByCssSelector(".freeze-directives select.freezeConfigProperties")
+            .run { Select(this) }
+            .run {
+                selectByVisibleText("retention.bytes")
+                selectByVisibleText("retention.ms")
+            }
+
         browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
         await {
             assertThat(browser.findElementById("dry-run-inspect-status").text).contains(
@@ -195,6 +206,13 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
                 ),
                 perTagProperties = emptyMap(),
                 perTagConfigOverrides = emptyMap(),
+                freezeDirectives = listOf(
+                    FreezeDirective(
+                        reasonMessage = "just to have it",
+                        partitionCount = true, replicationFactor = false,
+                        configProperties = listOf("retention.bytes", "retention.ms"),
+                    )
+                )
         )
         assertThat(topicsApi.getTopic("my-edit-1")).isEqualTo(expectedTopicDescription)
         assertThat(browser.findElementById("topic-yaml").text).isEqualTo(YamlMapper().serialize(expectedTopicDescription).trim())

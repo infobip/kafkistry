@@ -8,10 +8,7 @@
 
 <head>
     <#include "../commonResources.ftl"/>
-    <script src="static/topic/topicForm.js?ver=${lastCommit}"></script>
-    <script src="static/topic/topicResourceRequirements.js?ver=${lastCommit}"></script>
-    <script src="static/presenceForm.js?ver=${lastCommit}"></script>
-    <script src="static/topic/topicLabels.js?ver=${lastCommit}"></script>
+    <#include "form/topicFormResources.ftl">
     <script src="static/topic/editTopic.js?ver=${lastCommit}"></script>
     <script src="static/topic/importTopic.js?ver=${lastCommit}"></script>
     <script src="static/topic/createTopic.js?ver=${lastCommit}"></script>

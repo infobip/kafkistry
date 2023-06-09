@@ -103,6 +103,7 @@ function extractTopicDescription() {
         perClusterConfigOverrides: perClusterConfig,
         perTagProperties: perTagProperties,
         perTagConfigOverrides: perTagConfig,
+        freezeDirectives: extractFreezeDirectives(),
     };
 }
 

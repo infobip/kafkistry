@@ -89,6 +89,34 @@
                 <#include "../common/statusFlags.ftl">
             </td>
         </tr>
+        <tr>
+            <th>Frozen properties</th>
+            <td>
+                <#if topic.topicDescription.freezeDirectives?size == 0>
+                    ---
+                <#else>
+                    <ul>
+                        <#assign padlockSymol>&#128274;</#assign>
+                        <#list topic.topicDescription.freezeDirectives as freezeDirectve>
+                             <li>
+                                 <strong>Reason</strong>: <span class="text-links">${freezeDirectve.reasonMessage}</span>
+                                 <ul>
+                                     <#if freezeDirectve.partitionCount>
+                                         <li><span class="badge badge-secondary">Partition count</span> ${padlockSymol}</li>
+                                     </#if>
+                                     <#if freezeDirectve.replicationFactor>
+                                         <li><span class="badge badge-secondary">Replication factor</span> ${padlockSymol}</li>
+                                     </#if>
+                                     <#list freezeDirectve.configProperties as frozenProperty>
+                                         <li><code>${frozenProperty}</code> ${padlockSymol}</li>
+                                     </#list>
+                                 </ul>
+                             </li>
+                        </#list>
+                    </ul>
+                </#if>
+            </td>
+        </tr>
         <#if gitStorageEnabled>
             <tr>
                 <th>Pending changes</th>

@@ -277,6 +277,18 @@
 </div>
 
 <br>
+
+<div class="card">
+    <div class="card-header h3">
+        Freeze properties
+    </div>
+    <div class="card-body">
+        <#assign freezeDirectives = topic.freezeDirectives>
+        <#include "topicFreezeProperties.ftl">
+    </div>
+</div>
+<br/>
+
 <hr/>
 
 <button id="dry-run-inspect-btn" class="btn btn-secondary btn-sm mt-2">

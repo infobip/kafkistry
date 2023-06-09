@@ -42,6 +42,7 @@ import java.net.NetworkInterface
 import java.time.Duration
 import java.util.*
 import jakarta.servlet.http.HttpServletRequest
+import org.apache.kafka.common.config.TopicConfig
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import kotlin.random.Random
@@ -314,6 +315,15 @@ class DataStateInitializer(
                 labels = listOf(
                     Label("area", "51"),
                     Label("product", "military"),
+                ),
+                freezeDirectives = listOf(
+                    FreezeDirective(
+                        "feel like it :D", partitionCount = true,
+                        configProperties = listOf(
+                            TopicConfig.RETENTION_MS_CONFIG,
+                            TopicConfig.MAX_MESSAGE_BYTES_CONFIG,
+                        ),
+                    )
                 )
             )
         ) {

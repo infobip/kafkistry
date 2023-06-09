@@ -19,6 +19,7 @@ data class TopicDescription(
     val perClusterConfigOverrides: Map<KafkaClusterIdentifier, TopicConfigMap>,
     val perTagProperties: Map<Tag, TopicProperties> = emptyMap(),
     val perTagConfigOverrides: Map<Tag, TopicConfigMap> = emptyMap(),
+    val freezeDirectives: List<FreezeDirective> = emptyList(),
 ) : Serializable
 
 data class TopicProperties(
@@ -26,7 +27,9 @@ data class TopicProperties(
     val replicationFactor: Int
 ) : Serializable
 
-typealias TopicConfigMap = Map<String, String?>
+typealias TopicConfigKey = String
+typealias TopicConfigValue = String
+typealias TopicConfigMap = Map<TopicConfigKey, TopicConfigValue?>
 
 data class Presence(
     val type: PresenceType,
@@ -85,4 +88,11 @@ data class Label(
     val category: LabelCategory,
     val name: LabelName,
     val externalId: LabelExternalId? = null,
+) : Serializable
+
+data class FreezeDirective(
+    val reasonMessage: String,
+    val partitionCount: Boolean = false,
+    val replicationFactor: Boolean = false,
+    val configProperties: List<TopicConfigKey> = emptyList(),
 ) : Serializable
