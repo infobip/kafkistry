@@ -18,7 +18,9 @@ import javax.net.ServerSocketFactory
 
 class KafkaClusterContainer(
         private val topics: Collection<NewTopic>,
-        private val brokersConfigs: BrokersConfigs
+        private val brokersConfigs: BrokersConfigs,
+        startupTimeout: Duration,
+        logContainersOutput: Boolean,
 ) : DockerComposeContainer<KafkaClusterContainer>(
         "kafka",
         createDockerComposeFile(brokersConfigs)
@@ -34,20 +36,33 @@ class KafkaClusterContainer(
             clusterSize: Int = 1,
             customBrokersConfig: Map<String, String> = emptyMap(),
             numberOfPartitions: Int = 1,
-            vararg topics: String
-
+            startupTimeout: Duration = Duration.ofMinutes(1),
+            logContainersOutput: Boolean = false,
+            vararg topics: String,
     ) : this(
             topics.map { NewTopic(it, numberOfPartitions, 1) },
-            createBrokersConfigs(kafkaImage, customBrokersConfig, clusterSize)
+            createBrokersConfigs(kafkaImage, customBrokersConfig, clusterSize),
+            startupTimeout,
+            logContainersOutput,
     )
 
     init {
-        withExposedService("zookeeper", brokersConfigs.zkHostPort.port)
-                .waitingFor("zookeeper", Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(5)))
+        val startupWait = Wait.forListeningPort().withStartupTimeout(startupTimeout)
+        withExposedService("zookeeper", brokersConfigs.zkHostPort.port, startupWait)
+        if (logContainersOutput) {
+            withLogConsumer("zookeeper") {
+                log.info("ZOOKEEPER - {}: {}", it.type, it.utf8String.removeSuffix("\n"))
+            }
+        }
+        //withLocalCompose(false)
         brokersConfigs.hostsPorts.forEachIndexed { index, hostPort ->
             val serviceName = "kafka_${index}_1"
-            withExposedService(serviceName, hostPort.port)
-                    .waitingFor(serviceName, Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(5)))
+            withExposedService(serviceName, hostPort.port, startupWait)
+            if (logContainersOutput) {
+                withLogConsumer(serviceName) {
+                    log.info("{} - {}: {}", serviceName.uppercase(), it.type, it.utf8String.removeSuffix("\n"))
+                }
+            }
         }
     }
 
@@ -56,14 +71,13 @@ class KafkaClusterContainer(
         // create kafka topics
         val client = AdminClient.create(Properties().apply {
             put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokersUrl())
-        })
-        val topicNames = client.listTopics().names().get(1, TimeUnit.SECONDS)
+        }).also { client.set(it) }
+        val topicNames = client.listTopics().names().get(15, TimeUnit.SECONDS)
         val topics = this.topics.filter { topic -> !topicNames.contains(topic.name()) }
         if (topics.isNotEmpty()) {
             val result = client.createTopics(topics)
             result.all().get(5, TimeUnit.SECONDS)
         }
-        this.client.set(client)
     }
 
     override fun stop() {
@@ -77,16 +91,20 @@ class KafkaClusterContainer(
 
 }
 
-fun createDockerComposeFile(configs: BrokersConfigs): File = File.createTempFile("kafka-docker-compose-", ".yml")
+fun createDockerComposeFile(configs: BrokersConfigs): File {
+    val dir = File("tmp", "kafka-docker-compose").also {
+        it.mkdirs()
+    }
+    return File.createTempFile("compose-", ".yml", dir)
         .also { file ->
             Files.asCharSink(file, Charsets.UTF_8).write(
-                    createDockerComposeFileContent(configs).also {
-                        KafkaClusterContainer.log.info("Generated docker compose file content\n{}", it)
-                    }
+                createDockerComposeFileContent(configs).also {
+                    KafkaClusterContainer.log.info("Generated docker compose file content\n{}", it)
+                }
             )
-            println("")
-            println("Created docker compose file with name ${file.absolutePath}")
+            KafkaClusterContainer.log.info("Created docker compose file with name ${file.absolutePath}")
         }
+}
 
 private fun createDockerComposeFileContent(configs: BrokersConfigs) = """
 version: '2'

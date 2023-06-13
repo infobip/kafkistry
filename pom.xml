@@ -101,7 +101,7 @@
         <guava.version>31.1-jre</guava.version>
         <commons-io.version>2.11.0</commons-io.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <testcontainers.version>1.17.4</testcontainers.version>
+        <testcontainers.version>1.18.3</testcontainers.version>
         <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
     </properties>
@@ -192,7 +192,6 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -203,7 +202,6 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
