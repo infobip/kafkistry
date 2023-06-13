@@ -27,17 +27,17 @@ interface ValidationRule {
         topicDescription: TopicDescription, clusterMetadata: ClusterMetadata, existingTopicInfo: ExistingTopicInfo?
     ): TopicDescription = doFixConfig(topicDescription, clusterMetadata)
 
-    fun isViolated(
+    fun topicDescriptionViewOf(
         topicDescription: TopicDescription,
         clusterMetadata: ClusterMetadata,
         existingTopicInfo: ExistingTopicInfo?,
-    ): Boolean {
+    ): TopicDescriptionView {
         val clusterDefaults = clusterMetadata.info?.config?.let { clusterConfig ->
             TOPIC_CONFIG_PROPERTIES.associateWith {
                 ConfigValueInspector().clusterDefaultValue(clusterConfig, it)?.value
             }
         }.orEmpty()
-        val topicDescriptionView = TopicDescriptionView(
+        return TopicDescriptionView(
             name = topicDescription.name,
             properties = topicDescription.propertiesForCluster(clusterMetadata.ref),
             config = clusterDefaults + topicDescription.configForCluster(clusterMetadata.ref),
@@ -45,6 +45,14 @@ interface ValidationRule {
             originalDescription = topicDescription,
             existingTopicInfo = existingTopicInfo,
         )
+    }
+
+    fun isViolated(
+        topicDescription: TopicDescription,
+        clusterMetadata: ClusterMetadata,
+        existingTopicInfo: ExistingTopicInfo?,
+    ): Boolean {
+        val topicDescriptionView = topicDescriptionViewOf(topicDescription, clusterMetadata, existingTopicInfo)
         val violation = check(topicDescriptionView, clusterMetadata)
         return violation != valid()
     }
