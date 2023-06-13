@@ -46,6 +46,23 @@ class RegistryTopicsDataSource(
                 .filter { topicDescription.presence.needToBeOnCluster(it) }
                 .map { PresenceCluster().apply { cluster = it.identifier } }
             presenceTag = topicDescription.presence.tag
+            frozenProperties = topicDescription.freezeDirectives.flatMap { directive ->
+                listOfNotNull(
+                    FrozenProperty().apply {
+                        name = "partition-count"
+                        reason = directive.reasonMessage
+                    }.takeIf { directive.partitionCount },
+                    FrozenProperty().apply {
+                        name = "replication-factor"
+                        reason = directive.reasonMessage
+                    }.takeIf { directive.replicationFactor },
+                ) + directive.configProperties.map {
+                    FrozenProperty().apply {
+                        name = it
+                        reason = directive.reasonMessage
+                    }
+                }
+            }
         }
     }
 
@@ -74,12 +91,23 @@ class RegistryTopic {
     lateinit var presenceClusters: List<PresenceCluster>
 
     var presenceTag: Tag? = null
+
+    @ElementCollection
+    @JoinTable(name = "RegistryTopics_FrozenProperties")
+    lateinit var frozenProperties: List<FrozenProperty>
+
 }
 
 @Embeddable
 class TopicLabel {
     lateinit var category: LabelCategory
     lateinit var name: LabelName
+}
+
+@Embeddable
+class FrozenProperty {
+    lateinit var name: String
+    lateinit var reason: String
 }
 
 
