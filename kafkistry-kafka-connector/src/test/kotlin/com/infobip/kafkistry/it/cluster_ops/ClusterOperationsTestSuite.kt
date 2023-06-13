@@ -20,6 +20,9 @@ import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.QuotaProperties
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
+import org.apache.kafka.common.config.TopicConfig
+import org.assertj.core.api.SoftAssertions
+import org.assertj.core.api.StringAssert
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -1105,6 +1108,68 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 val quotas = doOnKafka { it.listQuotas().get() }
                 assertThat(quotas).isEmpty()
             }
+    }
+
+    @Test
+    fun `test topic default configs from cluster properties`() {
+        val clusterConfig = doOnKafka { it.clusterInfo("test").get() }.config
+
+        fun SoftAssertions.assertDefaultConfig(topicConfigKey: String) = assertThat(
+            ClusterTopicDefaultConfigs
+                .extractClusterExpectedValue(clusterConfig, topicConfigKey)
+                ?.value
+        ).`as`("Default config for '$topicConfigKey'")
+
+        fun StringAssert.isEqualToStringOf(expected: Any) = apply {
+            isEqualTo(expected.toString())
+        }
+
+        println("Cluster config is (size: ${clusterConfig.size}):")
+        clusterConfig.entries.forEach { (key, value)  ->
+            println("\t$key -> $value")
+        }
+
+        SoftAssertions().apply {
+            assertDefaultConfig(TopicConfig.CLEANUP_POLICY_CONFIG).isEqualTo("delete")
+            assertDefaultConfig(TopicConfig.COMPRESSION_TYPE_CONFIG).isEqualTo("producer")
+            assertDefaultConfig(TopicConfig.DELETE_RETENTION_MS_CONFIG).isEqualToStringOf(24 * 3600 * 1000L)
+            if (expectedClusterVersion > Version.of("3.1")) {
+                assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
+            } else {
+                assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(60 * 1000L)
+            }
+            assertDefaultConfig(TopicConfig.FLUSH_MESSAGES_INTERVAL_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
+            assertDefaultConfig(TopicConfig.FLUSH_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
+            assertDefaultConfig(TopicConfig.INDEX_INTERVAL_BYTES_CONFIG).isEqualToStringOf(4096)
+            assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_BYTES_CONFIG).isNull()
+            assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_MS_CONFIG).isNull()
+            if (expectedClusterVersion > Version.of("2.1")) {
+                assertDefaultConfig(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
+            } else {
+                assertDefaultConfig(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG).isNull()
+            }
+            if (expectedClusterVersion > Version.of("2.3")) {
+                assertDefaultConfig(TopicConfig.MAX_MESSAGE_BYTES_CONFIG).isEqualToStringOf(1024 * 1024 + 12)
+            } else {
+                assertDefaultConfig(TopicConfig.MAX_MESSAGE_BYTES_CONFIG).isEqualToStringOf(1_000_000 + 12)
+            }
+            assertDefaultConfig(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isEqualTo("true")
+            assertDefaultConfig("message.format.version").startsWith("" + expectedClusterVersion.major() + ".")
+            assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
+            assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_TYPE_CONFIG).isEqualTo("CreateTime")
+            assertDefaultConfig(TopicConfig.MIN_CLEANABLE_DIRTY_RATIO_CONFIG).isEqualToStringOf(0.5)
+            assertDefaultConfig(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG).isEqualToStringOf(0)
+            assertDefaultConfig(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG).isEqualToStringOf(1)
+            assertDefaultConfig(TopicConfig.PREALLOCATE_CONFIG).isEqualTo("false")
+            assertDefaultConfig(TopicConfig.REMOTE_LOG_STORAGE_ENABLE_CONFIG).isNull()
+            assertDefaultConfig(TopicConfig.RETENTION_BYTES_CONFIG).isEqualToStringOf(-1)
+            assertDefaultConfig(TopicConfig.RETENTION_MS_CONFIG).isEqualToStringOf(7 * 24 * 3600 * 1000L)
+            assertDefaultConfig(TopicConfig.SEGMENT_BYTES_CONFIG).isEqualToStringOf(1024L * 1024 * 1024)
+            assertDefaultConfig(TopicConfig.SEGMENT_INDEX_BYTES_CONFIG).isEqualToStringOf(10L * 1024 * 1024)
+            assertDefaultConfig(TopicConfig.SEGMENT_JITTER_MS_CONFIG).isEqualToStringOf(0)
+            assertDefaultConfig(TopicConfig.SEGMENT_MS_CONFIG).isEqualToStringOf(7 * 24 * 3600 * 1000L)
+            assertDefaultConfig(TopicConfig.UNCLEAN_LEADER_ELECTION_ENABLE_CONFIG).isEqualTo("false")
+        }.assertAll()
     }
 
     private fun verifyReAssignment(topicName: TopicName, assignments: Map<Partition, List<BrokerId>>) {

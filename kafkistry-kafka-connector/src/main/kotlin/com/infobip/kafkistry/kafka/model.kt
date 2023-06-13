@@ -95,6 +95,9 @@ data class Version(
         require(numbers.isNotEmpty()) { "Version needs to have numbers" }
     }
 
+    fun major() = numbers[0]
+    fun minor() = numbers[1]
+
     constructor(vararg numbers: Int) : this(listOf(*numbers.toTypedArray()))
 
     companion object {
