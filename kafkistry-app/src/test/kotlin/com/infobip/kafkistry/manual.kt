@@ -318,10 +318,11 @@ class DataStateInitializer(
                 ),
                 freezeDirectives = listOf(
                     FreezeDirective(
-                        "feel like it :D", partitionCount = true,
+                        "Captain's direct orders",
+                        partitionCount = true,
                         configProperties = listOf(
-                            TopicConfig.RETENTION_MS_CONFIG,
                             TopicConfig.MAX_MESSAGE_BYTES_CONFIG,
+                            TopicConfig.RETENTION_MS_CONFIG,
                         ),
                     )
                 )
