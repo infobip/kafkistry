@@ -32,7 +32,7 @@ class KafkaClusterContainer(
     private val client = AtomicReference<AdminClient>()
 
     constructor(
-            kafkaImage: String = "wurstmeister/kafka:latest",
+            kafkaImage: String,
             clusterSize: Int = 1,
             customBrokersConfig: Map<String, String> = emptyMap(),
             numberOfPartitions: Int = 1,
@@ -165,22 +165,7 @@ class BrokersConfigs(
         val customConfig: Map<String, String> = emptyMap()
 ) {
 
-    private val defaultConfig = mapOf(
-            "num.network.threads" to "3",
-            "num.io.threads" to "8",
-            "socket.send.buffer.bytes" to "102400",
-            "socket.receive.buffer.bytes" to "102400",
-            "socket.request.max.bytes" to "104857600",
-            "log.dirs" to "/tmp/kafka-logs",
-            "num.partitions" to "4",
-            "num.recovery.threads.per.data.dir" to "1",
-            "log.retention.hours" to "168",
-            "log.segment.bytes" to "1073741824",
-            "log.retention.check.interval.ms" to "300000",
-            "zookeeper.connection.timeout.ms" to "6000"
-    )
-
-    fun toYamlEnvironment(): String = defaultConfig.plus(customConfig)
+    fun toYamlEnvironment(): String = customConfig
             .mapKeys { it.key.replace(".", "_") }
             .mapKeys { it.key.uppercase(Locale.getDefault()) }
             .mapKeys { "      - KAFKA_${it.key}" }
