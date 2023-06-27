@@ -48,7 +48,7 @@ abstract class SuggestedTopicEdit(contextSupplier: () -> Context) : UITestCase(c
                 "CONFIG MISMATCH", "WRONG_CONFIG", "WRONG_PARTITION_COUNT", "WRONG_REPLICATION_FACTOR"
         )
 
-        browser.findElementWithText("Suggested edit").click()
+        browser.findElementWithText("Suggested edit").scrollIntoView().click()
         await {
             browser.assertPageText().contains("Suggested edit to match current state on clusters")
         }

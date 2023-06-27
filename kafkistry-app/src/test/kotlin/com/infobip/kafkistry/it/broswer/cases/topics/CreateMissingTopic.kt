@@ -26,12 +26,12 @@ abstract class CreateMissingTopic(contextSupplier: () -> Context) : UITestCase(c
     fun `test creating single missing topic through UI`() {
         navigateToTopicInspectPage("my-missing-1")
 
-        browser.findElementWithText("Create topic on kafka").click()
+        browser.findElementWithText("Create topic on kafka").scrollIntoView().click()
 
         await {
             browser.assertPageText().contains("Create missing topic")
         }
-        browser.findElementById("create-missing-btn").click()
+        browser.findElementById("create-missing-btn").scrollIntoView().click()
         await {
             browser.assertPageText().contains("Creation completed with success")
         }
@@ -43,12 +43,12 @@ abstract class CreateMissingTopic(contextSupplier: () -> Context) : UITestCase(c
     fun `test create where missing topic through UI`() {
         navigateToTopicInspectPage("my-missing-1")
 
-        browser.findElementWithText("Create where missing").click()
+        browser.findElementWithText("Create where missing").scrollIntoView().click()
 
         await {
             browser.assertPageText().contains("Missing topic bulk creation")
         }
-        browser.findElementById("bulk-create-where-missing-btn").click()
+        browser.findElementById("bulk-create-where-missing-btn").scrollIntoView().click()
         await {
             browser.assertPageText().contains(
                     "Topic creation completed with success",
@@ -61,7 +61,7 @@ abstract class CreateMissingTopic(contextSupplier: () -> Context) : UITestCase(c
 
     private fun navigateBackToInspectTopicPage() {
         //go back to topic inspect
-        browser.findElementWithText("Back").click()
+        browser.findElementWithText("Back").scrollIntoView().click()
 
         await {
             assertThat(browser.currentUrl).contains("/topics/inspect")
@@ -74,26 +74,26 @@ abstract class CreateMissingTopic(contextSupplier: () -> Context) : UITestCase(c
     fun `test create missing topics using create all on cluster`() {
         addTopicToRegistry(newTopic("my-missing-2"))    //to have 2 topics
 
-        browser.findElementById("nav-clusters").click()
+        browser.findElementById("nav-clusters").scrollIntoView().click()
         await {
             browser.assertPageText().contains("Status of clusters", "my-cluster")
         }
 
-        browser.findElementWithText("my-cluster").click()
+        browser.findElementWithText("my-cluster").scrollIntoView().click()
         await {
             browser.assertPageText().contains("Cluster: my-cluster")
         }
 
-        browser.findElementWithText("Create all missing...").click()
+        browser.findElementWithText("Create all missing...").scrollIntoView().click()
         await {
             browser.assertPageText().contains("Create missing topics")
         }
-        browser.findElementWithText("Create missing topics").click()
+        browser.findElementWithText("Create missing topics").scrollIntoView().click()
         await {
             browser.assertPageText().contains("Missing topics bulk creation", "There are 2 missing topic(s) to create")
         }
 
-        browser.findElementById("bulk-create-missing-btn").click()
+        browser.findElementById("bulk-create-missing-btn").scrollIntoView().click()
 
         await {
             browser.assertPageText().contains(
@@ -104,7 +104,7 @@ abstract class CreateMissingTopic(contextSupplier: () -> Context) : UITestCase(c
         }
 
         //go back to cluster page
-        browser.findElementWithText("Back").click()
+        browser.findElementWithText("Back").scrollIntoView().click()
         await {
             assertThat(browser.currentUrl).contains("/clusters/inspect")
             browser.assertPageText().contains("Cluster: my-cluster")
