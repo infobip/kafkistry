@@ -14,7 +14,7 @@ class FailedTestScreenshotWatcher : TestWatcher {
     override fun testFailed(context: ExtensionContext, cause: Throwable) {
         log.info("Test '{}' failed, going to take screenshot (failure cause: {})", context.displayName, cause.toString())
         try {
-            val screenshotBytes = BrowserItTestSuite.chrome.webDriver.getScreenshotAs(OutputType.BYTES)
+            val screenshotBytes = BrowserItTestSuite.browser.getScreenshotAs(OutputType.BYTES)
             val file = File("test-failure-screenshots")
                 .apply { mkdirs() }
                 .let { dir ->

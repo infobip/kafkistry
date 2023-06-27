@@ -42,7 +42,7 @@ class LoggingTestWatcher : TestWatcher {
 
     private fun logBrowserConsoleLog() {
         try {
-            val logEntries = BrowserItTestSuite.chrome.webDriver.manage().logs().get(LogType.BROWSER).all
+            val logEntries = BrowserItTestSuite.browser.manage().logs().get(LogType.BROWSER).all
             log.info("Got {} browser console log entries", logEntries.size)
             logEntries.forEachIndexed { index, entry -> println("console.log $index:  $entry") }
         }  catch (_: Exception) {

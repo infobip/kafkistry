@@ -1,26 +1,30 @@
 package com.infobip.kafkistry.it.broswer
 
+import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.api.AclsApi
 import com.infobip.kafkistry.api.ClustersApi
 import com.infobip.kafkistry.api.InspectApi
 import com.infobip.kafkistry.api.TopicsApi
-import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.it.broswer.cases.autopilot.AutopilotCreateTopic
 import com.infobip.kafkistry.it.broswer.cases.clusters.AddClusterToRegistry
 import com.infobip.kafkistry.it.broswer.cases.clusters.RemoveClusterFromRegistry
 import com.infobip.kafkistry.it.broswer.cases.sql.PerformSqlQuery
 import com.infobip.kafkistry.it.broswer.cases.topics.*
-import com.infobip.kafkistry.service.deleteAllOnCluster
 import com.infobip.kafkistry.kafka.ClientFactory
 import com.infobip.kafkistry.kafka.ConnectionDefinition
 import com.infobip.kafkistry.kafka.KafkaManagementClient
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
+import com.infobip.kafkistry.service.deleteAllOnCluster
 import com.infobip.kafkistry.webapp.WebHttpProperties
+import jakarta.annotation.Resource
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.chrome.ChromeOptions
+import org.openqa.selenium.remote.RemoteWebDriver
+import org.rnorth.ducttape.timeouts.Timeouts
+import org.rnorth.ducttape.unreliables.Unreliables
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -35,7 +39,8 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.net.InetAddress
 import java.util.*
-import jakarta.annotation.Resource
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
 
 class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverContainer>()
 
@@ -114,6 +119,14 @@ class BrowserItTestSuite {
                 RecordReadSamplerFactory(),
                 Optional.empty()
         )
+
+        val browser: RemoteWebDriver by lazy {
+            Unreliables.retryUntilSuccess(30, TimeUnit.SECONDS) {
+                Timeouts.getWithTimeout(10, TimeUnit.SECONDS) {
+                    RemoteWebDriver(chrome.seleniumAddress, ChromeOptions())
+                }
+            }
+        }
     }
 
     @BeforeEach
@@ -123,7 +136,7 @@ class BrowserItTestSuite {
                 ConnectionDefinition(embeddedKafka.brokersAsString, ssl = false, sasl = false, profiles = emptyList())
         )
         deleteAll()
-        chrome.webDriver.get("$baseUrl/home")
+        browser.get("$baseUrl/home")
     }
 
     @AfterEach
@@ -145,7 +158,7 @@ class BrowserItTestSuite {
     }
 
     private fun context() = Context(
-            browser = chrome.webDriver,
+            browser = browser,
             appCtx = applicationContext,
             clustersApi = clustersApi,
             topicsApi = topicsApi,
