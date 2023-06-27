@@ -63,34 +63,39 @@ class WebSecurityConfig(
         http.addFilterBefore(currentRequestReadingFilter, HeaderWriterFilter::class.java)
         if (securityProperties.enabled) {
             with(http) {
-                sessionManagement()
-                    .sessionFixation().migrateSession()
-                    .maximumSessions(10)
-                    .sessionRegistry(sessionRegistry)
-                addFilterBefore(preAuthUserFilter(), AbstractPreAuthenticatedProcessingFilter::class.java)
-                with(authorizeHttpRequests()) {
-                    authorizationConfigurers.forEach { it.configure(this) }
+                sessionManagement {
+                    it
+                        .sessionFixation().migrateSession()
+                        .maximumSessions(10)
+                        .sessionRegistry(sessionRegistry)
                 }
-                formLogin().loginPage("${httpProperties.rootPath}/login")
-                logout().logoutUrl("${httpProperties.rootPath}/logout")
-                with(csrf()) {
+                addFilterBefore(preAuthUserFilter(), AbstractPreAuthenticatedProcessingFilter::class.java)
+                authorizeHttpRequests { configurer ->
+                    authorizationConfigurers.forEach { it.configure(configurer) }
+                }
+                formLogin { it.loginPage("${httpProperties.rootPath}/login") }
+                logout { it.logoutUrl("${httpProperties.rootPath}/logout") }
+                csrf {
                     if (!securityProperties.csrfEnabled) {
-                        disable()
+                        it.disable()
                     } else {
                         noSessionRequestMatchers.ifPresent { matchers ->
-                            ignoringRequestMatchers(*matchers.toTypedArray())
+                            it.ignoringRequestMatchers(*matchers.toTypedArray())
                         }
                     }
                 }
-                httpBasic()
-                exceptionHandling()
-                    .defaultAuthenticationEntryPointFor(unauthorizedEntryPoint, unauthorizedEntryPoint.apiCallMatcher())
-                    .accessDeniedHandler(unauthorizedEntryPoint)
+
+                httpBasic {}
+                exceptionHandling {
+                    it
+                        .defaultAuthenticationEntryPointFor(unauthorizedEntryPoint, unauthorizedEntryPoint.apiCallMatcher())
+                        .accessDeniedHandler(unauthorizedEntryPoint)
+                }
             }
         } else {
             with(http) {
-                authorizeHttpRequests().anyRequest().permitAll()
-                csrf().disable()
+                authorizeHttpRequests { it.anyRequest().permitAll() }
+                csrf { it.disable() }
             }
         }
         return http.build()
