@@ -299,5 +299,19 @@
     	--s.topic, s.cluster,
     	s.status
     LIMIT 100
+- title: "GIT commits per topic"
+  sql: |
+    SELECT 
+        t.topic,
+        date(t.firstCommitTime/1000, 'unixepoch') AS firstCommitDate,
+        date(t.lastCommitTime/1000, 'unixepoch') AS lastCommitDate,
+        count(*) as commitCount,
+        (t.lastCommitTime - t.firstCommitTime) AS firstToLastCommitMs
+    FROM RegistryTopicHistory AS t
+    JOIN RegistryTopicHistory_Commits AS tc ON
+        t.topic = tc.TopicEntityHistory_topic
+    GROUP BY t.topic
+    ORDER BY commitCount DESC
+    LIMIT 50
 
 
