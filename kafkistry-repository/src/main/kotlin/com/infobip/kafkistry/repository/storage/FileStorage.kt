@@ -19,9 +19,11 @@ interface FileStorage {
     fun deleteAllFiles(writeContext: WriteContext)
     fun listFileChanges(name: String): List<FileChange>
     fun listCommits(range: CommitsRange): List<CommitFileChanges>
+    fun globallyLastCommitId(): CommitId?
 }
 
 typealias Branch = String
+typealias CommitId = String
 
 data class StoredFile(
         val name: String,
@@ -42,7 +44,7 @@ data class ChangeBranch(
 )
 
 data class Commit(
-        val commitId: String,
+        val commitId: CommitId,
         val merge: Boolean,
         val username: String,
         val timestampSec: Long,

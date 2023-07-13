@@ -2,6 +2,7 @@ package com.infobip.kafkistry.repository.storage
 
 import com.infobip.kafkistry.repository.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * In-memory cached decoration of [RequestingKeyValueRepository].
@@ -13,7 +14,9 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
 ) : DelegatingRequestingKeyValueRepository<ID, T>(delegate) {
 
     private val cache = ConcurrentHashMap<ID, T>()
-    private var lastRefresh = System.currentTimeMillis()
+    private var lastRefresh = AtomicReference(System.currentTimeMillis())
+    private val commits = AtomicReference<List<CommitEntityChanges<ID, T>>>(emptyList())
+    private var globalLastSeenCommitId = AtomicReference<CommitId?>(null)
 
     init {
         refreshAll()
@@ -23,7 +26,7 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
         val all = delegate.findAll().associateBy(keyIdExtractor)
         cache.putAll(all)
         cache.keys.retainAll(all.keys)
-        lastRefresh = System.currentTimeMillis()
+        lastRefresh.set(System.currentTimeMillis())
     }
 
     private fun refreshById(id: ID) {
@@ -38,7 +41,7 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
     private inline fun <T> maybeRefreshAndDo(operation: () -> T): T {
         if (refreshAllAfterMs != null) {
             val now = System.currentTimeMillis()
-            if (lastRefresh + refreshAllAfterMs < now) {
+            if (lastRefresh.get() + refreshAllAfterMs < now) {
                 refreshAll()
             }
         }
@@ -82,5 +85,39 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
     override fun requestDeleteAll(writeContext: WriteContext) {
         delegate.requestDeleteAll(writeContext)
         refreshAll()
+    }
+
+    private fun needsCommitsRefresh(): Boolean = globalLastSeenCommitId.get() != delegate.globallyLastCommitId()
+
+    private fun refreshAllCommits() {
+        val newestCommitId = delegate.globallyLastCommitId()
+        val listCommits = delegate.listCommits(CommitsRange.ALL)
+        commits.set(listCommits)
+        globalLastSeenCommitId.set(newestCommitId)
+    }
+
+    @Synchronized  //ensure that all concurrent calls will wait and use results from first which acquires the monitor
+    private fun refreshCommitsIfNeeded() {
+        if (needsCommitsRefresh()) {
+            refreshAllCommits()
+        }
+    }
+
+    override fun listCommits(range: CommitsRange): List<CommitEntityChanges<ID, T>> {
+        return if (range == CommitsRange.ALL) {
+            refreshCommitsIfNeeded()
+            commits.get()
+        } else {
+            if (needsCommitsRefresh()) {
+                //don't want to potentially wait long time for full refresh
+                delegate.listCommits(range)
+            } else {
+                commits.get().asSequence()
+                    .drop(range.skip)
+                    .let { if (range.count != null) it.take(range.count) else it }
+                    .let { if (range.globalLimit != null) it.take(range.globalLimit) else it }
+                    .toList()
+            }
+        }
     }
 }

@@ -115,6 +115,8 @@ class RequestingKeyValueRepositoryStorageAdapter<T : Any>(
                 }
     }
 
+    override fun globallyLastCommitId(): CommitId? = storage.globallyLastCommitId()
+
     private fun StoredFile.deserialize(): T = deserialize(content, name)
 
     private fun deserialize(content: String, name: String): T {

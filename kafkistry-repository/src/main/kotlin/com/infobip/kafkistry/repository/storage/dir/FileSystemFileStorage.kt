@@ -78,4 +78,6 @@ class FileSystemFileStorage(
     override fun listFileChanges(name: String): List<FileChange> = emptyList()
 
     override fun listCommits(range: CommitsRange): List<CommitFileChanges> = emptyList()
+
+    override fun globallyLastCommitId(): CommitId? = null
 }

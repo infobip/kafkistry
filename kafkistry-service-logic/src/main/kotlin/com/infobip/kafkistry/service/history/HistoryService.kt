@@ -17,7 +17,9 @@ class HistoryService(
 
     fun getFullHistory(): List<ChangeCommit<out Change>> = getHistory(CommitsRange.ALL)
 
-    fun getRecentHistory(count: Int): List<ChangeCommit<out Change>> = getHistory(CommitsRange(globalLimit = count))
+    fun getRecentHistory(count: Int): List<ChangeCommit<out Change>> {
+        return getHistory(CommitsRange(globalLimit = count)).take(count)
+    }
 
     private fun getHistory(range: CommitsRange): List<ChangeCommit<out Change>> {
         val clusterCommits = clustersRegistry.getCommitsHistory(range)

@@ -226,7 +226,7 @@ class GitRepository(
         }
     }
 
-    fun currentCommitId(): String {
+    fun currentCommitId(): CommitId {
         return exclusiveOnMainBranch {
             currentHeadRevision().objectId.name
         }
@@ -515,7 +515,7 @@ class GitRepository(
         }
     }
 
-    fun commitChanges(commitId: String, subDirFilter: String? = null): CommitFileChanges {
+    fun commitChanges(commitId: CommitId, subDirFilter: String? = null): CommitFileChanges {
         val commitObjectId = repository.resolve("$commitId^{commit}")
                 ?: throw KafkistryGitException("Commit id '$commitId' not found")
         return RevWalk(repository).use { walk ->

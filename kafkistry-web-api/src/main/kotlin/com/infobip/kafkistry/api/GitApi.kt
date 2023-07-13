@@ -4,6 +4,7 @@ import com.infobip.kafkistry.events.EventPublisher
 import com.infobip.kafkistry.events.RepositoryRefreshEvent
 import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.repository.storage.CommitFileChanges
+import com.infobip.kafkistry.repository.storage.CommitId
 import com.infobip.kafkistry.repository.storage.git.GitRefreshTrigger
 import com.infobip.kafkistry.repository.storage.git.GitRepository
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -40,7 +41,7 @@ class GitApi(
 
     @GetMapping("/commits/{commitId}")
     fun commitChanges(
-        @PathVariable("commitId") commitId: String
+        @PathVariable("commitId") commitId: CommitId
     ): CommitFileChanges = gitRepository.commitChanges(commitId)
 
 }

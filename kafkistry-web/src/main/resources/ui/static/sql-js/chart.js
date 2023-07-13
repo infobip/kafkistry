@@ -206,7 +206,7 @@ function getDataset() {
         $(this).find(".data-value").each(function () {
             let dataEntry = $(this);
             let rawValue = dataEntry.attr("data-value");
-            let numericValue = parseFloat(rawValue);
+            let numericValue = Number(rawValue);
             let value;
             if (rawValue === "null") {
                 value = null;
