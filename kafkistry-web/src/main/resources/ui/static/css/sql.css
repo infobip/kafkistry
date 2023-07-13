@@ -28,6 +28,9 @@
 .data-value.sql-boolean {
     color: #9b6add;
 }
+.data-value.sql-timestamp {
+    color: #b59d02;
+}
 
 .span-block {
     display: inline-block;

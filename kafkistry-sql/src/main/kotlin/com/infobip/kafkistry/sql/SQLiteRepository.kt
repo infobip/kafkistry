@@ -12,6 +12,7 @@ import java.io.File
 import java.io.InputStreamReader
 import java.sql.ResultSet
 import java.sql.Types
+import java.time.ZoneId
 
 class SQLiteRepository(
     dbPath: String,
@@ -195,6 +196,7 @@ class SQLiteRepository(
             val values = (1..metaData.columnCount).map { column ->
                 when (metaData.getColumnType(column)) {
                     Types.BOOLEAN -> getBoolean(column).let { if (wasNull()) null else it }
+                    Types.TIMESTAMP -> getTimestamp(column)?.toInstant()?.atZone(ZoneId.of("UTC"))
                     else -> getObject(column)
                 }
             }
