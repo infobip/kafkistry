@@ -97,6 +97,7 @@ function dryRunInspectRecordsStructure() {
         .done(function (response) {
             hideOpStatus();
             resultContainer.html(response);
+            registerAllInfoTooltipsIn(resultContainer)
             resultContainer.show();
             adjustFieldsView();
         })

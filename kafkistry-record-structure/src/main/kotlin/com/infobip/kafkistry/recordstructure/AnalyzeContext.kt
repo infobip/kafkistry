@@ -27,7 +27,7 @@ open class AnalyzeContext(
         clusterRecordsStructures: ClusterRecordsStructuresMap,
     ) {
         val recordsStructure = analyzeRecordStructure(
-            consumerRecord.headers(), consumerRecord.value()
+            consumerRecord.headers(), consumerRecord.key(), consumerRecord.value()
         )
         val recordsStructures = clusterRecordsStructures.computeIfAbsent(cluster.identifier) { ConcurrentHashMap() }
         recordsStructures.merge(consumerRecord.topic(), wrapNow(recordsStructure)) { old, new ->
@@ -36,16 +36,22 @@ open class AnalyzeContext(
     }
 
     private fun analyzeRecordStructure(
-        headers: Headers, recordPayload: ByteArray?
+        headers: Headers, recordKey: ByteArray?, recordPayload: ByteArray?
     ): TimestampWrappedRecordsStructure {
         val headersMap = headers.associate { it.key() to it.value() }
         val headersValue = analyzeValue(headersMap, null)
+        val recordSize = RecordTimedSize(
+            valueSize = timedValueOf(recordPayload?.size ?: 0),
+            keySize = timedValueOf(recordKey?.size ?: 0),
+            headersSize = timedValueOf(headers.sumOf { it.key().length + (it.value()?.size ?: 0) }),
+        )
         if (recordPayload == null) {
             return TimestampWrappedRecordsStructure(
                 PayloadType.NULL,
                 timestampWrappedHeaderFields = listOf(headersValue),
                 timestampWrappedJsonFields = null,
                 nullable = wrapNow(true),
+                size = recordSize,
             )
         }
         return try {
@@ -56,15 +62,20 @@ open class AnalyzeContext(
                 timestampWrappedHeaderFields = listOf(headersValue),
                 timestampWrappedJsonFields = listOf(value),
                 nullable = wrapNow(false),
+                size = recordSize,
             )
         } catch (e: Exception) {
             when (e) {
                 is JsonParseException, is JsonProcessingException, is CharConversionException -> {
-                    timestampWrappedUnknownRecordsStructure(listOf(headersValue), false)
+                    timestampWrappedUnknownRecordsStructure(listOf(headersValue), false, recordSize)
                 }
                 else -> throw e
             }
         }
+    }
+
+    private fun timedValueOf(value: Int): TimedHistory<IntNumberSummary> {
+        return TimedHistory.of(wrapNow(IntNumberSummary.ofSingle(value)))
     }
 
     private fun analyzeValue(
@@ -111,7 +122,6 @@ open class AnalyzeContext(
             }
             else -> {
                 val aInput = if (input is ByteArray) {
-                    @Suppress("UnstableApiUsage")
                     val stringInput = input.takeIf { Utf8.isWellFormed(input) }?.decodeToString()
                     stringInput?.toLongOrNull()?.let {
                         when (it in (Int.MIN_VALUE..Int.MAX_VALUE)) {

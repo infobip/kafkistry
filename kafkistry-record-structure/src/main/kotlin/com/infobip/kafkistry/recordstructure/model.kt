@@ -2,6 +2,7 @@ package com.infobip.kafkistry.recordstructure
 
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.*
+import java.time.Duration
 import java.util.concurrent.ConcurrentMap
 
 data class TimestampWrapper<T>(
@@ -16,6 +17,13 @@ data class TimestampWrappedRecordsStructure(
     val timestampWrappedHeaderFields: List<TimestampWrapper<TimestampWrappedRecordField>>?,
     val timestampWrappedJsonFields: List<TimestampWrapper<TimestampWrappedRecordField>>?,
     val nullable: TimestampWrapper<Boolean>,
+    val size: RecordTimedSize,
+)
+
+data class RecordTimedSize(
+    val keySize: TimedHistory<IntNumberSummary>,
+    val valueSize: TimedHistory<IntNumberSummary>,
+    val headersSize: TimedHistory<IntNumberSummary>,
 )
 
 data class TimestampWrappedFieldValue(
@@ -32,11 +40,18 @@ data class TimestampWrappedRecordField(
     val value: TimestampWrappedFieldValue? = null,
 )
 
-fun TimestampWrappedRecordsStructure.toRecordsStructure(): RecordsStructure = RecordsStructure(
+fun TimestampWrappedRecordsStructure.toRecordsStructure(
+    now: Long = generateTimestamp()
+): RecordsStructure = RecordsStructure(
     payloadType = payloadType,
     headerFields = timestampWrappedHeaderFields?.map { it.field.toRecordField() },
     jsonFields = timestampWrappedJsonFields?.map { it.field.toRecordField() },
     nullable = nullable.field,
+    size = RecordSize(
+        key = size.keySize.toSizeOverTime(now),
+        value = size.valueSize.toSizeOverTime(now),
+        headers = size.headersSize.toSizeOverTime(now),
+    )
 )
 
 fun TimestampWrappedRecordField.toRecordField(
@@ -55,6 +70,24 @@ fun TimestampWrappedRecordField.toRecordField(
                 valueSet = value.values.takeIf { it.isNotEmpty() }?.asSequence()?.map { it.field }?.toSet(),
             )
         }
+    )
+}
+
+fun TimedHistory<IntNumberSummary>.toSizeOverTime(now: Long) = SizeOverTime(
+    last15Min = last15Min.toSizeStatistic(Duration.ZERO, now),
+    lastHour = lastHour.toSizeStatistic(TimeConstant.offset15Min, now),
+    last6Hours = last6Hours.toSizeStatistic(TimeConstant.offset1h, now),
+    lastDay = lastDay.toSizeStatistic(TimeConstant.offset6h, now),
+    lastWeek = lastWeek.toSizeStatistic(TimeConstant.offset1d, now),
+    lastMonth = lastMonth.toSizeStatistic(TimeConstant.offset1w, now),
+)
+
+fun TimestampWrapper<IntNumberSummary>.toSizeStatistic(minOldness: Duration, now: Long): SizeStatistic? {
+    if (timestamp > now - minOldness.toMillis()) {
+        return null
+    }
+    return SizeStatistic(
+        count = field.count, avg = field.avg, min = field.min, max = field.max
     )
 }
 

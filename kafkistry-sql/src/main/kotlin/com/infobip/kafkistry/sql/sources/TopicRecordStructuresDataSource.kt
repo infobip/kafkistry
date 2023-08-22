@@ -2,10 +2,7 @@
 
 package com.infobip.kafkistry.sql.sources
 
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.PayloadType
-import com.infobip.kafkistry.model.RecordFieldType
-import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.recordstructure.RecordStructureAnalyzer
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.sql.SqlDataSource
@@ -50,6 +47,31 @@ class TopicRecordStructuresDataSource(
             nullable = recordsStructure.nullable
             jsonFields = recordsStructure.jsonFields?.flatMap { mapRecordField(it) }
             headerFields = recordsStructure.headerFields?.flatMap { mapRecordField(it) }
+            sizes = with(recordsStructure.size) {
+                key.mapToEmbedded("KEY") + value.mapToEmbedded("VALUE") + headers.mapToEmbedded("HEADERS")
+            }
+        }
+    }
+
+    private fun SizeOverTime.mapToEmbedded(property: String): List<PropertySizeOverTime> {
+        return listOfNotNull(
+            last15Min?.mapToEmbedded(property, SizeOverTime::last15Min.name),
+            lastHour?.mapToEmbedded(property, SizeOverTime::lastHour.name),
+            last6Hours?.mapToEmbedded(property, SizeOverTime::last6Hours.name),
+            lastDay?.mapToEmbedded(property, SizeOverTime::lastDay.name),
+            lastWeek?.mapToEmbedded(property, SizeOverTime::lastWeek.name),
+            lastMonth?.mapToEmbedded(property, SizeOverTime::lastMonth.name),
+        )
+    }
+
+    private fun SizeStatistic.mapToEmbedded(property: String, bucket: String): PropertySizeOverTime {
+        return PropertySizeOverTime().apply {
+            this.property = property
+            this.bucket = bucket
+            this.samples = count
+            this.avg = this@mapToEmbedded.avg
+            this.max = this@mapToEmbedded.max
+            this.min = this@mapToEmbedded.min
         }
     }
 
@@ -97,6 +119,10 @@ class RecordsStructure {
     @JoinTable(name = "RecordStructures_RecordHeaderFields")
     var headerFields: List<RecordField>? = null
 
+    @ElementCollection
+    @JoinTable(name = "RecordStructures_Sizes")
+    var sizes: List<PropertySizeOverTime>? = null
+
 }
 
 @Embeddable
@@ -114,4 +140,14 @@ class RecordField {
     var tooBig: Boolean? = null
     var valueSet: String? = null
 
+}
+
+@Embeddable
+class PropertySizeOverTime {
+    lateinit var property: String
+    lateinit var bucket: String
+    var samples: Int? = null
+    var avg: Int? = null
+    var max: Int? = null
+    var min: Int? = null
 }

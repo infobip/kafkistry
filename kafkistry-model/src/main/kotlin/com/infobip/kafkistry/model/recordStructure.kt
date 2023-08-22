@@ -23,6 +23,7 @@ enum class RecordFieldType {
  */
 data class RecordsStructure(
     val payloadType: PayloadType,
+    val size: RecordSize,
     val headerFields: List<RecordField>? = null,
     val jsonFields: List<RecordField>? = null,
     val nullable: Boolean = false,
@@ -47,5 +48,27 @@ data class RecordFieldValue(
     val highCardinality: Boolean,
     val tooBig: Boolean,
     val valueSet: Set<Any>? = null,
+)
+
+data class RecordSize(
+    val key: SizeOverTime,
+    val value: SizeOverTime,
+    val headers: SizeOverTime,
+)
+
+data class SizeOverTime(
+    val last15Min: SizeStatistic?,
+    val lastHour: SizeStatistic?,
+    val last6Hours: SizeStatistic?,
+    val lastDay: SizeStatistic?,
+    val lastWeek: SizeStatistic?,
+    val lastMonth: SizeStatistic?,
+)
+
+data class SizeStatistic(
+    val count: Int,
+    val avg: Int,
+    val min: Int,
+    val max: Int,
 )
 

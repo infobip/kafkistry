@@ -20,7 +20,10 @@ class TrimContext(
             trimCounter.addAndGet(entriesCountBeforeTrim - topicStructures.entries.size)
             for ((topic, topicStructure) in topicStructures) {
                 topicStructures[topic] = topicStructure.withField {
-                    it.copy(timestampWrappedJsonFields = it.timestampWrappedJsonFields?.trim())
+                    it.copy(
+                        timestampWrappedJsonFields = it.timestampWrappedJsonFields?.trim(),
+                        size = it.size.roll(),
+                    )
                 }
             }
         }
@@ -39,6 +42,14 @@ class TrimContext(
                 }
             }
             .also { trimCounter.addAndGet(sizeBefore - it.size) }
+    }
+
+    private fun RecordTimedSize.roll(): RecordTimedSize {
+        return RecordTimedSize(
+            keySize = keySize.maybeRollover(now),
+            valueSize = valueSize.maybeRollover(now),
+            headersSize = headersSize.maybeRollover(now),
+        )
     }
 
 }

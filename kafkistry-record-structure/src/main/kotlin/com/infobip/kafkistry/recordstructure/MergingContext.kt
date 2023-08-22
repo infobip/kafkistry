@@ -2,6 +2,7 @@ package com.infobip.kafkistry.recordstructure
 
 import com.infobip.kafkistry.model.*
 import kotlin.math.absoluteValue
+import kotlin.math.min
 
 open class MergingContext(
     properties: RecordAnalyzerProperties,
@@ -10,12 +11,14 @@ open class MergingContext(
 
     fun timestampWrappedUnknownRecordsStructure(
         headersFields: List<TimestampWrapper<TimestampWrappedRecordField>>?,
-        nullable: Boolean
+        nullable: Boolean,
+        size: RecordTimedSize,
     ) = TimestampWrappedRecordsStructure(
         PayloadType.UNKNOWN,
         timestampWrappedHeaderFields = headersFields,
         timestampWrappedJsonFields = null,
-        nullable = wrapNow(nullable)
+        nullable = wrapNow(nullable),
+        size = size,
     )
 
     /**
@@ -30,6 +33,7 @@ open class MergingContext(
             return timestampWrappedUnknownRecordsStructure(
                 headersFields = timestampWrappedHeaderFields merge other.timestampWrappedHeaderFields,
                 nullable = (nullable mergeBoolean other.nullable).field,
+                size = size merge other.size,
             )
         }
         return TimestampWrappedRecordsStructure(
@@ -37,7 +41,27 @@ open class MergingContext(
             timestampWrappedHeaderFields = timestampWrappedHeaderFields merge other.timestampWrappedHeaderFields,
             timestampWrappedJsonFields = timestampWrappedJsonFields merge other.timestampWrappedJsonFields,
             nullable = nullable mergeBoolean other.nullable,
+            size = size merge other.size,
         )
+    }
+
+    infix fun RecordTimedSize.merge(other: RecordTimedSize): RecordTimedSize {
+        return RecordTimedSize(
+            keySize = keySize merge other.keySize,
+            valueSize = valueSize merge other.valueSize,
+            headersSize = headersSize merge other.headersSize,
+        )
+    }
+
+    infix fun TimedHistory<IntNumberSummary>.merge(
+        other: TimedHistory<IntNumberSummary>
+    ): TimedHistory<IntNumberSummary> {
+        return this.merge(other) { first, second ->
+            TimestampWrapper(
+                field = first.field merge second.field,
+                timestamp = min(first.timestamp, second.timestamp),
+            )
+        }
     }
 
     infix fun List<TimestampWrapper<TimestampWrappedRecordField>>?.merge(

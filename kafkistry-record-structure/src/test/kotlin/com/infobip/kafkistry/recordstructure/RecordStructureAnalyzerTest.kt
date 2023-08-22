@@ -62,7 +62,7 @@ class RecordStructureAnalyzerTest {
             CLUSTER, ConsumerRecord(
                 TOPIC, 0, 0, 0, TimestampType.CREATE_TIME,
                 0, 0,
-                byteArrayOf(0x0), payload?.encodeToByteArray(),
+                byteArrayOf(), payload?.encodeToByteArray(),
                 RecordHeaders(headers.map { RecordHeader(it.key, it.value?.encodeToByteArray()) }),
                 Optional.empty(),
             )
@@ -93,6 +93,25 @@ class RecordStructureAnalyzerTest {
         val mapper = ObjectMapper().writerWithDefaultPrettyPrinter()
         assertThat(mapper.writeValueAsString(this)).isEqualTo(mapper.writeValueAsString(expectedStructure))
         assertThat(this).isEqualTo(expectedStructure)
+    }
+
+    private val zeroStatistic = SizeStatistic(1, 0, 0, 0)
+    private val zeroOverTime = sizeOverTime(zeroStatistic)
+
+    private fun statisticOf(vararg sizes: Int): SizeStatistic {
+        return SizeStatistic(sizes.size, sizes.sum() / sizes.size, sizes.min(), sizes.max())
+    }
+
+    private fun sizeOverTime(statistic: SizeStatistic): SizeOverTime {
+        return SizeOverTime(statistic, null, null, null, null, null)
+    }
+
+    private fun recordSizeOfValues(vararg sizes: Int): RecordSize {
+        return RecordSize(
+            key = sizeOverTime(statisticOf(*sizes.map { 0 }.toIntArray())),
+            value = sizeOverTime(statisticOf(*sizes)),
+            headers = sizeOverTime(statisticOf(*sizes.map { 0 }.toIntArray())),
+        )
     }
 
     @Test
@@ -330,7 +349,8 @@ class RecordStructureAnalyzerTest {
                         )
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(json.length),
         )
         assertJsonStructure(expectedStructure, json)
     }
@@ -556,7 +576,8 @@ class RecordStructureAnalyzerTest {
                         ),
                     ),
                 )
-            )
+            ),
+            size = recordSizeOfValues(jsonRealisticExample.length),
         )
         assertJsonStructure(expectedStructure, jsonRealisticExample)
     }
@@ -630,7 +651,8 @@ class RecordStructureAnalyzerTest {
                         )
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(json.length),
         )
         assertJsonStructure(expectedStructure, json)
     }
@@ -697,7 +719,8 @@ class RecordStructureAnalyzerTest {
                         )
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(json1.length, json2.length),
         )
         assertJsonStructure(expectedStructure, json1, json2)
     }
@@ -737,7 +760,8 @@ class RecordStructureAnalyzerTest {
                         ),
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(json1.length, json2.length),
         )
         assertJsonStructure(expectedStructure, json1, json2)
     }
@@ -763,7 +787,8 @@ class RecordStructureAnalyzerTest {
                         )
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(json1.length, json2.length, json3.length),
         )
         assertJsonStructure(expectedStructure, json1, json2, json3)
     }
@@ -790,7 +815,8 @@ class RecordStructureAnalyzerTest {
                         )
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(sizes = jsons.map { it.length }.toIntArray()),
         )
         assertJsonStructure(expectedStructure, jsons = jsons.toTypedArray())
     }
@@ -816,7 +842,11 @@ class RecordStructureAnalyzerTest {
                         )
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(
+                json1.length, json2.length, json3.length,
+                json3.length, json3.length, json3.length, json3.length,
+            ),
         )
         with(newAnalyzer(timeWindow = 200)) {
             acceptRecord(json1)
@@ -855,14 +885,15 @@ class RecordStructureAnalyzerTest {
                         ),
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(json1.length, json2.length),
         )
         assertJsonStructure(expectedStructure, json1, json2)
     }
 
     @Test
     fun `test nullable decay with time`() {
-        fun expectedStructure(nullable: Boolean) = RecordsStructure(
+        fun expectedStructure(nullable: Boolean, vararg sizes: Int) = RecordsStructure(
             payloadType = PayloadType.JSON,
             headerFields = emptyHeaders,
             jsonFields = listOf(
@@ -879,18 +910,19 @@ class RecordStructureAnalyzerTest {
                         ),
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(*sizes),
         )
         with(newAnalyzer(timeWindow = 200)) {
             acceptRecord("""{ "field":"val1" }""")
-            structure().assertEqualsTo(expectedStructure(false))
+            structure().assertEqualsTo(expectedStructure(false, 18))
             acceptRecord("""{ }""")
-            structure().assertEqualsTo(expectedStructure(true))
+            structure().assertEqualsTo(expectedStructure(true, 18, 3))
             acceptRecord("""{ "field":"val2" }""")
-            structure().assertEqualsTo(expectedStructure(true))
+            structure().assertEqualsTo(expectedStructure(true, 18, 3, 18))
             Thread.sleep(201)
             acceptRecord("""{ "field":"val3" }""")
-            structure().assertEqualsTo(expectedStructure(false))
+            structure().assertEqualsTo(expectedStructure(false, 18, 3, 18, 18))
         }
     }
 
@@ -902,7 +934,8 @@ class RecordStructureAnalyzerTest {
                 RecordsStructure(
                     PayloadType.NULL,
                     nullable = true,
-                    headerFields = emptyHeaders
+                    headerFields = emptyHeaders,
+                    size = recordSizeOfValues(0),
                 )
             )
 
@@ -916,9 +949,10 @@ class RecordStructureAnalyzerTest {
                         RecordField(
                             name = null,
                             fullName = null,
-                            RecordFieldType.STRING
+                            RecordFieldType.STRING,
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(0, 7),
                 )
             )
 
@@ -936,7 +970,8 @@ class RecordStructureAnalyzerTest {
                             fullName = null,
                             RecordFieldType.STRING
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(0, 7, 7),
                 )
             )
 
@@ -952,7 +987,8 @@ class RecordStructureAnalyzerTest {
                             fullName = null,
                             RecordFieldType.STRING
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(0, 7, 7, 0),
                 )
             )
         }
@@ -989,6 +1025,11 @@ class RecordStructureAnalyzerTest {
                                 ),
                             )
                         )
+                    ),
+                    size = RecordSize(
+                        key = zeroOverTime,
+                        value = zeroOverTime,
+                        headers = sizeOverTime(statisticOf(9 + 1 + 12 + 1 + 5 + 3))
                     )
                 )
             )
@@ -1022,7 +1063,8 @@ class RecordStructureAnalyzerTest {
                         ),
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(14, 14, 14, 14),
         )
         newAnalyzer(valueSamplingEnabled = true)
             .assertJsonStructure(expected, json1, json2, json3, json4)
@@ -1059,7 +1101,8 @@ class RecordStructureAnalyzerTest {
                         ),
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(sizes = jsons.map { it.length }.toIntArray()),
         )
         newAnalyzer(valueSamplingEnabled = true, valSamplingMaxCardinality = 5)
             .assertJsonStructure(expected, *jsons)
@@ -1094,7 +1137,8 @@ class RecordStructureAnalyzerTest {
                         ),
                     )
                 )
-            )
+            ),
+            size = recordSizeOfValues(sizes = jsons.map { it.length }.toIntArray()),
         )
         newAnalyzer(valueSamplingEnabled = true, valSamplingMaxCardinality = 5)
             .assertJsonStructure(expected, *jsons)
@@ -1126,7 +1170,8 @@ class RecordStructureAnalyzerTest {
                                 ),
                             )
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(14),
                 )
             )
         }
@@ -1156,7 +1201,8 @@ class RecordStructureAnalyzerTest {
                                 ),
                             )
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(7, 7, 7),
                 )
             )
         }
@@ -1185,7 +1231,8 @@ class RecordStructureAnalyzerTest {
                                 ),
                             )
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(7, 7),
                 )
             )
         }
@@ -1214,7 +1261,8 @@ class RecordStructureAnalyzerTest {
                                 ),
                             )
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(7, 2),
                 )
             )
         }
@@ -1242,7 +1290,8 @@ class RecordStructureAnalyzerTest {
                                 ),
                             )
                         )
-                    )
+                    ),
+                    size = recordSizeOfValues(9, 9),
                 )
             )
         }

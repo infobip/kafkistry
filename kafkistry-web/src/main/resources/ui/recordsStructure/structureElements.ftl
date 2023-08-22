@@ -1,5 +1,7 @@
 <#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
 
+<#import "../common/infoIcon.ftl" as info>
+
 <#assign collapseIdGen = 1>
 <#function nextCollapseId>
     <#assign collapseId = collapseIdGen>
@@ -107,6 +109,64 @@
     <#return fields>
 </#function>
 
+
+<#macro showSizeStat stat>
+<#-- @ftlvariable name="stat" type="com.infobip.kafkistry.model.SizeStatistic" -->
+    <#assign tooltip>
+        <table class='table table-sm m-0'>
+            <tr><th># samples</th><td>${stat.count}</td></tr>
+            <tr><th>Avg</th><td>${stat.avg} bytes</td></tr>
+            <tr><th>Min</th><td>${stat.min} bytes</td></tr>
+            <tr><th>Max</th><td>${stat.max} bytes</td></tr>
+        </table>
+    </#assign>
+    ${stat.avg} <@info.icon tooltip=tooltip/>
+</#macro>
+
+<#macro showRecordSize size>
+<#-- @ftlvariable name="size" type="com.infobip.kafkistry.model.RecordSize" -->
+    <table class="table m-0">
+        <thead class="thead-dark">
+        <tr>
+            <th></th>
+            <th>15 Min</th>
+            <th>1 Hour</th>
+            <th>6 Hours</th>
+            <th>Day</th>
+            <th>Week</th>
+            <th>Month</th>
+        </tr>
+        </thead>
+        <tr>
+            <th>Key</th>
+            <td><#if (size.key.last15Min)??><@showSizeStat stat=size.key.last15Min/><#else>---</#if></td>
+            <td><#if (size.key.lastHour)??><@showSizeStat stat=size.key.lastHour/><#else>---</#if></td>
+            <td><#if (size.key.last6Hours)??><@showSizeStat stat=size.key.last6Hours/><#else>---</#if></td>
+            <td><#if (size.key.lastDay)??><@showSizeStat stat=size.key.lastDay/><#else>---</#if></td>
+            <td><#if (size.key.lastWeek)??><@showSizeStat stat=size.key.lastWeek/><#else>---</#if></td>
+            <td><#if (size.key.lastMonth)??><@showSizeStat stat=size.key.lastMonth/><#else>---</#if></td>
+        </tr>
+        <tr>
+            <th>Value</th>
+            <td><#if (size.value.last15Min)??><@showSizeStat stat=size.value.last15Min/><#else>---</#if></td>
+            <td><#if (size.value.lastHour)??><@showSizeStat stat=size.value.lastHour/><#else>---</#if></td>
+            <td><#if (size.value.last6Hours)??><@showSizeStat stat=size.value.last6Hours/><#else>---</#if></td>
+            <td><#if (size.value.lastDay)??><@showSizeStat stat=size.value.lastDay/><#else>---</#if></td>
+            <td><#if (size.value.lastWeek)??><@showSizeStat stat=size.value.lastWeek/><#else>---</#if></td>
+            <td><#if (size.value.lastMonth)??><@showSizeStat stat=size.value.lastMonth/><#else>---</#if></td>
+        </tr>
+        <tr>
+            <th>Headers</th>
+            <td><#if (size.headers.last15Min)??><@showSizeStat stat=size.headers.last15Min/><#else>---</#if></td>
+            <td><#if (size.headers.lastHour)??><@showSizeStat stat=size.headers.lastHour/><#else>---</#if></td>
+            <td><#if (size.headers.last6Hours)??><@showSizeStat stat=size.headers.last6Hours/><#else>---</#if></td>
+            <td><#if (size.headers.lastDay)??><@showSizeStat stat=size.headers.lastDay/><#else>---</#if></td>
+            <td><#if (size.headers.lastWeek)??><@showSizeStat stat=size.headers.lastWeek/><#else>---</#if></td>
+            <td><#if (size.headers.lastMonth)??><@showSizeStat stat=size.headers.lastMonth/><#else>---</#if></td>
+        </tr>
+    </table>
+</#macro>
+
 <#macro showPayloadStructure structure>
 <#-- @ftlvariable name="structure" type="com.infobip.kafkistry.model.RecordsStructure" -->
     <div>
@@ -150,6 +210,14 @@
 
 <#macro showStructure structure>
 <#-- @ftlvariable name="structure" type="com.infobip.kafkistry.model.RecordsStructure" -->
+    <div class="card">
+        <div class="card-header h5">Sizes</div>
+        <div class="card-body p-0">
+            <@showRecordSize size=structure.size/>
+        </div>
+    </div>
+    <br/>
+
     <div class="card">
         <div class="card-header h5">Headers</div>
         <div class="card-body p-1">
