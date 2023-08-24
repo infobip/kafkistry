@@ -51,6 +51,9 @@ fun TimestampWrappedRecordsStructure.toRecordsStructure(
         key = size.keySize.toSizeOverTime(now),
         value = size.valueSize.toSizeOverTime(now),
         headers = size.headersSize.toSizeOverTime(now),
+        msg = sumTimedHistory(
+            key = size.keySize, value = size.valueSize, headers = size.headersSize
+        ).toSizeOverTime(now),
     )
 )
 
@@ -81,6 +84,33 @@ fun TimedHistory<IntNumberSummary>.toSizeOverTime(now: Long) = SizeOverTime(
     lastWeek = lastWeek.toSizeStatistic(TimeConstant.offset1d, now),
     lastMonth = lastMonth.toSizeStatistic(TimeConstant.offset1w, now),
 )
+
+fun sumTimedHistory(
+    key: TimedHistory<IntNumberSummary>,
+    value: TimedHistory<IntNumberSummary>,
+    headers: TimedHistory<IntNumberSummary>,
+): TimedHistory<IntNumberSummary> {
+    return TimedHistory(
+        last = sumTimestampWrapper(key.last, value.last, headers.last),
+        last15Min = sumTimestampWrapper(key.last15Min, value.last15Min, headers.last15Min),
+        lastHour = sumTimestampWrapper(key.lastHour, value.lastHour, headers.lastHour),
+        last6Hours = sumTimestampWrapper(key.last6Hours, value.last6Hours, headers.last6Hours),
+        lastDay = sumTimestampWrapper(key.lastDay, value.lastDay, headers.lastDay),
+        lastWeek = sumTimestampWrapper(key.lastWeek, value.lastWeek, headers.lastWeek),
+        lastMonth = sumTimestampWrapper(key.lastMonth, value.lastMonth, headers.lastMonth),
+    )
+}
+
+fun sumTimestampWrapper(
+    key: TimestampWrapper<IntNumberSummary>,
+    value: TimestampWrapper<IntNumberSummary>,
+    headers: TimestampWrapper<IntNumberSummary>,
+): TimestampWrapper<IntNumberSummary> {
+    return TimestampWrapper(
+        field = key.field sum value.field sum headers.field,
+        timestamp = minOf(key.timestamp, value.timestamp, headers.timestamp),
+    )
+}
 
 fun TimestampWrapper<IntNumberSummary>.toSizeStatistic(minOldness: Duration, now: Long): SizeStatistic? {
     if (timestamp > now - minOldness.toMillis()) {

@@ -51,6 +51,7 @@ data class RecordFieldValue(
 )
 
 data class RecordSize(
+    val msg: SizeOverTime,
     val key: SizeOverTime,
     val value: SizeOverTime,
     val headers: SizeOverTime,

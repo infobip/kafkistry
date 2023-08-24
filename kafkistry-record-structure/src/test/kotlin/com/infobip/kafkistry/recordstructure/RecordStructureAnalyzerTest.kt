@@ -108,6 +108,7 @@ class RecordStructureAnalyzerTest {
 
     private fun recordSizeOfValues(vararg sizes: Int): RecordSize {
         return RecordSize(
+            msg = sizeOverTime(statisticOf(*sizes)),
             key = sizeOverTime(statisticOf(*sizes.map { 0 }.toIntArray())),
             value = sizeOverTime(statisticOf(*sizes)),
             headers = sizeOverTime(statisticOf(*sizes.map { 0 }.toIntArray())),
@@ -1029,7 +1030,8 @@ class RecordStructureAnalyzerTest {
                     size = RecordSize(
                         key = zeroOverTime,
                         value = zeroOverTime,
-                        headers = sizeOverTime(statisticOf(9 + 1 + 12 + 1 + 5 + 3))
+                        headers = sizeOverTime(statisticOf(9 + 1 + 12 + 1 + 5 + 3)),
+                        msg = sizeOverTime(statisticOf(9 + 1 + 12 + 1 + 5 + 3)),
                     )
                 )
             )

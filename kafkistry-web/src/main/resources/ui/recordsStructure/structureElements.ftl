@@ -138,6 +138,15 @@
         </tr>
         </thead>
         <tr>
+            <th>Msg Total</th>
+            <td><#if (size.msg.last15Min)??><@showSizeStat stat=size.msg.last15Min/><#else>---</#if></td>
+            <td><#if (size.msg.lastHour)??><@showSizeStat stat=size.msg.lastHour/><#else>---</#if></td>
+            <td><#if (size.msg.last6Hours)??><@showSizeStat stat=size.msg.last6Hours/><#else>---</#if></td>
+            <td><#if (size.msg.lastDay)??><@showSizeStat stat=size.msg.lastDay/><#else>---</#if></td>
+            <td><#if (size.msg.lastWeek)??><@showSizeStat stat=size.msg.lastWeek/><#else>---</#if></td>
+            <td><#if (size.msg.lastMonth)??><@showSizeStat stat=size.msg.lastMonth/><#else>---</#if></td>
+        </tr>
+        <tr>
             <th>Key</th>
             <td><#if (size.key.last15Min)??><@showSizeStat stat=size.key.last15Min/><#else>---</#if></td>
             <td><#if (size.key.lastHour)??><@showSizeStat stat=size.key.lastHour/><#else>---</#if></td>

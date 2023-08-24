@@ -48,7 +48,10 @@ class TopicRecordStructuresDataSource(
             jsonFields = recordsStructure.jsonFields?.flatMap { mapRecordField(it) }
             headerFields = recordsStructure.headerFields?.flatMap { mapRecordField(it) }
             sizes = with(recordsStructure.size) {
-                key.mapToEmbedded("KEY") + value.mapToEmbedded("VALUE") + headers.mapToEmbedded("HEADERS")
+                key.mapToEmbedded("KEY") +
+                    value.mapToEmbedded("VALUE") +
+                    headers.mapToEmbedded("HEADERS") +
+                    msg.mapToEmbedded("MSG_TOTAL")
             }
         }
     }

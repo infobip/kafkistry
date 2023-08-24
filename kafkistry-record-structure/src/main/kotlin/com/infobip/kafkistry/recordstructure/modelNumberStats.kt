@@ -22,3 +22,10 @@ infix fun IntNumberSummary.merge(other: IntNumberSummary) = IntNumberSummary(
     max = max(max, other.max),
     min = min(min, other.min),
 )
+
+infix fun IntNumberSummary.sum(other: IntNumberSummary) = IntNumberSummary(
+    sum = (avg + other.avg).toLong() * min(count, other.count),
+    count = min(count, other.count),
+    max = max + other.max,
+    min = min + other.min,
+)
