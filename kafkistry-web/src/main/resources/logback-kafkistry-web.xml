@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+    <property name="KAFKISTRY_APPENDER_NAME" value="kafkistry-web-file"/>
+    <property name="KAFKISTRY_APPENDER_FILE_NAME" value="kafkistry-web.log"/>
+    <include resource="kafkistryLogbackRollingFileAppender.xml"/>
+    <logger name="com.infobip.kafkistry.webapp" additivity="true">
+        <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
+    </logger>
+    <logger name="com.infobip.kafkistry.api" additivity="true">
+        <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
+    </logger>
+    <logger name="com.infobip.kafkistry.metric.webapp" additivity="true">
+        <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
+    </logger>
+</configuration>

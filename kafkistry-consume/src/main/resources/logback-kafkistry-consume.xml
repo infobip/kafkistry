@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+    <property name="KAFKISTRY_APPENDER_NAME" value="kafkistry-consume-file"/>
+    <property name="KAFKISTRY_APPENDER_FILE_NAME" value="kafkistry-consume.log"/>
+    <include resource="kafkistryLogbackRollingFileAppender.xml"/>
+    <logger name="com.infobip.kafkistry.service.consume" additivity="true">
+        <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
+    </logger>
+</configuration>

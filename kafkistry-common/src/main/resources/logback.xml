@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="false">
+<configuration debug="true">
 
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
     <if condition='property("spring.profiles.active").contains("production") || property("SPRING_PROFILES_ACTIVE").contains("production")'>
         <then>
-            <appender name="fileout"
-                      class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <appender name="fileout" class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
                 <file>${SERVICE_LOG_ROOT}/output.log</file>
                 <encoder>
@@ -19,14 +18,12 @@
                     <maxIndex>10</maxIndex>
                     <FileNamePattern>${SERVICE_LOG_ROOT}/output.log.%i</FileNamePattern>
                 </rollingPolicy>
-                <triggeringPolicy
-                        class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
                     <MaxFileSize>6000KB</MaxFileSize>
                 </triggeringPolicy>
             </appender>
 
-            <appender name="fileerr"
-                      class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <appender name="fileerr" class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
                 <file>${SERVICE_LOG_ROOT}/error.log</file>
                 <encoder>
@@ -39,8 +36,7 @@
                     <maxIndex>10</maxIndex>
                     <FileNamePattern>${SERVICE_LOG_ROOT}/error.log.%i</FileNamePattern>
                 </rollingPolicy>
-                <triggeringPolicy
-                        class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
                     <MaxFileSize>6000KB</MaxFileSize>
                 </triggeringPolicy>
             </appender>
@@ -59,7 +55,7 @@
                 </encoder>
             </appender>
 
-            <logger name="com.infobip.kafkistry" level="DEBUG"/>
+            <logger name="com.infobip.kafkistry" level="DEBUG" additivity="true"/>
 
             <root level="INFO">
                 <appender-ref ref="CONSOLE"/>

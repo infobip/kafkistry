@@ -6,6 +6,7 @@ import com.infobip.kafkistry.metric.MetricHolder
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import io.prometheus.client.Counter
 import io.prometheus.client.Summary
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -26,10 +27,12 @@ interface EventPublisher {
 
 class LoggingEventPublisher(private val delegate: EventPublisher) : EventPublisher {
 
-    private val log = LoggerFactory.getLogger(LoggingEventPublisher::class.java)
+    private fun callerLogger(): Logger {
+        return LoggerFactory.getLogger(Exception().stackTrace[2].className)
+    }
 
     override fun publish(event: KafkistryEvent) {
-        log.info("Publishing event $event using ${delegate.javaClass.simpleName}")
+        callerLogger().info("Publishing event $event using ${delegate.javaClass.simpleName}")
         delegate.publish(event)
     }
 

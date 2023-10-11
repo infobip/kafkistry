@@ -1,4 +1,4 @@
-package com.infobip.kafkistry.events.listeners
+package com.infobip.kafkistry.repository.events
 
 import com.infobip.kafkistry.events.EventListener
 import com.infobip.kafkistry.events.RepositoryEvent

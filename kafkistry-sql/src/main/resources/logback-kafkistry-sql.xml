@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true">
+    <property name="KAFKISTRY_APPENDER_NAME" value="kafkistry-sql-file"/>
+    <property name="KAFKISTRY_APPENDER_FILE_NAME" value="kafkistry-sql.log"/>
+    <include resource="kafkistryLogbackRollingFileAppender.xml"/>
+    <logger name="com.infobip.kafkistry.sql" additivity="true">
+        <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
+    </logger>
+</configuration>

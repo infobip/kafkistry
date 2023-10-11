@@ -153,10 +153,16 @@ class SQLiteRepository(
     }
 
     override fun query(sql: String): QueryResult {
-        return synchronized(this) {
-            withExceptionTranslation {
-                doQuery(sql)
-            }
+        log.debug("Executing sql: \n{}", sql.prependIndent("    "))
+        return try {
+            synchronized(this) {
+                withExceptionTranslation {
+                    doQuery(sql)
+                }
+            }.also { log.debug("Got result set with {} rows, total rows {}", it.count, it.totalCount) }
+        } catch (ex: Exception) {
+            log.warn("Query execution failed", ex)
+            throw ex
         }
     }
 
