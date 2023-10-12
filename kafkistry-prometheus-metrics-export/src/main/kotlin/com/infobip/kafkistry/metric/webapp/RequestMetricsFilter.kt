@@ -13,6 +13,8 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 
 private val httpRequestLatenciesHolder = MetricHolder { prefix ->
     //default name: kafkistry_http_latencies
@@ -30,6 +32,7 @@ private val httpRequestLatenciesHolder = MetricHolder { prefix ->
 
 @Component
 @ConditionalOnProperty("app.metrics.http-calls", matchIfMissing = true)
+@Order(Ordered.LOWEST_PRECEDENCE)
 class RequestMetricsFilter(
     promProperties: PrometheusMetricsProperties,
 ) : GenericFilterBean() {

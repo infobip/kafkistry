@@ -12,4 +12,7 @@
     <logger name="com.infobip.kafkistry.metric.webapp" additivity="true">
         <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
     </logger>
+    <logger name="org.springframework.web.filter" additivity="true">
+        <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
+    </logger>
 </configuration>

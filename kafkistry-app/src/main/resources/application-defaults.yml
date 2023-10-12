@@ -18,7 +18,7 @@ app:
     consumer-groups:
       allow-no-owners-access: ${ALLOW_ACCESS_TO_CONSUMER_GROUPS_NO_OWNERS:false}
   http-logging:
-    enabled: ${HTTP_REQUESTS_LOGGING_ENABLED:false}
+    enabled: ${HTTP_REQUESTS_LOGGING_ENABLED:true}
   slack:
     enabled: ${SLACK_ENABLED:false}
     channel-id: ${SLACK_CHANNEL_ID:}

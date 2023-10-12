@@ -345,7 +345,7 @@ So, it's better to simply disable particular clusters when you know they are unr
 |---------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `HTTP_PORT`                     | `8080`       | Which port should web server listen on. No need to change if running in docker with port mapping.                                                                                                 |
 | `HTTP_ROOT_PATH`                | `/kafkistry` | This is basically _prefix_ for all http urls paths. Useful if Kafkistry is deployed behind http proxy which will be using url path for routing. **NOTE**: must not end with `/` but can be empty. |
-| `HTTP_REQUESTS_LOGGING_ENABLED` | `false`      | Should each HTTP request to Kafkistry be logged, see [filter](kafkistry-web/src/main/kotlin/com/infobip/kafkistry/webapp/RequestLoggingFilterConfig.kt)                                           |
+| `HTTP_REQUESTS_LOGGING_ENABLED` | `true`       | Should each HTTP request to Kafkistry be logged, see [filter](kafkistry-web/src/main/kotlin/com/infobip/kafkistry/webapp/RequestLoggingFilterConfig.kt)                                           |
 
 
 

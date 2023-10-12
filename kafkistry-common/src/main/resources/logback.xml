@@ -9,7 +9,7 @@
                 <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
                 <file>${SERVICE_LOG_ROOT}/output.log</file>
                 <encoder>
-                    <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %p %t %c - %m%n</pattern>
+                    <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %p %t %c [%X] - %m%n</pattern>
                 </encoder>
                 <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                     <level>DEBUG</level>
@@ -27,7 +27,7 @@
                 <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
                 <file>${SERVICE_LOG_ROOT}/error.log</file>
                 <encoder>
-                    <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %p %t %c - %m%n</pattern>
+                    <pattern>%d{dd.MM.yyyy HH:mm:ss.SSS} %p %t %c [%X] - %m%n</pattern>
                 </encoder>
                 <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                     <level>ERROR</level>
@@ -51,7 +51,7 @@
 
             <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
                 <encoder>
-                    <pattern>[%d{yyyy-MM-dd_HH:mm:ss.SSS}] [%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>
+                    <pattern>[%d{yyyy-MM-dd_HH:mm:ss.SSS}] [%thread] %highlight(%-5level) %cyan(%logger{15}) [%X] - %msg %n</pattern>
                 </encoder>
             </appender>
 
