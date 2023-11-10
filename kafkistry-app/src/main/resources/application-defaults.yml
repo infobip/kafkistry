@@ -160,7 +160,9 @@ spring.autoconfigure.exclude:
   - org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration
 
 server:
-  servlet.session.cookie.name: KRSESSIONID
+  servlet.session:
+    cookie.name: KRSESSIONID
+    timeout: 7d
   compression:
     enabled: true
     # opt in to content types

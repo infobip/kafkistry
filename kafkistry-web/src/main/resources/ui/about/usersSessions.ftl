@@ -62,6 +62,42 @@
                             </td>
                             <td class="time" data-time="${session.lastRequestTime?c}"></td>
                         </tr>
+                        <#if session.recordedRequests??>
+                            <tr>
+                                <td colspan="100" class="p-0">
+                                    <table class="table table-sm m-0">
+                                        <thead class="thead-light">
+                                        <tr>
+                                            <th>Method</th>
+                                            <th>URI</th>
+                                            <th>Query</th>
+                                            <th>First</th>
+                                            <th>Last</th>
+                                            <th>Count</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <#list session.recordedRequests.urlRequests as requests>
+                                            <tr>
+                                                <td><span class="badge badge-dark">${requests.method}</span></td>
+                                                <td><span class="text-break small">${requests.uri}</span></td>
+                                                <td class="text-break">
+                                                    <#if requests.query??>
+                                                        <span class="small">${requests.query}</span>
+                                                    <#else>
+                                                        <i>---</i>
+                                                    </#if>
+                                                </td>
+                                                <td class="time small" data-time="${requests.firstTime?c}"></td>
+                                                <td class="time small" data-time="${requests.lastTime?c}"></td>
+                                                <td>${requests.count}</td>
+                                            </tr>
+                                        </#list>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </#if>
                     </#list>
                 </table>
             </div>

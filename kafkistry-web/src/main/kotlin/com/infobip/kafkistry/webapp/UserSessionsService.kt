@@ -3,6 +3,8 @@ package com.infobip.kafkistry.webapp
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import com.infobip.kafkistry.webapp.security.User
 import org.springframework.security.core.session.SessionRegistry
+import org.springframework.session.Session
+import org.springframework.session.SessionRepository
 import org.springframework.stereotype.Service
 
 data class UserSessions(
@@ -15,10 +17,12 @@ data class SessionInfo(
     val sessionId: String,
     val expired: Boolean,
     val lastRequestTime: Long,
+    val recordedRequests: SessionRecordedRequests?,
 )
 
 @Service
 class UserSessionsService(
+    private val sessionRepository: SessionRepository<Session>,
     private val sessionRegistry: SessionRegistry,
     private val currentRequestUserResolver: CurrentRequestUserResolver,
 ) {
@@ -29,7 +33,11 @@ class UserSessionsService(
             .filterIsInstance<User>()
             .map { user ->
                 val sessions = sessionRegistry.getAllSessions(user, true)
-                    .map { SessionInfo(it.sessionId, it.isExpired, it.lastRequest.time) }
+                    .map {
+                        val recordedRequests = sessionRepository.findById(it.sessionId)
+                            ?.readSessionRecordedRequests()
+                        SessionInfo(it.sessionId, it.isExpired, it.lastRequest.time, recordedRequests)
+                    }
                     .sortedByDescending { it.lastRequestTime }
                 UserSessions(
                     user = user,
