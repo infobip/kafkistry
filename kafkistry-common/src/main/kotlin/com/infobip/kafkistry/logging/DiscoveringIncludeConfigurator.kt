@@ -23,7 +23,7 @@ class DiscoveringIncludeConfigurator  : ContextAwareBase(), Configurator, Applic
             jc.doConfigure(it.inputStream)
         }
         addInfo("Completed configuring")
-        return Configurator.ExecutionStatus.DO_NOT_INVOKE_NEXT_IF_ANY
+        return Configurator.ExecutionStatus.NEUTRAL
     }
 
     override fun onApplicationEvent(event: ApplicationEnvironmentPreparedEvent) {
