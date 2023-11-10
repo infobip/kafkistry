@@ -5,10 +5,7 @@ package com.infobip.kafkistry.sql.sources
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
-import com.infobip.kafkistry.model.ClusterRef
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.TopicDescription
-import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsets
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
@@ -133,6 +130,7 @@ class ClusterTopicDataSource(
             }
             val existingTopicInfo = topicClusterStatus.existingTopicInfo
             if (existingTopicInfo != null) {
+                uuid = existingTopicInfo.uuid
                 actualPartitionCount = existingTopicInfo.properties.partitionCount
                 actualReplicationFactor = existingTopicInfo.properties.replicationFactor
                 actualConfig = existingTopicInfo.config.map {
@@ -242,6 +240,8 @@ class Topic {
 
     @EmbeddedId
     lateinit var id: ClusterTopicId
+
+    var uuid: TopicUUID? = null
 
     var exist: Boolean? = null
 

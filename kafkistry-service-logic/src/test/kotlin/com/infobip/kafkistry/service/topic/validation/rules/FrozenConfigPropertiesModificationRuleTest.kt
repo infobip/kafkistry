@@ -90,6 +90,7 @@ class FrozenConfigPropertiesModificationRuleTest {
         retentionBytes: Long?,
         retentionMs: Long?,
     ) = ExistingTopicInfo(
+        uuid = null,
         name = "test-freeze-topic",
         properties = TopicProperties(partitionCount, replicationFactor),
         config = listOfNotNull(

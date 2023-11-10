@@ -52,7 +52,8 @@ internal class ReducingPartitionCountRuleTest {
     }
 
     private fun existingTopicInfo(partitionCount: Int) = ExistingTopicInfo(
-        "test-reducing-partitions-topic",
+        uuid = null,
+        name = "test-reducing-partitions-topic",
         properties = TopicProperties(partitionCount, 1),
         config = emptyMap(),
         partitionsAssignments = emptyList(),

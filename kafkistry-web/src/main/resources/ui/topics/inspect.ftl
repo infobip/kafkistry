@@ -179,6 +179,18 @@
         <div class="card-header h4">Topic configuration</div>
         <div class="card-body p-0">
         <table class="table table-sm table-bordered">
+            <tr class="thead-dark">
+                <th class="thead-dark">Topic ID (uuid)</th>
+                <td>
+                    <#if topicStatus.existingTopicInfo.uuid??>
+                        <strong><code>${topicStatus.existingTopicInfo.uuid}</code></strong>
+                    <#else>
+                        <i>(undefined for old kafka clusters)</i>
+                    </#if>
+                </td>
+            </tr>
+        </table>
+        <table class="table table-sm table-bordered">
             <thead class="thead-dark">
             <tr>
                 <th>Property</th>

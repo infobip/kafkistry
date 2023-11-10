@@ -43,6 +43,7 @@ class TopicOps(
                             ?: throw KafkaClusterManagementException("Invalid response, missing topic '$topicName' in config descriptions")
                         KafkaExistingTopic(
                             name = topicName,
+                            uuid = topicDescription.topicId()?.toString(),
                             internal = topicDescription.isInternal,
                             config = topicConfig.entries()
                                 .sortedBy { it.name() }

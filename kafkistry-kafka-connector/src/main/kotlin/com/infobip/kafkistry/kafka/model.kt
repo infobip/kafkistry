@@ -22,10 +22,11 @@ data class KafkaTopicConfiguration(
 )
 
 data class KafkaExistingTopic(
-        val name: TopicName,
-        val internal: Boolean,
-        val config: ExistingConfig,
-        val partitionsAssignments: List<PartitionAssignments>
+    val name: TopicName,
+    val internal: Boolean,
+    val config: ExistingConfig,
+    val partitionsAssignments: List<PartitionAssignments>,
+    val uuid: TopicUUID? = null,
 )
 
 data class PartitionAssignments(

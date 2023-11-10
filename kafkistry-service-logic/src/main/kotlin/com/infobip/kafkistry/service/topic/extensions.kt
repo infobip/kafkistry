@@ -113,6 +113,7 @@ fun KafkaExistingTopic.toTopicInfo(
     partitionReAssignments: Map<Partition, TopicPartitionReAssignment>,
     partitionsReplicasAssignor: PartitionsReplicasAssignor
 ): ExistingTopicInfo = ExistingTopicInfo(
+    uuid = uuid,
     name = name,
     properties = TopicProperties(
         partitionCount = partitionsAssignments.size,

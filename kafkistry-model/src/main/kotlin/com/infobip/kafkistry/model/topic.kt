@@ -4,6 +4,7 @@ import com.infobip.kafkistry.model.PresenceType.*
 import java.io.Serializable
 
 typealias TopicName = String
+typealias TopicUUID = String
 
 data class TopicDescription(
     val name: TopicName,

@@ -22,11 +22,12 @@ data class TopicStatuses(
 )
 
 data class ExistingTopicInfo(
+    val uuid: TopicUUID?,
     val name: TopicName,
     val properties: TopicProperties,
     val config: ExistingConfig,
     val partitionsAssignments: List<PartitionAssignments>,
-    val assignmentsDisbalance: AssignmentsDisbalance
+    val assignmentsDisbalance: AssignmentsDisbalance,
 )
 
 data class ReBalanceSuggestion(
