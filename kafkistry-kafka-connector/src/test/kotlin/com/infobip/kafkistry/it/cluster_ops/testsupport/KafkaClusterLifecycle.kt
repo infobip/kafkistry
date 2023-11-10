@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.it.cluster_ops.testsupport
 
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
+import org.slf4j.LoggerFactory
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 
 interface KafkaClusterLifecycle<T> {
@@ -23,6 +24,30 @@ class TestContainerKafkaClusterLifecycle(
     override fun stop() = kafkaCluster.stop()
 }
 
-fun EmbeddedKafkaBroker.asTestKafkaLifecycle() = EmbeddedKafkaClusterLifecycle(this)
-fun KafkaClusterContainer.asTestKafkaLifecycle() = TestContainerKafkaClusterLifecycle(this)
+class LoggingKafkaClusterLifeCycle<T>(
+    private val delegate: KafkaClusterLifecycle<T>
+) : KafkaClusterLifecycle<T> by delegate {
+
+    private val log = LoggerFactory.getLogger(delegate.javaClass)
+
+    override fun start() {
+        log.info("Starting cluster $delegate...")
+        delegate.start()
+        log.info("Started cluster $delegate")
+    }
+
+    override fun stop() {
+        log.info("Stopping cluster $delegate...")
+        delegate.stop()
+        log.info("Stopped cluster $delegate")
+
+    }
+}
+
+fun EmbeddedKafkaBroker.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
+    EmbeddedKafkaClusterLifecycle(this)
+)
+fun KafkaClusterContainer.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
+    TestContainerKafkaClusterLifecycle(this)
+)
 

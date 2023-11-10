@@ -43,7 +43,7 @@ class QuotasOps(
     }
 
     private fun fetchQuotasFromZk(): Map<QuotaEntity, Map<String, Double>> {
-        val adminZkClient = AdminZkClient(zkClient)
+        val adminZkClient = newZKAdminClient()
         fun Properties.toQuotaValues(): Map<String, Double> = this
             .mapKeys { it.key.toString() }
             .filterKeys { QuotaConfigs.isClientOrUserConfig(it) }
@@ -83,7 +83,7 @@ class QuotasOps(
 
     private fun alterQuotas(quotaAlterations: List<ClientQuotaAlteration>): CompletableFuture<Unit> {
         if (clusterVersion < VERSION_2_6) {
-            val adminZkClient = AdminZkClient(zkClient)
+            val adminZkClient = newZKAdminClient()
             quotaAlterations.forEach {
                 runOperation("alter entity quotas") {
                     alterQuotasOnZk(adminZkClient, it)
@@ -128,7 +128,7 @@ class QuotasOps(
                 }
             }
         }
-        adminZkClient.changeConfigs(configType, path, props)
+        adminZkClient.changeConfigs(configType, path, props, true)
     }
 
     private fun ClientQuotaEntity.toQuotaEntity(): QuotaEntity {

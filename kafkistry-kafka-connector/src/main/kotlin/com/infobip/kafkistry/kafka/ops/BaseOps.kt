@@ -5,12 +5,14 @@ import com.infobip.kafkistry.kafka.PartitionAssignments
 import com.infobip.kafkistry.kafka.ReplicaAssignment
 import com.infobip.kafkistry.kafka.Version
 import com.infobip.kafkistry.service.KafkaClusterManagementException
+import kafka.zk.AdminZkClient
 import kafka.zk.KafkaZkClient
 import org.apache.kafka.clients.admin.AbstractOptions
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.ConfigEntry
 import org.apache.kafka.common.KafkaFuture
 import org.apache.kafka.common.TopicPartitionInfo
+import scala.Option
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
@@ -105,6 +107,8 @@ abstract class BaseOps(
             }
         )
     }
+
+    fun newZKAdminClient() = AdminZkClient(zkClient, Option.empty())
 
 }
 

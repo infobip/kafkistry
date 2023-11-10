@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.autopilot.fencing
 
+import com.hazelcast.config.Config
 import com.hazelcast.core.Hazelcast
 
 internal class HazelcastSyncedActionAcquireFencingTest : BaseActionAcquireFencingTest() {
@@ -18,8 +19,15 @@ internal class HazelcastSyncedActionAcquireFencingTest : BaseActionAcquireFencin
         ttlMs: Long,
         block: (first: ActionAcquireFencing, second: ActionAcquireFencing) -> Unit
     ) {
-        val hazelcastInstance1 = Hazelcast.newHazelcastInstance()
-        val hazelcastInstance2 = Hazelcast.newHazelcastInstance()
+        val config = Config.loadDefault().apply {
+            clusterName = "fence-test"
+            networkConfig.join.tcpIpConfig.apply {
+                isEnabled = true
+                addMember("127.0.0.1")
+            }
+        }
+        val hazelcastInstance1 = Hazelcast.newHazelcastInstance(config)
+        val hazelcastInstance2 = Hazelcast.newHazelcastInstance(config)
         try {
             val fencing1 = HazelcastSyncedActionAcquireFencing(hazelcastInstance1, ttlMs)
             val fencing2 = HazelcastSyncedActionAcquireFencing(hazelcastInstance2, ttlMs)

@@ -3,7 +3,6 @@ package com.infobip.kafkistry.kafka.ops
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import kafka.server.DynamicConfig
-import kafka.zk.AdminZkClient
 import org.apache.kafka.clients.admin.Config
 import org.apache.kafka.clients.admin.ConfigEntry
 import org.apache.kafka.clients.admin.DescribeClusterOptions
@@ -96,7 +95,7 @@ class ClusterOps(
             it.source() == ConfigEntry.ConfigSource.DYNAMIC_BROKER_CONFIG && it.value() == null
         }
         val zkBrokerConfig = if (hasFalselyNullEntries) {
-            AdminZkClient(zkClient).fetchEntityConfig("brokers", brokerId.toString())
+            newZKAdminClient().fetchEntityConfig("brokers", brokerId.toString())
         } else {
             null
         }

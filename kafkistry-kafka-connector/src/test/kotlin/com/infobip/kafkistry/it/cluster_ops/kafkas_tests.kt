@@ -19,7 +19,7 @@ class ClusterOpsKafkaEmbeddedTest : ClusterNoAclOperationsTestSuite() {
     }
 
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
-    override val expectedClusterVersion = Version.of("3.4")
+    override val expectedClusterVersion = Version.of("3.6")
 }
 
 class ClusterAclOpsKafkaEmbeddedTest : ClusterAclOperationsTestSuite() {
@@ -129,6 +129,25 @@ class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.1")
+}
+
+@EnabledIfSystemProperty(
+    named = "enabledIntegrationTests",
+    matches = "all|.*(all-kafka|kafka-3\\.4).*",
+    disabledReason = "These tests are too slow to run each time",
+)
+class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuite() {
+
+    companion object {
+        @JvmField
+        val kafka = KafkaClusterContainer(
+            kafkaImage = "bitnami/kafka:3.4.0",
+            clusterSize = 3
+        ).asTestKafkaLifecycle()
+    }
+
+    override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
+    override val expectedClusterVersion = Version.of("3.4")
 }
 
 

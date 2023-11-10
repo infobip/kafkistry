@@ -1141,8 +1141,15 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             assertDefaultConfig(TopicConfig.FLUSH_MESSAGES_INTERVAL_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             assertDefaultConfig(TopicConfig.FLUSH_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             assertDefaultConfig(TopicConfig.INDEX_INTERVAL_BYTES_CONFIG).isEqualToStringOf(4096)
-            assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_BYTES_CONFIG).isNull()
-            assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_MS_CONFIG).isNull()
+            if (expectedClusterVersion > Version.of("3.4")) {
+                assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_BYTES_CONFIG).isEqualToStringOf(-2)
+                assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_MS_CONFIG).isEqualToStringOf(-2)
+                assertDefaultConfig(TopicConfig.REMOTE_LOG_STORAGE_ENABLE_CONFIG).isEqualToStringOf(false)
+            } else {
+                assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_BYTES_CONFIG).isNull()
+                assertDefaultConfig(TopicConfig.LOCAL_LOG_RETENTION_MS_CONFIG).isNull()
+                assertDefaultConfig(TopicConfig.REMOTE_LOG_STORAGE_ENABLE_CONFIG).isNull()
+            }
             if (expectedClusterVersion > Version.of("2.1")) {
                 assertDefaultConfig(TopicConfig.MAX_COMPACTION_LAG_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             } else {
@@ -1161,7 +1168,6 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             assertDefaultConfig(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG).isEqualToStringOf(0)
             assertDefaultConfig(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG).isEqualToStringOf(1)
             assertDefaultConfig(TopicConfig.PREALLOCATE_CONFIG).isEqualTo("false")
-            assertDefaultConfig(TopicConfig.REMOTE_LOG_STORAGE_ENABLE_CONFIG).isNull()
             assertDefaultConfig(TopicConfig.RETENTION_BYTES_CONFIG).isEqualToStringOf(-1)
             assertDefaultConfig(TopicConfig.RETENTION_MS_CONFIG).isEqualToStringOf(7 * 24 * 3600 * 1000L)
             assertDefaultConfig(TopicConfig.SEGMENT_BYTES_CONFIG).isEqualToStringOf(1024L * 1024 * 1024)

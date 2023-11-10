@@ -1,17 +1,15 @@
-package com.infobip.kafkistry.service.consume.interntopics
+package kafka.coordinator.group
 
-import kafka.common.OffsetAndMetadata
-import kafka.coordinator.group.GroupMetadata
-import kafka.coordinator.group.GroupMetadataKey
-import kafka.coordinator.group.MemberMetadata
-import kafka.coordinator.group.OffsetKey
-import kafka.coordinator.transaction.TransactionMetadata
-import kafka.coordinator.transaction.TxnKey
-import com.infobip.kafkistry.service.consume.interntopics.ConsumerOffsetMetadata.*
-import com.infobip.kafkistry.service.consume.interntopics.TransactionState.TxnTopicPartition
 import com.infobip.kafkistry.kafka.toJavaList
+import com.infobip.kafkistry.service.consume.interntopics.ConsumerOffsetMetadata.*
+import kafka.common.OffsetAndMetadata
+import kafka.coordinator.tryParseOrNull
+import org.apache.kafka.common.utils.SystemTime
+import java.nio.ByteBuffer
 
-object KafkaModelConverter {
+object KafkaGroupModelConverter {
+
+    private val time = SystemTime()
 
     fun convert(key: OffsetKey): ConsumerGroupRecordKey {
         return ConsumerGroupRecordKey(
@@ -41,7 +39,13 @@ object KafkaModelConverter {
         )
     }
 
-    fun convert(metadata: GroupMetadata): ConsumerGroupMetadata {
+    fun tryParseGroupMetadata(groupId: String?, value: ByteBuffer): ConsumerGroupMetadata? {
+        return tryParseOrNull {
+            GroupMetadataManager.readGroupMessageValue(groupId, value, time)
+        }?.let { convert(it) }
+    }
+
+    private fun convert(metadata: GroupMetadata): ConsumerGroupMetadata {
         return ConsumerGroupMetadata(
             groupId = metadata.groupId(),
             generationId = metadata.generationId(),
@@ -60,26 +64,6 @@ object KafkaModelConverter {
             rebalanceTimeoutMs = member.rebalanceTimeoutMs(),
             sessionTimeoutMs = member.sessionTimeoutMs(),
             protocolType = member.protocolType(),
-        )
-    }
-
-    fun convert(txnKey: TxnKey): TransactionState.TxnKey {
-        return TransactionState.TxnKey(
-            version = txnKey.version(),
-            transactionalId = txnKey.transactionalId(),
-        )
-    }
-
-    fun convert(txn: TransactionMetadata): TransactionState {
-        return TransactionState(
-            transactionalId = txn.transactionalId(),
-            producerId = txn.producerId(),
-            producerEpoch = txn.producerEpoch(),
-            txnTimeoutMs = txn.txnTimeoutMs(),
-            state = txn.state().toString(),
-            topicPartitions = txn.topicPartitions().toJavaList().map { TxnTopicPartition(it.topic(), it.partition()) },
-            txnStartTimestamp = txn.txnStartTimestamp(),
-            txnLastUpdateTimestamp = txn.txnLastUpdateTimestamp(),
         )
     }
 

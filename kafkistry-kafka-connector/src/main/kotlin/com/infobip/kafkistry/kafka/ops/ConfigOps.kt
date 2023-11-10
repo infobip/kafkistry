@@ -7,7 +7,6 @@ import com.infobip.kafkistry.model.TopicConfigMap
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
 import kafka.server.DynamicConfig
-import kafka.zk.AdminZkClient
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.config.ConfigResource
 import java.util.concurrent.CompletableFuture
@@ -47,7 +46,7 @@ class ConfigOps(
         val alterConfigsResult = if (clusterVersion < VERSION_2_3) {
             if (configResource.type() == ConfigResource.Type.BROKER) {
                 runOperation("alter broker config") {
-                    val adminZkClient = AdminZkClient(zkClient)
+                    val adminZkClient = newZKAdminClient()
                     val brokerConfigs = adminZkClient.fetchEntityConfig("brokers", configResource.name())
                     alterConfigOps().forEach { alterOp ->
                         when (alterOp.opType()) {
@@ -56,7 +55,7 @@ class ConfigOps(
                             else -> throw UnsupportedOperationException("Unsupported operation type ${alterOp.opType()}")
                         }
                     }
-                    adminZkClient.changeConfigs("brokers", configResource.name(), brokerConfigs)
+                    adminZkClient.changeConfigs("brokers", configResource.name(), brokerConfigs, true)
                 }
                 return CompletableFuture.completedFuture(Unit)
             } else {

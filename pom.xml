@@ -35,7 +35,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.1.2</version>
+        <version>3.1.5</version>
         <relativePath />
     </parent>
 
@@ -80,6 +80,7 @@
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <git-commit-id-maven-plugin.skip>false</git-commit-id-maven-plugin.skip>
         <jib-maven-plugin.version>3.3.2</jib-maven-plugin.version>
+        <test-open-modules-args>--add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED</test-open-modules-args>
 
         <!-- DOCKER -->
         <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
@@ -89,11 +90,11 @@
         <docker.to-image>infobip/kafkistry</docker.to-image>
 
         <!-- DEPENDENCIES -->
-        <kafka.version>3.4.0</kafka.version>
+        <kafka.version>3.6.0</kafka.version>
         <org.eclipse.jgit.version>6.3.0.202209071007-r</org.eclipse.jgit.version>
         <jsoup.version>1.15.4</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
-        <zookeeper.version>3.8.0</zookeeper.version>
+        <zookeeper.version>3.8.2</zookeeper.version>
         <sqlite-jdbc.version>3.42.0.0</sqlite-jdbc.version>
         <hibernate-validator.version>8.0.0.Final</hibernate-validator.version>
         <hibernate-orm.version>6.1.5.Final</hibernate-orm.version>
@@ -122,6 +123,17 @@
                 -->
             </dependency>
             <dependency>
+                <groupId>org.eclipse.jetty.toolchain</groupId>
+                <artifactId>jetty-jakarta-servlet-api</artifactId>
+                <version>5.0.2</version>
+                <!-- workaround for java.lang.ClassNotFoundException: jakarta.servlet.http.HttpSessionContext
+                  because:
+                    - spring boot brings jakarta-servlet-api:6.0.0 which is not compatible with jetty-server:11
+                    - jetty-server brings jetty-jakarta-servlet-api but with scope provided, meaning it's absent in runtime
+                    Remove this (and usage) once SB+Jetty+jakarta get inline and wrk out-of-the-box
+                 -->
+            </dependency>
+            <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
                 <version>2.13.9</version> <!-- override version fix RCE vulnerability; org.apache.kafka:kafka_2.13@3.3.1 pulls org.scala-lang:scala-library@2.13.8-->
@@ -139,7 +151,7 @@
             <dependency>
                 <groupId>com.hazelcast</groupId>
                 <artifactId>hazelcast</artifactId>
-                <version>5.3.0</version>  <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-web-api@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-service-logic@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-events@0.4.3-SNAPSHOT › com.hazelcast:hazelcast@5.1.5 -->
+                <version>5.3.4</version>  <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-web-api@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-service-logic@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-events@0.4.3-SNAPSHOT › com.hazelcast:hazelcast@5.1.5 -->
             </dependency>
             <dependency>
                 <groupId>org.xerial.snappy</groupId>
@@ -309,6 +321,7 @@
                     <excludes>
                         <exclude>**/it/**</exclude>
                     </excludes>
+                    <argLine>${test-open-modules-args}</argLine>
                 </configuration>
             </plugin>
 
@@ -337,6 +350,7 @@
                     <excludes>
                         <exclude />  <!-- inner classes were excluded by default -->
                     </excludes>
+                    <argLine>${test-open-modules-args}</argLine>
                 </configuration>
             </plugin>
             <plugin>

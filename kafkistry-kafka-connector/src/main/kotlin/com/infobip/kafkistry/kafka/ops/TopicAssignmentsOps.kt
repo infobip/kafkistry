@@ -3,7 +3,6 @@ package com.infobip.kafkistry.kafka.ops
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
-import kafka.log.LogConfig
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.ElectionType
 import org.apache.kafka.common.TopicPartition
@@ -36,7 +35,7 @@ class TopicAssignmentsOps (
                 .asCompletableFuture("describe cluster for re-assignments")
                 .get().map { it.id() }.toSet()
             brokerIds.filter { it !in allNodeIds }.takeIf { it.isNotEmpty() }?.run {
-                throw KafkaClusterManagementException("Unknown broker(s) used in assignments: $this")
+                throw KafkaClusterManagementException("Unknown broker(s) used in assignments: $this (known nodes: $allNodeIds)")
             }
         }
         val currentPartitionAssignments = adminClient
@@ -70,8 +69,8 @@ class TopicAssignmentsOps (
             val topicNames = leaderThrottlesMap.keys + followerThrottlesMap.keys
             topicNames.map { topic ->
                 val topicThrottleConfig = mapOf(
-                    LogConfig.LeaderReplicationThrottledReplicasProp() to leaderThrottlesMap[topic],
-                    LogConfig.FollowerReplicationThrottledReplicasProp() to followerThrottlesMap[topic],
+                    "leader.replication.throttled.replicas" to leaderThrottlesMap[topic],
+                    "follower.replication.throttled.replicas" to followerThrottlesMap[topic],
                 ).filterValues { it != null }
                 configOps.partialUpdateTopicConfig(topic, topicThrottleConfig)
             }.forEach { it.get() }
@@ -200,8 +199,8 @@ class TopicAssignmentsOps (
                 .mapValues { it.value.value }
                 .plus(
                     mapOf(
-                        LogConfig.FollowerReplicationThrottledReplicasProp() to null,
-                        LogConfig.LeaderReplicationThrottledReplicasProp() to null,
+                        "leader.replication.throttled.replicas" to null,
+                        "follower.replication.throttled.replicas" to null,
                     )
                 )
             configOps.updateTopicConfig(topicName, topicConfig).get()
