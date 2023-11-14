@@ -162,7 +162,7 @@ spring.autoconfigure.exclude:
 server:
   servlet.session:
     cookie.name: KRSESSIONID
-    timeout: 168h
+    timeout: 7d
   compression:
     enabled: true
     # opt in to content types

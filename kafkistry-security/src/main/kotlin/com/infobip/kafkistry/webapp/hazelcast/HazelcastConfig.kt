@@ -10,10 +10,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
+import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.session.FlushMode
+import org.springframework.session.config.SessionRepositoryCustomizer
+import org.springframework.session.hazelcast.HazelcastIndexedSessionRepository
 import org.springframework.session.hazelcast.config.annotation.web.http.EnableHazelcastHttpSession
+
 
 /**
  * Hazelcast is, at time of writing this documentation, used for 2 things:
@@ -55,6 +59,15 @@ class HazelcastConfig(
             }
         }
         return Hazelcast.newHazelcastInstance(config)
+    }
+
+    @Bean
+    fun hazelcastSessionRepositoryCustomizer(
+        serverFactory: AbstractServletWebServerFactory,
+    ): SessionRepositoryCustomizer<HazelcastIndexedSessionRepository> {
+        return SessionRepositoryCustomizer<HazelcastIndexedSessionRepository> {
+            it.setDefaultMaxInactiveInterval(serverFactory.session.timeout)
+        }
     }
 
     private fun TcpIpConfig.addMembers(memberIps: String) = addMembers(listOf(memberIps))
