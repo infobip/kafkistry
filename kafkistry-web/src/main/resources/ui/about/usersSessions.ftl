@@ -46,12 +46,17 @@
             <div class="card-body p-0">
                 <table class="table m-0">
                     <tr class="thead-dark">
+                        <th></th>
                         <th>Session ID</th>
                         <th>Expired</th>
                         <th>Last request</th>
                     </tr>
                     <#list userSessions.sessions as session>
-                        <tr>
+                        <tr data-toggle="collapsing" data-target="#recorded-requests-${session?index?c}">
+                            <td>
+                                <span class="when-collapsed" title="expand...">▼</span>
+                                <span class="when-not-collapsed" title="collapse...">△</span>
+                            </td>
                             <td><code>${session.sessionId}</code></td>
                             <td>
                                 <#if session.expired>
@@ -63,7 +68,7 @@
                             <td class="time" data-time="${session.lastRequestTime?c}"></td>
                         </tr>
                         <#if session.recordedRequests??>
-                            <tr>
+                            <tr id="recorded-requests-${session?index?c}" class="collapseable">
                                 <td colspan="100" class="p-0">
                                     <table class="table table-sm m-0">
                                         <thead class="thead-light">
