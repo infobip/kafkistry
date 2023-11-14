@@ -52,7 +52,7 @@
                         <th>Last request</th>
                     </tr>
                     <#list userSessions.sessions as session>
-                        <tr data-toggle="collapsing" data-target="#recorded-requests-${session?index?c}">
+                        <tr data-toggle="collapsing" data-target="#recorded-requests-${userSessions?index?c}-${session?index?c}">
                             <td>
                                 <span class="when-collapsed" title="expand...">▼</span>
                                 <span class="when-not-collapsed" title="collapse...">△</span>
@@ -68,7 +68,7 @@
                             <td class="time" data-time="${session.lastRequestTime?c}"></td>
                         </tr>
                         <#if session.recordedRequests??>
-                            <tr id="recorded-requests-${session?index?c}" class="collapseable">
+                            <tr id="recorded-requests-${userSessions?index?c}-${session?index?c}" class="collapseable">
                                 <td colspan="100" class="p-0">
                                     <table class="table table-sm m-0">
                                         <thead class="thead-light">
