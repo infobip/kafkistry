@@ -2,7 +2,6 @@ package com.infobip.kafkistry.webapp
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
-import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
@@ -10,9 +9,11 @@ import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory
 import org.springframework.session.Session
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.GenericFilterBean
+import java.util.concurrent.Executors
 import kotlin.math.max
 import kotlin.math.min
 
@@ -49,15 +50,26 @@ class SessionRecordingRequestFilter : GenericFilterBean() {
 
     private val log = LoggerFactory.getLogger(SessionRecordingRequestFilter::class.java)
 
+    private val executor = Executors.newSingleThreadExecutor(CustomizableThreadFactory("session-request-recorder"))
+
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
         if (request is HttpServletRequest) {
-            try {
-                recordRequest(request)
-            } catch (ex: Exception) {
-                log.error("Encountered exception during recording request into session, ignoring", ex)
-            }
+            executor.submit { tryRecord(request) }  //fire and forget
         }
         chain.doFilter(request, response)
+    }
+
+    override fun destroy() {
+        super.destroy()
+        executor.shutdown()
+    }
+
+    private fun tryRecord(request: HttpServletRequest) {
+        try {
+            recordRequest(request)
+        } catch (ex: Exception) {
+            log.error("Encountered exception during recording request into session, ignoring", ex)
+        }
     }
 
     private fun recordRequest(request: HttpServletRequest) {
