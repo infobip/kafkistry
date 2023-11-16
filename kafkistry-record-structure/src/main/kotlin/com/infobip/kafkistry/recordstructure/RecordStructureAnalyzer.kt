@@ -49,7 +49,7 @@ class RecordStructureAnalyzer(
      */
     fun dump(): Int {
         log.info("Dumping collected recordStructures, size: ${clusterRecordsStructures.size}")
-        val numDumpedRecordsStructures =  clusterRecordsStructures.values.sumOf { it.size }
+        val numDumpedRecordsStructures = clusterRecordsStructures.values.sumOf { it.size }
         recordStructureAnalyzerStorage.dump(clusterRecordsStructures)
         return numDumpedRecordsStructures
     }
@@ -102,6 +102,25 @@ class RecordStructureAnalyzer(
     }
 
     /**
+     * Get inferred structure of records in for all topics across different clusters
+     * Some existing topic may not be present if this map if having no samples yet
+     */
+    fun getAllStructures(): Map<TopicName, RecordsStructure> {
+        return with(MergingContext(properties)) {
+            clusterRecordsStructures.values
+                .flatMap { clusterStructures ->
+                    clusterStructures.map { it.key to it.value.field }
+                }
+                .groupBy({ it.first }, { it.second })
+                .mapValues {
+                    it.value.reduce { acc, recordStructures ->
+                        acc merge recordStructures
+                    }.toRecordsStructure()
+                }
+        }
+    }
+
+    /**
      * Saves all the collected topicStructure on shutdown event
      */
     override fun close() {
@@ -114,7 +133,7 @@ class RecordStructureAnalyzer(
                 topicStructures.map { (topic, structure) ->
                     Triple(topic, cluster, structure.field.payloadType)
                 }
-             }
+            }
             .groupBy { it.first }
             .mapValues { (_, entries) ->
                 entries.associate { it.second to it.third }

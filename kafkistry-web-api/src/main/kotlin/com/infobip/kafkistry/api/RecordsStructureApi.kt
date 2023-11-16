@@ -28,6 +28,10 @@ class RecordsStructureApi(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
     ): RecordsStructure? = recordStructureAnalyzer.getStructure(clusterIdentifier, topicName)
 
+
+    @GetMapping("/topic/all")
+    fun structuresOfTopics(): Map<TopicName, RecordsStructure> = recordStructureAnalyzer.getAllStructures()
+
     @GetMapping("/topic")
     fun structureOfTopic(
         @RequestParam("topicName") topicName: TopicName,
