@@ -73,3 +73,11 @@ data class SizeStatistic(
     val max: Int,
 )
 
+fun RecordField.flatten(): List<RecordField> {
+    return listOf(
+        RecordField(name = name, fullName = fullName, type = type, children = null, nullable = nullable, value = value)
+    ) + children.orEmpty().flatMap { it.flatten() }
+}
+
+
+
