@@ -21,21 +21,29 @@ function existingValuesOf(sourceSelector) {
 }
 
 function initAutocomplete(elements, textInput, refreshYamlOnSelect) {
+    let onSelect = refreshYamlOnSelect ? refreshYaml : undefined;
+    initAutocompleteInput(elements, textInput, onSelect);
+}
+
+function initAutocompleteInput(elements, textInput, onSelectCallback) {
+    let callback = function () {
+        onSelectCallback.call(textInput.get());
+    }
     disableAutocomplete(textInput);
     textInput
         .autocomplete({
             source: elements,
             select: function () {
-                if (refreshYamlOnSelect) {
-                    setTimeout(refreshYaml, 20);
+                if (onSelectCallback) {
+                    setTimeout(callback, 20);
                 }
             },
             minLength: 0
         })
         .focus(function () {
             $(this).data("uiAutocomplete").search($(this).val());
-            if (refreshYamlOnSelect) {
-                refreshYaml();
+            if (onSelectCallback) {
+                callback();
             }
         });
     textInput.autocomplete("enable");
