@@ -40,10 +40,11 @@ class AboutController(
 
     @GetMapping(USERS_SESSIONS)
     fun showUserSessions(): ModelAndView {
-        val usersSessions = webSessionsApi.allUsersSessions()
+        val (usersSessions, requestsStats) = webSessionsApi.allUsersSessionsAndStats()
         return ModelAndView(
             "about/usersSessions", mapOf(
                 "usersSessions" to usersSessions,
+                "requestsStats" to requestsStats,
             )
         )
     }

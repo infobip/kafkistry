@@ -1,5 +1,6 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="usersSessions"  type="java.util.List<com.infobip.kafkistry.webapp.UserSessions>" -->
+<#-- @ftlvariable name="requestsStats"  type="java.util.List<com.infobip.kafkistry.webapp.RecordedRequestStats>" -->
 
 <html lang="en">
 
@@ -23,6 +24,46 @@
     <#else>
         <p>There are ${usersSessions?size} currently logged-in users</p>
     </#if>
+
+    <div class="card mb-2">
+        <div class="card-header collapsed" data-toggle="collapsing" data-target="#global-stats-body">
+            <h5>
+                <span class="when-collapsed" title="expand...">▼</span>
+                <span class="when-not-collapsed" title="collapse...">△</span>
+                There are ${requestsStats?size} recorded distinct requests
+            </h5>
+        </div>
+        <div id="global-stats-body" class="card-body p-0 collapseable">
+            <table class="table table-sm m-0">
+                <thead class="thead-light">
+                <tr>
+                    <th>Method</th>
+                    <th>URI</th>
+                    <th>Query</th>
+                    <th>Count</th>
+                    <th>Usernames</th>
+                </tr>
+                </thead>
+                <tbody>
+                <#list requestsStats as requestStats>
+                    <tr>
+                        <td><span class="badge badge-dark">${requestStats.request.method}</span></td>
+                        <td><span class="text-break small">${requestStats.request.uri}</span></td>
+                        <td class="text-break">
+                            <#if requestStats.request.query??>
+                                <span class="small">${requestStats.request.query}</span>
+                            <#else>
+                                <i>---</i>
+                            </#if>
+                        </td>
+                        <td>${requestStats.metrics.count}</td>
+                        <td>${requestStats.metrics.usernames?join(", ")}</td>
+                    </tr>
+                </#list>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <#list usersSessions as userSessions>
         <div class="card mb-2">

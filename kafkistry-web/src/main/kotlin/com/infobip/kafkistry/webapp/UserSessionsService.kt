@@ -20,6 +20,29 @@ data class SessionInfo(
     val recordedRequests: SessionRecordedRequests?,
 )
 
+data class UserSessionsAndStats(
+    val userSessions: List<UserSessions>,
+    val stats: List<RecordedRequestStats>,
+)
+
+data class RecordedRequestStats(
+    val request: RecordedRequest,
+    val metrics: RecordedRequestMetrics,
+)
+
+data class RecordedRequest(
+    val method: String,
+    val uri: String,
+    val query: String?,
+)
+
+data class RecordedRequestMetrics(
+    val firstTime: Long,
+    val lastTime: Long,
+    val count: Int,
+    val usernames: List<String>,
+)
+
 @Service
 class UserSessionsService(
     private val sessionRepository: SessionRepository<Session>,
@@ -46,6 +69,33 @@ class UserSessionsService(
                 )
             }
             .sortedByDescending { it.sessions.firstOrNull()?.lastRequestTime ?: 0L }
+    }
+
+    fun currentUsersSessionsAndStats(): UserSessionsAndStats {
+        val usersSessions = currentUsersSessions()
+        val stats = usersSessions
+            .flatMap { userSessions ->
+                userSessions.sessions.flatMap { session ->
+                    session.recordedRequests?.urlRequests.orEmpty()
+                        .map {
+                            Triple(RecordedRequest(it.method, it.uri, it.query), userSessions.user, it)
+                        }
+                }
+            }
+            .groupBy({ it.first }, { it.second to it.third })
+            .map { (request, userRequests) ->
+                RecordedRequestStats(
+                    request = request,
+                    metrics = RecordedRequestMetrics(
+                        firstTime = userRequests.minOf { it.second.firstTime },
+                        lastTime = userRequests.maxOf { it.second.lastTime },
+                        count = userRequests.sumOf { it.second.count },
+                        usernames = userRequests.map { it.first.username }.distinct(),
+                    ),
+                )
+            }
+            .sortedByDescending { it.metrics.count }
+        return UserSessionsAndStats(usersSessions, stats)
     }
 
     fun expireSession(sessionId: String) {
