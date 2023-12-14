@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Lazy
 import org.springframework.context.annotation.Role
+import org.springframework.context.event.ApplicationContextEvent
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
@@ -24,7 +25,7 @@ class SchedulingConfig {
 
     var enabled = true
 
-    private val log = LoggerFactory.getLogger(com.infobip.kafkistry.config.SchedulingConfig::class.java)
+    private val log = LoggerFactory.getLogger(SchedulingConfig::class.java)
 
     @Bean
     fun scheduler() = ThreadPoolTaskScheduler()
@@ -41,8 +42,11 @@ class SchedulingConfig {
         @Lazy taskRegistrar: ScheduledTaskRegistrar,
     ) =
         object : ScheduledAnnotationBeanPostProcessor(taskRegistrar) {
-            override fun onApplicationEvent(event: ContextRefreshedEvent) {
+            override fun onApplicationEvent(event: ApplicationContextEvent) {
                 super.onApplicationEvent(event)
+                if (event !is ContextRefreshedEvent) {
+                    return
+                }
                 val registeredTasks = scheduledTasks
                 val poolSize = registeredTasks.size.coerceAtLeast(1)
                 log.info("Re-configuring thread pool size to: {}", poolSize)

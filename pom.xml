@@ -35,7 +35,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.1.5</version>
+        <version>3.2.0</version>
         <relativePath />
     </parent>
 
@@ -91,10 +91,10 @@
 
         <!-- DEPENDENCIES -->
         <kafka.version>3.6.0</kafka.version>
-        <org.eclipse.jgit.version>6.3.0.202209071007-r</org.eclipse.jgit.version>
+        <org.eclipse.jgit.version>6.6.1.202309021850-r</org.eclipse.jgit.version>
         <jsoup.version>1.15.4</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
-        <zookeeper.version>3.8.2</zookeeper.version>
+        <zookeeper.version>3.8.3</zookeeper.version>
         <sqlite-jdbc.version>3.42.0.0</sqlite-jdbc.version>
         <hibernate-validator.version>8.0.0.Final</hibernate-validator.version>
         <hibernate-orm.version>6.1.5.Final</hibernate-orm.version>
@@ -102,7 +102,7 @@
         <guava.version>32.0.0-jre</guava.version>
         <commons-io.version>2.11.0</commons-io.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <testcontainers.version>1.18.3</testcontainers.version>
+        <testcontainers.version>1.19.1</testcontainers.version>
         <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
     </properties>
@@ -134,6 +134,16 @@
                  -->
             </dependency>
             <dependency>
+                <groupId>org.eclipse.jgit</groupId>
+                <artifactId>org.eclipse.jgit</artifactId>
+                <version>${org.eclipse.jgit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jgit</groupId>
+                <artifactId>org.eclipse.jgit.ssh.jsch</artifactId>
+                <version>${org.eclipse.jgit.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
                 <version>2.13.9</version> <!-- override version fix RCE vulnerability; org.apache.kafka:kafka_2.13@3.3.1 pulls org.scala-lang:scala-library@2.13.8-->
@@ -156,7 +166,17 @@
             <dependency>
                 <groupId>org.xerial.snappy</groupId>
                 <artifactId>snappy-java</artifactId>
-                <version>1.1.10.1</version>  <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-kafka-connector@0.5.1-SNAPSHOT > org.apache.kafka:kafka_2.13@3.4.0 > org.apache.kafka:kafka-clients@3.4.0 > org.xerial.snappy:snappy-java@1.1.8.4 -->
+                <version>1.1.10.4</version>  <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-kafka-connector@0.5.1-SNAPSHOT > org.apache.kafka:kafka_2.13@3.4.0 > org.apache.kafka:kafka-clients@3.4.0 > org.xerial.snappy:snappy-java@1.1.8.4 -->
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.4.14</version>  <!-- override to fix CWE; com.infobip.kafkistry:kafkistry-app@0.6.1-SNAPSHOT > com.infobip.kafkistry:kafkistry-common@0.6.1-SNAPSHOT > ch.qos.logback:logback-classic@1.4.12 -->
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>1.4.14</version>  <!-- override to fix CWE; com.infobip.kafkistry:kafkistry-app@0.6.1-SNAPSHOT > com.infobip.kafkistry:kafkistry-common@0.6.1-SNAPSHOT > ch.qos.logback:logback-classic@1.4.12 > ch.qos.logback:logback-core@1.4.12 -->
             </dependency>
         </dependencies>
     </dependencyManagement>
