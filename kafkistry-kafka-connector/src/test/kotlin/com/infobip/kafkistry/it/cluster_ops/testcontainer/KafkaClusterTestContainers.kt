@@ -36,7 +36,8 @@ class KafkaClusterContainer(
             clusterSize: Int = 1,
             customBrokersConfig: Map<String, String> = emptyMap(),
             numberOfPartitions: Int = 1,
-            startupTimeout: Duration = Duration.ofMinutes(1),
+            startupTimeout: Duration = Duration.ofSeconds(200
+            ),
             logContainersOutput: Boolean = false,
             vararg topics: String,
     ) : this(
@@ -135,7 +136,7 @@ private fun createBrokerFileContent(
       - zookeeper
     environment:
       - KAFKA_BROKER_ID=$brokerIndex
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:${brokersConfigs.zkHostPort.port},${brokersConfigs.zkHostPort.host}:${brokersConfigs.zkHostPort.port}
+      - KAFKA_ZOOKEEPER_CONNECT=${brokersConfigs.zkHostPort.host}:${brokersConfigs.zkHostPort.port}
       - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9094,OUTSIDE://${hostPort.host}:${hostPort.port}
       - KAFKA_LISTENERS=INSIDE://:9094,OUTSIDE://:${hostPort.port}
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
