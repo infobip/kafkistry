@@ -368,12 +368,18 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         doOnKafka {
             it.reAssignPartitions("elect-leader-test-topic", newAssignments, 1024).get()
         }
-        assertThat(doOnKafka { it.listAllTopics().get() }[0].partitionsAssignments.partitionLeadersMap()).isEqualTo(mapOf(
-                0 to 1, 1 to 2, 2 to 2
+        fun partitionLeadersMap(): Map<Partition, BrokerId> {
+            return doOnKafka { it.listAllTopics().get() }
+                .first { it.name == "elect-leader-test-topic" }
+                .partitionsAssignments
+                .partitionLeadersMap()
+        }
+        assertThat(partitionLeadersMap()).isEqualTo(mapOf(
+            0 to 1, 1 to 2, 2 to 2
         ))
         verifyReAssignment("elect-leader-test-topic", newAssignments)
-        assertThat(doOnKafka { it.listAllTopics().get() }[0].partitionsAssignments.partitionLeadersMap()).isEqualTo(mapOf(
-                0 to 1, 1 to 2, 2 to 2
+        assertThat(partitionLeadersMap()).isEqualTo(mapOf(
+            0 to 1, 1 to 2, 2 to 2
         ))
 
         val existingTopicBefore = doOnKafka { it.listAllTopics().get() }[0]
@@ -464,60 +470,97 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             it.awaitTopicCreated("to-read-test")
         }
         val consumer = createConsumerAndSubscribe("test-consumer", "to-read-test")
+        Awaitility.await("group to get assignments")
+            .atMost(Duration.ofSeconds(6))
+            .untilAsserted {
+                consumer.poll(Duration.ZERO)
+                assertThat(consumer.assignment()).containsExactlyInAnyOrder(
+                    TopicPartition("to-read-test", 0),
+                    TopicPartition("to-read-test", 1),
+                    TopicPartition("to-read-test", 2),
+                )
+            }
 
         //check group is now listed
         val groups = doOnKafka { it.consumerGroups().get() }
         assertThat(groups).containsExactly("test-consumer")
 
         //check assignments and offsets before commit
-        val group = doOnKafka { it.consumerGroup("test-consumer").get() }
-        assertThat(group.id).isEqualTo("test-consumer")
-        assertThat(group.status).isEqualTo(ConsumerGroupStatus.STABLE)
-        assertThat(group.members).isNotEmpty
-        assertThat(group.offsets).isEmpty() //nothing committed yet
-        assertThat(group.assignments).`as`("All partitions assigned")
-                .extracting<List<Any?>> { listOf(it.topic, it.partition) }
-                .containsExactlyInAnyOrder(
-                        listOf("to-read-test", 0),
-                        listOf("to-read-test", 1),
-                        listOf("to-read-test", 2),
-                )
-
-        //check offsets after commit
-        consumer.commitSync(Duration.ofSeconds(2))
-        val groupAfterCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
-        assertThat(groupAfterCommit.offsets)
-                .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
-                .containsExactlyInAnyOrder(
-                        listOf("to-read-test", 0, 0L),
-                        listOf("to-read-test", 1, 0L),
-                        listOf("to-read-test", 2, 0L)
-                )
-        assertThat(group.assignments).`as`("All partitions still assigned")
+        val groupBeforeCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
+        log.info("group: ${groupBeforeCommit.id} -> ${groupBeforeCommit.status} ${groupBeforeCommit.members}" )
+        assertThat(groupBeforeCommit.id).isEqualTo("test-consumer")
+        assertThat(groupBeforeCommit.status).isEqualTo(ConsumerGroupStatus.STABLE)
+        assertThat(groupBeforeCommit.members).isNotEmpty
+        assertThat(groupBeforeCommit.offsets).isEmpty() //nothing committed yet
+        assertThat(groupBeforeCommit.assignments).`as`("All partitions assigned")
             .extracting<List<Any?>> { listOf(it.topic, it.partition) }
             .containsExactlyInAnyOrder(
                 listOf("to-read-test", 0),
                 listOf("to-read-test", 1),
                 listOf("to-read-test", 2),
             )
-        assertThat(group.assignments)
+
+        Awaitility.await("group assignment must still be 3 partitions")
+            .atMost(Duration.ofSeconds(5))
+            .untilAsserted {
+                consumer.poll(Duration.ZERO)
+                assertThat(consumer.assignment()).hasSize(3)
+            }
+
+        //do commit for all assignment partitions with current (start offsets) position
+        consumer.commitSync(Duration.ofSeconds(2))
+
+        Awaitility.await("group assignment must still be 3 partitions")
+            .atMost(Duration.ofSeconds(5))
+            .untilAsserted {
+                consumer.poll(Duration.ZERO)
+                assertThat(consumer.assignment()).hasSize(3)
+            }
+
+        //check offsets after commit
+        Awaitility.await("commits to be visible")
+            .atMost(Duration.ofSeconds(10))
+            .untilAsserted {
+                val groupAfterCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
+                assertThat(groupAfterCommit.offsets)
+                    .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
+                    .containsExactlyInAnyOrder(
+                        listOf("to-read-test", 0, 0L),
+                        listOf("to-read-test", 1, 0L),
+                        listOf("to-read-test", 2, 0L),
+                    )
+            }
+
+        val groupAfterCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
+        assertThat(groupBeforeCommit.assignments).`as`("All partitions still assigned")
+            .extracting<List<Any?>> { listOf(it.topic, it.partition) }
+            .containsExactlyInAnyOrder(
+                listOf("to-read-test", 0),
+                listOf("to-read-test", 1),
+                listOf("to-read-test", 2),
+            )
+        assertThat(groupBeforeCommit.assignments)
             .`as`("All partitions assignments are same as before commit")
             .isEqualTo(groupAfterCommit.assignments)
 
         //check empty after
         consumer.close(Duration.ofSeconds(2))
-        val groupAfterClose = doOnKafka { it.consumerGroup("test-consumer").get() }
-        assertThat(groupAfterClose.status).isEqualTo(ConsumerGroupStatus.EMPTY)
-        assertThat(groupAfterClose.members).isEmpty()
-        assertThat(groupAfterClose.offsets)
-            .`as`("Even though group is empty, committed offsets are still there")
-            .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
-            .containsExactlyInAnyOrder(
-                listOf("to-read-test", 0, 0L),
-                listOf("to-read-test", 1, 0L),
-                listOf("to-read-test", 2, 0L)
-            )
-        assertThat(groupAfterClose.assignments).isEmpty()
+        Awaitility.await("empty after unsubscribe")
+            .atMost(Duration.ofSeconds(5))
+            .untilAsserted {
+                val groupAfterClose = doOnKafka { it.consumerGroup("test-consumer").get() }
+                assertThat(groupAfterClose.status).isEqualTo(ConsumerGroupStatus.EMPTY)
+                assertThat(groupAfterClose.members).isEmpty()
+                assertThat(groupAfterClose.offsets)
+                    .`as`("Even though group is empty, committed offsets are still there")
+                    .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
+                    .containsExactlyInAnyOrder(
+                        listOf("to-read-test", 0, 0L),
+                        listOf("to-read-test", 1, 0L),
+                        listOf("to-read-test", 2, 0L)
+                    )
+                assertThat(groupAfterClose.assignments).isEmpty()
+            }
 
         //check deletion of specific topic-partition offsets
         if (expectedClusterVersion >= Version.of("2.4")) {
@@ -1133,7 +1176,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             assertDefaultConfig(TopicConfig.CLEANUP_POLICY_CONFIG).isEqualTo("delete")
             assertDefaultConfig(TopicConfig.COMPRESSION_TYPE_CONFIG).isEqualTo("producer")
             assertDefaultConfig(TopicConfig.DELETE_RETENTION_MS_CONFIG).isEqualToStringOf(24 * 3600 * 1000L)
-            if (expectedClusterVersion > Version.of("3.1")) {
+            if (expectedClusterVersion > Version.of("3.4")) {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
             } else {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(60 * 1000L)

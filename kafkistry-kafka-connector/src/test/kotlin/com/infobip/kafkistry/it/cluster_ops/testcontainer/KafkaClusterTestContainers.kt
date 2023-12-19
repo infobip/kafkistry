@@ -9,12 +9,10 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.DockerComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
-import java.net.InetAddress
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import javax.net.ServerSocketFactory
 
 class KafkaClusterContainer(
         private val topics: Collection<NewTopic>,
@@ -32,14 +30,13 @@ class KafkaClusterContainer(
     private val client = AtomicReference<AdminClient>()
 
     constructor(
-            kafkaImage: String,
-            clusterSize: Int = 1,
-            customBrokersConfig: Map<String, String> = emptyMap(),
-            numberOfPartitions: Int = 1,
-            startupTimeout: Duration = Duration.ofSeconds(200
-            ),
-            logContainersOutput: Boolean = false,
-            vararg topics: String,
+        kafkaImage: String,
+        clusterSize: Int = 1,
+        customBrokersConfig: Map<String, String> = emptyMap(),
+        numberOfPartitions: Int = 1,
+        startupTimeout: Duration = Duration.ofSeconds(20),
+        logContainersOutput: Boolean = true,
+        vararg topics: String,
     ) : this(
             topics.map { NewTopic(it, numberOfPartitions, 1) },
             createBrokersConfigs(kafkaImage, customBrokersConfig, clusterSize),
@@ -111,7 +108,7 @@ private fun createDockerComposeFileContent(configs: BrokersConfigs) = """
 version: '2'
 services:
   zookeeper:
-    image: bitnami/zookeeper:3.6.0
+    image: bitnami/zookeeper:3.8.3
     ports:
       - "${configs.zkHostPort.port}:${configs.zkHostPort.port}"
     environment:
@@ -167,28 +164,11 @@ class BrokersConfigs(
 ) {
 
     fun toYamlEnvironment(): String = customConfig
-            .mapKeys { it.key.replace(".", "_") }
-            .mapKeys { it.key.uppercase(Locale.getDefault()) }
-            .mapKeys { "      - KAFKA_${it.key}" }
-            .map { "${it.key}=${it.value}" }
-            .joinToString("\n")
+        .mapKeys { it.key.replace(".", "_") }
+        .mapKeys { it.key.uppercase(Locale.getDefault()) }
+        .mapKeys { "      - KAFKA_${it.key}" }
+        .map { "${it.key}=${it.value}" }
+        .joinToString("\n")
 
 }
 
-data class HostPort(val host: String, val port: Int) {
-    companion object {
-        fun newLocalAvailable() = HostPort(
-                host = InetAddress.getLocalHost().hostName,
-                port = randomPort(),
-        )
-
-        private fun randomPort(): Int {
-            val serverSocket = ServerSocketFactory.getDefault().createServerSocket(
-                0, 1, InetAddress.getByName("localhost")
-            )
-            return serverSocket.localPort.also {
-                serverSocket.close()
-            }
-        }
-    }
-}

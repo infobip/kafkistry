@@ -128,7 +128,7 @@ class QuotasOps(
                 }
             }
         }
-        adminZkClient.changeConfigs(configType, path, props, true)
+        adminZkClient.changeConfigs(configType, path, props, false)
     }
 
     private fun ClientQuotaEntity.toQuotaEntity(): QuotaEntity {

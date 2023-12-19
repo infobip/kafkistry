@@ -10,7 +10,7 @@ fun <K, V> KafkaConsumer<K, V>.poolAll(maxIterations: Int = 10): List<ConsumerRe
     var i = 0
     while (true) {
         i++
-        val records = poll(Duration.ofSeconds(1))
+        val records = poll(Duration.ofSeconds(5))
         if (records.isEmpty || i >= maxIterations) {
             break
         }

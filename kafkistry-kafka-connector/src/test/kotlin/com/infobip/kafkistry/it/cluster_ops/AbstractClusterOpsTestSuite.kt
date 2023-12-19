@@ -6,8 +6,7 @@ import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
-import org.junit.Before
-import org.junit.BeforeClass
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.Logger
@@ -61,6 +60,9 @@ abstract class AbstractClusterOpsTestSuite {
             client.deleteAllOnCluster()
             clusterBrokerIds = client.clusterInfo("").get().nodeIds
         }
+        assertThat(clusterBrokerIds).`as`("Node IDs of cluster")
+            .containsExactlyInAnyOrder(0, 1, 2)
+            .hasSize(3)
     }
 
 }
