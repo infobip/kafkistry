@@ -3,6 +3,7 @@ package com.infobip.kafkistry.it.cluster_ops
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import com.infobip.kafkistry.kafka.KafkaManagementClient
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException
 import java.time.Duration
 
 fun <K, V> KafkaConsumer<K, V>.poolAll(maxIterations: Int = 10): List<ConsumerRecord<K, V>> {
@@ -21,7 +22,14 @@ fun <K, V> KafkaConsumer<K, V>.poolAll(maxIterations: Int = 10): List<ConsumerRe
 
 fun KafkaManagementClient.deleteAllOnCluster() {
     val topics = listAllTopicNames().get()
-    topics.forEach { deleteTopic(it).get() }
+    topics.forEach { topic ->
+        deleteTopic(topic)
+            .exceptionally { ex ->
+                val exes = listOf(ex, ex.cause, ex.cause?.cause)
+                if (exes.all { it !is UnknownTopicOrPartitionException }) throw ex
+            }
+            .get()
+    }
     val groups = consumerGroups().get()
     groups.forEach { deleteConsumer(it).exceptionally {  }.get() }
     try {

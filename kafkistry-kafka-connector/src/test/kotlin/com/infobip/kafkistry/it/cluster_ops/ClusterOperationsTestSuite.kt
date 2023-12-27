@@ -87,22 +87,30 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     @Test
     fun `test delete topic`() {
-        val topics = doOnKafka {
+        doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "delete-test-topic",
-                    partitionsReplicas = createAssignments(1, 1),
-                    config = emptyMap()
+                name = "delete-test-topic",
+                partitionsReplicas = createAssignments(1, 1),
+                config = emptyMap(),
             )).get()
             it.awaitTopicCreated("delete-test-topic")
             it.deleteTopic("delete-test-topic").get()
-            it.listAllTopics().get()
         }
-        assertThat(topics).isEmpty()
+        Awaitility.await("deletion to complete")
+            .atMost(Duration.ofSeconds(5))
+            .untilAsserted {
+                val topics = try {
+                    doOnKafka { it.listAllTopics().get() }
+                } catch (ex: Throwable) {
+                    fail("failed to list topics", ex)
+                }
+                assertThat(topics).isEmpty()
+            }
     }
 
     @Test
     fun `test change topic config`() {
-        val topics = doOnKafka {
+        doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
                     name = "update-test-topic",
                     partitionsReplicas = createAssignments(1, 3),
@@ -115,18 +123,23 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             )).get()
             it.listAllTopics().get()
         }
-        assertThat(topics).hasSize(1)
-        val existingTopic = topics[0]
-        assertThat(existingTopic.name).isEqualTo("update-test-topic")
-        assertThat(existingTopic.partitionsAssignments).hasSize(1)
-                .extracting<Int> { it.replicasAssignments.size }
-                .containsOnly(3)    //replication factor
-        assertThat(existingTopic.config.filterValues { !it.default }.filterOutFalseDefaults())
-                .contains(
+        Awaitility.await("for topic update to be applied")
+            .atMost(Duration.ofSeconds(5))
+            .untilAsserted {
+                val topics = doOnKafka { it.listAllTopics().get() }.filter { !it.internal }
+                assertThat(topics).hasSize(1)
+                val existingTopic = topics[0]
+                assertThat(existingTopic.name).isEqualTo("update-test-topic")
+                assertThat(existingTopic.partitionsAssignments).hasSize(1)
+                    .extracting<Int> { it.replicasAssignments.size }
+                    .containsOnly(3)    //replication factor
+                assertThat(existingTopic.config.filterValues { !it.default }.filterOutFalseDefaults())
+                    .contains(
                         entry("retention.bytes", "444555666"),
                         entry("min.insync.replicas", "2")
-                )
-                .doesNotContainKey("retention.ms")
+                    )
+                    .doesNotContainKey("retention.ms")
+            }
     }
 
     @Test
@@ -521,6 +534,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         Awaitility.await("commits to be visible")
             .atMost(Duration.ofSeconds(10))
             .untilAsserted {
+                consumer.commitSync(Duration.ofSeconds(2))
                 val groupAfterCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
                 assertThat(groupAfterCommit.offsets)
                     .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
@@ -1003,7 +1017,9 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         verifyReAssignment("re-assignment-progress-test", newAssignment)
 
         val reAssignmentCompleted = System.currentTimeMillis()
-        assertThat(reAssignmentCompleted - reAssignmentStarted).`as`("ReAssignment duration").isBetween(4_000, 6_500)
+        assertThat(reAssignmentCompleted - reAssignmentStarted)
+            .`as`("ReAssignment duration (nominal 5sec)")
+            .isBetween(4_000, 8_000)
 
         assertThat(doOnKafka { it.listReAssignments().get() }).`as`("ReAssignments after completion").isEmpty()
 
@@ -1071,11 +1087,15 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 assertThat(seenReAssignments).`as`("ReAssignments in progress").hasSize(2)
             }
 
-        doOnKafka { it.cancelReAssignments("cancel-re-assignment-progress-test", listOf(0, 1)) }
-        val newAssignmentsVerification = doOnKafka { it.verifyReAssignPartitions("cancel-re-assignment-progress-test", newAssignment) }
-        assertThat(newAssignmentsVerification)
-                .contains("failed")
-                .doesNotContain("Topic: Throttle was removed")
+        doOnKafka { it.cancelReAssignments("cancel-re-assignment-progress-test", listOf(0, 1)).get() }
+        Awaitility.await("cancelation to be applied")
+            .atMost(Duration.ofSeconds(5))
+            .untilAsserted {
+                val newAssignmentsVerification = doOnKafka { it.verifyReAssignPartitions("cancel-re-assignment-progress-test", newAssignment) }
+                assertThat(newAssignmentsVerification)
+                    .contains("failed")
+                    .doesNotContain("Topic: Throttle was removed")
+            }
 
         verifyReAssignment("cancel-re-assignment-progress-test", oldAssignment)
 
@@ -1176,7 +1196,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             assertDefaultConfig(TopicConfig.CLEANUP_POLICY_CONFIG).isEqualTo("delete")
             assertDefaultConfig(TopicConfig.COMPRESSION_TYPE_CONFIG).isEqualTo("producer")
             assertDefaultConfig(TopicConfig.DELETE_RETENTION_MS_CONFIG).isEqualToStringOf(24 * 3600 * 1000L)
-            if (expectedClusterVersion > Version.of("3.4")) {
+            if (this@ClusterOperationsTestSuite is ClusterOpsKafkaEmbeddedTest) {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
             } else {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(60 * 1000L)

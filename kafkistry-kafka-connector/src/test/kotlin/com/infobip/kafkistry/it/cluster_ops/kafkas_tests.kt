@@ -46,8 +46,6 @@ class ClusterOpsKafkaDockerCompose_V_2_1_1_Test : ClusterNoAclOperationsTestSuit
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "wurstmeister/kafka:2.12-2.1.1",
-            clusterSize = 3,
-            logContainersOutput = false,
         ).asTestKafkaLifecycle()
     }
 
@@ -66,8 +64,6 @@ class ClusterOpsKafkaDockerCompose_V_2_3_1_Test : ClusterNoAclOperationsTestSuit
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:2.3.1",
-            clusterSize = 3,
-            logContainersOutput = false,
         ).asTestKafkaLifecycle()
     }
 
@@ -86,8 +82,6 @@ class ClusterOpsKafkaDockerCompose_V_2_5_0_Test : ClusterNoAclOperationsTestSuit
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:2.5.0",
-            clusterSize = 3,
-            logContainersOutput = false,
         ).asTestKafkaLifecycle()
     }
 
@@ -107,8 +101,6 @@ class ClusterOpsKafkaDockerCompose_V_2_8_0_Test : ClusterNoAclOperationsTestSuit
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:2.8.0",
-            clusterSize = 3,
-            logContainersOutput = false,
         ).asTestKafkaLifecycle()
     }
 
@@ -127,8 +119,6 @@ class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuit
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:3.1.0",
-            clusterSize = 3,
-            logContainersOutput = false,
         ).asTestKafkaLifecycle()
     }
 
@@ -147,8 +137,6 @@ class ClusterOpsKafkaDockerCompose_V_3_3_2_Test : ClusterNoAclOperationsTestSuit
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:3.3.2",
-            clusterSize = 3,
-            logContainersOutput = false,
         ).asTestKafkaLifecycle()
     }
 
@@ -168,14 +156,32 @@ class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuit
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:3.4.0",
-            clusterSize = 3,
-            logContainersOutput = false,
-            customBrokersConfig = mapOf("ENABLE_KRAFT" to "no"),
+            kraft = false,
         ).asTestKafkaLifecycle()
     }
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.4")
+}
+
+@EnabledIfSystemProperty(
+    named = "enabledIntegrationTests",
+    matches = "all|.*(all-kafka|kafka-3\\.6).*",
+    disabledReason = "These tests are too slow to run each time",
+)
+class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuite() {
+
+    companion object {
+        @JvmField
+        val kafka = KafkaClusterContainer(
+            kafkaImage = "bitnami/kafka:3.6.0",
+            logContainersOutput = false,
+            kraft = true,
+        ).asTestKafkaLifecycle()
+    }
+
+    override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
+    override val expectedClusterVersion = Version.of("3.6")
 }
 
 
