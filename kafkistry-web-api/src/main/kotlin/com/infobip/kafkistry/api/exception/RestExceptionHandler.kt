@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.http.HttpStatusCode
+import org.springframework.web.context.request.ServletWebRequest
+import org.springframework.web.context.request.WebRequest
 
 @ControllerAdvice
 class RestExceptionHandler : ResponseEntityExceptionHandler() {
@@ -19,10 +22,23 @@ class RestExceptionHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(Exception::class)
     fun handleAll(ex: Exception, request: HttpServletRequest): ResponseEntity<Any>? {
         log.warn("Request ${request.method} ${request.requestURI} user: ${request.userPrincipal} encountered exception", ex)
+        return createResponse(ex)
+    }
+
+    override fun handleExceptionInternal(
+        ex: java.lang.Exception, body: Any?, headers: HttpHeaders, statusCode: HttpStatusCode, request: WebRequest
+    ): ResponseEntity<Any>? {
+        val servletRequest = (request as? ServletWebRequest)?.request
+        log.warn("Request ${servletRequest?.method.orEmpty()} ${servletRequest?.requestURI.orEmpty()} user: ${request.userPrincipal} encountered exception", ex)
+        return createResponse(ex, statusCode)
+    }
+
+    private fun createResponse(ex: java.lang.Exception, statusCode: HttpStatusCode? = null): ResponseEntity<Any> {
         val status = (ex as? KafkistryException)
-                ?.httpStatus
-                ?.let { HttpStatus.valueOf(it) }
-                ?: HttpStatus.INTERNAL_SERVER_ERROR
+            ?.httpStatus
+            ?.let { HttpStatus.valueOf(it) }
+            ?: (statusCode as? HttpStatus)
+            ?: HttpStatus.INTERNAL_SERVER_ERROR
         val apiError = ApiError(status, ex.deepToString())
         return ResponseEntity(apiError, HttpHeaders(), apiError.status)
     }
