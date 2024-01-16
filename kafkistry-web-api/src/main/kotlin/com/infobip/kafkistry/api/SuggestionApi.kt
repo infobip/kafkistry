@@ -79,6 +79,13 @@ class SuggestionApi(
     fun generateYaml(
         @RequestBody body: Any
     ): String = yamlMapper.serialize(body)
+    /**
+     * This is basically just converter from yaml data format to json representation
+     */
+    @PostMapping("/yaml-to-json")
+    fun generateJson(
+        @RequestBody body: String
+    ): Any = yamlMapper.deserialize(body, Any::class.java)
 
     @GetMapping("/re-balance")
     fun reBalanceAssignments(

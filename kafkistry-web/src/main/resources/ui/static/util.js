@@ -1,5 +1,5 @@
 function extractErrMsg(error) {
-    if (error.status) {
+    if (error && error.status) {
         if (error.responseJSON && error.responseJSON.message) {
             return "HTTP " + error.status + ": " + error.responseJSON.message;
         } else {
@@ -17,7 +17,12 @@ function extractErrHtml(error) {
     return null;
 }
 
-function jsonToYaml(object, onResult) {
+function jsonToYaml(object, onResult, onFailure) {
+    let failureCallback = onFailure ? onFailure : function (error) {
+        console.log(error);
+        let errorMsg = extractErrMsg(error);
+        console.log(errorMsg);
+    }
     $
         .ajax("api/suggestion/json-to-yaml", {
             method: "POST",
@@ -25,9 +30,23 @@ function jsonToYaml(object, onResult) {
             data: JSON.stringify(object)
         })
         .done(onResult)
-        .fail(function (error) {
-            console.log(error);
-        });
+        .fail(failureCallback());
+}
+
+function yamlToJson(yamlString, onResult, onFailure) {
+    let failureCallback = onFailure ? onFailure : function (error) {
+        console.log(error);
+        let errorMsg = extractErrMsg(error);
+        console.log(errorMsg);
+    }
+    $
+        .ajax("api/suggestion/yaml-to-json", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: yamlString,
+        })
+        .done(onResult)
+        .fail(failureCallback);
 }
 
 const JIRA_REGEX = /(^|[\/:\s,()[\]])([A-Z]+-[0-9]+)(?=$|[\s,()[\]?\/])/g;
