@@ -161,10 +161,12 @@ function doConsume(formData) {
     let newUrl = generateNewUrl(formData);
     console.log("New url: " + newUrl);
     window.history.replaceState(null, null, newUrl);
-    showOpProgress("Reading messages...");
+    let readingMessage = "Reading messages...";
+    showOpProgress(readingMessage);
     let partitionStatsExpanded = $("#partition-stats-container").hasClass("show");
     let showFlags = currentShowFlags();
     let consumeResultContainer = $("#messages-container");
+    startTicking(formData.readConfig.maxWaitMs / 1000, "server-op-status", readingMessage);
     $
         .ajax("consume/read-topic" +
             "?topicName=" + encodeURI(formData.topicName) +
@@ -175,6 +177,7 @@ function doConsume(formData) {
             data: JSON.stringify(formData.readConfig)
         })
         .done(function (response) {
+            stopTicking();
             hideOpStatus();
             consumeResultContainer.hide();
             consumeResultContainer.html(response);
@@ -188,6 +191,7 @@ function doConsume(formData) {
             renderValues();
         })
         .fail(function (error) {
+            stopTicking();
             let errHtml = extractErrHtml(error);
             if (errHtml) {
                 consumeResultContainer.html(errHtml);

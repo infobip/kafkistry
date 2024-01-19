@@ -98,4 +98,5 @@
 <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
 
 <script src="static/diffHtml.js?ver=${lastCommit}"></script>
-<script src="static/yamlDiff.js?ver=${lastCommit}?ver=${lastCommit}"></script>
+<script src="static/yamlDiff.js?ver=${lastCommit}"></script>
+<script src="static/tickingStatus.js?ver=${lastCommit}"></script>
