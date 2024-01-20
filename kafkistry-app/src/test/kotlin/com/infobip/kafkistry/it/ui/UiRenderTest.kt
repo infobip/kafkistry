@@ -516,7 +516,7 @@ class UiRenderTest {
                         readFilter = ReadFilter.EMPTY,
                 )
         )
-        assertThat(page.text()).startsWith("Got 6 record(s)")
+        assertThat(page.text()).startsWith("Read status: Got 6 record(s)")
         assertThat(page.select(".record")).hasSize(6)
     }
 
