@@ -16,6 +16,8 @@
 <#-- @ftlvariable name="headersDeserializerType" type="java.lang.String" -->
 <#-- @ftlvariable name="readFilterJson" type="java.lang.String" -->
 <#-- @ftlvariable name="readOnlyCommitted" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autoContinuation" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="autoContinuationAfterEnd" type="java.lang.Boolean" -->
 
 <html lang="en">
 
@@ -227,13 +229,45 @@
 
         <br/>
         <div class="clearfix"></div>
-        <button type="button" class="btn btn-primary form-control" id="consume-btn">
+        <label>
+            Auto-continuation
+            <#assign autoContinuationDoc>
+                When <code>enabled</code>, reading/consume completed with <code>timeout</code>
+                and without any records matching criteria, consume will then automatically trigger continue
+                where previous consume read left off. <br/>
+                When <code>disabled</code>, no continuation will be triggered after <code>timeout</code>.
+            </#assign>
+            <@info.icon tooltip=autoContinuationDoc/>
+        </label>
+        <label class="mx-2">
+            <input class="mr-1" type="checkbox" name="auto-continuation" <#if (autoContinuation?? && autoContinuation)>checked</#if>>
+            <span class="mr-sm-1">enabled</span>
+        </label>
+        <label>
+            <input class="mr-1" type="checkbox" name="auto-continuation-after-end" <#if (autoContinuationAfterEnd?? && autoContinuationAfterEnd)>checked</#if>>
+            <span class="mr-sm-1">
+                continue after end
+                <#assign autoContinuationonEndDoc>
+                    When <code>enabled</code>, auto-continuation will continue even when end of topic is reached
+                    (up-to newest messages), basically waiting for new messages to get produced.
+                    When <code>disabled</code>, auto-continuation will stop after reaching end of topic (end of all partitions).
+                </#assign>
+                <@info.icon tooltip=autoContinuationonEndDoc/>
+            </span>
+        </label>
+
+        <div class="clearfix"></div>
+        <button type="button" class="consume-trigger-btn btn btn-primary form-control" id="consume-btn">
             Start reading
+        </button>
+        <button type="button" class="consume-stop-btn btn btn-danger form-control" id="stop-btn" style="display: none;">
+            Stop reading
         </button>
     </div>
 
     <br/>
     <#include "../common/serverOpStatus.ftl">
+    <div id="error-container"></div>
     <div id="messages-container"></div>
 </div>
 

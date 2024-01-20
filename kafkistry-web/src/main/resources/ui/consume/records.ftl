@@ -19,9 +19,15 @@
     <#assign msg = msg + ", reading reached latest">
 </#if>
 
+<div style="display: none" id="consume-status-data"
+    data-totalCount="${recordsResult.totalCount?c}"
+    data-resultCount="${records?size?c}"
+    data-timedOut="${recordsResult.timedOut?c}"
+    data-reachedEnd="${recordsResult.reachedEnd?c}"></div>
+
 <div class="alert ${msgAlertClass}">${msg}</div>
 
-<button type="button" class="btn btn-secondary form-control" id="continue-consume-btn">
+<button type="button" class="consume-trigger-btn btn btn-secondary form-control" id="continue-consume-btn">
     Continue reading
 </button>
 <div class="spacing"></div>

@@ -1,6 +1,7 @@
 $(document).ready(function () {
     registerAllInfoTooltips();
     $("#consume-btn").click(startConsume);
+    $(".consume-stop-btn").click(stopConsume);
     allClusterTopics = $(".cluster-topics").map(function () {
         let clusterData = $(this);
         let clusterIdentifier = clusterData.attr("data-cluster-identifier");
@@ -142,10 +143,20 @@ function updatePickedTimeIndicator() {
 
 function startConsume() {
     let formData = readFormData();
-    doConsume(formData);
+    doConsume(formData, {trigger: "NONE"});
+}
+
+function stopConsume() {
+    if (consumeXHR) {
+        consumeXHR.abort();
+    }
 }
 
 function startContinueConsume() {
+    doStartContinueConsume({trigger: "MANUAL"});
+}
+
+function doStartContinueConsume(continuationCtx) {
     let formData = readFormData();
     let partitionFromOffset = {};
     $(".partition-read-status").each(function () {
@@ -154,20 +165,44 @@ function startContinueConsume() {
         partitionFromOffset[partition] = parseInt(partitionStatusRow.attr("data-ended-at-offset"));
     })
     formData.readConfig.partitionFromOffset = partitionFromOffset;
-    doConsume(formData);
+    doConsume(formData, continuationCtx);
 }
 
-function doConsume(formData) {
+let consumeXHR = null;
+
+function doConsume(formData, continuationCtx) {
     let newUrl = generateNewUrl(formData);
     console.log("New url: " + newUrl);
     window.history.replaceState(null, null, newUrl);
-    let readingMessage = "Reading messages...";
+    let readingMessage;
+    switch (continuationCtx.trigger) {
+        case "AUTO":
+            readingMessage = `Auto-continue reading messages (attempt: ${continuationCtx.attempt})...`;
+            break;
+        case "MANUAL":
+            readingMessage = `Continue reading messages...`;
+            break;
+        default:
+            readingMessage = "Reading messages...";
+    }
     showOpProgress(readingMessage);
+    let consumeTriggerButtons = function (){
+        return $(".consume-trigger-btn");
+    }
+    let consumeStopButtons = function (){
+        return $(".consume-stop-btn");
+    }
+    consumeTriggerButtons().hide();
+    consumeStopButtons().show();
     let partitionStatsExpanded = $("#partition-stats-container").hasClass("show");
     let showFlags = currentShowFlags();
+    let errorContainer = $("#error-container");
     let consumeResultContainer = $("#messages-container");
     startTicking(formData.readConfig.maxWaitMs / 1000, "server-op-status", readingMessage);
-    $
+    if (consumeXHR != null) {
+        console.error("should be null", consumeXHR);
+    }
+    consumeXHR = $
         .ajax("consume/read-topic" +
             "?topicName=" + encodeURI(formData.topicName) +
             "&clusterIdentifier=" + encodeURI(formData.clusterIdentifier), {
@@ -176,8 +211,14 @@ function doConsume(formData) {
             headers: {ajax: 'true'},
             data: JSON.stringify(formData.readConfig)
         })
-        .done(function (response) {
+        .always(function () {
+            errorContainer.hide();
             stopTicking();
+            consumeTriggerButtons().show();
+            consumeStopButtons().hide();
+            consumeXHR = null;
+        })
+        .done(function (response) {
             hideOpStatus();
             consumeResultContainer.hide();
             consumeResultContainer.html(response);
@@ -189,18 +230,53 @@ function doConsume(formData) {
             consumeResultContainer.show();
             formatTimestamp();
             renderValues();
+            maybeAutoContinue(continuationCtx);
         })
         .fail(function (error) {
-            stopTicking();
             let errHtml = extractErrHtml(error);
             if (errHtml) {
-                consumeResultContainer.html(errHtml);
-                hideOpStatus();
+                errorContainer.html(errHtml);
+                errorContainer.show();
+                setTimeout(function () {
+                    //don't re-continue right away
+                    hideOpStatus();
+                    maybeAutoContinue(continuationCtx);
+                }, 1000)
             } else {
                 let errorMsg = extractErrMsg(error);
                 showOpError("Topic reading request failed:", errorMsg);
             }
         });
+}
+
+function maybeAutoContinue(continuationCtx) {
+    let formData= readFormData();
+    if (!formData.readConfig.autoContinuation.enabled) {
+        return; //auto-continuation not enabled
+    }
+    let consumeStats = consumeStatusData();
+    if (consumeStats.resultCount > 0) {
+        return; //got records, no more continuations
+    }
+    if (consumeStats.reachedEnd && !formData.readConfig.autoContinuation.enabledAfterEnd) {
+        return; //stop continuation, end is reached
+    }
+    if (!continuationCtx || continuationCtx.trigger !== "AUTO") {
+        continuationCtx = {trigger: "AUTO", attempt: 1};
+    } else {
+        continuationCtx.attempt++;
+    }
+    doStartContinueConsume(continuationCtx);
+}
+
+function consumeStatusData() {
+    let container = $("#consume-status-data");
+    return {
+        totalCount: parseIntOrDefault(container.attr("data-totalCount"), 0),
+        resultCount: parseIntOrDefault(container.attr("data-resultCount"), 0),
+        timedOut: parseBooleanOrUndefined(container.attr("data-timedOut")),
+        reachedEnd: parseBooleanOrUndefined(container.attr("data-reachedEnd")),
+    }
 }
 
 function readFormData() {
@@ -224,6 +300,10 @@ function readFormData() {
                 headersType: deserializationType($("select[name=headersDeserializerType]").val()),
             },
             readFilter: readFilterData(),
+            autoContinuation: {
+                enabled: $("input[name=auto-continuation]").is(":checked"),
+                enabledAfterEnd: $("input[name=auto-continuation-after-end]").is(":checked"),
+            },
         }
     }
 }
@@ -254,7 +334,9 @@ function generateNewUrl(formData) {
         "&valueDeserializerType=" + (formData.readConfig.recordDeserialization.valueType || "") +
         "&headersDeserializerType=" + (formData.readConfig.recordDeserialization.headersType || "") +
         "&readFilterJson=" + encodeURIComponent(JSON.stringify(formData.readConfig.readFilter)) +
-        "&readOnlyCommitted=" + formData.readConfig.readOnlyCommitted;
+        "&readOnlyCommitted=" + formData.readConfig.readOnlyCommitted +
+        "&autoContinuation=" + formData.readConfig.autoContinuation.enabled +
+        "&autoContinuationAfterEnd=" + formData.readConfig.autoContinuation.enabledAfterEnd;
     let currentUrl = window.location.href;
     let paramsStart = currentUrl.indexOf("?");
     let newUrl;
@@ -488,6 +570,27 @@ function parseIntOrDefault(numberText, defaultValue) {
         return defaultValue;
     }
     return result;
+}
+
+function parseBooleanOrUndefined(boolText) {
+    return parseBooleanOrDefault(boolText, undefined);
+}
+
+function parseBooleanOrDefault(boolText, defaultValue) {
+    if (typeof boolText === "string") {
+        let sanitized = boolText.trim().toLowerCase();
+        if (sanitized === "true") {
+            return true;
+        } else if (sanitized === "false") {
+            return false;
+        } else {
+            return defaultValue;
+        }
+    } else if (typeof boolText === "boolean") {
+        return boolText;
+    } else {
+        return defaultValue;
+    }
 }
 
 function decodeUrlOrNull(string) {

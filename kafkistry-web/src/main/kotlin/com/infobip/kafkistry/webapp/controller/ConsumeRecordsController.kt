@@ -49,7 +49,9 @@ class ConsumeRecordsController(
         @RequestParam(name = "valueDeserializerType", required = false) valueDeserializerType: DeserializerType?,
         @RequestParam(name = "headersDeserializerType", required = false) headersDeserializerType: DeserializerType?,
         @RequestParam(name = "readFilterJson", required = false) readFilterJson: String?,
-        @RequestParam(name = "readOnlyCommitted", required = false) readOnlyCommitted: Boolean?
+        @RequestParam(name = "readOnlyCommitted", required = false) readOnlyCommitted: Boolean?,
+        @RequestParam(name = "autoContinuation", required = false) autoContinuation: Boolean?,
+        @RequestParam(name = "autoContinuationAfterEnd", required = false) autoContinuationAfterEnd: Boolean?,
     ): ModelAndView {
         if (consumeApi() == null) {
             return disabled()
@@ -86,6 +88,8 @@ class ConsumeRecordsController(
                 "headersDeserializerType" to headersDeserializerType,
                 "readFilterJson" to readFilterJson,
                 "readOnlyCommitted" to readOnlyCommitted,
+                "autoContinuation" to autoContinuation,
+                "autoContinuationAfterEnd" to autoContinuationAfterEnd,
             )
         )
     }
