@@ -121,6 +121,8 @@ class ConsumeRecordsController(
         return ModelAndView(
             "consume/records", mapOf(
                 "recordsResult" to continuedRecordsResult.recordsResult,
+                "overallReadCount" to continuedRecordsResult.overallReadCount,
+                "overallSkipCount" to continuedRecordsResult.overallSkipCount,
                 "overallPartitions" to continuedRecordsResult.overallPartitions,
             )
         )

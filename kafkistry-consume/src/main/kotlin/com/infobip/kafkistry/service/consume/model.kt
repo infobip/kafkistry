@@ -113,9 +113,12 @@ data class KafkaRecord(
 )
 
 data class KafkaRecordsResult(
-    val totalCount: Int,
+    val readCount: Int,
     val timedOut: Boolean,
     val reachedEnd: Boolean,
+    val skipCount: Long,
+    val totalRecordsCount: Long,
+    val remainingCount: Long,
     val partitions: Map<Partition, PartitionReadStatus>,
     val records: List<KafkaRecord>,
 )
@@ -129,6 +132,8 @@ data class PartitionReadStatus(
     val matching: Int,
     val reachedEnd: Boolean,
     val remaining: Long,
+    val beginOffset: Long,
+    val endOffset: Long,
 )
 
 data class ContinuedReadConfig(
@@ -138,5 +143,7 @@ data class ContinuedReadConfig(
 
 data class ContinuedKafkaRecordsResult(
     val recordsResult: KafkaRecordsResult,
+    val overallReadCount: Long,
+    val overallSkipCount: Long,
     val overallPartitions: Map<Partition, PartitionReadStatus>,
 )

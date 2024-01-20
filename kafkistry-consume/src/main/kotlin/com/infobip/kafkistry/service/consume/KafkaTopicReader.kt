@@ -35,27 +35,32 @@ class KafkaTopicReader(
         readConfig: ReadConfig
     ): KafkaRecordsResult {
         readConfig.checkLimitations()
-        return createConsumer(cluster, username, readConfig)
-            .use {
-                it.setup(topicName, readConfig)
+        return createConsumer(cluster, username, readConfig).use {
+            with(ConsumerCtx(it, topicName, cluster.ref(), readConfig)) {
+                setup()
                 try {
-                    it.readMessages(topicName, cluster.ref(), readConfig)
+                    readMessages()
                 } catch (ex: OffsetOutOfRangeException) {
                     it.translateInvalidOffsetException(ex)
                 }
             }
+        }
     }
 
     private fun ReadConfig.checkLimitations() {
         if (numRecords > consumeProperties.maxRecords()) {
-            throw KafkistryConsumeException("Maximum allowed maxRecords is %d, got: %d".format(
-                consumeProperties.maxRecords, numRecords
-            ))
+            throw KafkistryConsumeException(
+                "Maximum allowed maxRecords is %d, got: %d".format(
+                    consumeProperties.maxRecords, numRecords
+                )
+            )
         }
         if (maxWaitMs > consumeProperties.maxWaitMs()) {
-            throw KafkistryConsumeException("Maximum allowed maxWaitMs is %d, got: %d".format(
-                consumeProperties.maxWaitMs, maxWaitMs
-            ))
+            throw KafkistryConsumeException(
+                "Maximum allowed maxWaitMs is %d, got: %d".format(
+                    consumeProperties.maxWaitMs, maxWaitMs
+                )
+            )
         }
     }
 
@@ -74,10 +79,23 @@ class KafkaTopicReader(
         }
     }
 
-    private fun KafkaConsumer<*, *>.setup(topicName: TopicName, readConfig: ReadConfig) {
-        val allTopicPartitions = partitionsFor(topicName)?.map { it.partition() }
+
+    private inner class ConsumerCtx(
+        val consumer: KafkaConsumer<ByteArray, ByteArray>,
+        val topicName: TopicName,
+        val clusterRef: ClusterRef,
+        val readConfig: ReadConfig,
+    ) {
+        lateinit var allTopicPartitions: List<Int>
+        lateinit var partitions: List<TopicPartition>
+        lateinit var beginOffsets: Map<TopicPartition, Long>
+        lateinit var endOffsets: Map<TopicPartition, Long>
+    }
+
+    private fun ConsumerCtx.setup() {
+        allTopicPartitions = consumer.partitionsFor(topicName)?.map { it.partition() }
             ?: throw KafkistryConsumeException("Topic '$topicName' does not exist on cluster")
-        val partitions = with(readConfig) {
+        partitions = with(readConfig) {
             val unknownPartitions = (partitions.orEmpty() + notPartitions.orEmpty())
                 .filter { it !in allTopicPartitions }
             if (unknownPartitions.isNotEmpty()) {
@@ -92,60 +110,58 @@ class KafkaTopicReader(
                 .filter { notPartitions == null || it !in notPartitions }
                 .map { TopicPartition(topicName, it) }
         }
-        assign(partitions)
+        consumer.assign(partitions)
+        beginOffsets = consumer.beginningOffsets(partitions)
+        endOffsets = consumer.endOffsets(partitions)
         setOffsets(readConfig.fromOffset, readConfig.partitionFromOffset.orEmpty())
     }
 
-    private fun KafkaConsumer<*, *>.setOffsets(fromOffset: Offset, partitionFromOffset: Map<Partition, Long>) {
-        val partitionsToResolve = assignment().filter { it.partition() !in partitionFromOffset.keys }
+    private fun ConsumerCtx.setOffsets(fromOffset: Offset, partitionFromOffset: Map<Partition, Long>) {
+        val partitionsToResolve = consumer.assignment().filter { it.partition() !in partitionFromOffset.keys }
         fun Collection<TopicPartition>.calcOffsets(calc: (begin: Long, end: Long) -> Long): Map<TopicPartition, Long> {
-            val beginOffsets = beginningOffsets(this)
-            val endOffsets = endOffsets(this)
-            return (beginOffsets.keys + endOffsets.keys).distinct()
+            return this.distinct()
                 .associateWith { topicPartition ->
                     val begin = beginOffsets[topicPartition] ?: 0L
                     val end = endOffsets[topicPartition] ?: 0L
                     calc(begin, end).coerceIn(begin, end)
                 }
         }
-
         val resolvedOffsets = when (fromOffset.type) {
             EARLIEST -> partitionsToResolve.calcOffsets { begin, _ -> begin + fromOffset.offset }
             LATEST -> partitionsToResolve.calcOffsets { _, end -> end - fromOffset.offset }
             EXPLICIT -> partitionsToResolve.associateWith { fromOffset.offset }
-            TIMESTAMP -> offsetsForTimes(partitionsToResolve.associateWith { fromOffset.offset })
+            TIMESTAMP -> consumer.offsetsForTimes(partitionsToResolve.associateWith { fromOffset.offset })
                 .filter { (_: TopicPartition, time: OffsetAndTimestamp?) -> time != null }
                 .mapValues { (_: TopicPartition, time: OffsetAndTimestamp) -> time.offset() }
                 .let { partitionOffsets ->
                     val unresolvedPartitions = partitionsToResolve.filter { it !in partitionOffsets.keys }
-                    if (unresolvedPartitions.toSet() == assignment()) throw KafkistryConsumeException(
+                    if (unresolvedPartitions.toSet() == consumer.assignment()) throw KafkistryConsumeException(
                         "There is no messages with timestamp greater than %d".format(fromOffset.offset)
                     )
                     val defaultToEndOffsets = unresolvedPartitions.calcOffsets { _, end -> end }
                     partitionOffsets + defaultToEndOffsets
                 }
         }
-        val newOffsets = assignment().associateWith {
+        val newOffsets = consumer.assignment().associateWith {
             partitionFromOffset[it.partition()] ?: resolvedOffsets[it] ?: 0L
         }
-        newOffsets.forEach { (topicPartition, offset) -> seek(topicPartition, offset) }
+        newOffsets.forEach { (topicPartition, offset) -> consumer.seek(topicPartition, offset) }
     }
 
     /**
      * Function reads at most `readConfig.numRecords` records starting from already assigned offsets for consumer group.
      */
-    private fun KafkaConsumer<ByteArray, ByteArray>.readMessages(
-        topicName: TopicName, clusterRef: ClusterRef, readConfig: ReadConfig
-    ): KafkaRecordsResult {
+    private fun ConsumerCtx.readMessages(): KafkaRecordsResult {
         val recordCreator = recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization)
         val readMonitor = ReadMonitor.ofConfig(readConfig)
         val poolDuration = Duration.ofMillis(consumeProperties.poolInterval())
-        val initialPositions = assignment().sortedBy { it.partition() }.associate { it.partition() to position(it) }
-        val endOffsets = endOffsets(assignment())
+        val initialPositions = consumer.assignment()
+            .sortedBy { it.partition() }
+            .associate { it.partition() to consumer.position(it) }
         val recordsSequence = sequence {
             while (true) {
                 if (!readMonitor.needToReadMore()) break
-                poll(poolDuration).also { yieldAll(it) }
+                consumer.poll(poolDuration).also { yieldAll(it) }
             }
         }
         val recordFilter = filterFactory.createFilter(readConfig.readFilter)
@@ -157,34 +173,44 @@ class KafkaTopicReader(
             .take(readConfig.numRecords)
             .toList()
         val partitionsReadStatuses = readMonitor.partitionsReadStatus()
+        val partitionsReadStats = initialPositions.mapValues { (partition, offset) ->
+            val stats = partitionsReadStatuses[partition]
+            val topicPartition = TopicPartition(topicName, partition)
+            val beginOffset = beginOffsets[topicPartition] ?: 0L
+            val endOffset = endOffsets[topicPartition] ?: 0L
+            if (stats != null) {
+                PartitionReadStatus(
+                    startedAtOffset = stats.first,
+                    startedAtTimestamp = stats.firstTimestamp,
+                    endedAtOffset = stats.last + 1,
+                    endedAtTimestamp = stats.lastTimestamp,
+                    read = stats.last - stats.first + 1,
+                    matching = stats.matching,
+                    reachedEnd = stats.last + 1 >= endOffset,
+                    remaining = (endOffset - stats.last - 1).coerceAtLeast(0),
+                    beginOffset = beginOffset,
+                    endOffset = endOffset,
+                )
+            } else {
+                PartitionReadStatus(
+                    startedAtOffset = offset, endedAtOffset = offset, read = 0, matching = 0,
+                    startedAtTimestamp = null, endedAtTimestamp = null,
+                    reachedEnd = offset >= endOffset,
+                    remaining = (endOffset - offset).coerceAtLeast(0),
+                    beginOffset = beginOffset,
+                    endOffset = endOffset,
+                )
+            }
+        }
         return KafkaRecordsResult(
-            totalCount = readMonitor.totalRecords(),
+            readCount = readMonitor.totalRecords(),
             timedOut = readMonitor.hasTimedOut(),
-            reachedEnd = endOffsets.all { position(it.key) >= it.value },
-            partitions = initialPositions.mapValues { (partition, offset) ->
-                val stats = partitionsReadStatuses[partition]
-                val endOffset = endOffsets[TopicPartition(topicName, partition)] ?: 0L
-                if (stats != null) {
-                    PartitionReadStatus(
-                        startedAtOffset = stats.first,
-                        startedAtTimestamp = stats.firstTimestamp,
-                        endedAtOffset = stats.last + 1,
-                        endedAtTimestamp = stats.lastTimestamp,
-                        read = stats.last - stats.first + 1,
-                        matching = stats.matching,
-                        reachedEnd = stats.last + 1 >= endOffset,
-                        remaining = (endOffset - stats.last - 1).coerceAtLeast(0),
-                    )
-                } else {
-                    PartitionReadStatus(
-                        startedAtOffset = offset, endedAtOffset = offset, read = 0, matching = 0,
-                        startedAtTimestamp = null, endedAtTimestamp = null,
-                        reachedEnd = offset >= endOffset,
-                        remaining = (endOffset - offset).coerceAtLeast(0),
-                    )
-                }
-            },
-            records = records
+            skipCount = partitionsReadStats.values.sumOf { (it.startedAtOffset - it.beginOffset).coerceAtLeast(0) },
+            totalRecordsCount = partitionsReadStats.values.sumOf { it.endOffset - it.beginOffset },
+            remainingCount = partitionsReadStats.values.sumOf { (it.endOffset - it.endedAtOffset).coerceAtLeast(0) },
+            reachedEnd = endOffsets.all { consumer.position(it.key) >= it.value },
+            partitions = partitionsReadStats,
+            records = records,
         )
     }
 
@@ -202,15 +228,18 @@ class KafkaTopicReader(
             tooSmallOffsetPartitions.isNotEmpty() && tooBigOffsetPartitions.isNotEmpty() -> {
                 throw KafkistryConsumeException(
                     "Requested offset for partitions $tooSmallOffsetPartitions is lower than earliest possible; " +
-                            "Requested offset for partitions $tooBigOffsetPartitions is bigger than latest possible", ex
+                        "Requested offset for partitions $tooBigOffsetPartitions is bigger than latest possible", ex
                 )
             }
+
             tooSmallOffsetPartitions.isNotEmpty() -> throw KafkistryConsumeException(
                 "Requested offset for partitions $tooSmallOffsetPartitions is lower than earliest possible", ex
             )
+
             tooBigOffsetPartitions.isNotEmpty() -> throw KafkistryConsumeException(
                 "Requested offset for partitions $tooBigOffsetPartitions is bigger than latest possible", ex
             )
+
             else -> throw ex
         }
     }

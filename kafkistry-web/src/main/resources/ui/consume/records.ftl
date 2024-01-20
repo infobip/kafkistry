@@ -1,4 +1,6 @@
 <#-- @ftlvariable name="recordsResult" type="com.infobip.kafkistry.service.consume.KafkaRecordsResult" -->
+<#-- @ftlvariable name="overallSkipCount" type="java.lang.Long" -->
+<#-- @ftlvariable name="overallReadCount" type="java.lang.Long" -->
 <#-- @ftlvariable name="overallPartitions" type="java.util.Map<java.lang.Integer, com.infobip.kafkistry.service.consume.PartitionReadStatus>" -->
 <#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
 
@@ -6,36 +8,58 @@
 
 <#assign records = recordsResult.records>
 
-<#if records?size == 0>
-    <#assign msgAlertClass = "alert-warning">
-    <#assign msg = "No records received from total of ${recordsResult.totalCount} record(s)">
-<#else>
-    <#assign msgAlertClass = "alert-primary">
-    <#assign msg = "Got ${records?size} record(s) from total of ${recordsResult.totalCount} record(s)">
-</#if>
-
-<#if recordsResult.timedOut>
-    <#assign msg = msg + ", wait has timed out">
-</#if>
-<#if recordsResult.reachedEnd>
-    <#assign msg = msg + ", reading reached latest">
-</#if>
-
 <#if overallPartitions??>
+    <#assign totalReadCount = overallReadCount>
+    <#assign totalSkipCount = overallSkipCount>
     <#assign partitionsStats = overallPartitions>
 <#else>
     <#assign partitionsStats = recordsResult.partitions>
+    <#assign totalSkipCount = recordsResult.skipCount>
+    <#assign totalReadCount = recordsResult.readCount>
 </#if>
 
+<#assign statusMessages = []>
+<#if records?size == 0>
+    <#assign msgAlertClass = "alert-warning">
+    <#assign statusMessages += ["No records received"]>
+<#else>
+    <#assign msgAlertClass = "alert-primary">
+    <#assign statusMessages += ["Got ${records?size} record(s)"]>
+</#if>
+
+<#assign statusMessages += ["Read iteration processed ${recordsResult.readCount} record(s)"]>
+<#assign statusMessages += ["Processed ${totalReadCount} record(s), ${util.prettyNumber(100.0*totalReadCount/recordsResult.totalRecordsCount)}% of ${recordsResult.totalRecordsCount} total records in topic partition(s)"]>
+<#if totalSkipCount gt 0>
+    <#assign statusMessages += ["Skipped first ${totalSkipCount} record(s) (${util.prettyNumber(100.0*totalSkipCount/recordsResult.totalRecordsCount)}% of total in partitions) due to 'Read starting from' options"]>
+</#if>
+<#if recordsResult.remainingCount gt 0>
+    <#assign statusMessages += ["Remaining ${recordsResult.remainingCount} record(s) (${util.prettyNumber(100.0*recordsResult.remainingCount/recordsResult.totalRecordsCount)}% of total in partitions) to reach end "]>
+</#if>
+
+<#if recordsResult.timedOut>
+    <#assign statusMessages += ["Wait has timed out"]>
+</#if>
+<#if recordsResult.reachedEnd>
+    <#assign statusMessages += ["Reading reached latest"]>
+</#if>
+
+
 <div style="display: none" id="consume-status-data"
-    data-totalCount="${recordsResult.totalCount?c}"
-    data-resultCount="${records?size?c}"
-    data-timedOut="${recordsResult.timedOut?c}"
-    data-reachedEnd="${recordsResult.reachedEnd?c}"
-    data-partitionStats="${json.writeValueAsString(partitionsStats)}"
+     data-readCount="${recordsResult.readCount?c}"
+     data-resultCount="${records?size?c}"
+     data-timedOut="${recordsResult.timedOut?c}"
+     data-reachedEnd="${recordsResult.reachedEnd?c}"
+     data-partitionStats="${json.writeValueAsString(partitionsStats)}"
 ></div>
 
-<div class="alert ${msgAlertClass}">${msg}</div>
+<div class="alert ${msgAlertClass}">
+    <strong>Read status:</strong><br/>
+    <ul class="m-0">
+        <#list statusMessages as msg>
+            <li>${msg}</li>
+        </#list>
+    </ul>
+</div>
 
 <button type="button" class="consume-trigger-btn btn btn-secondary form-control" id="continue-consume-btn">
     Continue reading
@@ -54,38 +78,38 @@
 <br/>
 <div class="spacing"></div>
 
-    <div class="form-row">
-        <div class="col-3">
-            <label>Control</label>
-            <div class="width-full">
-                <button id="expand-all-btn" class="btn btn-sm btn-secondary">Expand all</button>
-                <button id="collapse-all-btn" class="btn btn-sm btn-secondary">Collapse all</button>
-            </div>
-        </div>
-        <div class="col-5">
-            <label>Show</label>
-            <div class="width-full form-row show-flags">
-                <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
-                    Metadata <input type="checkbox" name="showMetadata" checked>
-                </label>
-                <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
-                    Key <input type="checkbox" name="showKey" checked>
-                </label>
-                <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
-                    Headers <input type="checkbox" name="showHeaders" checked>
-                </label>
-                <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
-                    Value <input type="checkbox" name="showValue" checked>
-                </label>
-            </div>
-        </div>
-        <div class="col-4">
-            <label>Extra</label>
-            <div class="width-full">
-                <button id="export-btn" class="btn btn-sm btn-secondary">Export to file...</button>
-            </div>
+<div class="form-row">
+    <div class="col-3">
+        <label>Control</label>
+        <div class="width-full">
+            <button id="expand-all-btn" class="btn btn-sm btn-secondary">Expand all</button>
+            <button id="collapse-all-btn" class="btn btn-sm btn-secondary">Collapse all</button>
         </div>
     </div>
+    <div class="col-5">
+        <label>Show</label>
+        <div class="width-full form-row show-flags">
+            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+                Metadata <input type="checkbox" name="showMetadata" checked>
+            </label>
+            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+                Key <input type="checkbox" name="showKey" checked>
+            </label>
+            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+                Headers <input type="checkbox" name="showHeaders" checked>
+            </label>
+            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+                Value <input type="checkbox" name="showValue" checked>
+            </label>
+        </div>
+    </div>
+    <div class="col-4">
+        <label>Extra</label>
+        <div class="width-full">
+            <button id="export-btn" class="btn btn-sm btn-secondary">Export to file...</button>
+        </div>
+    </div>
+</div>
 
 <br/>
 
@@ -100,7 +124,8 @@
                 <div class="col">
                     <span>Partition</span>: <code class="partition record-metadata-value">${record.partition}</code>
                     <span>Offset</span>: <code class="offset record-metadata-value">${record.offset?c}</code>
-                    <span>Leader epoch</span>: <code class="leader-epoch record-metadata-value">${(record.leaderEpoch?c)!'N/A'}</code>
+                    <span>Leader epoch</span>: <code
+                            class="leader-epoch record-metadata-value">${(record.leaderEpoch?c)!'N/A'}</code>
                     <span>Topic</span>: <code class="topic record-metadata-value">${record.topic}</code>
                     <br/>
                     <span>Key size</span>: <code class="topic record-metadata-value">${record.keySize}</code>
@@ -109,8 +134,10 @@
                     <br/>
                     <span class="text-nowrap">
                         <span>Timestamp</span>:
-                        <span class="badge badge-secondary record-timestamp-type" data-timestamp-type="${record.timestampType.name()}">${record.timestampType}</span>
-                        <code class="timestamp record-metadata-value" data-timestamp="${record.timestamp?c}">${record.timestamp?c}</code>
+                        <span class="badge badge-secondary record-timestamp-type"
+                              data-timestamp-type="${record.timestampType.name()}">${record.timestampType}</span>
+                        <code class="timestamp record-metadata-value"
+                              data-timestamp="${record.timestamp?c}">${record.timestamp?c}</code>
                         <code class="time" data-time="${record.timestamp?c}"></code>
                     </span>
                 </div>

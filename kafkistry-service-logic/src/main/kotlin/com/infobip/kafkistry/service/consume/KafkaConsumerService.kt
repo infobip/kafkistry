@@ -13,6 +13,7 @@ import com.infobip.kafkistry.service.consume.serialize.KeySerializerType
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import kotlin.math.max
 import kotlin.math.min
 
 @Service
@@ -43,9 +44,12 @@ class KafkaConsumerService(
         continuedReadConfig: ContinuedReadConfig,
     ): ContinuedKafkaRecordsResult {
         val nextResult = readRecords(clusterIdentifier, topicName, continuedReadConfig.readConfig)
+        val overallPartitions = continuedReadConfig.previousPartitions mergeWithNext nextResult.partitions
         return ContinuedKafkaRecordsResult(
             recordsResult = nextResult,
-            overallPartitions = continuedReadConfig.previousPartitions mergeWithNext nextResult.partitions,
+            overallSkipCount = overallPartitions.values.sumOf { (it.startedAtOffset - it.beginOffset).coerceAtLeast(0) },
+            overallReadCount = overallPartitions.values.sumOf { it.read },
+            overallPartitions = overallPartitions,
         )
     }
 
@@ -63,13 +67,15 @@ class KafkaConsumerService(
         }
         return PartitionReadStatus(
             startedAtOffset = min(startedAtOffset, next.startedAtOffset),
-            endedAtOffset = min(endedAtOffset, next.endedAtOffset),
+            endedAtOffset = max(endedAtOffset, next.endedAtOffset),
             startedAtTimestamp = startedAtTimestamp minNullable next.startedAtTimestamp,
-            endedAtTimestamp = endedAtTimestamp minNullable next.endedAtTimestamp,
+            endedAtTimestamp = endedAtTimestamp maxNullable next.endedAtTimestamp,
             read = read + next.read,
             matching = matching + next.matching,
             reachedEnd = next.reachedEnd,
             remaining = next.remaining,
+            beginOffset = next.beginOffset,
+            endOffset = next.endOffset,
         )
     }
 
@@ -100,5 +106,12 @@ infix fun Long?.minNullable(other: Long?): Long? {
         this ?: other
     } else {
         min(this, other)
+    }
+}
+infix fun Long?.maxNullable(other: Long?): Long? {
+    return if (this == null || other == null) {
+        this ?: other
+    } else {
+        max(this, other)
     }
 }

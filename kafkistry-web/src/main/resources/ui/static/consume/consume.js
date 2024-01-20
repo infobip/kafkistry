@@ -147,6 +147,7 @@ function startConsume() {
 }
 
 function stopConsume() {
+    consumeWasAborted = true;
     if (consumeXHR) {
         consumeXHR.abort();
     }
@@ -168,6 +169,7 @@ function doStartContinueConsume(continuationCtx) {
     doConsume(formData, continuationCtx);
 }
 
+let consumeWasAborted = false;
 let consumeXHR = null;
 
 function doConsume(formData, continuationCtx) {
@@ -198,9 +200,6 @@ function doConsume(formData, continuationCtx) {
     let errorContainer = $("#error-container");
     let consumeResultContainer = $("#messages-container");
     startTicking(formData.readConfig.maxWaitMs / 1000, "server-op-status", readingMessage);
-    if (consumeXHR != null) {
-        console.error("should be null", consumeXHR);
-    }
     let url;
     let postData;
     if (continuationCtx.trigger !== "NONE") {
@@ -213,6 +212,7 @@ function doConsume(formData, continuationCtx) {
         url = "consume/read-topic";
         postData = formData.readConfig;
     }
+    consumeWasAborted = false;
     consumeXHR = $
         .ajax(url +
             "?topicName=" + encodeURI(formData.topicName) +
@@ -246,17 +246,22 @@ function doConsume(formData, continuationCtx) {
         })
         .fail(function (error) {
             let errHtml = extractErrHtml(error);
+            let mayContinue;
             if (errHtml) {
                 errorContainer.html(errHtml);
                 errorContainer.show();
+                mayContinue = true;
+            } else {
+                let errorMsg = extractErrMsg(error);
+                showOpError("Topic reading request failed:", errorMsg);
+                mayContinue = !consumeWasAborted;
+            }
+            if (mayContinue) {
                 setTimeout(function () {
                     //don't re-continue right away
                     hideOpStatus();
                     maybeAutoContinue(continuationCtx);
-                }, 1000)
-            } else {
-                let errorMsg = extractErrMsg(error);
-                showOpError("Topic reading request failed:", errorMsg);
+                }, 1000);
             }
         });
 }
@@ -285,7 +290,7 @@ function consumeStatusData() {
     let container = $("#consume-status-data");
     let partitionStats = parseJsonOrNull(container.attr("data-partitionStats"));
     return {
-        totalCount: parseIntOrDefault(container.attr("data-totalCount"), 0),
+        readCount: parseIntOrDefault(container.attr("data-readCount"), 0),
         resultCount: parseIntOrDefault(container.attr("data-resultCount"), 0),
         timedOut: parseBooleanOrUndefined(container.attr("data-timedOut")),
         reachedEnd: parseBooleanOrUndefined(container.attr("data-reachedEnd")),
