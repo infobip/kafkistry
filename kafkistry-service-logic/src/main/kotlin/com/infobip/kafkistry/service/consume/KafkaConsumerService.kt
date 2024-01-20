@@ -13,6 +13,7 @@ import com.infobip.kafkistry.service.consume.serialize.KeySerializerType
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 @Service
 @ConditionalOnProperty("app.consume.enabled", matchIfMissing = true)
@@ -36,6 +37,42 @@ class KafkaConsumerService(
         return topicReader.readTopicRecords(topicName, cluster, user.username, readConfig)
     }
 
+    fun readRecordsContinued(
+        clusterIdentifier: KafkaClusterIdentifier,
+        topicName: TopicName,
+        continuedReadConfig: ContinuedReadConfig,
+    ): ContinuedKafkaRecordsResult {
+        val nextResult = readRecords(clusterIdentifier, topicName, continuedReadConfig.readConfig)
+        return ContinuedKafkaRecordsResult(
+            recordsResult = nextResult,
+            overallPartitions = continuedReadConfig.previousPartitions mergeWithNext nextResult.partitions,
+        )
+    }
+
+    private infix fun Map<Partition, PartitionReadStatus>.mergeWithNext(
+        next: Map<Partition, PartitionReadStatus>
+    ): Map<Partition, PartitionReadStatus> {
+        return (keys + next.keys)
+            .mapNotNull { partition -> (this[partition] mergeWithNext next[partition])?.let { partition to it } }
+            .toMap()
+    }
+
+    private infix fun PartitionReadStatus?.mergeWithNext(next: PartitionReadStatus?): PartitionReadStatus? {
+        if (this == null || next == null) {
+            return this ?: next
+        }
+        return PartitionReadStatus(
+            startedAtOffset = min(startedAtOffset, next.startedAtOffset),
+            endedAtOffset = min(endedAtOffset, next.endedAtOffset),
+            startedAtTimestamp = startedAtTimestamp minNullable next.startedAtTimestamp,
+            endedAtTimestamp = endedAtTimestamp minNullable next.endedAtTimestamp,
+            read = read + next.read,
+            matching = matching + next.matching,
+            reachedEnd = next.reachedEnd,
+            remaining = next.remaining,
+        )
+    }
+
     fun resolvePartitionForKey(
         clusterIdentifier: KafkaClusterIdentifier,
         topicName: TopicName,
@@ -56,4 +93,12 @@ class KafkaConsumerService(
         }
     }
 
+}
+
+infix fun Long?.minNullable(other: Long?): Long? {
+    return if (this == null || other == null) {
+        this ?: other
+    } else {
+        min(this, other)
+    }
 }

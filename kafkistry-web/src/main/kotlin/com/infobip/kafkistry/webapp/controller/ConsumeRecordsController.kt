@@ -12,6 +12,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME
 import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME_READ_TOPIC
+import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME_READ_TOPIC_CONTINUE
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
@@ -105,6 +106,22 @@ class ConsumeRecordsController(
         return ModelAndView(
             "consume/records", mapOf(
                 "recordsResult" to recordsResult
+            )
+        )
+    }
+
+    @PostMapping(CONSUME_READ_TOPIC_CONTINUE)
+    fun showReadRecordsContinue(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+        @RequestParam("topicName") topicName: TopicName,
+        @RequestBody continuedReadConfig: ContinuedReadConfig,
+    ): ModelAndView {
+        val consumeApi = consumeApi() ?: return disabled()
+        val continuedRecordsResult = consumeApi.readTopicContinued(clusterIdentifier, topicName, continuedReadConfig)
+        return ModelAndView(
+            "consume/records", mapOf(
+                "recordsResult" to continuedRecordsResult.recordsResult,
+                "overallPartitions" to continuedRecordsResult.overallPartitions,
             )
         )
     }

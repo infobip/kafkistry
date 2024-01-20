@@ -201,14 +201,26 @@ function doConsume(formData, continuationCtx) {
     if (consumeXHR != null) {
         console.error("should be null", consumeXHR);
     }
+    let url;
+    let postData;
+    if (continuationCtx.trigger !== "NONE") {
+        url = "consume/read-topic/continue";
+        postData = {
+            readConfig: formData.readConfig,
+            previousPartitions: consumeStatusData().partitionStats,
+        };
+    } else {
+        url = "consume/read-topic";
+        postData = formData.readConfig;
+    }
     consumeXHR = $
-        .ajax("consume/read-topic" +
+        .ajax(url +
             "?topicName=" + encodeURI(formData.topicName) +
             "&clusterIdentifier=" + encodeURI(formData.clusterIdentifier), {
             method: "POST",
             contentType: "application/json; charset=utf-8",
             headers: {ajax: 'true'},
-            data: JSON.stringify(formData.readConfig)
+            data: JSON.stringify(postData),
         })
         .always(function () {
             errorContainer.hide();
@@ -271,11 +283,13 @@ function maybeAutoContinue(continuationCtx) {
 
 function consumeStatusData() {
     let container = $("#consume-status-data");
+    let partitionStats = parseJsonOrNull(container.attr("data-partitionStats"));
     return {
         totalCount: parseIntOrDefault(container.attr("data-totalCount"), 0),
         resultCount: parseIntOrDefault(container.attr("data-resultCount"), 0),
         timedOut: parseBooleanOrUndefined(container.attr("data-timedOut")),
         reachedEnd: parseBooleanOrUndefined(container.attr("data-reachedEnd")),
+        partitionStats: partitionStats ? partitionStats : {},
     }
 }
 

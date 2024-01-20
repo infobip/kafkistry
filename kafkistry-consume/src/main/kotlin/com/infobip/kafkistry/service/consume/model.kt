@@ -130,3 +130,13 @@ data class PartitionReadStatus(
     val reachedEnd: Boolean,
     val remaining: Long,
 )
+
+data class ContinuedReadConfig(
+    val readConfig: ReadConfig,
+    val previousPartitions: Map<Partition, PartitionReadStatus>,
+)
+
+data class ContinuedKafkaRecordsResult(
+    val recordsResult: KafkaRecordsResult,
+    val overallPartitions: Map<Partition, PartitionReadStatus>,
+)
