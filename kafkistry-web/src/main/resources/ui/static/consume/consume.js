@@ -177,7 +177,7 @@ function doConsume(formData, continuationCtx) {
     let readingMessage;
     switch (continuationCtx.trigger) {
         case "AUTO":
-            readingMessage = `Auto-continue reading messages (attempt: ${continuationCtx.attempt})...`;
+            readingMessage = `Auto-continue reading messages (iteration: ${continuationCtx.iteration})...`;
             break;
         case "MANUAL":
             readingMessage = `Continue reading messages...`;
@@ -194,7 +194,6 @@ function doConsume(formData, continuationCtx) {
     }
     consumeTriggerButtons().hide();
     consumeStopButtons().show();
-    let partitionStatsExpanded = $("#partition-stats-container").hasClass("show");
     let showFlags = currentShowFlags();
     let errorContainer = $("#error-container");
     let consumeResultContainer = $("#messages-container");
@@ -220,6 +219,7 @@ function doConsume(formData, continuationCtx) {
         })
         .done(function (response) {
             hideOpStatus();
+            let partitionStatsExpanded = $("#partition-stats-container").hasClass("show");
             consumeResultContainer.hide();
             consumeResultContainer.html(response);
             if (partitionStatsExpanded) {
@@ -262,9 +262,9 @@ function maybeAutoContinue(continuationCtx) {
         return; //stop continuation, end is reached
     }
     if (!continuationCtx || continuationCtx.trigger !== "AUTO") {
-        continuationCtx = {trigger: "AUTO", attempt: 1};
+        continuationCtx = {trigger: "AUTO", iteration: 1};
     } else {
-        continuationCtx.attempt++;
+        continuationCtx.iteration++;
     }
     doStartContinueConsume(continuationCtx);
 }
