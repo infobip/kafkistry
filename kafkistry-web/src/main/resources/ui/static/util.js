@@ -1,5 +1,11 @@
 function extractErrMsg(error) {
-    if (error && error.status) {
+    if (!error) {
+        return "Unable to reach app server";
+    }
+    if (error.readyState === 4 && error.status === 0 || error.statusText === "abort") {
+        return "Request was aborted";
+    }
+    if (error.status) {
         if (error.responseJSON && error.responseJSON.message) {
             return "HTTP " + error.status + ": " + error.responseJSON.message;
         } else {
