@@ -37,6 +37,11 @@
     <#assign statusMessages += ["Remaining ${recordsResult.remainingCount} record(s) (${util.prettyNumber(100.0*recordsResult.remainingCount/recordsResult.totalRecordsCount)}% of total in partitions) to reach end "]>
 </#if>
 
+<#assign preRetention = totalSkipCount + totalReadCount + recordsResult.remainingCount - recordsResult.totalRecordsCount>
+<#if preRetention gt 0>
+    <#assign statusMessages += ["${preRetention} record(s) have been processed, but now were deleted by retention on topic"]>
+</#if>
+
 <#if recordsResult.timedOut>
     <#assign statusMessages += ["Wait has timed out"]>
 </#if>
@@ -44,6 +49,29 @@
     <#assign statusMessages += ["Reading reached latest"]>
 </#if>
 
+<style>
+    .progress-bar-section {
+        min-width: 0.25em;
+        overflow: hidden;
+        font-size: 0.75em;
+    }
+    .progress-bar-empty {
+        width: 0 !important;
+        min-width: 0 !important;
+    }
+    .progress-bar-section.deleted {
+        background-color: rgb(200, 50, 20);
+    }
+    .progress-bar-section.skipped {
+        background-color: rgb(133, 133, 133);
+    }
+    .progress-bar-section.processed {
+        background-color: rgb(40, 180, 40);
+    }
+    .progress-bar-section.remaining {
+        background-color: rgb(75, 120, 222);
+    }
+</style>
 
 <div style="display: none" id="consume-status-data"
      data-readCount="${recordsResult.readCount?c}"
@@ -60,9 +88,9 @@
             <li>${msg}</li>
         </#list>
     </ul>
-    <#assign preRetention = totalSkipCount + totalReadCount + recordsResult.remainingCount - recordsResult.totalRecordsCount>
     <#assign totalSum = preRetention + totalSkipCount + totalReadCount + recordsResult.remainingCount>
-    <@pb.progressBar total=totalSum preRetention=preRetention skip=totalSkipCount read=totalReadCount remain=recordsResult.remainingCount/>
+    <@pb.progressBar total=totalSum preRetention=preRetention skip=totalSkipCount read=totalReadCount remain=recordsResult.remainingCount
+        emHeight=2 legend=true/>
 </div>
 
 <button type="button" class="consume-trigger-btn btn btn-secondary form-control" id="continue-consume-btn">
