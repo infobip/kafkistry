@@ -37,7 +37,13 @@
     <#assign statusMessages += ["Remaining ${recordsResult.remainingCount} record(s) (${util.prettyNumber(100.0*recordsResult.remainingCount/recordsResult.totalRecordsCount)}% of total in partitions) to reach end "]>
 </#if>
 
-<#assign preRetention = totalSkipCount + totalReadCount + recordsResult.remainingCount - recordsResult.totalRecordsCount>
+<#assign preRetention = 0>
+<#list partitionsStats as partition, partitionStatus>
+    <#assign skip = partitionStatus.startedAtOffset-partitionStatus.beginOffset>
+    <#if skip lt 0>
+        <#assign preRetention += -skip>
+    </#if>
+</#list>
 <#if preRetention gt 0>
     <#assign statusMessages += ["${preRetention} record(s) have been processed, but now were deleted by retention on topic"]>
 </#if>
