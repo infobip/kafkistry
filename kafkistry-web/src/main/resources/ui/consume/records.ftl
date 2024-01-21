@@ -5,6 +5,7 @@
 <#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
 
 <#import "../common/util.ftl" as util>
+<#import "progressBar.ftl" as pb>
 
 <#assign records = recordsResult.records>
 
@@ -54,11 +55,14 @@
 
 <div class="alert ${msgAlertClass}">
     <strong>Read status:</strong><br/>
-    <ul class="m-0">
+    <ul>
         <#list statusMessages as msg>
             <li>${msg}</li>
         </#list>
     </ul>
+    <#assign preRetention = totalSkipCount + totalReadCount + recordsResult.remainingCount - recordsResult.totalRecordsCount>
+    <#assign totalSum = preRetention + totalSkipCount + totalReadCount + recordsResult.remainingCount>
+    <@pb.progressBar total=totalSum preRetention=preRetention skip=totalSkipCount read=totalReadCount remain=recordsResult.remainingCount/>
 </div>
 
 <button type="button" class="consume-trigger-btn btn btn-secondary form-control" id="continue-consume-btn">

@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="partitionsStats" type="java.util.Map<java.lang.Integer, com.infobip.kafkistry.service.consume.PartitionReadStatus>" -->
 
 <#import "../common/util.ftl" as util>
+<#import "progressBar.ftl" as pb>
 
 <table class="table table-sm m-0">
     <thead class="thead-light">
@@ -27,7 +28,7 @@
             <@prettyPercentage value=fromBegin zeroDivDefault=zeroDivDefault partitionStatus=partitionStatus/>
         </#macro>
         <tr class="partition-read-status" data-partition="${partition?c}" data-ended-at-offset="${partitionStatus.endedAtOffset?c}">
-            <td>${partition}</td>
+            <td rowspan="2">${partition}</td>
             <td>
                 <div class="row">
                     <div class="col">
@@ -68,9 +69,27 @@
                     <span class="badge badge-secondary">NO</span>
                 </#if>
                 <#if partitionStatus.remaining gt 0>
-                    <span title="Remaining to end" class="small">(${partitionStatus.remaining})</span>
-                    <@prettyPercentage value=partitionStatus.remaining zeroDivDefault=0.0 partitionStatus=partitionStatus/>
+                    <span title="Remaining to end" class="small">
+                        ${partitionStatus.remaining}
+                        <span title="% of total messages in partition">
+                            <@prettyPercentage value=partitionStatus.remaining zeroDivDefault=0.0 partitionStatus=partitionStatus/>
+                        </span>
+                    </span>
                 </#if>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="100">
+                <#assign skip = partitionStatus.startedAtOffset-partitionStatus.beginOffset>
+                <#assign preRetention = 0>
+                <#if skip lt 0>
+                    <#assign preRetention = -skip>
+                    <#assign skip = 0>
+                </#if>
+                <#assign read = partitionStatus.read>
+                <#assign remain = partitionStatus.remaining>
+                <#assign totalSum = preRetention + skip + read + remain>
+                <@pb.progressBar total=totalSum preRetention=preRetention skip=skip read=read remain=remain/>
             </td>
         </tr>
     </#list>
