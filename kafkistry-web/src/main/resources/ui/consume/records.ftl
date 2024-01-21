@@ -71,8 +71,10 @@
 <div class="spacing"></div>
 
 <div class="card">
-    <div id="partition-stats-toggler" class="card-header"
+    <div id="partition-stats-toggler" class="card-header collapsed"
          data-toggle="collapsing" data-target="#partition-stats-container" title="Expand/collapse...">
+        <span class="when-collapsed" title="expand...">▼</span>
+        <span class="when-not-collapsed" title="collapse...">△</span>
         <span class="h5">Partition read stats</span>
     </div>
     <div class="card-body p-0 collapseable" id="partition-stats-container">
