@@ -463,7 +463,14 @@ class DataStateInitializer(
                         ProducerRecord(
                             name, partition, null,
                             if (it % 2 == 0) "key_$it" else """{"index":$it}""",
-                            """{"id":$it,"msg":"Dummy message $it","map":{"$it":$it}}""",
+                            """
+                                {
+                                    "id":$it,
+                                    "time":${System.currentTimeMillis()},
+                                    "msg":"Dummy message $it",
+                                    "map":{"$it":$it}
+                                }
+                            """.trimIndent(),
                             RecordHeaders(
                                 listOf(
                                     RecordHeader("INDEX", IntegerSerializer().serialize(name, it)),
