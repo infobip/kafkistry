@@ -22,7 +22,11 @@
     <#if usersSessions?size == 0>
         <p><i>(no user sessions)</i></p>
     <#else>
-        <p>There are ${usersSessions?size} currently logged-in users</p>
+        <p>
+            There are ${usersSessions?size} currently logged-in users
+            <button class="btn btn-sm btn-outline-secondary"
+                onclick="$('[data-toggle=collapsing]').click();">Expand/collapse all</button>
+        </p>
     </#if>
 
     <div class="card mb-2">
@@ -38,26 +42,30 @@
                 <thead class="thead-light">
                 <tr>
                     <th>Method</th>
-                    <th>URI</th>
-                    <th>Query</th>
+                    <th>URI + Query</th>
                     <th>Count</th>
                     <th>Usernames</th>
                 </tr>
                 </thead>
                 <tbody>
                 <#list requestsStats as requestStats>
+                    <#assign href = requestStats.request.uri>
+                    <#if requestStats.request.query??>
+                        <#assign href = href + "?" + requestStats.request.query>
+                    </#if>
                     <tr>
                         <td><span class="badge badge-dark">${requestStats.request.method}</span></td>
-                        <td><span class="text-break small">${requestStats.request.uri}</span></td>
-                        <td class="text-break">
-                            <#if requestStats.request.query??>
-                                <span class="small">${requestStats.request.query}</span>
-                            <#else>
-                                <i>---</i>
-                            </#if>
+                        <td>
+                            <span class="text-break small">
+                                <#if requestStats.request.method == "GET">
+                                    <a href="${href}">${href}</a>
+                                <#else>
+                                    ${href}
+                                </#if>
+                            </span>
                         </td>
                         <td>${requestStats.metrics.count}</td>
-                        <td>${requestStats.metrics.usernames?join(", ")}</td>
+                        <td class="small">${requestStats.metrics.usernames?join(", ")}</td>
                     </tr>
                 </#list>
                 </tbody>
@@ -93,6 +101,10 @@
                         <th>Last request</th>
                     </tr>
                     <#list userSessions.sessions as session>
+                        <#if session.recordedRequests?? && session.recordedRequests?size == 0>
+                            <#-- dont even show session with no recorded requests to display -->
+                            <#continue>
+                        </#if>
                         <tr data-toggle="collapsing" data-target="#recorded-requests-${userSessions?index?c}-${session?index?c}">
                             <td>
                                 <span class="when-collapsed" title="expand...">▼</span>
@@ -115,27 +127,35 @@
                                         <thead class="thead-light">
                                         <tr>
                                             <th>Method</th>
-                                            <th>URI</th>
-                                            <th>Query</th>
-                                            <th>First</th>
-                                            <th>Last</th>
+                                            <th>URI + Query</th>
+                                            <th>First / Last</th>
                                             <th>Count</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         <#list session.recordedRequests.urlRequests as requests>
+                                            <#assign href = requests.uri>
+                                            <#if requests.query??>
+                                                <#assign href = href + "?" + requests.query>
+                                            </#if>
                                             <tr>
                                                 <td><span class="badge badge-dark">${requests.method}</span></td>
-                                                <td><span class="text-break small">${requests.uri}</span></td>
-                                                <td class="text-break">
-                                                    <#if requests.query??>
-                                                        <span class="small">${requests.query}</span>
-                                                    <#else>
-                                                        <i>---</i>
+                                                <td>
+                                                    <span class="text-break small">
+                                                        <#if requests.method == "GET">
+                                                            <a href="${href}">${href}</a>
+                                                        <#else>
+                                                            ${href}
+                                                        </#if>
+                                                    </span>
+                                                </td>
+                                                <td class="text-nowrap">
+                                                    <span class="time small" data-time="${requests.firstTime?c}"></span>
+                                                    <#if requests.lastTime != requests.firstTime>
+                                                        <hr class="my-1"/>
+                                                        <span class="time small" data-time="${requests.lastTime?c}"></span>
                                                     </#if>
                                                 </td>
-                                                <td class="time small" data-time="${requests.firstTime?c}"></td>
-                                                <td class="time small" data-time="${requests.lastTime?c}"></td>
                                                 <td>${requests.count}</td>
                                             </tr>
                                         </#list>
