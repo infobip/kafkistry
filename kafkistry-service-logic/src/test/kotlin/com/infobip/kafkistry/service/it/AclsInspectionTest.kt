@@ -3,8 +3,6 @@ package com.infobip.kafkistry.service.it
 import com.nhaarman.mockitokotlin2.whenever
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.kafka.KafkaAclRule
-import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
-import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.PresenceType.EXCLUDED_CLUSTERS
 import com.infobip.kafkistry.service.*
@@ -13,7 +11,9 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.kafka.ConsumerGroup
 import com.infobip.kafkistry.kafka.parseAcl
+import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalAclRules
@@ -60,6 +60,9 @@ class AclsInspectionTest {
     @MockBean
     private lateinit var stateProvider: KafkaClustersStateProvider
 
+    @MockBean
+    private lateinit var groupsStateProvider: KafkaConsumerGroupsProvider
+
     @Autowired
     private lateinit var acls: AclsRegistryService
 
@@ -71,7 +74,7 @@ class AclsInspectionTest {
 
     @Before
     fun before() {
-        Mockito.reset(stateProvider)
+        Mockito.reset(stateProvider, groupsStateProvider)
         topics.deleteAll(UpdateContext("test msg"))
         clusters.removeAll()
         acls.deleteAll(UpdateContext("test msg"))
@@ -102,10 +105,20 @@ class AclsInspectionTest {
     fun `test ok rule`() {
         acls.create(listOf(rule_X_T1).toPrincipalAclRules().first())
         clusters.addCluster(cluster1)
-        cluster1.mockClusterStateRules(rule_X_T1)
+        cluster1.mockClusterStateRules(rule_X_T1, topics = listOf("t1"))
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertOk()
         assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(OK)
+    }
+
+    @Test
+    fun `test detached rule`() {
+        acls.create(listOf(rule_X_T1).toPrincipalAclRules().first())
+        clusters.addCluster(cluster1)
+        cluster1.mockClusterStateRules(rule_X_T1)
+        val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
+        result.status.assertNotOk()
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(DETACHED)
     }
 
     @Test
@@ -122,7 +135,7 @@ class AclsInspectionTest {
     fun `test unexpected rule`() {
         acls.create(listOf(rule_X_T1).toPrincipalAclRules(presence()).first())
         clusters.addCluster(cluster1)
-        cluster1.mockClusterStateRules(rule_X_T1)
+        cluster1.mockClusterStateRules(rule_X_T1, topics = listOf("t1"))
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
         assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(UNEXPECTED)
@@ -131,7 +144,7 @@ class AclsInspectionTest {
     @Test
     fun `test unknown rule`() {
         clusters.addCluster(cluster1)
-        cluster1.mockClusterStateRules(rule_X_T1)
+        cluster1.mockClusterStateRules(rule_X_T1, topics = listOf("t1"))
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
         assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(UNKNOWN)
@@ -232,21 +245,24 @@ class AclsInspectionTest {
         acls.create(p3Rules)
 
         c1.mockClusterStateRules(
-                rule_p1_r1, rule_p1_r2,
-                rule_p2_r1, rule_p2_r2,
-                rule_p3_r1, rule_p3_r2, rule_p3_r3,
-                rule_p4_r1, rule_p4_r2
+            rule_p1_r1, rule_p1_r2,
+            rule_p2_r1, rule_p2_r2,
+            rule_p3_r1, rule_p3_r2, rule_p3_r3,
+            rule_p4_r1, rule_p4_r2,
+            topics = listOf("t1", "t2"), groups = listOf("g1"),
         )
         c2.mockClusterStateRules(
-                rule_p1_r1, rule_p1_r2,
-                rule_p2_r1,
-                rule_p3_r1, rule_p3_r2, rule_p3_r3,
-                rule_p4_r1, rule_p4_r2
+            rule_p1_r1, rule_p1_r2,
+            rule_p2_r1,
+            rule_p3_r1, rule_p3_r2, rule_p3_r3,
+            rule_p4_r1, rule_p4_r2,
+            topics = listOf("t1"), groups = listOf("g1"),
         )
         c3.mockClusterStateRules(
-                rule_p1_r1, rule_p1_r2,
-                rule_p2_r1,
-                rule_p3_r2, rule_p3_r3
+            rule_p1_r1, rule_p1_r2,
+            rule_p2_r1,
+            rule_p3_r2, rule_p3_r3,
+            topics = listOf("t1"), groups = listOf("g1"),
         )
 
         //do actual inspections
@@ -525,12 +541,26 @@ class AclsInspectionTest {
     private fun KafkaCluster.mockClusterStateRules(
             vararg rules: KafkaAclRule,
             security: Boolean = true,
-            stateType: StateType = StateType.VISIBLE
+            stateType: StateType = StateType.VISIBLE,
+            topics: List<TopicName> = emptyList(),
+            groups: List<ConsumerGroupId> = emptyList(),
     ) {
         whenever(stateProvider.getLatestClusterState(identifier)).thenReturn(newState(
                 acls = rules.toList(),
                 securityEnabled = security,
-                stateType = stateType
+                stateType = stateType,
+                topics = topics.map { newTopic(name = it) }.toTypedArray(),
+        ))
+        whenever(groupsStateProvider.getLatestState(identifier)).thenReturn(StateData(
+            stateType = stateType,
+            clusterIdentifier = identifier,
+            stateTypeName = "groups",
+            lastRefreshTime = System.currentTimeMillis(),
+            value = if (stateType == StateType.VISIBLE) {
+                ClusterConsumerGroups(
+                    consumerGroups = groups.associateWith { Maybe.Absent(RuntimeException()) },
+                )
+            } else null,
         ))
     }
 
