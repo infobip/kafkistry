@@ -1138,9 +1138,13 @@ app.topic-validation:
     | `app.topic-validation.kstream-partition-count.enabled-on.clusters.<...cluster filter options..>` | _all_   | On which clusters to check KStream's topics partition count for co-partition match, see [cluster options](#cluster-filter-options) |
     | `app.topic-validation.kstream-partition-count.enabled-on.topics.<...filter options...>`          | _all_   | For which topics to check KStream's topics partition count for co-partition match, see [options](#filter-options)                  |
 
+
 ## ACLs inspection
 
 Kafkistry inspects the status of each ACL rule, for example is it OK, MISSING, UNKNOWN, etc. 
+
+### ACLs conflicts
+
 Beside that basic inspection, there is checking for ACL rules _conflict_.
 
 Currently, there are two types of conflicts detection implemented:
@@ -1157,6 +1161,20 @@ Those checks can be disabled globally or per specific cluster:
 | `app.acl.conflict-checking.consumer-groups.enabled-on-clusters.<...cluster filter options...>`   | _all_   | Selective options to filter for which clusters to perform **consumer groups** ACL conflict checking. See [cluster filter options](#cluster-filter-options)   |
 | `ACL_TRANSACTIONAL_ID_CONFLICT_ENABLED`                                                          | _true_  | Flag to globally enable/disable transactional id conflict checking.                                                                                          |
 | `app.acl.conflict-checking.transactional-ids.enabled-on-clusters.<...cluster filter options...>` | _all_   | Selective options to filter for which clusters to perform **transactional ids** ACL conflict checking. See [cluster filter options](#cluster-filter-options) |
+
+
+### ACLs DETACHED inspection
+
+ACL rule is considered _"detached"_ when it references resource (topic/consumer group) which doesn't exist.
+*DETACHED* status is warning type which it not problematic on its own but could indicate that corresponding ACL is 
+no longer needed.
+
+Configuration properties:
+
+| Property                                      | Default | Description                                                                                                                                                                                                                                                                                                                                                                            |
+|-----------------------------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.acl-inspect.detached.allow-global-check` | `false` | When `false` *detached* issue will be raised if ACL does not reference any resource (topic/group) looking on resources on same kafka cluster. When `true` then ACL on cluster _c1_ referencing resource _r1_ won't raise issue even though _r1_ is not found on _c1_ but is found on some other cluster (say _c2_), but it will still raise issue if _r1_ is not found on any cluster. |
+| `app.acl-inspect.detached.ignore-any-user`    | `false` | When `true` inspection will ignore possible detach issue for principal `User:*`.                                                                                                                                                                                                                                                                                                       |
 
 
 ## Cluster inspection

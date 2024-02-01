@@ -18,10 +18,14 @@ internal class AclsConflictResolverTest {
         val kafkaAcls = acls.map { it.parseAcl() }
         val clusterData = AclClusterLinkData(
             clusterRef = ClusterRef(clusterIdentifier),
+            clusterDisabled = false,
             acls = kafkaAcls,
             topics = emptyList(),
             consumerGroups = emptyList(),
             quotaEntities = emptyList(),
+            transactionalIds = emptyList(),
+            existingTopics = null,
+            existingConsumerGroups = null,
         )
 
         return TestAclsConflictResolver(object : AclResolverDataProvider {

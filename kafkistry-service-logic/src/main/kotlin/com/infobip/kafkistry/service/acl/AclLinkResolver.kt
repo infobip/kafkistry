@@ -9,6 +9,8 @@ import com.infobip.kafkistry.model.AclResource.Type.*
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
+const val ANY_PRINCIPAL = "User:*"
+
 @Component
 class AclLinkResolver(
     private val aclDataProvider: AclResolverDataProvider
@@ -22,9 +24,25 @@ class AclLinkResolver(
         aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
     ): List<TopicName> = indexCache().findAffectedTopics(aclRule, clusterIdentifier)
 
+    fun findAffectedExistingTopics(
+        aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
+    ): List<TopicName>? = indexCache().findAffectedExistingTopics(aclRule, clusterIdentifier)
+
+    fun findAffectedExistingAnywhereTopics(
+        aclRule: KafkaAclRule
+    ): List<TopicName>? = indexCache().findAffectedExistingTopics(aclRule, null)
+
     fun findAffectedConsumerGroups(
         aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
     ): List<ConsumerGroupId> = indexCache().findAffectedConsumerGroups(aclRule, clusterIdentifier)
+
+    fun findAffectedExistingConsumerGroups(
+        aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
+    ): List<ConsumerGroupId>? = indexCache().findAffectedExistingConsumerGroups(aclRule, clusterIdentifier)
+
+    fun findAffectedExistingAnywhereConsumerGroups(
+        aclRule: KafkaAclRule
+    ): List<ConsumerGroupId>? = indexCache().findAffectedExistingConsumerGroups(aclRule, null)
 
     fun findAffectedTransactionalIds(
         aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
@@ -51,28 +69,50 @@ class AclLinkResolver(
     ): List<QuotaEntity> = indexCache().findPrincipalAffectingQuotas(principalId, clusterIdentifier)
 
     private fun createIndex(): IndexSnapshot {
-        val clusterSnapshots = aclDataProvider.getClustersData()
-            .mapValues { (_, clusterData) ->
-                ClusterSnapshot(
-                    topics = clusterData.topics,
-                    consumerGroups = clusterData.consumerGroups,
-                    quotaEntities = clusterData.quotaEntities,
-                    resourceAcls = clusterData.acls.groupBy { it.resource },
-                    principals = clusterData.acls.map { it.principal }.toSet(),
-                    transactionalIds = clusterData.transactionalIds,
-                )
-            }
-        return IndexSnapshot(clusterSnapshots)
+        val clustersData = aclDataProvider.getClustersData()
+        val clusterSnapshots = clustersData.mapValues { (_, clusterData) ->
+            LinksSnapshot(
+                topics = clusterData.topics,
+                consumerGroups = clusterData.consumerGroups,
+                existingTopics = clusterData.existingTopics,
+                existingConsumerGroups = clusterData.existingConsumerGroups,
+                quotaEntities = clusterData.quotaEntities,
+                resourceAcls = clusterData.acls.groupBy { it.resource },
+                principals = clusterData.acls.map { it.principal }.toSet(),
+                transactionalIds = clusterData.transactionalIds,
+            )
+        }
+        val haveUnreachableCluster = clustersData.values.any {
+            !it.clusterDisabled && (it.existingTopics == null || it.existingConsumerGroups == null)
+        }
+        val globalSnapshot = LinksSnapshot(
+            topics = clustersData.values.flatMap { it.topics }.distinct(),
+            consumerGroups = clustersData.values.flatMap { it.consumerGroups }.distinct(),
+            existingTopics = if (haveUnreachableCluster) { null } else { clustersData.values.flatMap { it.existingTopics.orEmpty() } },
+            existingConsumerGroups = if (haveUnreachableCluster) { null } else { clustersData.values.flatMap { it.existingConsumerGroups.orEmpty() } },
+            quotaEntities = clustersData.values.flatMap { it.quotaEntities }.distinct(),
+            resourceAcls = clustersData.values.flatMap { it.acls }.distinct().groupBy { it.resource },
+            principals = clustersData.values.flatMap { it.acls }.map { it.principal }.toSet(),
+            transactionalIds = clustersData.values.flatMap { it.transactionalIds }.distinct(),
+        )
+        return IndexSnapshot(
+            globalSnapshot = globalSnapshot,
+            clusterSnapshots = clusterSnapshots,
+        )
     }
 
-    private inner class ClusterSnapshot(
+    private inner class LinksSnapshot(
         val topics: List<TopicName>,
         val consumerGroups: List<ConsumerGroupId>,
+        val existingTopics: List<TopicName>?,
+        val existingConsumerGroups: List<ConsumerGroupId>?,
         val quotaEntities: List<QuotaEntity>,
         val resourceAcls: Map<AclResource, List<KafkaAclRule>>,
         val principals: Set<PrincipalId>,
         val transactionalIds: List<TransactionalId>,
     ) {
+        val existingTopicsSet: Set<TopicName>? = existingTopics?.toSet()
+        val existingConsumerGroupsSet: Set<ConsumerGroupId>? = existingConsumerGroups?.toSet()
         val topicAcls: Map<TopicName, List<KafkaAclRule>>
         val consumerGroupsAcls: Map<ConsumerGroupId, List<KafkaAclRule>>
         val aclTopics: Map<AclResource, List<TopicName>>
@@ -139,7 +179,7 @@ class AclLinkResolver(
                 .mapNotNull { entity -> entity.user?.let { it to entity } }
                 .groupBy ({ it.first }, { it.second })
             principalQuotaEntities = principals.asSequence()
-                .filter { it != "User:*" && it.startsWith("User:") }
+                .filter { it != ANY_PRINCIPAL && it.startsWith("User:") }
                 .associateWith { principal ->
                     val user: KafkaUser = principal.removePrefix("User:")
                     val exactUserEntities = userEntities[user].orEmpty()
@@ -169,29 +209,59 @@ class AclLinkResolver(
     }
 
     private inner class IndexSnapshot(
-        private val clusterSnapshots: Map<KafkaClusterIdentifier, ClusterSnapshot> = mapOf()
+        private val globalSnapshot: LinksSnapshot,
+        private val clusterSnapshots: Map<KafkaClusterIdentifier, LinksSnapshot>,
     ) {
 
+        private fun snapshotFor(clusterIdentifier: KafkaClusterIdentifier?): LinksSnapshot? {
+            return if (clusterIdentifier == null) {
+                globalSnapshot
+            } else {
+                clusterSnapshots[clusterIdentifier]
+            }
+        }
+
         private fun findAffected(
-            aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier, type: AclResource.Type,
-            directMap: ClusterSnapshot.() -> Map<AclResource, List<String>>,
-            allList: ClusterSnapshot.() -> List<String>,
+            aclRule: KafkaAclRule,
+            clusterIdentifier: KafkaClusterIdentifier?,
+            type: AclResource.Type,
+            directMap: LinksSnapshot.() -> Map<AclResource, List<String>>,
+            allList: LinksSnapshot.() -> List<String>,
         ): List<String> {
             if (aclRule.resource.type != type) {
                 return emptyList()
             }
-            val snapshot = clusterSnapshots[clusterIdentifier] ?: return emptyList()
+            val snapshot = snapshotFor(clusterIdentifier) ?: return emptyList()
             snapshot.directMap()[aclRule.resource]?.run { return this }
             return snapshot.allList().findMatchingNames(aclRule.resource)
+        }
+
+        private fun List<String>.onlyExisting(
+            clusterIdentifier: KafkaClusterIdentifier?,
+            existingSet: LinksSnapshot.() -> Set<String>?,
+        ): List<String>? {
+            val snapshot = snapshotFor(clusterIdentifier) ?: return null
+            val existing = snapshot.existingSet() ?: return null
+            return filter { it in existing }
         }
 
         fun findAffectedTopics(
             aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
         ): List<TopicName> = findAffected(aclRule, clusterIdentifier, TOPIC, { aclTopics }, { topics })
 
+        fun findAffectedExistingTopics(
+            aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier?
+        ): List<TopicName>? = findAffected(aclRule, clusterIdentifier, TOPIC, { aclTopics }, { topics })
+            .onlyExisting(clusterIdentifier) { existingTopicsSet }
+
         fun findAffectedConsumerGroups(
             aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
         ): List<ConsumerGroupId> = findAffected(aclRule, clusterIdentifier, GROUP, { aclConsumerGroups }, { consumerGroups })
+
+        fun findAffectedExistingConsumerGroups(
+            aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier?,
+        ): List<ConsumerGroupId>? = findAffected(aclRule, clusterIdentifier, GROUP, { aclConsumerGroups }, { consumerGroups })
+            .onlyExisting(clusterIdentifier) { existingConsumerGroupsSet }
 
         fun findAffectedTransactionalIds(
             aclRule: KafkaAclRule, clusterIdentifier: KafkaClusterIdentifier
@@ -232,7 +302,7 @@ class AclLinkResolver(
         fun findPrincipalAffectingQuotas(
             principalId: PrincipalId, clusterIdentifier: KafkaClusterIdentifier
         ): List<QuotaEntity> {
-            if (principalId == "User:*" || !principalId.startsWith("User:")) {
+            if (principalId == ANY_PRINCIPAL || !principalId.startsWith("User:")) {
                 return emptyList()
             }
             val snapshot = clusterSnapshots[clusterIdentifier] ?: return emptyList()
@@ -271,7 +341,7 @@ class AclLinkResolver(
                 .orderAclsAsWildcardPrefixedLiteral()
     }
 
-    private fun ClusterSnapshot.findAffectedForQuotaEntity(quotaEntity: QuotaEntity): List<PrincipalId> {
+    private fun LinksSnapshot.findAffectedForQuotaEntity(quotaEntity: QuotaEntity): List<PrincipalId> {
         return when {
             quotaEntity == QuotaEntity.userDefault() ||
                     quotaEntity == QuotaEntity.clientDefault() ||
@@ -281,7 +351,7 @@ class AclLinkResolver(
         }
     }
 
-    private fun ClusterSnapshot.findAffectingForPrincipal(principal: PrincipalId): List<QuotaEntity> {
+    private fun LinksSnapshot.findAffectingForPrincipal(principal: PrincipalId): List<QuotaEntity> {
         val user = principal.removePrefix("User:")
         return userQuotaEntities[user] ?: nonLiteralUserQuotaEntities
     }
@@ -317,10 +387,13 @@ class AclLinkResolver(
 
 data class AclClusterLinkData(
     val clusterRef: ClusterRef,
+    val clusterDisabled: Boolean,
     val topics: List<TopicName>,
     val consumerGroups: List<ConsumerGroupId>,
     val quotaEntities: List<QuotaEntity>,
     val acls: List<KafkaAclRule>,
-    val transactionalIds: List<TransactionalId> = emptyList(),
+    val transactionalIds: List<TransactionalId>,
+    val existingTopics: List<TopicName>?,
+    val existingConsumerGroups: List<TopicName>?,
 )
 
