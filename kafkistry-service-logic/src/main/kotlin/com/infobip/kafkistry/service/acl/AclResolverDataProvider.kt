@@ -34,10 +34,14 @@ class AclResolverDataProviderImpl(
             val clusterQuotas = quotasProvider.getLatestState(clusterRef.identifier)
             clusterRef.identifier to AclClusterLinkData(
                 clusterRef = clusterRef,
+                clusterDisabled = clusterState.stateType == StateType.DISABLED,
                 topics = clusterTopicNames(clusterRef, allTopics, clusterState, allPrincipalsAcls),
                 consumerGroups = consumerGroupIds(clusterState, clusterConsumerGroups),
                 quotaEntities = clusterEntityQuotas(clusterRef, allQuotas, clusterQuotas),
-                acls = clusterAcls(clusterRef, clusterState, allPrincipalsAcls)
+                acls = clusterAcls(clusterRef, clusterState, allPrincipalsAcls),
+                transactionalIds = emptyList(),
+                existingTopics = clusterState.valueOrNull()?.topics?.map { it.name },
+                existingConsumerGroups = clusterConsumerGroups.valueOrNull()?.consumerGroups?.keys?.sorted(),
             )
         }
     }

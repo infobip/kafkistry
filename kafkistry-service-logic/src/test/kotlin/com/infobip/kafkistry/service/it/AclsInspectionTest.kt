@@ -3,8 +3,6 @@ package com.infobip.kafkistry.service.it
 import com.nhaarman.mockitokotlin2.whenever
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.kafka.KafkaAclRule
-import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
-import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.PresenceType.EXCLUDED_CLUSTERS
 import com.infobip.kafkistry.service.*
@@ -13,7 +11,9 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.UpdateContext
 import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.kafka.ConsumerGroup
 import com.infobip.kafkistry.kafka.parseAcl
+import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalAclRules
@@ -21,6 +21,7 @@ import com.infobip.kafkistry.service.acl.*
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CONFLICT
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.DETACHED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
@@ -59,6 +60,9 @@ class AclsInspectionTest {
     @MockBean
     private lateinit var stateProvider: KafkaClustersStateProvider
 
+    @MockBean
+    private lateinit var groupsStateProvider: KafkaConsumerGroupsProvider
+
     @Autowired
     private lateinit var acls: AclsRegistryService
 
@@ -70,7 +74,7 @@ class AclsInspectionTest {
 
     @Before
     fun before() {
-        Mockito.reset(stateProvider)
+        Mockito.reset(stateProvider, groupsStateProvider)
         topics.deleteAll(UpdateContext("test msg"))
         clusters.removeAll()
         acls.deleteAll(UpdateContext("test msg"))
@@ -101,10 +105,20 @@ class AclsInspectionTest {
     fun `test ok rule`() {
         acls.create(listOf(rule_X_T1).toPrincipalAclRules().first())
         clusters.addCluster(cluster1)
-        cluster1.mockClusterStateRules(rule_X_T1)
+        cluster1.mockClusterStateRules(rule_X_T1, topics = listOf("t1"))
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertOk()
         assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(OK)
+    }
+
+    @Test
+    fun `test detached rule`() {
+        acls.create(listOf(rule_X_T1).toPrincipalAclRules().first())
+        clusters.addCluster(cluster1)
+        cluster1.mockClusterStateRules(rule_X_T1)
+        val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
+        result.status.assertNotOk()
+        assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(DETACHED)
     }
 
     @Test
@@ -121,7 +135,7 @@ class AclsInspectionTest {
     fun `test unexpected rule`() {
         acls.create(listOf(rule_X_T1).toPrincipalAclRules(presence()).first())
         clusters.addCluster(cluster1)
-        cluster1.mockClusterStateRules(rule_X_T1)
+        cluster1.mockClusterStateRules(rule_X_T1, topics = listOf("t1"))
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
         assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(UNEXPECTED)
@@ -130,7 +144,7 @@ class AclsInspectionTest {
     @Test
     fun `test unknown rule`() {
         clusters.addCluster(cluster1)
-        cluster1.mockClusterStateRules(rule_X_T1)
+        cluster1.mockClusterStateRules(rule_X_T1, topics = listOf("t1"))
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
         result.status.assertNotOk()
         assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(UNKNOWN)
@@ -231,21 +245,24 @@ class AclsInspectionTest {
         acls.create(p3Rules)
 
         c1.mockClusterStateRules(
-                rule_p1_r1, rule_p1_r2,
-                rule_p2_r1, rule_p2_r2,
-                rule_p3_r1, rule_p3_r2, rule_p3_r3,
-                rule_p4_r1, rule_p4_r2
+            rule_p1_r1, rule_p1_r2,
+            rule_p2_r1, rule_p2_r2,
+            rule_p3_r1, rule_p3_r2, rule_p3_r3,
+            rule_p4_r1, rule_p4_r2,
+            topics = listOf("t1", "t2"), groups = listOf("g1"),
         )
         c2.mockClusterStateRules(
-                rule_p1_r1, rule_p1_r2,
-                rule_p2_r1,
-                rule_p3_r1, rule_p3_r2, rule_p3_r3,
-                rule_p4_r1, rule_p4_r2
+            rule_p1_r1, rule_p1_r2,
+            rule_p2_r1,
+            rule_p3_r1, rule_p3_r2, rule_p3_r3,
+            rule_p4_r1, rule_p4_r2,
+            topics = listOf("t1"), groups = listOf("g1"),
         )
         c3.mockClusterStateRules(
-                rule_p1_r1, rule_p1_r2,
-                rule_p2_r1,
-                rule_p3_r2, rule_p3_r3
+            rule_p1_r1, rule_p1_r2,
+            rule_p2_r1,
+            rule_p3_r2, rule_p3_r3,
+            topics = listOf("t1"), groups = listOf("g1"),
         )
 
         //do actual inspections
@@ -279,11 +296,11 @@ class AclsInspectionTest {
         val expected_P3_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
                 clusterIdentifier = "c_1",
-                status = AclStatus(false, listOf(OK has 2, UNEXPECTED has 1, CONFLICT has 1)),
+                status = AclStatus(false, listOf(OK has 1, UNEXPECTED has 1, CONFLICT has 1, DETACHED has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
                         AclRuleStatus(listOf(UNEXPECTED, CONFLICT), rule_p3_r2, listOf(), listOf("g1"), listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS), listOf(rule_p1_r2, rule_p4_r2)),
-                        AclRuleStatus(listOf(OK), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(DETACHED), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyList(),
@@ -324,11 +341,11 @@ class AclsInspectionTest {
         val expected_P3_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
                 clusterIdentifier = "c_2",
-                status = AclStatus(false, listOf(OK has 2, CONFLICT has 1)),
+                status = AclStatus(false, listOf(OK has 1, CONFLICT has 1, DETACHED has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
                         AclRuleStatus(listOf(CONFLICT), rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2, rule_p4_r2)),
-                        AclRuleStatus(listOf(OK), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(DETACHED), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -369,11 +386,11 @@ class AclsInspectionTest {
         val expected_P3_on_c3 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
                 clusterIdentifier = "c_3",
-                status = AclStatus(false, listOf(NOT_PRESENT_AS_EXPECTED has 1, CONFLICT has 1, OK has 1)),
+                status = AclStatus(false, listOf(NOT_PRESENT_AS_EXPECTED has 1, CONFLICT has 1, DETACHED has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(NOT_PRESENT_AS_EXPECTED), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
                         AclRuleStatus(listOf(CONFLICT), rule_p3_r2, listOf(), listOf("g1"), listOf(), listOf(rule_p1_r2)),
-                        AclRuleStatus(listOf(OK), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
+                        AclRuleStatus(listOf(DETACHED), rule_p3_r3, listOf(), listOf(), listOf(), listOf())
                 ),
                 availableOperations = emptyList(),
                 affectingQuotaEntities = emptyList(),
@@ -398,7 +415,7 @@ class AclsInspectionTest {
         assertThat(clustersResult[0].principalAclsInspections[1]).isEqualTo(expected_P2_on_c1)
         assertThat(clustersResult[0].principalAclsInspections[2]).isEqualTo(expected_P3_on_c1)
         assertThat(clustersResult[0].principalAclsInspections[3]).isEqualTo(expected_P4_on_c1)
-        assertThat(clustersResult[0].status).isEqualTo(AclStatus(false, listOf(OK has 4, CONFLICT has 3, UNKNOWN has 3, UNEXPECTED has 1)))
+        assertThat(clustersResult[0].status).isEqualTo(AclStatus(false, listOf(OK has 3, CONFLICT has 3, UNKNOWN has 3, UNEXPECTED has 1, DETACHED has 1)))
 
         assertThat(clustersResult[1].clusterIdentifier).isEqualTo("c_2")
         assertThat(clustersResult[1].principalAclsInspections).hasSize(4)
@@ -406,14 +423,14 @@ class AclsInspectionTest {
         assertThat(clustersResult[1].principalAclsInspections[1]).isEqualTo(expected_P2_on_c2)
         assertThat(clustersResult[1].principalAclsInspections[2]).isEqualTo(expected_P3_on_c2)
         assertThat(clustersResult[1].principalAclsInspections[3]).isEqualTo(expected_P4_on_c2)
-        assertThat(clustersResult[1].status).isEqualTo(AclStatus(false, listOf(OK has 4, CONFLICT has 3, UNKNOWN has 2)))
+        assertThat(clustersResult[1].status).isEqualTo(AclStatus(false, listOf(OK has 3, CONFLICT has 3, UNKNOWN has 2, DETACHED has 1)))
 
         assertThat(clustersResult[2].clusterIdentifier).isEqualTo("c_3")
         assertThat(clustersResult[2].principalAclsInspections).hasSize(3)
         assertThat(clustersResult[2].principalAclsInspections[0]).isEqualTo(expected_P1_on_c3)
         assertThat(clustersResult[2].principalAclsInspections[1]).isEqualTo(expected_P2_on_c3)
         assertThat(clustersResult[2].principalAclsInspections[2]).isEqualTo(expected_P3_on_c3)
-        assertThat(clustersResult[2].status).isEqualTo(AclStatus(false, listOf(OK has 3, CONFLICT has 2, NOT_PRESENT_AS_EXPECTED has 1)))
+        assertThat(clustersResult[2].status).isEqualTo(AclStatus(false, listOf(OK has 2, CONFLICT has 2, NOT_PRESENT_AS_EXPECTED has 1, DETACHED has 1)))
 
         assertThat(principalsResult).hasSize(3)
         assertThat(principalsResult[0]).isEqualTo(
@@ -441,7 +458,7 @@ class AclsInspectionTest {
                 principal = "User:P3",
                 principalAcls = p3Rules,
                 clusterInspections = listOf(expected_P3_on_c1, expected_P3_on_c2, expected_P3_on_c3),
-                status = AclStatus(false, listOf(OK has 5, CONFLICT has 3, UNEXPECTED has 1, NOT_PRESENT_AS_EXPECTED has 1)),
+                status = AclStatus(false, listOf(CONFLICT has 3, DETACHED has 3, OK has 2, UNEXPECTED has 1, NOT_PRESENT_AS_EXPECTED has 1)),
                 availableOperations = listOf(DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
                 affectingQuotaEntities = emptyMap(),
         )
@@ -524,12 +541,26 @@ class AclsInspectionTest {
     private fun KafkaCluster.mockClusterStateRules(
             vararg rules: KafkaAclRule,
             security: Boolean = true,
-            stateType: StateType = StateType.VISIBLE
+            stateType: StateType = StateType.VISIBLE,
+            topics: List<TopicName> = emptyList(),
+            groups: List<ConsumerGroupId> = emptyList(),
     ) {
         whenever(stateProvider.getLatestClusterState(identifier)).thenReturn(newState(
                 acls = rules.toList(),
                 securityEnabled = security,
-                stateType = stateType
+                stateType = stateType,
+                topics = topics.map { newTopic(name = it) }.toTypedArray(),
+        ))
+        whenever(groupsStateProvider.getLatestState(identifier)).thenReturn(StateData(
+            stateType = stateType,
+            clusterIdentifier = identifier,
+            stateTypeName = "groups",
+            lastRefreshTime = System.currentTimeMillis(),
+            value = if (stateType == StateType.VISIBLE) {
+                ClusterConsumerGroups(
+                    consumerGroups = groups.associateWith { Maybe.Absent(RuntimeException()) },
+                )
+            } else null,
         ))
     }
 

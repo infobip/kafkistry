@@ -210,25 +210,164 @@ class AclLinkResolverTest {
         assertThat(resolver.findAffectingQuotaEntities("User:new")).containsExactly("<default>|<all>")
     }
 
+    @Test
+    fun `test find affecting existing topics`() {
+        val resolver = newResolverWithClusterData(
+            topics = listOf("foo", "bar", "baz"),
+            existingTopics = listOf("bar", "baz"),
+            acls = listOf(
+                "User:bob * TOPIC:ba* ALL ALLOW",
+                "User:alice * TOPIC:* ALL ALLOW",
+                "User:tom * TOPIC:nuk ALL ALLOW",
+            )
+        )
+        assertThat(resolver.findAffectedTopics("User:bob * TOPIC:ba* ALL ALLOW")).containsExactlyInAnyOrder("bar", "baz")
+        assertThat(resolver.findAffectedExistingTopics("User:bob * TOPIC:ba* ALL ALLOW")).containsExactlyInAnyOrder("bar", "baz")
+        assertThat(resolver.findAffectedTopics("User:alice * TOPIC:* ALL ALLOW")).containsExactlyInAnyOrder("foo", "bar", "baz")
+        assertThat(resolver.findAffectedExistingTopics("User:alice * TOPIC:* ALL ALLOW")).containsExactlyInAnyOrder("bar", "baz")
+        assertThat(resolver.findAffectedTopics("User:tom * TOPIC:nuk ALL ALLOW")).containsExactlyInAnyOrder("nuk")
+        assertThat(resolver.findAffectedExistingTopics("User:tom * TOPIC:nuk ALL ALLOW")).containsExactlyInAnyOrder()
+    }
+
+    @Test
+    fun `test find affecting existing topics - unreachable cluster`() {
+        val resolver = newResolverWithClusterData(
+            topics = listOf("foo", "bar", "baz"),
+            existingTopics = null,
+            acls = listOf(
+                "User:bob * TOPIC:ba* ALL ALLOW",
+                "User:alice * TOPIC:* ALL ALLOW",
+                "User:tom * TOPIC:nuk ALL ALLOW",
+            )
+        )
+        assertThat(resolver.findAffectedTopics("User:bob * TOPIC:ba* ALL ALLOW")).containsExactlyInAnyOrder("bar", "baz")
+        assertThat(resolver.findAffectedExistingTopics("User:bob * TOPIC:ba* ALL ALLOW")).isNull()
+        assertThat(resolver.findAffectedTopics("User:alice * TOPIC:* ALL ALLOW")).containsExactlyInAnyOrder("foo", "bar", "baz")
+        assertThat(resolver.findAffectedExistingTopics("User:alice * TOPIC:* ALL ALLOW")).isNull()
+        assertThat(resolver.findAffectedTopics("User:tom * TOPIC:nuk ALL ALLOW")).containsExactlyInAnyOrder("nuk")
+        assertThat(resolver.findAffectedExistingTopics("User:tom * TOPIC:nuk ALL ALLOW")).isNull()
+    }
+
+    @Test
+    fun `test find affecting existing consumer groups`() {
+        val resolver = newResolverWithClusterData(
+            groups = listOf("foo-1", "foo-2", "bar"),
+            existingGroups = listOf("foo-1", "foo-2", "bar"),
+            acls = listOf(
+                "User:bob * GROUP:foo* ALL ALLOW",
+                "User:alice * GROUP:* ALL ALLOW",
+                "User:tom * TOPIC:bar ALL ALLOW",
+            )
+        )
+        assertThat(resolver.findAffectedGroups("User:bob * GROUP:foo* ALL ALLOW")).containsExactlyInAnyOrder("foo-1", "foo-2")
+        assertThat(resolver.findAffectedExistingGroups("User:bob * GROUP:foo* ALL ALLOW")).containsExactlyInAnyOrder("foo-1", "foo-2")
+        assertThat(resolver.findAffectedGroups("User:alice * GROUP:* ALL ALLOW")).containsExactlyInAnyOrder("foo-1", "foo-2", "bar")
+        assertThat(resolver.findAffectedExistingGroups("User:alice * GROUP:* ALL ALLOW")).containsExactlyInAnyOrder("foo-1", "foo-2", "bar")
+        assertThat(resolver.findAffectedGroups("User:tom * GROUP:bar ALL ALLOW")).containsExactlyInAnyOrder("bar")
+        assertThat(resolver.findAffectedExistingGroups("User:tom * GROUP:bar ALL ALLOW")).containsExactlyInAnyOrder("bar")
+    }
+
+    @Test
+    fun `test find affecting existing consumer groups - unreachable cluster`() {
+        val resolver = newResolverWithClusterData(
+            groups = listOf("foo-1", "foo-2", "bar"),
+            existingGroups = null,
+            acls = listOf(
+                "User:bob * GROUP:foo* ALL ALLOW",
+                "User:alice * GROUP:* ALL ALLOW",
+                "User:tom * GROUP:bar ALL ALLOW",
+            )
+        )
+        assertThat(resolver.findAffectedGroups("User:bob * GROUP:foo* ALL ALLOW")).containsExactlyInAnyOrder("foo-1", "foo-2")
+        assertThat(resolver.findAffectedExistingGroups("User:bob * GROUP:foo* ALL ALLOW")).isNull()
+        assertThat(resolver.findAffectedGroups("User:alice * GROUP:* ALL ALLOW")).containsExactlyInAnyOrder("foo-1", "foo-2", "bar")
+        assertThat(resolver.findAffectedExistingGroups("User:alice * GROUP:* ALL ALLOW")).isNull()
+        assertThat(resolver.findAffectedGroups("User:tom * GROUP:bar ALL ALLOW")).containsExactlyInAnyOrder("bar")
+        assertThat(resolver.findAffectedExistingGroups("User:tom * GROUP:bar ALL ALLOW")).isNull()
+    }
+
+    @Test
+    fun `test find affecting existing anywhere`() {
+        val resolver = newResolverWithClusterData(
+            newAclClusterLinkData(cluster = "c1", groups = listOf("g1", "g2", "cg1")),
+            newAclClusterLinkData(cluster = "c2", groups = listOf("g1", "g2", "cg2")),
+        )
+        assertThat(resolver.findAffectedExistingAnywhereGroups("User:bob * GROUP:g* ALL ALLOW")).containsExactlyInAnyOrder("g1", "g2")
+        assertThat(resolver.findAffectedExistingAnywhereGroups("User:bob * GROUP:cg* ALL ALLOW")).containsExactlyInAnyOrder("cg1", "cg2")
+    }
+
+    @Test
+    fun `test find affecting existing anywhere - one unreachable`() {
+        val resolver = newResolverWithClusterData(
+            newAclClusterLinkData(cluster = "c1", groups = listOf("g1", "g2", "cg1"), existingGroups = null),
+            newAclClusterLinkData(cluster = "c2", groups = listOf("g1", "g2", "cg2")),
+        )
+        assertThat(resolver.findAffectedExistingAnywhereGroups("User:bob * GROUP:g* ALL ALLOW")).isNull()
+        assertThat(resolver.findAffectedExistingAnywhereGroups("User:bob * GROUP:cg* ALL ALLOW")).isNull()
+    }
+
+    @Test
+    fun `test find affecting existing anywhere - one disabled`() {
+        val resolver = newResolverWithClusterData(
+            newAclClusterLinkData(cluster = "c1", groups = listOf("g1", "g2", "cg1"), disabled = true, existingGroups = null),
+            newAclClusterLinkData(cluster = "c2", groups = listOf("g1", "g2", "cg2")),
+        )
+        assertThat(resolver.findAffectedExistingAnywhereGroups("User:bob * GROUP:g* ALL ALLOW")).containsExactlyInAnyOrder("g1", "g2")
+        assertThat(resolver.findAffectedExistingAnywhereGroups("User:bob * GROUP:cg* ALL ALLOW")).containsExactlyInAnyOrder("cg2")
+    }
+
     private val cluster = "kfk-test"
 
-    private fun newResolverWithClusterData(
+    private fun newAclClusterLinkData(
+        cluster: KafkaClusterIdentifier,
+        disabled: Boolean = false,
         topics: List<TopicName> = emptyList(),
+        existingTopics: List<TopicName>? = topics,
         groups: List<ConsumerGroupId> = emptyList(),
+        existingGroups: List<ConsumerGroupId>? = groups,
         quotaEntities: List<QuotaEntity> = emptyList(),
-        acls: List<String> = emptyList()
+        acls: List<String> = emptyList(),
+    ) = AclClusterLinkData(
+        ClusterRef(cluster), disabled, topics, groups, quotaEntities, acls.map { it.parseAcl() }, emptyList(), existingTopics, existingGroups
+    )
+
+    private fun newResolverWithClusterData(
+        vararg clusters: AclClusterLinkData,
     ): AclLinkResolver {
-        val data = AclClusterLinkData(ClusterRef(cluster), topics, groups, quotaEntities, acls.map { it.parseAcl() })
         val provider: AclResolverDataProvider = mock()
-        whenever(provider.getClustersData()).thenReturn(mapOf(cluster to data))
+        val data = clusters.associateBy { it.clusterRef.identifier }
+        whenever(provider.getClustersData()).thenReturn(data)
         return AclLinkResolver(provider)
     }
 
+    private fun newResolverWithClusterData(
+        disabled: Boolean = false,
+        topics: List<TopicName> = emptyList(),
+        existingTopics: List<TopicName>? = topics,
+        groups: List<ConsumerGroupId> = emptyList(),
+        existingGroups: List<ConsumerGroupId>? = groups,
+        quotaEntities: List<QuotaEntity> = emptyList(),
+        acls: List<String> = emptyList()
+    ): AclLinkResolver {
+        return newResolverWithClusterData(
+            newAclClusterLinkData(cluster, disabled, topics, existingTopics, groups, existingGroups, quotaEntities, acls)
+        )
+    }
+
     private fun AclLinkResolver.findAffectedTopics(acl: String) =
-            findAffectedTopics(acl.parseAcl(), cluster)
+        findAffectedTopics(acl.parseAcl(), cluster)
+
+    private fun AclLinkResolver.findAffectedExistingTopics(acl: String) =
+        findAffectedExistingTopics(acl.parseAcl(), cluster)
 
     private fun AclLinkResolver.findAffectedGroups(acl: String) =
-            findAffectedConsumerGroups(acl.parseAcl(), cluster)
+        findAffectedConsumerGroups(acl.parseAcl(), cluster)
+
+    private fun AclLinkResolver.findAffectedExistingGroups(acl: String) =
+        findAffectedExistingConsumerGroups(acl.parseAcl(), cluster)
+
+    private fun AclLinkResolver.findAffectedExistingAnywhereGroups(acl: String) =
+        findAffectedExistingAnywhereConsumerGroups(acl.parseAcl())
 
     private fun AclLinkResolver.findAffectingQuotaEntities(principal: PrincipalId)  =
             findPrincipalAffectingQuotas(principal, cluster).map { it.asID() }

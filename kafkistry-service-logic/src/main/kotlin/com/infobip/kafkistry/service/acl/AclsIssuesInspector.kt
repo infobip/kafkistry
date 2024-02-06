@@ -10,6 +10,7 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CONFLICT
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.DETACHED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
@@ -17,11 +18,27 @@ import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.SECUR
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNAVAILABLE
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNEXPECTED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.stereotype.Component
+
+@Component
+@ConfigurationProperties("app.acl-inspect")
+class AclInspectorConfig {
+
+    @NestedConfigurationProperty
+    var detached = DetachedInspectConfig()
+}
+
+class DetachedInspectConfig {
+    var allowGlobalCheck = false
+    var ignoreAnyUser = false
+}
 
 @Component
 class AclsIssuesInspector(
     private val aclLinkResolver: AclLinkResolver,
+    private val config: AclInspectorConfig,
 ) {
 
     fun inspectPrincipalAcls(
@@ -197,23 +214,67 @@ class AclsIssuesInspector(
             AclResource.Type.TRANSACTIONAL_ID -> conflictChecker.transactionalIdConflicts(rule, clusterRef)
             else -> emptyList()
         }
-        val statusTypes = if (conflictingAcls.isEmpty()) {
+        val affectedTopics = aclLinkResolver.findAffectedTopics(rule, clusterRef.identifier)
+        val affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(rule, clusterRef.identifier)
+        val exists = when (statusType) {
+            OK, UNKNOWN, UNEXPECTED -> true
+            MISSING, UNAVAILABLE, NOT_PRESENT_AS_EXPECTED, SECURITY_DISABLED -> false
+            else -> null
+        }
+        val problematicStatuses = buildList {
+            if (conflictingAcls.isNotEmpty()) add(CONFLICT)
+            if (exists == true && !rule.canIgnoreDetached()) {
+                val (affectedExistingTopics, affectedExistingConsumerGroups) = affectedTopicsAndGroups(rule, clusterRef)
+                if (rule.resource.type == AclResource.Type.TOPIC && affectedExistingTopics != null && affectedExistingTopics.isEmpty()) {
+                    add(DETACHED)
+                }
+                if (rule.resource.type == AclResource.Type.GROUP && affectedExistingConsumerGroups != null && affectedExistingConsumerGroups.isEmpty()) {
+                    add(DETACHED)
+                }
+            }
+        }
+        val statusTypes = if (problematicStatuses.isEmpty()) {
             listOf(statusType)
         } else {
             if (statusType == OK) {
-                listOf(CONFLICT)
+                problematicStatuses
             } else {
-                listOf(statusType, CONFLICT)
+                listOf(statusType) + problematicStatuses
             }
         }
         return AclRuleStatus(
             statusTypes = statusTypes,
             rule = rule,
-            affectedTopics = aclLinkResolver.findAffectedTopics(rule, clusterRef.identifier),
-            affectedConsumerGroups = aclLinkResolver.findAffectedConsumerGroups(rule, clusterRef.identifier),
+            affectedTopics = affectedTopics,
+            affectedConsumerGroups = affectedConsumerGroups,
             availableOperations = statusType.availableOperations(principalExists),
             conflictingAcls = conflictingAcls,
         )
+    }
+
+    private fun KafkaAclRule.canIgnoreDetached(): Boolean {
+        return principal == ANY_PRINCIPAL && config.detached.ignoreAnyUser
+    }
+
+    private data class AffectedExistingResources(
+        val topics: List<TopicName>?,
+        val groups: List<ConsumerGroupId>?,
+    )
+    private fun affectedTopicsAndGroups(
+        rule: KafkaAclRule,
+        clusterRef: ClusterRef,
+    ): AffectedExistingResources {
+        val affectedExistingTopics = if (config.detached.allowGlobalCheck) {
+            aclLinkResolver.findAffectedExistingAnywhereTopics(rule)
+        } else {
+            aclLinkResolver.findAffectedExistingTopics(rule, clusterRef.identifier)
+        }
+        val affectedExistingConsumerGroups = if (config.detached.allowGlobalCheck) {
+            aclLinkResolver.findAffectedExistingAnywhereConsumerGroups(rule)
+        } else {
+            aclLinkResolver.findAffectedExistingConsumerGroups(rule, clusterRef.identifier)
+        }
+        return AffectedExistingResources(affectedExistingTopics, affectedExistingConsumerGroups)
     }
 
 }
