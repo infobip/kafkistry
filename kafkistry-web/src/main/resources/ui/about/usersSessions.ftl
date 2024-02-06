@@ -101,7 +101,7 @@
                         <th>Last request</th>
                     </tr>
                     <#list userSessions.sessions as session>
-                        <#if session.recordedRequests?? && session.recordedRequests?size == 0>
+                        <#if session.recordedRequests?? && session.recordedRequests.urlRequests?size == 0>
                             <#-- dont even show session with no recorded requests to display -->
                             <#continue>
                         </#if>
