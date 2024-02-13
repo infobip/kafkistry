@@ -82,7 +82,7 @@
 <script src="https://cdn.jsdelivr.net/g/mark.js(jquery.mark.min.js)"></script>
 <script src="https://cdn.datatables.net/plug-ins/1.10.13/features/mark.js/datatables.mark.js"></script>
 
-<script src="https://cdn.rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/caldwell/renderjson@1.4.0/renderjson.js"></script>
 
 <script src="https://cdn.jsdelivr.net/g/filesaver.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
