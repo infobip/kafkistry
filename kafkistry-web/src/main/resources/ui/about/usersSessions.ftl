@@ -95,7 +95,7 @@
             <div class="card-body p-0">
                 <table class="table m-0">
                     <tr class="thead-dark">
-                        <th>redak ovog bi mako</th>
+                        <th></th>
                         <th>Session ID</th>
                         <th>Expired</th>
                         <th>Last request</th>
