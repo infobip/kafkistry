@@ -95,13 +95,13 @@
             <div class="card-body p-0">
                 <table class="table m-0">
                     <tr class="thead-dark">
-                        <th></th>
+                        <th>redak ovog bi mako</th>
                         <th>Session ID</th>
                         <th>Expired</th>
                         <th>Last request</th>
                     </tr>
                     <#list userSessions.sessions as session>
-                        <#if session.recordedRequests?? && session.recordedRequests.urlRequests?size == 0>
+                        <#if !(session.recordedRequests??) || session.recordedRequests.urlRequests?size == 0>
                             <#-- dont even show session with no recorded requests to display -->
                             <#continue>
                         </#if>
