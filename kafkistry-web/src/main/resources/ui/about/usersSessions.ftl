@@ -128,7 +128,7 @@
                                         <tr>
                                             <th>Method</th>
                                             <th>URI + Query</th>
-                                            <th>First / Last</th>
+                                            <th>Last / First</th>
                                             <th>Count</th>
                                         </tr>
                                         </thead>
@@ -150,10 +150,10 @@
                                                     </span>
                                                 </td>
                                                 <td class="text-nowrap">
-                                                    <span class="time small" data-time="${requests.firstTime?c}"></span>
+                                                    <span class="time small" data-time="${requests.lastTime?c}"></span>
                                                     <#if requests.lastTime != requests.firstTime>
                                                         <hr class="my-1"/>
-                                                        <span class="time small" data-time="${requests.lastTime?c}"></span>
+                                                        <span class="time small" data-time="${requests.firstTime?c}"></span>
                                                     </#if>
                                                 </td>
                                                 <td>${requests.count}</td>
