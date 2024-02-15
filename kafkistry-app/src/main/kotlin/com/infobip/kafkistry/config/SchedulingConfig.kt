@@ -42,7 +42,7 @@ class SchedulingConfig {
         @Lazy taskRegistrar: ScheduledTaskRegistrar,
     ) =
         object : ScheduledAnnotationBeanPostProcessor(taskRegistrar) {
-            override fun onApplicationEvent(event: ContextRefreshedEvent) {
+            override fun onApplicationEvent(event: ApplicationContextEvent) {
                 super.onApplicationEvent(event)
                 if (event !is ContextRefreshedEvent) {
                     return

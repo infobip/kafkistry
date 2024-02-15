@@ -35,7 +35,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.1.6</version>
+        <version>3.2.2</version>
         <relativePath />
     </parent>
 
@@ -63,13 +63,12 @@
         <!-- PROJECT -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <jdk.version>18</jdk.version>
-        <java.version>18</java.version>
-        <maven.compiler.source>18</maven.compiler.source>
+        <jdk.version>21</jdk.version>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <kotlin.version>1.8.10</kotlin.version>
         <kotlin.jvm.target>17</kotlin.jvm.target>
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+        <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
 
         <!-- PLUGIN -->
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
@@ -86,16 +85,15 @@
         <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
         <jib-maven-plugin.goal>dockerBuild</jib-maven-plugin.goal>
         <docker.skip-build>true</docker.skip-build>
-        <docker.from-image>openjdk:18-jdk</docker.from-image>
+        <docker.from-image>openjdk:21-jdk</docker.from-image>
         <docker.to-image>infobip/kafkistry</docker.to-image>
 
         <!-- DEPENDENCIES -->
-        <kafka.version>3.6.0</kafka.version>
-        <org.eclipse.jgit.version>6.6.1.202309021850-r</org.eclipse.jgit.version>
+        <kafka.version>3.6.1</kafka.version>
+        <org.eclipse.jgit.version>6.8.0.202311291450-r</org.eclipse.jgit.version>
         <jsoup.version>1.15.4</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
         <zookeeper.version>3.8.3</zookeeper.version>
-        <sqlite-jdbc.version>3.42.0.0</sqlite-jdbc.version>
         <hibernate-validator.version>8.0.0.Final</hibernate-validator.version>
         <hibernate-orm.version>6.1.5.Final</hibernate-orm.version>
         <commons-pool2.version>2.8.0</commons-pool2.version>
@@ -110,30 +108,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.xerial</groupId>
-                <artifactId>sqlite-jdbc</artifactId>
-                <version>${sqlite-jdbc.version}</version>
-                <!--
-                when running in docker container alpine (7h of troubleshooting this)
-                this is to fix:
-                    Failed to load native library:sqlite-3.31.1-310c23f0-3e87-45d8-8c7b-50aca7696c74-libsqlitejdbc.so. osinfo: Linux-Alpine/x86_64
-                    java.lang.UnsatisfiedLinkError: /tmp/sqlite-3.31.1-310c23f0-3e87-45d8-8c7b-50aca7696c74-libsqlitejdbc.so: libc.musl-x86_64.so.1: cannot open shared object file: No such file or directory
-                    java.lang.UnsatisfiedLinkError: org.sqlite.core.NativeDB._open_utf8([BI)V
-                    when running in docker container alpine
-                -->
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.toolchain</groupId>
-                <artifactId>jetty-jakarta-servlet-api</artifactId>
-                <version>5.0.2</version>
-                <!-- workaround for java.lang.ClassNotFoundException: jakarta.servlet.http.HttpSessionContext
-                  because:
-                    - spring boot brings jakarta-servlet-api:6.0.0 which is not compatible with jetty-server:11
-                    - jetty-server brings jetty-jakarta-servlet-api but with scope provided, meaning it's absent in runtime
-                    Remove this (and usage) once SB+Jetty+jakarta get inline and wrk out-of-the-box
-                 -->
-            </dependency>
-            <dependency>
                 <groupId>org.eclipse.jgit</groupId>
                 <artifactId>org.eclipse.jgit</artifactId>
                 <version>${org.eclipse.jgit.version}</version>
@@ -144,39 +118,9 @@
                 <version>${org.eclipse.jgit.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-library</artifactId>
-                <version>2.13.9</version> <!-- override version fix RCE vulnerability; org.apache.kafka:kafka_2.13@3.3.1 pulls org.scala-lang:scala-library@2.13.8-->
-            </dependency>
-           <dependency>
-                <groupId>org.yaml</groupId>
-                <artifactId>snakeyaml</artifactId>
-                <version>2.0</version> <!-- override version to fix CWE vulnerability; com.fasterxml.jackson.dataformat:jackson-dataformat-yaml@2.14.2 pulls org.yaml:snakeyaml@1.33 -->
-            </dependency>
-            <dependency>
                 <groupId>org.bitbucket.b_c</groupId>
                 <artifactId>jose4j</artifactId>
-                <version>0.9.3</version> <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-app@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-kafka-connector@0.4.3-SNAPSHOT › org.apache.kafka:kafka_2.13@3.4.0 › org.bitbucket.b_c:jose4j@0.7.9 -->
-            </dependency>
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast</artifactId>
-                <version>5.3.4</version>  <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-web-api@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-service-logic@0.4.3-SNAPSHOT › com.infobip.kafkistry:kafkistry-events@0.4.3-SNAPSHOT › com.hazelcast:hazelcast@5.1.5 -->
-            </dependency>
-            <dependency>
-                <groupId>org.xerial.snappy</groupId>
-                <artifactId>snappy-java</artifactId>
-                <version>1.1.10.4</version>  <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-kafka-connector@0.5.1-SNAPSHOT > org.apache.kafka:kafka_2.13@3.4.0 > org.apache.kafka:kafka-clients@3.4.0 > org.xerial.snappy:snappy-java@1.1.8.4 -->
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.4.14</version>  <!-- override to fix CWE; com.infobip.kafkistry:kafkistry-app@0.6.1-SNAPSHOT > com.infobip.kafkistry:kafkistry-common@0.6.1-SNAPSHOT > ch.qos.logback:logback-classic@1.4.12 -->
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.4.14</version>  <!-- override to fix CWE; com.infobip.kafkistry:kafkistry-app@0.6.1-SNAPSHOT > com.infobip.kafkistry:kafkistry-common@0.6.1-SNAPSHOT > ch.qos.logback:logback-classic@1.4.12 > ch.qos.logback:logback-core@1.4.12 -->
+                <version>0.9.4</version> <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-kafka-connector@0.6.2-SNAPSHOT > org.apache.kafka:kafka_2.13@3.6.1 > org.bitbucket.b_c:jose4j@0.9.3 -->
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -614,3 +558,4 @@
     </distributionManagement>
 
 </project>
+

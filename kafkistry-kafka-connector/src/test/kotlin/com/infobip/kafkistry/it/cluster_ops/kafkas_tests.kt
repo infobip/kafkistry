@@ -8,12 +8,13 @@ import com.infobip.kafkistry.it.cluster_ops.testsupport.asTestKafkaLifecycle
 import com.infobip.kafkistry.kafka.Version
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.springframework.kafka.test.EmbeddedKafkaBroker
+import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 
 class ClusterOpsKafkaEmbeddedTest : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
-        val kafka = EmbeddedKafkaBroker(3).apply {
+        val kafka = EmbeddedKafkaZKBroker(3).apply {
             brokerProperty("auto.leader.rebalance.enable", "false")
         }.asTestKafkaLifecycle()
     }
@@ -26,7 +27,7 @@ class ClusterAclOpsKafkaEmbeddedTest : ClusterAclOperationsTestSuite() {
 
     companion object {
         @JvmField
-        val kafka = EmbeddedKafkaBroker(3).apply {
+        val kafka = EmbeddedKafkaZKBroker(3).apply {
             brokerProperty("authorizer.class.name", AclAuthorizer::class.java.canonicalName)
             brokerProperty("super.users", "User:ANONYMOUS")
         }.asTestKafkaLifecycle()

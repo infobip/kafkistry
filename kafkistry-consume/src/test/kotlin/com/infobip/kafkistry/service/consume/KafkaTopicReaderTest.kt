@@ -24,6 +24,8 @@ import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Test
 import org.springframework.kafka.test.EmbeddedKafkaBroker
+import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
+import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -82,7 +84,8 @@ class KafkaTopicReaderTest {
 
     private fun EmbeddedKafkaBroker.clusterId(): String {
         return when (this) {
-            is EmbeddedKafkaBroker -> this.kafkaServers[0].clusterId()
+            is EmbeddedKafkaZKBroker -> this.kafkaServers[0].clusterId()
+            is EmbeddedKafkaKraftBroker -> this.cluster.nodes().clusterId().toString()
             else -> throw UnsupportedOperationException("Can't extract cluster id of $this, unknown implementation")
         }
     }

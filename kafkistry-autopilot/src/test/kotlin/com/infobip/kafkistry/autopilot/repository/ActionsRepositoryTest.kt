@@ -191,7 +191,7 @@ internal class ActionsRepositoryTest {
             val repo = newRepo { retentionMs = 1000 }
             val now = System.currentTimeMillis()
             repeat(100) {
-                repo.save(newOutcome("a-$it", SUCCESSFUL, time = if (it < 50) now - 1000 else now))
+                repo.save(newOutcome("a-$it", SUCCESSFUL, time = if (it < 50) now - 1001 else now))
             }
             repo.cleanup()
             val actionFlows = repo.findAll()

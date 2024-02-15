@@ -1225,6 +1225,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             }
             assertDefaultConfig(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isEqualTo("true")
             assertDefaultConfig("message.format.version").startsWith("" + expectedClusterVersion.major() + ".")
+            @Suppress("DEPRECATION")
             assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_TYPE_CONFIG).isEqualTo("CreateTime")
             assertDefaultConfig(TopicConfig.MIN_CLEANABLE_DIRTY_RATIO_CONFIG).isEqualToStringOf(0.5)
