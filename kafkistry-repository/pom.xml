@@ -23,10 +23,17 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
+            <version>${org.eclipse.jgit.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit.ssh.jsch</artifactId>
+            <artifactId>org.eclipse.jgit.ssh.apache</artifactId>
+            <version>${org.eclipse.jgit.version}</version>  <!-- needed for ssh keypair git auth -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-git</artifactId>
+            <version>${sshd-git.version}</version>  <!-- needed for username+password git ssh auth -->
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -37,7 +44,12 @@
             <artifactId>simpleclient</artifactId>
             <version>${prometheus-client.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>io.github.sparsick.testcontainers.gitserver</groupId>
+            <artifactId>testcontainers-gitserver</artifactId>
+            <version>${testcontainers-gitserver.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

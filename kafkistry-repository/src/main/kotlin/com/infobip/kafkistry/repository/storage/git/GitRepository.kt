@@ -7,11 +7,9 @@ import com.infobip.kafkistry.repository.WriteContext
 import com.infobip.kafkistry.repository.storage.*
 import com.infobip.kafkistry.service.KafkistryGitException
 import com.infobip.kafkistry.utils.deepToString
-import com.jcraft.jsch.JSch
-import com.jcraft.jsch.KeyPair
-import com.jcraft.jsch.Session
 import io.prometheus.client.Summary
 import org.apache.commons.io.FileUtils
+import org.apache.sshd.git.transport.GitSshdSessionFactory
 import org.eclipse.jgit.api.*
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.JGitInternalException
@@ -23,19 +21,20 @@ import org.eclipse.jgit.revwalk.RevSort
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.revwalk.RevWalkUtils
 import org.eclipse.jgit.revwalk.filter.RevFilter
-import org.eclipse.jgit.transport.SshTransport
-import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory
-import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig
+import org.eclipse.jgit.transport.*
+import org.eclipse.jgit.transport.sshd.IdentityPasswordProvider
+import org.eclipse.jgit.transport.sshd.JGitKeyCache
+import org.eclipse.jgit.transport.sshd.SshdSessionFactoryBuilder
 import org.eclipse.jgit.treewalk.AbstractTreeIterator
 import org.eclipse.jgit.treewalk.CanonicalTreeParser
 import org.eclipse.jgit.treewalk.EmptyTreeIterator
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.util.FS
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicReference
@@ -124,44 +123,71 @@ class GitRepository(
     }
 
     private fun createTransportSecurityCallback(): TransportConfigCallback {
-        fun String.keyToBytes(): ByteArray? {
-            val file = Files.createTempFile("tmp-id_rsa", "").toFile()
-            return try {
-                FileUtils.write(file, this, Charsets.UTF_8)
-                val bytes = ByteArrayOutputStream()
-                KeyPair.load(JSch(), file.absolutePath).writePrivateKey(bytes)
-                bytes.toByteArray()
-            } finally {
-                file.delete()
+        return when {
+            auth.sshKeyPath != null || auth.sshPrivateKey != null -> {
+                //authenticating with private key (public part of pair is on git server)
+                sshPublicKeyTransportSecurityCallback()
+            }
+            gitRemoteUri != null && auth.password != null -> {
+                //authenticating with plain username+password
+                sshUsernamePasswordTransportSecurityCallback()
+            }
+            else -> {
+                if (gitRemoteUri != null) {
+                    log.warn("Creating GIT transport without SSH KEY nor PASSWORD authentication")
+                }
+                TransportConfigCallback {}
             }
         }
+    }
 
-        val sshPrivateKey = auth.sshPrivateKey?.takeIf { it.isNotBlank() }?.keyToBytes()
-        return TransportConfigCallback { transport ->
-            val sshTransport = transport as SshTransport
-            sshTransport.sshSessionFactory = object : JschConfigSessionFactory() {
-
-                override fun configure(hc: OpenSshConfig.Host, session: Session) {
-                    auth.password?.takeIf { it.isNotEmpty() }?.let {
-                        session.setPassword(it)
-                    }
-                    session.setConfig("StrictHostKeyChecking", if (strictSshHostKeyChecking) "yes" else "no")
+    private fun sshPublicKeyTransportSecurityCallback(): TransportConfigCallback {
+        val sshConfigFile = Files.createTempFile("tmp-ssh-config", "").toFile().also { confFile ->
+            confFile.deleteOnExit()
+            val sshConfig = StringBuilder().apply {
+                append("${SshConstants.HOST} *\n")
+                if (auth.sshKeyPath != null) {
+                    append("    ${SshConstants.IDENTITY_FILE} ${auth.sshKeyPath}\n")
                 }
-
-                override fun createDefaultJSch(fs: FS): JSch {
-                    val defaultJSch = super.createDefaultJSch(fs)
-                    auth.sshKeyPath?.takeIf { it.isNotEmpty() }?.let { keyPath ->
-                        defaultJSch.addIdentity(keyPath, auth.sshKeyPassphrase)
+                if (auth.sshPrivateKey != null) {
+                    val keyFile = Files.createTempFile("tmp-ssh-config", "").toFile().also {
+                        it.deleteOnExit()
+                        FileUtils.write(it, auth.sshPrivateKey, Charsets.UTF_8)
                     }
-                    sshPrivateKey?.let { privateKey ->
-                        defaultJSch.addIdentity(
-                            "key", privateKey, null,
-                            auth.sshKeyPassphrase?.takeIf { it.isNotEmpty() }?.toByteArray()
-                        )
-                    }
-                    return defaultJSch
+                    append("    ${SshConstants.IDENTITY_FILE} ${keyFile}\n")
+                }
+                append("    ${SshConstants.STRICT_HOST_KEY_CHECKING} ${if (strictSshHostKeyChecking) "yes" else "no"}\n")
+            }.toString()
+            FileUtils.write(confFile, sshConfig, Charsets.UTF_8)
+        }
+        val sshSessionFactory = SshdSessionFactoryBuilder()
+            .setPreferredAuthentications("publickey")
+            .setHomeDirectory(FS.DETECTED.userHome())
+            .setSshDirectory(File(FS.DETECTED.userHome(), SshConstants.SSH_DIR))
+            .setConfigFile { sshConfigFile.absoluteFile }
+            .apply {
+                val passphraseProvider = UsernamePasswordCredentialsProvider("", auth.sshKeyPassphrase)
+                if (auth.sshKeyPassphrase != null) {
+                    setKeyPasswordProvider { IdentityPasswordProvider(passphraseProvider) }
                 }
             }
+            .build(JGitKeyCache())
+        return TransportConfigCallback { transport ->
+            val sshTransport = transport as SshTransport
+            sshTransport.sshSessionFactory = sshSessionFactory
+        }
+    }
+
+    private fun sshUsernamePasswordTransportSecurityCallback(): TransportConfigCallback {
+        val credentialsProvider = run {
+            val user = URI.create(gitRemoteUri.orEmpty()).userInfo
+            log.info("Username to SSH login is '$user'")
+            UsernamePasswordCredentialsProvider(user, auth.password)
+        }
+        return TransportConfigCallback { transport ->
+            val sshTransport = transport as SshTransport
+            sshTransport.credentialsProvider = credentialsProvider
+            sshTransport.sshSessionFactory = GitSshdSessionFactory()
         }
     }
 
@@ -234,14 +260,11 @@ class GitRepository(
 
     @Throws(GitAPIException::class)
     private fun cloneOrInitNewRepo() {
-        fun setGitProtocolV1() = repository.config.setString("protocol", null, "version", "1")
-
         if (noRemote) {
             log.info("Going to GIT INIT empty repository in directory $dir")
             Git.init()
                     .setDirectory(dir)
                     .call()
-            setGitProtocolV1()
             makeEmptyCommit()
             log.info("Successful GIT INIT empty repository in directory $dir")
         } else {
@@ -253,7 +276,6 @@ class GitRepository(
                     .setCloneAllBranches(true)
                     .setTransportConfigCallback(transportCallback)
                     .call()
-            setGitProtocolV1()
             repository.config.apply {
                 setString("remote", "origin", "prune", "true")
             }

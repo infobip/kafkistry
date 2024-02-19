@@ -1,10 +1,9 @@
 package com.infobip.kafkistry.repository.git.it
 
+import com.github.sparsick.testcontainers.gitserver.GitServerVersions
+import com.github.sparsick.testcontainers.gitserver.plain.GitServerContainer
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
-import org.assertj.core.api.AbstractListAssert
 import org.assertj.core.api.Assertions.*
-import org.assertj.core.api.ListAssert
-import org.assertj.core.api.ObjectAssert
 import org.assertj.core.groups.Tuple
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.MergeResult
@@ -20,16 +19,21 @@ import com.infobip.kafkistry.repository.storage.git.GitWriteBranchSelector
 import com.infobip.kafkistry.service.KafkistryGitException
 import com.infobip.kafkistry.utils.test.newTestFolder
 import org.apache.commons.io.FileUtils.deleteDirectory
-import org.assertj.core.api.SoftAssertions
-import org.junit.Rule
-import org.junit.Test
+import org.assertj.core.api.*
+import org.eclipse.jgit.api.errors.TransportException
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.testcontainers.containers.GenericContainer
+import org.slf4j.LoggerFactory
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.function.Function
 
+@Testcontainers
 class GitTest {
 
     /*
@@ -47,15 +51,19 @@ class GitTest {
      *
      */
 
-    @Rule
-    @JvmField
-    var gitServer = GitServerContainer()
+    private val serverLog = LoggerFactory.getLogger("GIT-SERVER-CONTAINER")
 
-    class GitServerContainer : GenericContainer<GitServerContainer>("strm/test-git-ssh-server:latest") {
-        init {
-            withExposedPorts(22)
-        }
-    }
+    @Container
+    val gitServer: GitServerContainer = GitServerContainer(GitServerVersions.V2_43.dockerImageName)
+        .withGitRepo("repo") // overwrite the default git repository name
+        .withGitPassword("secret") // overwrite the default git password
+        .withClasspathResourceMapping("kafkistry_git_test_id_rsa.pub", "/home/git/.ssh/authorized_keys", BindMode.READ_ONLY)
+        .waitingFor(Wait.forListeningPort())
+        .withLogConsumer { serverLog.info("{}: {} ", it.type, it.utf8StringWithoutLineEnding) }
+
+    private val privateKey: String = javaClass.classLoader.getResourceAsStream("kafkistry_git_test_id_rsa")
+        ?.readAllBytes()?.decodeToString()
+        ?: throw IllegalStateException("Unable to load private test ssh key")
 
     @Test
     fun `test any change on remote is visible locally - new branch`() {
@@ -75,9 +83,7 @@ class GitTest {
         val changesWithFilter = git1.listAllBranchesChanges("dir", "test.txt")
         assertThat(changesWithFilter).flatExtractFileChanges()
             .containsExactly(
-                tuple(
-                    "test.txt", null, "test content", listOf("foo bar")
-                )
+                tuple("test.txt", null, "test content", listOf("foo bar"))
             )
         assertThat(git1.listAllBranchesChanges()).isEqualTo(changesWithFilter)  //because this file is only change against master
 
@@ -137,16 +143,12 @@ class GitTest {
 
         assertThat(git1.listAllBranchesChanges()).flatExtractFileChanges()
             .containsExactly(
-                tuple(
-                    "test3.txt", null, "test content3", listOf("foo bar")
-                )
+                tuple("test3.txt", null, "test content3", listOf("foo bar"))
             )
         git1.doRefreshRepository()  //after refresh repo will be aware of new commit on the file on same branch
         assertThat(git1.listAllBranchesChanges()).flatExtractFileChanges()
             .containsExactly(
-                tuple(
-                    "test3.txt", null, "edited content", listOf("xyz abc", "foo bar")
-                )
+                tuple("test3.txt", null, "edited content", listOf("xyz abc", "foo bar"))
             )
 
         //check all changes on master branch from beginning
@@ -250,7 +252,7 @@ class GitTest {
             try {
                 git.pull().setTransportConfigCallback(authCallback).call()
                 fail("Expected to have exception on pull")
-            } catch (ex: Exception) {
+            } catch (_: Exception) {
             }
             git.commit()
                 .setAuthor("data looser", "email")
@@ -503,10 +505,53 @@ class GitTest {
         }
     }
 
+    @Test
+    fun `test fail to auth with no credentials`() {
+        assertThatThrownBy {
+            newGit(auth = GitRepository.Auth.NONE).use {
+                it.updateOrInitRepositoryTest()
+            }
+        }.cause().isInstanceOf(KafkistryGitException::class.java)
+            .cause().isInstanceOf(TransportException::class.java)
+    }
+
+    @Test
+    fun `test auth with private identity key`() {
+        assertThatCode {
+            newGit(password = null).use {
+                it.updateOrInitRepositoryTest()
+            }
+        }.doesNotThrowAnyException()
+    }
+
+    @Test
+    fun `test fail auth with private identity key and wrong key password`() {
+        assertThatThrownBy {
+            newGit(password = null, sshPrivateKeyPassword = "wrong").use {
+                it.updateOrInitRepositoryTest()
+            }
+        }.cause().isInstanceOf(KafkistryGitException::class.java)
+            .cause().isInstanceOf(TransportException::class.java)
+    }
+
+    @Test
+    fun `test auth with username password`() {
+        assertThatCode {
+            newGit(sshPrivateKey = null).use {
+                it.updateOrInitRepositoryTest()
+            }
+        }.doesNotThrowAnyException()
+    }
+
     private fun newGit(
         dirPath: String = newTestFolder("git"),
-        gitRemoteUri: String? = "ssh://git@localhost:${gitServer.getMappedPort(22)}/repo.git",
-        auth: GitRepository.Auth = GitRepository.Auth(password = "secret"),
+        gitRemoteUri: String? = gitServer.gitRepoURIAsSSH.toString(),
+        password: String? = "secret",
+        sshPrivateKey: String? = privateKey,
+        sshPrivateKeyPassword: String? = "my_test_password",
+        auth: GitRepository.Auth = GitRepository.Auth(
+            sshPrivateKey = sshPrivateKey, password = password, sshKeyPassphrase = sshPrivateKeyPassword,
+        ),
         writeBranchSelector: GitWriteBranchSelector = GitWriteBranchSelector(writeToMaster = false),
         strictSshHostKeyChecking: Boolean = false,
     ): GitRepository {

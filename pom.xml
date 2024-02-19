@@ -91,6 +91,7 @@
         <!-- DEPENDENCIES -->
         <kafka.version>3.6.1</kafka.version>
         <org.eclipse.jgit.version>6.8.0.202311291450-r</org.eclipse.jgit.version>
+        <sshd-git.version>2.11.0</sshd-git.version> <!-- Apache MINA -->
         <jsoup.version>1.15.4</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
         <zookeeper.version>3.8.3</zookeeper.version>
@@ -101,22 +102,13 @@
         <commons-io.version>2.11.0</commons-io.version>
         <awaitility.version>4.2.0</awaitility.version>
         <testcontainers.version>1.19.1</testcontainers.version>
+        <testcontainers-gitserver.version>0.5.0</testcontainers-gitserver.version>
         <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.eclipse.jgit</groupId>
-                <artifactId>org.eclipse.jgit</artifactId>
-                <version>${org.eclipse.jgit.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jgit</groupId>
-                <artifactId>org.eclipse.jgit.ssh.jsch</artifactId>
-                <version>${org.eclipse.jgit.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.bitbucket.b_c</groupId>
                 <artifactId>jose4j</artifactId>
