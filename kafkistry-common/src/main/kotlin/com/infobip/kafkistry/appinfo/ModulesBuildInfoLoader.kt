@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.appinfo
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.LoggerFactory
@@ -19,7 +20,9 @@ class ModulesBuildInfoLoader {
     fun modulesInfos(): List<ModuleBuildInfo> = modulesInfos
 
     private fun loadAll(): List<ModuleBuildInfo> {
-        val mapper = JavaPropsMapper().registerKotlinModule()
+        val mapper = JavaPropsMapper().registerKotlinModule().apply {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
         val patternResolver: ResourcePatternResolver = PathMatchingResourcePatternResolver()
         log.info("Finding modules build infos with pattern: '{}'", RESOURCES_PATTERN)
         val propertiesResources = patternResolver.getResources(RESOURCES_PATTERN)

@@ -36,6 +36,17 @@
                     <tr>
                         <th>Version</th><td>${module.git.build.version}</td>
                     </tr>
+                    <#if !module.git.closest.tag.name?contains(module.git.build.version)>
+                        <tr>
+                            <th>Closest release tag</th>
+                            <td>
+                                ${module.git.closest.tag.name}
+                                <#if module.git.closest.tag.commit.count gt 0>
+                                    / ${module.git.closest.tag.commit.count} commit(s) since
+                                </#if>
+                            </td>
+                        </tr>
+                    </#if>
                     <tr>
                         <th>Build time</th><td class="time" data-time="${module.git.build.time?long?c}">---</td>
                     </tr>
@@ -43,7 +54,23 @@
                         <th>Commit Time</th><td class="time" data-time="${module.git.commit.time?long?c}">---</td>
                     </tr>
                     <tr>
-                        <th>Commit ID</th><td><code>${module.git.commit.id.full}</code></td>
+                        <th>Commit ID</th>
+                        <#assign commitBrowseUrl = module.git.remote.browse.commitPrefixUrl + module.git.commit.id.full>
+                        <td>
+                            <a href="${commitBrowseUrl}" target="_blank"><code>${module.git.commit.id.full}</code></a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Commit message</th>
+                        <td><pre style="white-space: pre-wrap;">${module.git.commit.message.full}</pre></td>
+                    </tr>
+                    <tr>
+                        <th>Remote URL</th>
+                        <td>
+                            Browse: <a href="${module.git.remote.browse.url}" target="_blank">${module.git.remote.browse.url}</a>
+                            <br/>
+                            Origin: <a href="${module.git.remote.origin.url}" target="_blank">${module.git.remote.origin.url}</a>
+                        </td>
                     </tr>
                 </table>
             </div>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project child.project.url.inherit.append.path="false" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.infobip.kafkistry</groupId>
     <artifactId>kafkistry-parent</artifactId>
@@ -78,6 +78,7 @@
         <enforcerSkip>true</enforcerSkip>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <git-commit-id-maven-plugin.skip>false</git-commit-id-maven-plugin.skip>
+        <git-commit-id-maven-plugin.repository.browse-commit.url-prefix>https://github.com/infobip/kafkistry/commit/</git-commit-id-maven-plugin.repository.browse-commit.url-prefix>
         <jib-maven-plugin.version>3.3.2</jib-maven-plugin.version>
         <test-open-modules-args>--add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED</test-open-modules-args>
 
@@ -105,6 +106,9 @@
         <testcontainers-gitserver.version>0.5.0</testcontainers-gitserver.version>
         <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
+
+        <!-- METADATA -->
+
     </properties>
 
     <dependencyManagement>
@@ -444,6 +448,10 @@
                         <includeOnlyProperty>^git.build.(time|version)$</includeOnlyProperty>
                         <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
                         <includeOnlyProperty>^git.commit.time$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.message.full$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.remote.origin.url$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.closest.tag.name$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.closest.tag.commit.count$</includeOnlyProperty>
                     </includeOnlyProperties>
                     <replacementProperties>
                         <replacementProperty>
@@ -456,6 +464,18 @@
                             <property>maven.artifactId</property>
                             <token>^.*$</token>
                             <value>${project.artifactId}</value>
+                            <regex>false</regex>
+                        </replacementProperty>
+                        <replacementProperty>
+                            <property>git.remote.browse.url</property>
+                            <token>^.*$</token>
+                            <value>${project.url}</value>
+                            <regex>false</regex>
+                        </replacementProperty>
+                        <replacementProperty>
+                            <property>git.remote.browse.commit-prefix-url</property>
+                            <token>^.*$</token>
+                            <value>${git-commit-id-maven-plugin.repository.browse-commit.url-prefix}</value>
                             <regex>false</regex>
                         </replacementProperty>
                     </replacementProperties>
