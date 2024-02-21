@@ -12,3 +12,4 @@
 /registry-data-*
 tmp
 test-failure-screenshots
+SERVICE_LOG_ROOT_IS_UNDEFINED
