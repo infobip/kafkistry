@@ -102,7 +102,6 @@
         <guava.version>32.0.0-jre</guava.version>
         <commons-io.version>2.11.0</commons-io.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <testcontainers.version>1.19.1</testcontainers.version>
         <testcontainers-gitserver.version>0.5.0</testcontainers-gitserver.version>
         <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
@@ -113,6 +112,18 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-bom</artifactId>
+                <version>6.2.2</version> <!-- override version SBD defined 6.2.1 to fix vulnerability, remove when bumping spring boot dependencies; fixing: com.infobip.kafkistry:kafkistry-security@0.6.2-SNAPSHOT > org.springframework.security:spring-security-web@6.2.1 -->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.bitbucket.b_c</groupId>
                 <artifactId>jose4j</artifactId>
