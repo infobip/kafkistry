@@ -56,10 +56,10 @@
                             <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
                                 <pattern>%m%n</pattern>
                             </fullPatternLayout>
-                            <staticField>facility:${SERVICE_NAME}</staticField>
+                            <staticField>facility:${LOGSTASH_FACILITY:-kafkistry}</staticField>
                         </encoder>
                         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-                            <level>DEBUG</level>
+                            <level>${LOGSTASH_LEVEL:-DEBUG}</level>
                         </filter>
                     </appender>
 
