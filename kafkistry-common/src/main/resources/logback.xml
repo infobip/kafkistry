@@ -41,9 +41,43 @@
                 </triggeringPolicy>
             </appender>
 
+            <if condition='isDefined("LOGSTASH_HOST")'>
+                <then>
+                    <appender name="LOGSTASH" class="de.siegmar.logbackgelf.GelfUdpAppender">
+                        <graylogHost>${LOGSTASH_HOST}</graylogHost>
+                        <encoder class="de.siegmar.logbackgelf.GelfEncoder">
+                            <includeMdcData>true</includeMdcData>
+                            <includeMarker>true</includeMarker>
+                            <includeLevelName>true</includeLevelName>
+                            <numbersAsString>false</numbersAsString>
+                            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                                <pattern>%m%nopex</pattern>
+                            </shortPatternLayout>
+                            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
+                                <pattern>%m%n</pattern>
+                            </fullPatternLayout>
+                            <staticField>facility:${LOGSTASH_FACILITY:-kafkistry}</staticField>
+                        </encoder>
+                        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                            <level>${LOGSTASH_LEVEL:-DEBUG}</level>
+                        </filter>
+                    </appender>
+
+                    <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+                        <neverBlock>true</neverBlock>
+                        <appender-ref ref="LOGSTASH"/>
+                    </appender>
+                </then>
+            </if>
+
             <root level="INFO">
                 <appender-ref ref="fileout"/>
                 <appender-ref ref="fileerr"/>
+                <if condition='isDefined("LOGSTASH_HOST")'>
+                    <then>
+                        <appender-ref ref="ASYNC_LOGSTASH"/>
+                    </then>
+                </if>
             </root>
         </then>
 
