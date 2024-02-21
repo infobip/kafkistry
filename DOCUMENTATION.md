@@ -52,6 +52,10 @@
  - [Slack integration](#slack-integration---auditing)
  - [Jira integration](#jira-integration)
  - [Miscellaneous UI Settings](#miscellaneous-ui-settings)
+ - [Logging](#logging)
+   + [Console output](#logging-to-console-output)
+   + [Files](#logging-to-files)
+   + [Logstash](#logging-to-logstash)
  - [Writing custom plugins](#writing-custom-plugins)
  
 
@@ -1385,6 +1389,39 @@ When having JIRA_BASE_URL, Kafkistry UI will inject links to JIRA
 | `app.hostname.value`      | _(empty/none)_                                                                                 | Name of hostname to be shown in UI as `Served by: <hostname>`                                                                                              | 
 | `app.hostname.property`   | _(empty/none)_                                                                                 | Name of system property or environment variable to resolve hostname from, to be shown in UI as `Served by: <hostname>`                                     | 
 | `FORCE_TAG_FOR_PRESENCE`  | _false_                                                                                        | When set to `true` then only **Cluster Tag** presence option for topics/acls/quotas will be enabled while **All**/**Only on**/**Not on** will be disabled. | 
+
+
+
+## Logging
+
+Kafkistry uses _logback_ as logging framework.
+
+### Logging to Console output
+
+By default, Kafkistry will output all logging to console output (**stdout**).
+
+### Logging to files
+
+Logging to files can be enabled if `production` spring profile is activated by:
+- `SPRING_PROFILES_ACTIVE` (or `spring.profiles_active`) containing `production`
+
+Each file logging appender is configured to roll maximum of `10` last files, each having `6000kB` max.
+
+When logging to files, then logging to console output is disabled.
+
+### Logging to Logstash
+
+If environment variable `LOGSTASH_HOST` is present, Kafkistry will send logging to it, alongside with logging into files.
+**NOTE**: spring profile `production` must be enabled.
+
+Properties to configure:
+
+| Property            | Default     | Description                                                                                                         |
+|---------------------|-------------|---------------------------------------------------------------------------------------------------------------------|
+| `LOGSTASH_HOST`     | _n/a_       | URL to logstash host where appender should send logging requests.                                                   | 
+| `LOGSTASH_FACILITY` | `kafkistry` | Which facility to declare with each logging message.                                                                | 
+| `LOGSTASH_LEVEL`    | `DEBUG`     | Max logging level to be sent to logstash. Available levels: `OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE`, `ALL` | 
+
 
 
 ## Writing custom plugins
