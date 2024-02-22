@@ -1395,30 +1395,43 @@ When having JIRA_BASE_URL, Kafkistry UI will inject links to JIRA
 ## Logging
 
 Kafkistry uses _logback_ as logging framework.
+Various appenders are defined conditionally by `LOGGING_TARGETS` _(environment variable)_ or `logging.targets` _(config property)_
+
+Here are examples of defined `LOGGING_TARGETS` and corresponding outcome
+
+| Example value           | Console output | File(s)   | Logstash  |
+|-------------------------|----------------|-----------|-----------|
+| _undefined_             | `ENABLED`      | _n/a_     | _n/a_     |
+| `""` _(empty)_          | _n/a_          | _n/a_     | _n/a_     |
+| `console`               | `ENABLED`      | _n/a_     | _n/a_     |
+| `file`                  | _n/a_          | `ENABLED` | _n/a_     |
+| `logstash`              | _n/a_          | _n/a_     | `ENABLED` |
+| `file,logstash`         | _n/a_          | `ENABLED` | `ENABLED` |
+| `file,console`          | `ENABLED`      | `ENABLED` | _n/a_     |
+| `console,file,logstash` | `ENABLED`      | `ENABLED` | `ENABLED` |
 
 ### Logging to Console output
 
-By default, Kafkistry will output all logging to console output (**stdout**).
+By default, Kafkistry will output all logging to console output (**stdout**). Unless, specified differently by
+`LOGGING_TARGETS` or `logging.targets`
 
 ### Logging to files
 
-Logging to files can be enabled if `production` spring profile is activated by:
-- `SPRING_PROFILES_ACTIVE` (or `spring.profiles_active`) containing `production`
+Logging to files can be enabled if `file` is defined in:
+- `LOGGING_TARGETS` (or `logging.targets`) env/property containing `file`
 
 Each file logging appender is configured to roll maximum of `10` last files, each having `6000kB` max.
 
-When logging to files, then logging to console output is disabled.
-
 ### Logging to Logstash
 
-If environment variable `LOGSTASH_HOST` is present, Kafkistry will send logging to it, alongside with logging into files.
-**NOTE**: spring profile `production` must be enabled.
+If environment variable `LOGSTASH_HOST` is present and `LOGGING_TARGETS` (or `logging.targets`) env/property contains `logstash`,
+Kafkistry will send logging to it.
 
-Properties to configure:
+Properties to configure for logstash appender:
 
 | Property            | Default     | Description                                                                                                         |
 |---------------------|-------------|---------------------------------------------------------------------------------------------------------------------|
-| `LOGSTASH_HOST`     | _n/a_       | URL to logstash host where appender should send logging requests.                                                   | 
+| `LOGSTASH_HOST`     | _n/a_       | **REQUIRED**: URL to logstash host where appender should send logging requests.                                     | 
 | `LOGSTASH_FACILITY` | `kafkistry` | Which facility to declare with each logging message.                                                                | 
 | `LOGSTASH_LEVEL`    | `DEBUG`     | Max logging level to be sent to logstash. Available levels: `OFF`, `ERROR`, `WARN`, `INFO`, `DEBUG`, `TRACE`, `ALL` | 
 
