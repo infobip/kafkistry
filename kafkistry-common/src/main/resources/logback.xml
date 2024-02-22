@@ -67,17 +67,16 @@
                         <neverBlock>true</neverBlock>
                         <appender-ref ref="LOGSTASH"/>
                     </appender>
+
+                    <root level="INFO">
+                        <appender-ref ref="ASYNC_LOGSTASH"/>
+                    </root>
                 </then>
             </if>
 
             <root level="INFO">
                 <appender-ref ref="fileout"/>
                 <appender-ref ref="fileerr"/>
-                <if condition='isDefined("LOGSTASH_HOST")'>
-                    <then>
-                        <appender-ref ref="ASYNC_LOGSTASH"/>
-                    </then>
-                </if>
             </root>
         </then>
 
