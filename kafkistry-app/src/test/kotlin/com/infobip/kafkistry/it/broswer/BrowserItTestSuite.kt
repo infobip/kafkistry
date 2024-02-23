@@ -39,7 +39,6 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.net.InetAddress
 import java.util.*
-import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverContainer>()
@@ -57,7 +56,8 @@ class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverCo
             "authorizer.class.name=kafka.security.authorizer.AclAuthorizer",
             "super.users=User:ANONYMOUS",
             "auto.leader.rebalance.enable=false",
-        ]
+        ],
+        kraft = false,
 )
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -112,6 +112,7 @@ class BrowserItTestSuite {
         @Container
         @JvmField
         val chrome: KBrowserWebDriverContainer = KBrowserWebDriverContainer()
+
                 .withCapabilities(ChromeOptions())
 
         val clientFactory = ClientFactory(
