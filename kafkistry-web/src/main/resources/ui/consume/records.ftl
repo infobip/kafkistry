@@ -29,12 +29,16 @@
 </#if>
 
 <#assign statusMessages += ["Read iteration processed ${recordsResult.readCount} record(s)"]>
-<#assign statusMessages += ["Processed ${totalReadCount} record(s), ${util.prettyNumber(100.0*totalReadCount/recordsResult.totalRecordsCount)}% of ${recordsResult.totalRecordsCount} total records in topic partition(s)"]>
-<#if totalSkipCount gt 0>
-    <#assign statusMessages += ["Skipped first ${totalSkipCount} record(s) (${util.prettyNumber(100.0*totalSkipCount/recordsResult.totalRecordsCount)}% of total in partitions) due to 'Read starting from' options"]>
-</#if>
-<#if recordsResult.remainingCount gt 0>
-    <#assign statusMessages += ["Remaining ${recordsResult.remainingCount} record(s) (${util.prettyNumber(100.0*recordsResult.remainingCount/recordsResult.totalRecordsCount)}% of total in partitions) to reach end "]>
+<#if recordsResult.totalRecordsCount == 0>
+    <#assign statusMessages += ["Processed no record(s), topic is empty"]>
+<#else>
+    <#assign statusMessages += ["Processed ${totalReadCount} record(s), ${util.prettyNumber(100.0*totalReadCount/recordsResult.totalRecordsCount)}% of ${recordsResult.totalRecordsCount} total records in topic partition(s)"]>
+    <#if totalSkipCount gt 0>
+        <#assign statusMessages += ["Skipped first ${totalSkipCount} record(s) (${util.prettyNumber(100.0*totalSkipCount/recordsResult.totalRecordsCount)}% of total in partitions) due to 'Read starting from' options"]>
+    </#if>
+    <#if recordsResult.remainingCount gt 0>
+        <#assign statusMessages += ["Remaining ${recordsResult.remainingCount} record(s) (${util.prettyNumber(100.0*recordsResult.remainingCount/recordsResult.totalRecordsCount)}% of total in partitions) to reach end "]>
+    </#if>
 </#if>
 
 <#assign preRetention = 0>
