@@ -9,14 +9,10 @@ import org.springframework.stereotype.Component
 @Component
 class YamlMapper {
 
-    private val mapper: ObjectMapper
-
-    init {
-        val yamlFactory = YAMLFactory()
-                .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
-        mapper = ObjectMapper(yamlFactory)
-                .registerKotlinModule()
-    }
+    private val mapper: ObjectMapper = YAMLFactory()
+        .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
+        .let { ObjectMapper(it) }
+        .registerKotlinModule()
 
     fun serialize(any: Any?): String = mapper.writeValueAsString(any)
 
