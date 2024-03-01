@@ -166,10 +166,10 @@ class GitRepository(
             .setSshDirectory(File(FS.DETECTED.userHome(), SshConstants.SSH_DIR))
             .setConfigFile { sshConfigFile.absoluteFile }
             .apply {
-                val passphraseProvider = UsernamePasswordCredentialsProvider("", auth.sshKeyPassphrase)
-                if (auth.sshKeyPassphrase != null) {
-                    setKeyPasswordProvider { IdentityPasswordProvider(passphraseProvider) }
-                }
+                auth.sshKeyPassphrase
+                    ?.let { UsernamePasswordCredentialsProvider("", it) }
+                    ?.let { IdentityPasswordProvider(it) }
+                    ?.run { setKeyPasswordProvider { this } }
             }
             .build(JGitKeyCache())
         return TransportConfigCallback { transport ->
