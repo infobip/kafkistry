@@ -160,7 +160,7 @@ open class AbstractManagementAuditAspect(
             val resultCaptor: ResultCaptor<E, *>,
             private val finishOperations: List<(E) -> Unit>
     ) {
-        fun finalize() {
+        fun doFinalize() {
             argumentCaptors.forEach { it.apply(event) }
             stateCaptors.forEach { it.apply(event) }
             resultCaptor.apply(event)
@@ -192,7 +192,7 @@ open class AbstractManagementAuditAspect(
                 execution.stateCaptors.forEach { it.captureAfter() }
             }
             val event = execution.event.apply {
-                executeAndLogIfException { execution.finalize() }
+                executeAndLogIfException { execution.doFinalize() }
             }
             executeAndLogIfException {
                 eventsListener.acceptEvent(event)
