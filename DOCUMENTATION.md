@@ -1344,15 +1344,16 @@ repository or on some action on kafka cluster.
 
 Properties to set:
 
-| Property                 | Default | Description                                                                                                                                                                            |
-|--------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `SLACK_ENABLED`          | `false` |                                                                                                                                                                                        |
-| `SLACK_CHANNEL_ID`       | _none_  | ID of slack channel to send notifications into                                                                                                                                         |
-| `SLACK_SECRET_TOKEN`     | _none_  | Secret token to allow Kafkistry to authenticate on Slack's API, you'll need create slack bot application for your Slack workspace                                                      | 
-| `SLACK_PROXY_HOST`       | _none_  | Optional property. Use it if your Kafkistry deployment does not have access to public internet and must go through SOCKS proxy to be able to access Slack' API                         |
-| `SLACK_PROXY_PORT`       | _none_  | Optional property. _read description for SLACK_PROXY_HOST_                                                                                                                             |
-| `SLACK_LINK_BASE_HOST`   | _none_  | User accessible base url for Kafkistry UI. Needed to generate message URL(s) properly. Example value: `https://my-kafka-proxy.local`                                                   |
-| `SLACK_ENVIRONMENT_NAME` | `n/a`   | Optional property. Useful if you have different Kafkistry(s) deployed in different environments and when message appears in slack channel to be abe to distinguish where it came from. |
+| Property                  | Default | Description                                                                                                                                                                            |
+|---------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `SLACK_ENABLED`           | `false` |                                                                                                                                                                                        |
+| `SLACK_CHANNEL_ID`        | _none_  | ID of slack channel to send notifications into                                                                                                                                         |
+| `SLACK_SECRET_TOKEN`      | _none_  | Secret token to allow Kafkistry to authenticate on Slack's API, you'll need create slack bot application for your Slack workspace                                                      | 
+| `SLACK_PROXY_HOST`        | _none_  | Optional property. Use it if your Kafkistry deployment does not have access to public internet and must go through SOCKS proxy to be able to access Slack' API                         |
+| `SLACK_PROXY_PORT`        | _none_  | Optional property. _read description for SLACK_PROXY_HOST_                                                                                                                             |
+| `SLACK_LINK_BASE_HOST`    | _none_  | User accessible base url for Kafkistry UI. Needed to generate message URL(s) properly. Example value: `https://my-kafka-proxy.local`                                                   |
+| `SLACK_ENVIRONMENT_NAME`  | `n/a`   | Optional property. Useful if you have different Kafkistry(s) deployed in different environments and when message appears in slack channel to be abe to distinguish where it came from. |
+| `SLACK_INCLUDE_AUTOPILOT` | `true`  | Optional property. Useful if you wish to exclude autopilot generated audit events in slack, then set this to `false`.                                                                  |
 
 
 

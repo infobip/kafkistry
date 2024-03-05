@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.slack
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.stereotype.Component
 
 @Component
@@ -16,4 +17,13 @@ class SlackProperties {
     var channelId: String = ""
     var environmentName: String = ""
     var baseHost: String = ""
+
+    @NestedConfigurationProperty
+    var filter = SlackAuditFilterProperties()
+}
+
+class SlackAuditFilterProperties {
+
+    var includeAutopilot = true
+
 }

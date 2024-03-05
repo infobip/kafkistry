@@ -27,6 +27,8 @@ app:
     proxy-port: ${SLACK_PROXY_PORT:0}
     base-host: ${SLACK_LINK_BASE_HOST:}
     environment-name: ${SLACK_ENVIRONMENT_NAME:n/a}
+    filter:
+      include-autopilot: ${SLACK_INCLUDE_AUTOPILOT:true}
   topic-wizard:
     default-partition-count: ${WIZARD_DEFAULT_PARTITIONS:1}
     partition-thresholds: ${WIZARD_PARTITION_THRESHOLDS:{"default":{"100":10,"2000":30,"5000":60}}}
