@@ -103,7 +103,7 @@ class ClusterBrokerRackChecker(
                         violation = RuleViolation(
                             ruleClassName = checkerClassName,
                             severity = RuleViolation.Severity.WARNING,
-                            message = "All %NUM_BROKERS% brokers have same %RACK_PROPERTY%=%RACK_ID",
+                            message = "All %NUM_BROKERS% brokers have same %RACK_PROPERTY%=%RACK_ID%",
                             placeholders = mapOf(
                                 "NUM_BROKERS" to Placeholder("num.brokers", clusterInfo.nodeIds.size),
                                 "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
@@ -130,8 +130,8 @@ class ClusterBrokerRackChecker(
                         ruleClassName = checkerClassName,
                         severity = RuleViolation.Severity.WARNING,
                         message = "Different number of brokers per rack, " +
-                            "%NUM_BROKERS_MIN% brokers have %RACK_PROPERTY%=%RACK_ID_MIN (ids=%BROKER_IDS_MIN%), " +
-                            "%NUM_BROKERS_MAX% brokers have %RACK_PROPERTY%=%RACK_ID_MAX (ids=%BROKER_IDS_MAX%)",
+                            "%NUM_BROKERS_MIN% brokers have %RACK_PROPERTY%=%RACK_ID_MIN% (ids=%BROKER_IDS_MIN%), " +
+                            "%NUM_BROKERS_MAX% brokers have %RACK_PROPERTY%=%RACK_ID_MAX% (ids=%BROKER_IDS_MAX%)",
                         placeholders = mapOf(
                             "NUM_BROKERS_MIN" to Placeholder("num.brokers", minRackBrokerIds.value.size),
                             "NUM_BROKERS_MAX" to Placeholder("num.brokers", maxRackBrokerIds.value.size),
