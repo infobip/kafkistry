@@ -15,6 +15,9 @@ class GitRefreshTrigger(
     private val backgroundJob = BackgroundJob.of(
         category = "git", description = "Git repository refresh/pull",
     )
+    private val backgroundJobRepos = BackgroundJob.of(
+        category = "repository-git", description = "Data repository cache backed by git refresh",
+    )
 
     private fun currentGitCommit(): String? {
         return try {
@@ -34,11 +37,13 @@ class GitRefreshTrigger(
         } else {
             jobExecution.succeeded()
         }
-        val newCommitId = currentGitCommit()
-        val needRefresh = newCommitId != lastCommitId || newCommitId == null
-        lastCommitId = newCommitId
-        if (needRefresh) {
-            repositories.forEach { it.refresh() }
+        issuesRegistry.doCapturingException(backgroundJobRepos) {
+            val newCommitId = currentGitCommit()
+            val needRefresh = newCommitId != lastCommitId || newCommitId == null
+            if (needRefresh) {
+                repositories.forEach { it.refresh() }
+            }
+            lastCommitId = newCommitId
         }
     }
 }
