@@ -35,6 +35,7 @@ import kotlin.collections.MutableMap.MutableEntry
 abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     abstract val expectedClusterVersion: Version
+    abstract val expectedKraftEnabled: Boolean
 
     private fun entry(key: String, value: String): MutableEntry<String, ConfigValue> = object : MutableEntry<String, ConfigValue> {
         override val key: String
@@ -426,6 +427,13 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         val clusterInfo = doOnKafka { it.clusterInfo("test-id").get() }
         assertThat(clusterInfo.clusterVersion).isEqualTo(expectedClusterVersion)
         assertThat(clusterInfo.nodeIds).hasSize(3)
+        assertThat(clusterInfo.kraftEnabled).`as`("kraft enabled").isEqualTo(expectedKraftEnabled)
+        if (expectedKraftEnabled) {
+            assertThat(clusterInfo.quorumInfo.voters).hasSize(3)
+            assertThat(clusterInfo.quorumInfo.observers).hasSize(0)
+        } else {
+            assertThat(clusterInfo.quorumInfo).isEqualTo(ClusterQuorumInfo.EMPTY)
+        }
     }
 
     @Test
@@ -1196,7 +1204,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             assertDefaultConfig(TopicConfig.CLEANUP_POLICY_CONFIG).isEqualTo("delete")
             assertDefaultConfig(TopicConfig.COMPRESSION_TYPE_CONFIG).isEqualTo("producer")
             assertDefaultConfig(TopicConfig.DELETE_RETENTION_MS_CONFIG).isEqualToStringOf(24 * 3600 * 1000L)
-            if (this@ClusterOperationsTestSuite is ClusterOpsKafkaEmbeddedTest) {
+            if (this@ClusterOperationsTestSuite is ClusterOpsKafkaZkEmbeddedTest) {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
             } else {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(60 * 1000L)

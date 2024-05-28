@@ -129,6 +129,7 @@ fun newClusterInfo(
     zookeeperConnectionString: String = "zk_conn",
     clusterVersion: Version = Version.of("1.0"),
     securityEnabled: Boolean = false,
+    kraftEnabled: Boolean = false,
 ) = ClusterInfo(
     clusterId = clusterId,
     identifier = identifier,
@@ -143,6 +144,9 @@ fun newClusterInfo(
     zookeeperConnectionString = zookeeperConnectionString,
     clusterVersion = clusterVersion,
     securityEnabled = securityEnabled,
+    kraftEnabled = kraftEnabled,
+    features = ClusterFeatures.EMPTY,
+    quorumInfo = ClusterQuorumInfo.EMPTY,
 )
 
 fun TopicDescription.newExistingKafkaTopic(

@@ -1,10 +1,12 @@
 package com.infobip.kafkistry.kafka
 
-import org.apache.kafka.clients.admin.ConfigEntry
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.NamedType
 import com.infobip.kafkistry.service.StatusLevel
+import org.apache.kafka.clients.admin.ConfigEntry
+import org.apache.kafka.clients.admin.QuorumInfo
 import java.io.Serializable
+import java.util.*
 
 data class ConnectionDefinition(
     val connectionString: String,
@@ -16,9 +18,9 @@ data class ConnectionDefinition(
 fun KafkaCluster.connectionDefinition() = ConnectionDefinition(connectionString, sslEnabled, saslEnabled, profiles)
 
 data class KafkaTopicConfiguration(
-        val name: TopicName,
-        val partitionsReplicas: Map<Partition, List<BrokerId>>,
-        val config: TopicConfigMap
+    val name: TopicName,
+    val partitionsReplicas: Map<Partition, List<BrokerId>>,
+    val config: TopicConfigMap,
 )
 
 data class KafkaExistingTopic(
@@ -30,8 +32,8 @@ data class KafkaExistingTopic(
 )
 
 data class PartitionAssignments(
-        val partition: Partition,
-        val replicasAssignments: List<ReplicaAssignment>
+    val partition: Partition,
+    val replicasAssignments: List<ReplicaAssignment>,
 )
 
 fun List<PartitionAssignments>.toPartitionReplicasMap(): Map<Partition, List<BrokerId>> {
@@ -47,11 +49,11 @@ fun List<PartitionAssignments>.partitionLeadersMap(): Map<Partition, BrokerId> {
 }
 
 data class ReplicaAssignment(
-        val brokerId: BrokerId,
-        val leader: Boolean,
-        val inSyncReplica: Boolean,
-        val preferredLeader: Boolean,
-        val rank: Int
+    val brokerId: BrokerId,
+    val leader: Boolean,
+    val inSyncReplica: Boolean,
+    val preferredLeader: Boolean,
+    val rank: Int,
 )
 
 typealias ExistingConfig = Map<String, ConfigValue>
@@ -59,11 +61,11 @@ typealias Partition = Int
 typealias BrokerId = Int
 
 data class ConfigValue(
-        val value: String?,
-        val default: Boolean,
-        val readOnly: Boolean,
-        val sensitive: Boolean,
-        val source: ConfigEntry.ConfigSource
+    val value: String?,
+    val default: Boolean,
+    val readOnly: Boolean,
+    val sensitive: Boolean,
+    val source: ConfigEntry.ConfigSource,
 )
 
 data class ClusterInfo(
@@ -80,6 +82,9 @@ data class ClusterInfo(
     val zookeeperConnectionString: String,
     val clusterVersion: Version?,
     val securityEnabled: Boolean,
+    val kraftEnabled: Boolean,
+    val features: ClusterFeatures,
+    val quorumInfo: ClusterQuorumInfo,
 )
 
 data class ClusterBroker(
@@ -90,7 +95,7 @@ data class ClusterBroker(
 )
 
 data class Version(
-        val numbers: List<Int>
+    val numbers: List<Int>,
 ) {
     init {
         require(numbers.isNotEmpty()) { "Version needs to have numbers" }
@@ -128,8 +133,8 @@ data class Version(
 typealias ConsumerMemberId = String
 
 data class PartitionOffsets(
-        val begin: Long,
-        val end: Long
+    val begin: Long,
+    val end: Long,
 )
 
 enum class ConsumerGroupStatus(
@@ -176,24 +181,24 @@ data class KafkaAclRule(
     val principal: PrincipalId,
     val resource: AclResource,
     val host: String,
-    val operation: AclOperation
+    val operation: AclOperation,
 ) {
     override fun toString() = asString()
 }
 
 data class GroupOffsetsReset(
-        val seek: OffsetSeek,
-        val topics: List<TopicSeek>
+    val seek: OffsetSeek,
+    val topics: List<TopicSeek>,
 )
 
 data class TopicSeek(
-        val topic: TopicName,
-        val partitions: List<PartitionSeek>? = null
+    val topic: TopicName,
+    val partitions: List<PartitionSeek>? = null,
 )
 
 data class PartitionSeek(
-        val partition: Partition,
-        val seek: OffsetSeek? = null
+    val partition: Partition,
+    val seek: OffsetSeek? = null,
 )
 
 data class OffsetSeek(
@@ -238,27 +243,27 @@ data class TopicPartitionOffsetChange(
 ) : Serializable
 
 data class TopicPartitionReplica(
-        val rootDir: String,
-        val brokerId: BrokerId,
-        val topic: TopicName,
-        val partition: Partition,
-        val sizeBytes: Long,
-        val offsetLag: Long,
-        val isFuture: Boolean
+    val rootDir: String,
+    val brokerId: BrokerId,
+    val topic: TopicName,
+    val partition: Partition,
+    val sizeBytes: Long,
+    val offsetLag: Long,
+    val isFuture: Boolean,
 )
 
 data class TopicPartitionReAssignment(
-        val topic: TopicName,
-        val partition: Partition,
-        val addingReplicas: List<BrokerId>,
-        val removingReplicas: List<BrokerId>,
-        val allReplicas: List<BrokerId>
+    val topic: TopicName,
+    val partition: Partition,
+    val addingReplicas: List<BrokerId>,
+    val removingReplicas: List<BrokerId>,
+    val allReplicas: List<BrokerId>,
 )
 
 data class ThrottleRate(
-        val leaderRate: Long? = null,
-        val followerRate: Long? = null,
-        val alterDirIoRate: Long? = null
+    val leaderRate: Long? = null,
+    val followerRate: Long? = null,
+    val alterDirIoRate: Long? = null,
 ) {
     companion object {
         val NO_THROTTLE = ThrottleRate()
@@ -268,5 +273,39 @@ data class ThrottleRate(
 data class ClientQuota(
     val entity: QuotaEntity,
     val properties: QuotaProperties,
+)
+
+data class ClusterFeatures(
+    val finalizedFeatures: Map<String, VersionsRange>,
+    val supportedFeatures: Map<String, VersionsRange>,
+    val finalizedFeaturesEpoch: Long?,
+) {
+    companion object {
+        val EMPTY = ClusterFeatures(emptyMap(), emptyMap(), null)
+    }
+}
+
+data class VersionsRange(
+    val minVersion: Int,
+    val maxVersion: Int,
+)
+
+data class ClusterQuorumInfo(
+    val leaderId: Int,
+    val leaderEpoch: Long,
+    val highWatermark: Long,
+    val voters: List<QuorumReplicaState>,
+    val observers: List<QuorumReplicaState>,
+) {
+    companion object {
+        val EMPTY = ClusterQuorumInfo(0, 0, 0, emptyList(), emptyList())
+    }
+}
+
+data class QuorumReplicaState(
+    val replicaId: Int,
+    val logEndOffset: Long,
+    val lastFetchTimestamp: Long?,
+    val lastCaughtUpTimestamp: Long?,
 )
 

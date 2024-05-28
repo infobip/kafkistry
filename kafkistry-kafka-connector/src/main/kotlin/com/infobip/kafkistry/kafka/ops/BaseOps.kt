@@ -55,8 +55,8 @@ abstract class BaseOps(
         timeoutMs(ctx.writeRequestTimeoutMs.toInt())
     }
 
-    fun readTimeoutDuration() = Duration.ofMillis(ctx.readRequestTimeoutMs)
-    fun writeTimeoutDuration() = Duration.ofMillis(ctx.writeRequestTimeoutMs)
+    fun readTimeoutDuration(): Duration = Duration.ofMillis(ctx.readRequestTimeoutMs)
+    fun writeTimeoutDuration(): Duration = Duration.ofMillis(ctx.writeRequestTimeoutMs)
 
     fun <T> KafkaFuture<T>.asCompletableFuture(ofWhat: String): CompletableFuture<T> {
         return CompletableFuture<T>().also {

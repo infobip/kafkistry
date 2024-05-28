@@ -7,10 +7,10 @@ import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
 import com.infobip.kafkistry.it.cluster_ops.testsupport.asTestKafkaLifecycle
 import com.infobip.kafkistry.kafka.Version
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
-import org.springframework.kafka.test.EmbeddedKafkaBroker
+import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 
-class ClusterOpsKafkaEmbeddedTest : ClusterNoAclOperationsTestSuite() {
+class ClusterOpsKafkaZkEmbeddedTest : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
@@ -21,6 +21,21 @@ class ClusterOpsKafkaEmbeddedTest : ClusterNoAclOperationsTestSuite() {
 
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
     override val expectedClusterVersion = Version.of("3.6")
+    override val expectedKraftEnabled: Boolean = false
+}
+
+class ClusterOpsKafkaKraftEmbeddedTest : ClusterNoAclOperationsTestSuite() {
+
+    companion object {
+        @JvmField
+        val kafka = EmbeddedKafkaKraftBroker(3, 1).apply {
+            brokerProperty("auto.leader.rebalance.enable", "false")
+        }.asTestKafkaLifecycle()
+    }
+
+    override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
+    override val expectedClusterVersion = Version.of("3.6")
+    override val expectedKraftEnabled: Boolean = true
 }
 
 class ClusterAclOpsKafkaEmbeddedTest : ClusterAclOperationsTestSuite() {
@@ -52,6 +67,7 @@ class ClusterOpsKafkaDockerCompose_V_2_1_1_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.1")
+    override val expectedKraftEnabled: Boolean = false
 }
 
 @EnabledIfSystemProperty(
@@ -70,6 +86,7 @@ class ClusterOpsKafkaDockerCompose_V_2_3_1_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.3")
+    override val expectedKraftEnabled: Boolean = false
 }
 
 @EnabledIfSystemProperty(
@@ -88,6 +105,7 @@ class ClusterOpsKafkaDockerCompose_V_2_5_0_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.5")
+    override val expectedKraftEnabled: Boolean = false
 }
 
 
@@ -107,6 +125,7 @@ class ClusterOpsKafkaDockerCompose_V_2_8_0_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.8")
+    override val expectedKraftEnabled: Boolean = false
 }
 
 @EnabledIfSystemProperty(
@@ -125,6 +144,7 @@ class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.1")
+    override val expectedKraftEnabled: Boolean = false
 }
 
 @EnabledIfSystemProperty(
@@ -143,6 +163,7 @@ class ClusterOpsKafkaDockerCompose_V_3_3_2_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.3")
+    override val expectedKraftEnabled: Boolean = false
 }
 
 
@@ -163,6 +184,7 @@ class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.4")
+    override val expectedKraftEnabled: Boolean = false
 }
 
 @EnabledIfSystemProperty(
@@ -183,6 +205,7 @@ class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuit
 
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.6")
+    override val expectedKraftEnabled: Boolean = true
 }
 
 

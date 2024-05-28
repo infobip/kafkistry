@@ -1,30 +1,32 @@
 package com.infobip.kafkistry
 
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.header.internals.RecordHeader
-import org.apache.kafka.common.header.internals.RecordHeaders
-import org.apache.kafka.common.serialization.IntegerSerializer
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
-import org.assertj.core.util.Files
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
 import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetricsProvider
 import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.acl.toAclRule
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.newQuota
 import com.infobip.kafkistry.service.newTopic
-import com.infobip.kafkistry.service.acl.toAclRule
 import com.infobip.kafkistry.service.toKafkaCluster
 import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole
 import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
+import jakarta.servlet.http.HttpServletRequest
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.config.TopicConfig
+import org.apache.kafka.common.header.internals.RecordHeader
+import org.apache.kafka.common.header.internals.RecordHeaders
+import org.apache.kafka.common.serialization.IntegerSerializer
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.StringSerializer
+import org.assertj.core.util.Files
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
@@ -34,17 +36,16 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.core.env.get
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule
+import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
+import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 import java.io.File
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.time.Duration
 import java.util.*
-import jakarta.servlet.http.HttpServletRequest
-import org.apache.kafka.common.config.TopicConfig
-import org.springframework.core.Ordered
-import org.springframework.core.annotation.Order
 import kotlin.random.Random
 
 /**
@@ -62,7 +63,7 @@ fun manualMain(
     args: Array<String>,
     extraProfiles: List<String> = emptyList(),
     extraProperties: List<String> = emptyList(),
-    extraInitializers: List<ApplicationContextInitializer<ConfigurableApplicationContext>> = emptyList()
+    extraInitializers: List<ApplicationContextInitializer<ConfigurableApplicationContext>> = emptyList(),
 ) {
     SpringApplicationBuilder()
         .sources(configClass, DataStateInitializer::class.java)
@@ -113,22 +114,32 @@ class DataStateInitializer(
     private val ctx: ConfigurableApplicationContext,
     private val kafkaClientProvider: KafkaClientProvider,
     private val partitionsReplicasAssignor: PartitionsReplicasAssignor,
-    private val consumerGroupsProvider: KafkaConsumerGroupsProvider
+    private val consumerGroupsProvider: KafkaConsumerGroupsProvider,
 ) : OrderedApplicationRunner() {
 
     private val log = LoggerFactory.getLogger("manual-init")
     private lateinit var api: ApiClient
+    private val kraft = true
 
-    private val kafka = EmbeddedKafkaRule(6)
-        .brokerProperty("log.retention.bytes", "123456789")
-        .brokerProperty("log.segment.bytes", "12345678")
-        .brokerProperty("authorizer.class.name", kafka.security.authorizer.AclAuthorizer::class.java.name)
-        .brokerProperty("super.users", "User:ANONYMOUS")
-        .also {
-            log.info("EmbeddedKafka starting...")
-            it.before()
-            log.info("EmbeddedKafka started: {}", it.embeddedKafka.brokersAsString)
+    private val kafka = if (kraft) {
+        EmbeddedKafkaKraftBroker(6, 1).apply {
+            brokerProperty("log.retention.bytes", "123456789")
+            brokerProperty("log.segment.bytes", "12345678")
+            brokerProperty("authorizer.class.name", org.apache.kafka.metadata.authorizer.StandardAuthorizer::class.java.name)
+            brokerProperty("super.users", "User:ANONYMOUS")
         }
+    } else {
+        EmbeddedKafkaZKBroker(6).apply {
+            brokerProperty("log.retention.bytes", "123456789")
+            brokerProperty("log.segment.bytes", "12345678")
+            brokerProperty("authorizer.class.name", kafka.security.authorizer.AclAuthorizer::class.java.name)
+            brokerProperty("super.users", "User:ANONYMOUS")
+        }
+    }.apply {
+        log.info("EmbeddedKafka starting...")
+        afterPropertiesSet()
+        log.info("EmbeddedKafka started: {}", brokersAsString)
+    }
 
     private fun <T> doRetrying(retries: Int = 5, operation: () -> T): T? {
         var attemptsLeft = retries
@@ -151,7 +162,7 @@ class DataStateInitializer(
         topicName: TopicName,
         partitions: Int,
         replication: Int,
-        brokers: List<BrokerId>
+        brokers: List<BrokerId>,
     ) {
         val assignments = assignRoundRobin(brokers, partitions, replication)
         reAssign(cluster, topicName, assignments)
@@ -160,7 +171,7 @@ class DataStateInitializer(
     private fun assignRoundRobin(
         brokers: List<BrokerId>,
         partitions: Int,
-        replication: Int
+        replication: Int,
     ): Map<Partition, List<BrokerId>> {
         return partitionsReplicasAssignor.assignNewPartitionReplicas(
             existingAssignments = emptyMap(),
@@ -202,7 +213,7 @@ class DataStateInitializer(
     @Bean
     fun mockBrokerDiskMetrics() = object : BrokerDiskMetricsProvider {
         override fun brokersDisk(
-            clusterIdentifier: KafkaClusterIdentifier, brokers: List<ClusterBroker>
+            clusterIdentifier: KafkaClusterIdentifier, brokers: List<ClusterBroker>,
         ): Map<BrokerId, BrokerDiskMetric> {
             val (total, free) = File(Files.temporaryFolderPath()).let {
                 it.totalSpace to it.freeSpace
@@ -233,7 +244,7 @@ class DataStateInitializer(
         val rootPath = ctx.httpRootPath()
         log.info("KR started on http://localhost:$serverPort$rootPath")
         val clusterIdentifier = "kafka-${System.getProperty("user.name")}-pc"
-        val cluster = api.testClusterConnection(kafka.embeddedKafka.brokersAsString)
+        val cluster = api.testClusterConnection(kafka.brokersAsString)
             .copy(identifier = clusterIdentifier)
             .toKafkaCluster()
             .copy(tags = listOf("home", "test"))
@@ -401,7 +412,7 @@ class DataStateInitializer(
                 reAssign(cluster, name, 6, 3, (0..3).toList())
             }
             val producerConfig = mapOf(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.embeddedKafka.brokersAsString
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.brokersAsString
             )
             log.info("Producing to topic {}", name)
             KafkaProducer(producerConfig, StringSerializer(), StringSerializer()).use { producer ->
@@ -452,7 +463,7 @@ class DataStateInitializer(
                 api.createMissingTopic(name, clusterIdentifier)
             }
             val producerConfig = mapOf(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.embeddedKafka.brokersAsString
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.brokersAsString
             )
             log.info("Producing to topic {}", name)
             KafkaProducer(producerConfig, StringSerializer(), StringSerializer()).use { producer ->
@@ -492,7 +503,7 @@ class DataStateInitializer(
                     .forEach { it.get() }
             }
             val consumerConfig = mapOf(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.embeddedKafka.brokersAsString,
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.brokersAsString,
                 ConsumerConfig.GROUP_ID_CONFIG to "test-consumer",
                 ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "latest"
             )

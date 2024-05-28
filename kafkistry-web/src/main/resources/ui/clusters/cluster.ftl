@@ -26,6 +26,7 @@
 <#include "../commonMenu.ftl">
 
 <#import "../common/util.ftl" as util>
+<#import "../common/infoIcon.ftl" as info>
 
 <div class="container">
     <h3>Cluster: <span class="text-monospace">${clusterIdentifier}</span></h3>
@@ -173,6 +174,94 @@
             <th>Last refresh</th>
             <td class="time" data-time="${clusterStatus.lastRefreshTime?c}"></td>
         </tr>
+        <#if clusterStatus.clusterInfo??>
+            <#assign clusterInfo = clusterStatus.clusterInfo>
+            <tr>
+                <th>Cluster id</th>
+                <td><code>${clusterInfo.clusterId}</code></td>
+            </tr>
+            <tr>
+                <th>Consensus type</th>
+                <td>
+                    <#assign clusterConsensusType = clusterInfo.kraftEnabled?then("KRaft", "Zookeper")>
+                    <span class="badge badge-dark">${clusterConsensusType}</span>
+                </td>
+            </tr>
+            <#if clusterInfo.kraftEnabled>
+                <tr>
+                    <th>Leader</th>
+                    <td>
+                        <strong>ID</strong>:${clusterInfo.quorumInfo.leaderId?c}
+                        <strong>Epoch</strong>:${clusterInfo.quorumInfo.leaderEpoch?c}
+                        <strong>High-Watermark</strong>:${clusterInfo.quorumInfo.highWatermark?c}
+                    </td>
+                </tr>
+                <#macro quorumReplicas replicas>
+                <#-- @ftlvariable name="replicas" type="java.util.List<com.infobip.kafkistry.kafka.QuorumReplicaState>" -->
+                    <table>
+                        <tr>
+                            <th>Replica ID</th>
+                            <th>Log end offset</th>
+                            <th>Last fetch</th>
+                            <th>Last caught up</th>
+                        </tr>
+                        <#list replicas as replica>
+                            <tr>
+                                <td>${replica.replicaId?c}</td>
+                                <td>${replica.logEndOffset?c}</td>
+                                <td class="small">
+                                    <#if replica.lastFetchTimestamp??>
+                                        <span class="time" data-time="${replica.lastFetchTimestamp?c}"></span>
+                                    <#else>
+                                        <i>n/a</i>
+                                    </#if>
+                                </td>
+                                <td class="small">
+                                    <#if replica.lastCaughtUpTimestamp??>
+                                        <span class="time" data-time="${replica.lastCaughtUpTimestamp?c}"></span>
+                                    <#else>
+                                        <i>n/a</i>
+                                    </#if>
+                                </td>
+                            </tr>
+                        </#list>
+                    </table>
+                </#macro>
+                <tr>
+                    <th>Voters</th>
+                    <td>
+                        <#if clusterInfo.quorumInfo.voters?size == 0>
+                            <i>(none)</i>
+                        <#else>
+                            <@quorumReplicas replicas=clusterInfo.quorumInfo.voters/>
+                        </#if>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Observers</th>
+                    <td>
+                        <#if clusterInfo.quorumInfo.observers?size == 0>
+                            <i>(none)</i>
+                        <#else>
+                            <@quorumReplicas replicas=clusterInfo.quorumInfo.observers/>
+                        </#if>
+                    </td>
+                </tr>
+            <#else>
+                <tr>
+                    <th>Controller node id</th>
+                    <td>${clusterInfo.controllerId}</td>
+                </tr>
+            </#if>
+            <tr>
+                <th>Nodes/Broker ids</th>
+                <td><#include "clusterNodesList.ftl"></td>
+            </tr>
+            <tr>
+                <th>Connection</th>
+                <td class="small">${clusterInfo.connectionString}</td>
+            </tr>
+        </#if>
         <#if autopilotEnabled>
             <tr class="<#if autopilotActions?size gt 0>no-hover</#if>">
                 <th>Autopilot</th>
@@ -279,27 +368,7 @@
                 <#assign clusterInfo = clusterStatus.clusterInfo>
                 <table class="table table-sm">
                     <tr>
-                        <th>Cluster id</th>
-                        <td>${clusterInfo.clusterId}</td>
-                    </tr>
-                    <tr>
-                        <th>Identifier</th>
-                        <td>${clusterInfo.identifier}</td>
-                    </tr>
-                    <tr>
-                        <th>Controller node id</th>
-                        <td>${clusterInfo.controllerId}</td>
-                    </tr>
-                    <tr>
-                        <th>Nodes/Broker ids</th>
-                        <td><#include "clusterNodesList.ftl"></td>
-                    </tr>
-                    <tr>
-                        <th>Connection</th>
-                        <td>${clusterInfo.connectionString}</td>
-                    </tr>
-                    <tr>
-                        <th>Broker config</th>
+                        <th>Select broker config</th>
                         <td>
                             <ul class="nav">
                                 <#list clusterInfo.nodeIds as brokerId>
