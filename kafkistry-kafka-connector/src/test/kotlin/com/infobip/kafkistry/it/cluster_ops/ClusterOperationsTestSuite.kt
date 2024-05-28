@@ -282,15 +282,19 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             it.reAssignPartitions("re-assign-partition-replicas-test-topic", newAssignments, 1024).get()
         }
         verifyReAssignment("re-assign-partition-replicas-test-topic", newAssignments)
-        val topicsAfter = doOnKafka { it.listAllTopics().get() }
-        assertThat(topicsAfter).hasSize(1)
-        val existingTopicAfter = topicsAfter[0]
-        assertThat(existingTopicAfter.name).isEqualTo("re-assign-partition-replicas-test-topic")
-        assertThat(existingTopicAfter.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(newAssignments)
-        assertThat(existingTopicAfter.config.mapValues { it.value.value }).`as`("Topic throttle removed").contains(
-                Assertions.entry("follower.replication.throttled.replicas", ""),
-                Assertions.entry("leader.replication.throttled.replicas", ""),
-        )
+        Awaitility.await("topic to be reconfigured after reassignment")
+            .atMost(5, TimeUnit.SECONDS)
+            .untilAsserted {
+                val topicsAfter = doOnKafka { it.listAllTopics().get() }
+                assertThat(topicsAfter).hasSize(1)
+                val existingTopicAfter = topicsAfter[0]
+                assertThat(existingTopicAfter.name).isEqualTo("re-assign-partition-replicas-test-topic")
+                assertThat(existingTopicAfter.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(newAssignments)
+                assertThat(existingTopicAfter.config.mapValues { it.value.value }).`as`("Topic throttle removed").contains(
+                    Assertions.entry("follower.replication.throttled.replicas", ""),
+                    Assertions.entry("leader.replication.throttled.replicas", ""),
+                )
+            }
     }
 
     @Test
@@ -1330,7 +1334,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         Awaitility.await("For topic '$topic' to be created")
             .atMost(5, TimeUnit.SECONDS)
             .untilAsserted {
-                repeat(3) {
+                repeat(6) {
                     assertThat(listAllTopicNames().get()).contains(topic)
                 }
             }
