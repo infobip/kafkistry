@@ -1215,6 +1215,17 @@ where value is list of fully qualified class names to disable/exclude from evalu
      |-----------------------------------|--------------|----------------------------------------------------------------------------------|
      | `app.resources.thresholds.low`    | `65.0` (_%_) | Upper bound for usage percentage to be classified as *low*.                      |
      | `app.resources.thresholds.medium` | `90.0` (_%_) | Upper bound for usage percentage to be classified as *medium*. (above is *high*) |
+ - [ClusterBrokerRackChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterBrokerRackChecker.kt)
+   - It reports issues when there is un-even number of brokers having same `broker-rack` defined. This check is there to ensure that brokers are evenly spread onto different racks/availability-zones.
+   - By default, when all brokers have `broker-rack=null` or some `broker-rack=<CUSTOM_UNDEFINED_VALUE>` situation is then considered as OK.
+   - 
+     | Property                                         | Default        | Description                                                                                                                                                                                                                                                        |
+     |--------------------------------------------------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+     | `app.clusters-inspect.rack.undefined-rack-value` | `""` *(empty)* | Custom specific value that is considered as *"undefined"*                                                                                                                                                                                                          |
+     | `app.clusters-inspect.rack.tolerate-undefined`   | `true`         | When `true` then issue will be raised if any of brokers has *undefined* `broker.rack`                                                                                                                                                                              |
+     | `app.clusters-inspect.rack.tolerate-all-qual`    | `false`        | When `false` then issue will be raised if all brokers have same *non-undefined* `broker.rack`                                                                                                                                                                      |
+     | `app.clusters-inspect.rack.strict-balance`       | `false`        | When `true` then strict balance is required, meaning that there is exact equal numbers of brokers with same `broker.rack`. Note, strict balance is not possible in situations where number of brokers is not divisible by number of different `broker.rack`-values |
+   
 
 ### Custom cluster-level issue checkers
 
