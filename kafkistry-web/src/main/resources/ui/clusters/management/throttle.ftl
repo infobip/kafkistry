@@ -32,7 +32,7 @@
             <#if brokerId?is_string>
                 <div class="alert alert-sm alert-inline m-0 alert-secondary">${brokerId}</div>
             <#else>
-                <@broker.clusterBrokerId brokerId=brokerId/>
+                <@broker.clusterNodeId nodeId=brokerId/>
             </#if>
         </th>
 
@@ -86,7 +86,7 @@
         </thead>
         <tbody>
         <@throttleRow brokerId="ALL" throttle=commonThrottle/>
-        <#list clusterInfo.nodeIds as brokerId>
+        <#list clusterInfo.brokerIds as brokerId>
             <@throttleRow brokerId=brokerId throttle=(clusterInfo.perBrokerThrottle?api.get(brokerId))!{}/>
         </#list>
         </tbody>

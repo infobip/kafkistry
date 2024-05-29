@@ -203,10 +203,10 @@ class OperationSuggestionService(
             )
         val existingAssignments = existingTopicInfo.partitionsAssignments.toPartitionReplicasMap()
         val partitionLoads = existingAssignments.partitionLoads(topicOnCluster.currentTopicReplicaInfos)
-        val allClusterBrokers = clusterStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.nodeIds
+        val allClusterBrokerIds = clusterStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds
         val assignmentsChange = newAssignmentGenerator(
             ReAssignContext(
-                topicName, existingAssignments, partitionLoads, allClusterBrokers
+                topicName, existingAssignments, partitionLoads, allClusterBrokerIds
             )
         )
         return ReBalanceSuggestion(
@@ -215,7 +215,7 @@ class OperationSuggestionService(
             oldDisbalance = existingTopicInfo.assignmentsDisbalance,
             newDisbalance = partitionsAssignor.assignmentsDisbalance(
                 assignmentsChange.newAssignments,
-                allClusterBrokers,
+                allClusterBrokerIds,
                 partitionLoads
             ),
             dataMigration = with(inspectionService) {
@@ -321,7 +321,7 @@ class OperationSuggestionService(
         val topicsReBalanceStatuses = topicsReBalanceSuggestions.mapValues {
             it.value.existingTopicInfo.partitionsAssignments.toAssignmentsInfo(
                 it.value.assignmentsChange,
-                clusterInfo.nodeIds
+                clusterInfo.brokerIds
             )
         }
         val totalDataMigration = topicsReBalanceSuggestions.values

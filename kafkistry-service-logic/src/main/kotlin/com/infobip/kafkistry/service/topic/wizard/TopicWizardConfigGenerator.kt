@@ -174,7 +174,7 @@ class TopicWizardConfigGenerator(
             HighAvailability.STRONG_DURABILITY -> 3 to false
         }
         val numberBrokerNodes = when (clusterState.stateType) {
-            StateType.VISIBLE -> clusterState.value().clusterInfo.nodeIds.size
+            StateType.VISIBLE -> clusterState.value().clusterInfo.brokerIds.size
             StateType.DISABLED -> wantedReplicationFactor
             else -> throw TopicWizardException(
                     "Can't suggest replication factor for cluster '$clusterIdentifier' because it's state is ${clusterState.stateType}"

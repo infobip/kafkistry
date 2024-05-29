@@ -50,7 +50,7 @@ class TopicManagementService(
         val clusterBrokersLoad = inspectionService.inspectClusterBrokersLoad(clusterData)
         val assignments = partitionsReplicasAssignor.assignNewPartitionReplicas(
                 existingAssignments = emptyMap(),
-                allBrokers = clusterData.clusterInfo.nodeIds,
+                allBrokers = clusterData.clusterInfo.brokerIds,
                 numberOfNewPartitions = properties.partitionCount,
                 replicationFactor = properties.replicationFactor,
                 existingPartitionLoads = inspectionResult.existingTopicInfo
@@ -255,7 +255,7 @@ class TopicManagementService(
         val inspectionResult = inspectionService.inspectTopicOnCluster(topicDescription, cluster.ref())
         val validation = partitionsReplicasAssignor.validateAssignments(
                 assignments = newPartitionsAssignments,
-                allBrokers = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.nodeIds,
+                allBrokers = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds,
                 topicProperties = topicDescription.propertiesForCluster(cluster.ref())
         )
         if (!validation.valid) {
@@ -296,7 +296,7 @@ class TopicManagementService(
                     ?: inspectionResult.existingTopicInfo.properties
             val validation = partitionsReplicasAssignor.validateAssignments(
                     assignments = newPartitionsAssignments,
-                    allBrokers = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.nodeIds,
+                    allBrokers = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds,
                     topicProperties = topicProperties
             )
             if (!validation.valid) {

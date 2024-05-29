@@ -32,7 +32,7 @@ class TopicDiskAnalyzer(
         preferUsingDescriptionProps: Boolean,
     ): TopicClusterDiskUsage {
         val brokerIds: List<BrokerId> = clustersStateProvider.getLatestClusterStateValue(clusterRef.identifier)
-            .clusterInfo.nodeIds
+            .clusterInfo.brokerIds
         val topicClusterStatus = if (topicDescription != null) {
             topicsInspectionService.inspectTopicOnCluster(topicDescription, clusterRef)
         } else {

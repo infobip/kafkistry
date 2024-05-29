@@ -194,7 +194,7 @@ class TopicsController(
                 ?.filter { it in listOf("partition-count", "replication-factor") }
                 ?: emptyList()
         val assignmentStatus = topicStatus.existingTopicInfo?.partitionsAssignments
-                ?.toAssignmentsInfo(null, clusterInfo?.nodeIds ?: emptyList())
+                ?.toAssignmentsInfo(null, clusterInfo?.brokerIds ?: emptyList())
         val topicConsumerGroups = consumersApi.clusterTopicConsumers(clusterIdentifier, topicName)
         val topicOffsets = topicOffsetsApi.getTopicOffsets(topicName, clusterIdentifier)
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)

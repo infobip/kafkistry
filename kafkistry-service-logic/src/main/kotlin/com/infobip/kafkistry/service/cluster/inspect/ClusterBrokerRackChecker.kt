@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.cluster.inspect
 
+import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.Placeholder
@@ -35,14 +36,22 @@ class ClusterBrokerRackChecker(
             .valueOrNull()
             ?.clusterInfo
             ?: return emptyList()
-        if (clusterInfo.nodeIds.size == 1) {
-            return emptyList()  //no point in checking rack if having only one node
-        }
         if (clusterInfo.onlineNodeIds.toSet() != clusterInfo.nodeIds.toSet()) {
             return emptyList()  //some nodes are down, no further analysis
         }
-        val nodesRackNullable = clusterInfo.perBrokerConfig.mapValues { (_, configs) ->
-            configs[KafkaConfig.RackProp()]?.value?.takeIf { it != properties.undefinedRackValue }
+        val brokerIssues = checkNodesIssues(clusterInfo.brokerIds, ClusterNodeRole.BROKER, clusterInfo.perBrokerConfig)
+        val controllerIssues = checkNodesIssues(clusterInfo.controllerIds, ClusterNodeRole.CONTROLLER, clusterInfo.perBrokerConfig)
+        return brokerIssues + controllerIssues
+    }
+
+    private fun checkNodesIssues(
+        nodeIds: List<NodeId>, processRole: ClusterNodeRole, perNodeConfig: Map<NodeId, ExistingConfig>,
+    ): List<ClusterInspectIssue> {
+        if (nodeIds.size == 1) {
+            return emptyList()  //no point in checking rack if having only one node
+        }
+        val nodesRackNullable = nodeIds.associateWith { perNodeConfig[it] }.mapValues { (_, configs) ->
+            configs?.get(KafkaConfig.RackProp())?.value?.takeIf { it != properties.undefinedRackValue }
         }
         val allUndefined = nodesRackNullable.values.all { it == null }
         if (allUndefined) {
@@ -52,36 +61,38 @@ class ClusterBrokerRackChecker(
                 listOf(
                     ClusterInspectIssue(
                         name = RACK_ABSENT_ISSUE,
-                        doc = "Indicates that nodes in cluster have no rack defined",
+                        doc = "Indicates that $processRole nodes in cluster have no rack defined",
                         violation = RuleViolation(
                             ruleClassName = checkerClassName,
                             severity = RuleViolation.Severity.WARNING,
-                            message = "All %NUM_BROKERS% brokers do not have %RACK_PROPERTY% defined",
+                            message = "All %NUM_NODES% %NODE_ROLE%(s) do not have %RACK_PROPERTY% defined",
                             placeholders = mapOf(
-                                "NUM_BROKERS" to Placeholder("num.brokers", clusterInfo.nodeIds.size),
+                                "NUM_NODES" to Placeholder("num.nodes", nodeIds.size),
                                 "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
+                                "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                             )
                         )
                     )
                 )
             }
         }
-        val undefinedRackBrokerIds = nodesRackNullable
+        val undefinedRackNodeIds = nodesRackNullable
             .filterValues { it == null }
             .keys.sorted()
-        if (undefinedRackBrokerIds.isNotEmpty()) {
+        if (undefinedRackNodeIds.isNotEmpty()) {
             return listOf(
                 ClusterInspectIssue(
                     name = RACK_ABSENT_ISSUE,
-                    doc = "Indicates that some nodes in cluster have no rack defined, while some do",
+                    doc = "Indicates that some $processRole nodes in cluster have no rack defined, while some do",
                     violation = RuleViolation(
                         ruleClassName = checkerClassName,
                         severity = RuleViolation.Severity.WARNING,
-                        message = "%NUM_BROKERS% brokers %BROKER_IDS% do not have %RACK_PROPERTY% defined",
+                        message = "%NUM_NODES% %NODE_ROLE%(s) %BROKER_IDS% do not have %RACK_PROPERTY% defined",
                         placeholders = mapOf(
-                            "NUM_BROKERS" to Placeholder("num.brokers", clusterInfo.nodeIds.size),
-                            "BROKER_IDS" to Placeholder("broker.ids", undefinedRackBrokerIds),
+                            "NUM_NODES" to Placeholder("num.nodes", nodeIds.size),
+                            "NODE_IDS" to Placeholder("node.ids", undefinedRackNodeIds),
                             "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
+                            "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                         )
                     )
                 )
@@ -99,15 +110,16 @@ class ClusterBrokerRackChecker(
                 listOf(
                     ClusterInspectIssue(
                         name = EQUAL_RACK_ISSUE,
-                        doc = "Indicates that all nodes in cluster have same rack, meaning less redundancy",
+                        doc = "Indicates that all $processRole nodes in cluster have same rack, meaning less redundancy",
                         violation = RuleViolation(
                             ruleClassName = checkerClassName,
                             severity = RuleViolation.Severity.WARNING,
-                            message = "All %NUM_BROKERS% brokers have same %RACK_PROPERTY%=%RACK_ID%",
+                            message = "All %NUM_NODES% %NODE_ROLE%(s) have same %RACK_PROPERTY%=%RACK_ID%",
                             placeholders = mapOf(
-                                "NUM_BROKERS" to Placeholder("num.brokers", clusterInfo.nodeIds.size),
+                                "NUM_NODES" to Placeholder("num.nodes", nodeIds.size),
                                 "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
                                 "RACK_ID" to Placeholder(KafkaConfig.RackProp(), nodesRack.values.first()),
+                                "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                             )
                         )
                     )
@@ -115,31 +127,32 @@ class ClusterBrokerRackChecker(
             }
         }
         val rackNodes = nodesRack.entries.groupBy ({ it.value }, { it.key })
-        val minRackBrokerIds = rackNodes.minBy { it.value.size }
-        val maxRackBrokerIds = rackNodes.maxBy { it.value.size }
-        val exactBalance = minRackBrokerIds.value.size == maxRackBrokerIds.value.size
-        val semiBalance = minRackBrokerIds.value.size + 1 == maxRackBrokerIds.value.size
+        val minRackNodeIds = rackNodes.minBy { it.value.size }
+        val maxRackNodeIds = rackNodes.maxBy { it.value.size }
+        val exactBalance = minRackNodeIds.value.size == maxRackNodeIds.value.size
+        val semiBalance = minRackNodeIds.value.size + 1 == maxRackNodeIds.value.size
         if (exactBalance || (semiBalance && !properties.strictBalance)) {
             return emptyList()
         } else {
             return listOf(
                 ClusterInspectIssue(
                     name = RACK_DISBALANCE_ISSUE,
-                    doc = "Indicates that different amount of nodes in cluster have same rack, meaning disbalance",
+                    doc = "Indicates that different amount of $processRole nodes in cluster have same rack, meaning disbalance",
                     violation = RuleViolation(
                         ruleClassName = checkerClassName,
                         severity = RuleViolation.Severity.WARNING,
-                        message = "Different number of brokers per rack, " +
-                            "%NUM_BROKERS_MIN% brokers have %RACK_PROPERTY%=%RACK_ID_MIN% (ids=%BROKER_IDS_MIN%), " +
-                            "%NUM_BROKERS_MAX% brokers have %RACK_PROPERTY%=%RACK_ID_MAX% (ids=%BROKER_IDS_MAX%)",
+                        message = "Different number of %NODE_ROLE%(s) per rack, " +
+                            "%NUM_NODES_MIN% %NODE_ROLE%(s) have %RACK_PROPERTY%=%RACK_ID_MIN% (ids=%NODE_IDS_MIN%), " +
+                            "%NUM_NODES_MAX% %NODE_ROLE%(s) have %RACK_PROPERTY%=%RACK_ID_MAX% (ids=%NODE_IDS_MAX%)",
                         placeholders = mapOf(
-                            "NUM_BROKERS_MIN" to Placeholder("num.brokers", minRackBrokerIds.value.size),
-                            "NUM_BROKERS_MAX" to Placeholder("num.brokers", maxRackBrokerIds.value.size),
-                            "BROKER_IDS_MIN" to Placeholder("broker.ids", minRackBrokerIds.value.sorted()),
-                            "BROKER_IDS_MAX" to Placeholder("broker.ids", maxRackBrokerIds.value.sorted()),
-                            "RACK_ID_MIN" to Placeholder(KafkaConfig.RackProp(), minRackBrokerIds.key),
-                            "RACK_ID_MAX" to Placeholder(KafkaConfig.RackProp(), maxRackBrokerIds.key),
+                            "NUM_NODES_MIN" to Placeholder("num.nodes", minRackNodeIds.value.size),
+                            "NUM_NODES_MAX" to Placeholder("num.nodes", maxRackNodeIds.value.size),
+                            "NODE_IDS_MIN" to Placeholder("nodes.ids", minRackNodeIds.value.sorted()),
+                            "NODE_IDS_MAX" to Placeholder("nodes.ids", maxRackNodeIds.value.sorted()),
+                            "RACK_ID_MIN" to Placeholder(KafkaConfig.RackProp(), minRackNodeIds.key),
+                            "RACK_ID_MAX" to Placeholder(KafkaConfig.RackProp(), maxRackNodeIds.key),
                             "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
+                            "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                         )
                     )
                 )

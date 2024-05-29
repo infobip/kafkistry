@@ -3,8 +3,8 @@ package com.infobip.kafkistry
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
-import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
-import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetricsProvider
+import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
+import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetricsProvider
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.acl.toAclRule
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
@@ -211,14 +211,14 @@ class DataStateInitializer(
     }
 
     @Bean
-    fun mockBrokerDiskMetrics() = object : BrokerDiskMetricsProvider {
-        override fun brokersDisk(
-            clusterIdentifier: KafkaClusterIdentifier, brokers: List<ClusterBroker>,
-        ): Map<BrokerId, BrokerDiskMetric> {
+    fun mockNodeDiskMetrics() = object : NodeDiskMetricsProvider {
+        override fun nodesDisk(
+            clusterIdentifier: KafkaClusterIdentifier, nodes: List<ClusterNode>,
+        ): Map<NodeId, NodeDiskMetric> {
             val (total, free) = File(Files.temporaryFolderPath()).let {
                 it.totalSpace to it.freeSpace
             }
-            return brokers.associate { it.brokerId to BrokerDiskMetric(total, free) }
+            return nodes.associate { it.nodeId to NodeDiskMetric(total, free) }
         }
     }
 

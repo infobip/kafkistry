@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.service.resources
 
 import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
+import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
@@ -108,7 +108,7 @@ operator fun BrokerDiskUsage.plus(other: BrokerDiskUsage) = BrokerDiskUsage(
     freeCapacityBytes = freeCapacityBytes plusNullable other.freeCapacityBytes,
 )
 
-fun BrokerDiskUsage.portionsOf(diskMetric: BrokerDiskMetric?, usageLevelClassifier: UsageLevelClassifier): BrokerDiskPortions {
+fun BrokerDiskUsage.portionsOf(diskMetric: NodeDiskMetric?, usageLevelClassifier: UsageLevelClassifier): BrokerDiskPortions {
     val usedPercentOfCapacity = totalUsedBytes percentageOfNullable diskMetric?.total
     val possibleUsedPercentOfCapacity = boundedSizePossibleUsedBytes percentageOfNullable diskMetric?.total
     return BrokerDiskPortions(
@@ -138,14 +138,14 @@ fun Map<BrokerId, BrokerDisk>.worstUsageLevel(selector: BrokerDiskPortions.() ->
     ?: UsageLevel.NONE
 
 operator fun BrokerDisk.minus(other: BrokerDisk): BrokerDisk {
-    val brokerDiskMetric = BrokerDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)
+    val brokerDiskMetric = NodeDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)
     val usageDiff = usage - other.usage
     val diffPortions = usageDiff.portionsOf(brokerDiskMetric, UsageLevelClassifier.NONE)
     return BrokerDisk(usageDiff.copy(totalCapacityBytes = null, freeCapacityBytes = null), diffPortions)
 }
 
 operator fun BrokerDisk.unaryMinus(): BrokerDisk {
-    val brokerDiskMetric = BrokerDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)
+    val brokerDiskMetric = NodeDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)
     val first = BrokerDiskUsage.ZERO.copy(
         totalCapacityBytes = usage.totalCapacityBytes,
         freeCapacityBytes = usage.freeCapacityBytes,

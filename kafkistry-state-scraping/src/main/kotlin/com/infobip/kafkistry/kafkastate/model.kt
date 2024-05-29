@@ -2,7 +2,7 @@ package com.infobip.kafkistry.kafkastate
 
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.StateType.*
-import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
+import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.model.ConsumerGroupId
@@ -89,23 +89,24 @@ data class TopicReplicaInfos(
 )
 
 data class ReplicaDirs(
-        val replicas: Map<TopicName, TopicReplicaInfos>
+    val replicas: Map<TopicName, TopicReplicaInfos>,
 )
 
 data class OldestRecordsAges(
-        val earliestRecordAges: Map<TopicName, Map<Partition, Long>>
+    val earliestRecordAges: Map<TopicName, Map<Partition, Long>>,
 )
 
 data class TopicPartitionReAssignments(
-        val topicReAssignments: List<TopicPartitionReAssignment>
+    val topicReAssignments: List<TopicPartitionReAssignment>,
 )
 
 data class ClusterQuotas(
-        val quotas: Map<QuotaEntity, QuotaProperties>
+    val quotas: Map<QuotaEntity, QuotaProperties>,
 )
 
-data class ClusterBrokerMetrics(
-        val brokersMetrics: Map<BrokerId, BrokerDiskMetric>
+data class ClusterNodeMetrics(
+    val nodesMetrics: Map<NodeId, NodeDiskMetric>,
+    val brokersMetrics: Map<BrokerId, NodeDiskMetric>,
 )
 
 sealed class Maybe<out V> {

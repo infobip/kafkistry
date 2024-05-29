@@ -8,7 +8,7 @@ import com.infobip.kafkistry.autopilot.fencing.LocalActionAcquireFencing
 import com.infobip.kafkistry.autopilot.repository.*
 import com.infobip.kafkistry.events.EventPublisher
 import com.infobip.kafkistry.kafkastate.AbstractKafkaStateProvider
-import com.infobip.kafkistry.kafkastate.BrokerDiskMetricsStateProvider.Companion.BROKERS_DISK_METRICS
+import com.infobip.kafkistry.kafkastate.NodeDiskMetricsStateProvider.Companion.NODES_DISK_METRICS
 import com.infobip.kafkistry.kafkastate.KafkaRecordSamplerProvider.Companion.RECORDS_SAMPLING
 import com.infobip.kafkistry.utils.FilterProperties
 import org.springframework.beans.factory.ObjectProvider
@@ -88,7 +88,7 @@ class AutopilotClusterStableRequirementProperties {
     @NestedConfigurationProperty
     val usedStateProviders = FilterProperties().apply {
         excluded = setOf(
-            BROKERS_DISK_METRICS,
+            NODES_DISK_METRICS,
             RECORDS_SAMPLING,
         )
     }

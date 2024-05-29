@@ -25,7 +25,7 @@
 <#import "../common/infoIcon.ftl" as _info_>
 <#import "../sql/sqlQueries.ftl" as sql>
 
-<#assign tinyMode = clusterInfo.nodeIds?size gt 6>
+<#assign tinyMode = clusterInfo.brokerIds?size gt 6>
 
 <div class="card mb-2">
     <div class="card-header">
@@ -79,9 +79,9 @@
                     </tr>
                     <tr class="thead-dark">
                         <th class="text-center">Partition</th>
-                        <#list clusterInfo.nodeIds as brokerId>
+                        <#list clusterInfo.brokerIds as brokerId>
                             <th class="text-center" style="width: ${100/(1+clusterInfo.nodeIds?size)}%">
-                                <@brokerBadge.clusterBrokerId brokerId=brokerId/>
+                                <@brokerBadge.clusterNodeId nodeId=brokerId/>
                             </th>
                         </#list>
                     </tr>
@@ -90,7 +90,7 @@
                             ALL<br/>
                             ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
                         </th>
-                        <#list clusterInfo.nodeIds as brokerId>
+                        <#list clusterInfo.brokerIds as brokerId>
                             <th class="text-center">
                                 <#assign brokerTotalBytes = (topicReplicas.brokerTotalSizes?api.get(brokerId))!0>
                                 ${_util.prettyDataSize(brokerTotalBytes)}

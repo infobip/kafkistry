@@ -30,7 +30,7 @@ class RequiredResourcesInspector {
         val partitionInBytesPerSec = totalInputBytesPerSec / topicProperties.partitionCount
         val numPartitionFollowers = topicProperties.replicationFactor - 1
         val partitionSyncOutBytesPerSec = partitionInBytesPerSec * numPartitionFollowers
-        val brokerUsage = clusterInfo?.nodeIds?.size?.let { numBrokers ->
+        val brokerUsage = clusterInfo?.brokerIds?.size?.let { numBrokers ->
             val maxPartitionReplicasOnBroker = IntMath.divide(numPartitionReplicas, numBrokers, RoundingMode.CEILING)
             val maxLeadersOnBroker = IntMath.divide(topicProperties.partitionCount, numBrokers, RoundingMode.CEILING)
             val maxFollowersOnBroker = IntMath.divide(topicProperties.partitionCount * numPartitionFollowers, numBrokers, RoundingMode.CEILING)

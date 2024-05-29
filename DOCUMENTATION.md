@@ -1031,7 +1031,7 @@ Properties to configure:
 In case when above listed mechanisms can't fulfill your needs, there is option to implement your
 own mechanism for obtaining broker's total disk capacity and free disk space.
 
-Implement interface [BrokerDiskMetricsProvider](kafkistry-state-scraping/src/main/kotlin/com/infobip/kafkistry/kafkastate/brokerdisk/BrokerDiskMetricsProvider.kt)
+Implement interface [NodeDiskMetricsProvider](kafkistry-state-scraping/src/main/kotlin/com/infobip/kafkistry/kafkastate/brokerdisk/NodeDiskMetricsProvider.kt)
 which could obtain needed metrics with your mechanism of choice.
 
 See more about [writing custom plugins](#writing-custom-plugins)

@@ -1,9 +1,6 @@
 package com.infobip.kafkistry.service.generator.balance
 
-import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafka.KafkaExistingTopic
-import com.infobip.kafkistry.kafka.Partition
-import com.infobip.kafkistry.kafka.toPartitionReplicasMap
+import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
 import com.infobip.kafkistry.kafkastate.KafkaTopicReAssignmentsProvider
@@ -56,7 +53,7 @@ class GlobalBalancerService(
             )
         }
         return GlobalState(
-            brokerIds = clusterState.clusterInfo.nodeIds, loads = topicLoads, assignments = assignments
+            brokerIds = clusterState.clusterInfo.brokerIds, loads = topicLoads, assignments = assignments
         )
     }
 

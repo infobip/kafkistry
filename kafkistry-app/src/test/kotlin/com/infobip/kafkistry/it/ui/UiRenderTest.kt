@@ -147,7 +147,7 @@ class UiRenderTest {
     }
 
     private fun KafkaCluster.getBrokerIds(): List<BrokerId> {
-        return kafkaClientsProvider.doWithClient(this) { it.clusterInfo(identifier).get().nodeIds }
+        return kafkaClientsProvider.doWithClient(this) { it.clusterInfo(identifier).get().brokerIds }
     }
 
     private fun KafkaCluster.createTopic(topic: TopicDescription) {

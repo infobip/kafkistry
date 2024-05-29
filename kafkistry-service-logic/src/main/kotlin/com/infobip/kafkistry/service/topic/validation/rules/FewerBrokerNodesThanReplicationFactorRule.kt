@@ -13,7 +13,7 @@ class FewerBrokerNodesThanReplicationFactorRule : ValidationRule {
 
     override fun check(topicDescriptionView: TopicDescriptionView, clusterMetadata: ClusterMetadata): RuleViolation? {
         if (!topicDescriptionView.presentOnCluster) return valid()
-        val numBrokers = clusterMetadata.info?.nodeIds?.size ?: return valid()
+        val numBrokers = clusterMetadata.info?.brokerIds?.size ?: return valid()
         val replicationFactor = topicDescriptionView.properties.replicationFactor
         return if (replicationFactor > numBrokers) {
             violated(
@@ -29,7 +29,7 @@ class FewerBrokerNodesThanReplicationFactorRule : ValidationRule {
         val clusterInfo = clusterMetadata.info ?: throw KafkistryIllegalStateException(
             "Can't fix config for topic '${topicDescription.name}' for cluster '${clusterMetadata.ref.identifier}' with no ClusterInfo (unreachable?)"
         )
-        return topicDescription.withReplicationFactor(clusterInfo.nodeIds.size, clusterMetadata.ref)
+        return topicDescription.withReplicationFactor(clusterInfo.brokerIds.size, clusterMetadata.ref)
     }
 
     private fun TopicDescription.withReplicationFactor(replicationFactor: Int, clusterRef: ClusterRef): TopicDescription {

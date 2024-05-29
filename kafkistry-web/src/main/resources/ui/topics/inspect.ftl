@@ -404,7 +404,7 @@
             </div>
             <div id="unwanted-leader-menu" class="collapse">
                 <span>Choose unwanted broker: </span>
-                <#list clusterInfo.nodeIds as brokerId>
+                <#list clusterInfo.brokerIds as brokerId>
                     <a class="btn btn-sm btn-warning" href="${appUrl.topicsManagement().showTopicUnwantedLeaderReAssignment(topicName, clusterIdentifier, brokerId)}">
                         ${brokerId?c}
                     </a>
@@ -429,7 +429,7 @@
                 <br/>
                 <table>
                     <tr>
-                        <#list clusterInfo.nodeIds as brokerId>
+                        <#list clusterInfo.brokerIds as brokerId>
                             <td>
                                 <a class="btn btn-sm btn-outline-danger m-1" href="${appUrl.topicsManagement().showTopicExcludedBrokersReAssignment(topicName, clusterIdentifier, [brokerId])}">
                                     ${brokerId?c}
@@ -437,9 +437,9 @@
                             </td>
                         </#list>
                     </tr>
-                        <#list clusterInfo.nodeIds as b1>
+                        <#list clusterInfo.brokerIds as b1>
                             <tr>
-                                <#list clusterInfo.nodeIds as b2>
+                                <#list clusterInfo.brokerIds as b2>
                                     <td>
                                         <#if b1 != b2>
                                             <a class="btn btn-sm btn-outline-danger m-1" href="${appUrl.topicsManagement().showTopicExcludedBrokersReAssignment(topicName, clusterIdentifier, [b1, b2])}">

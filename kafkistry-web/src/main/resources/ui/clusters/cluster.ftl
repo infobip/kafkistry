@@ -368,15 +368,15 @@
                 <#assign clusterInfo = clusterStatus.clusterInfo>
                 <table class="table table-sm">
                     <tr>
-                        <th>Select broker config</th>
+                        <th>Select node config</th>
                         <td>
                             <ul class="nav">
-                                <#list clusterInfo.nodeIds as brokerId>
+                                <#list clusterInfo.nodeIds as nodeId>
                                     <li>
-                                        <#assign active = (brokerId == clusterInfo.controllerId)?then("active", "")>
+                                        <#assign active = (nodeId == clusterInfo.controllerId)?then("active", "")>
                                         <a class="btn btn-sm btn-outline-dark m-1 ${active}" data-toggle="tab"
-                                           href="#broker-${brokerId?c}-config">
-                                            ${brokerId?c}
+                                           href="#node-${nodeId?c}-config">
+                                            ${nodeId?c}
                                         </a>
                                     </li>
                                 </#list>
@@ -385,11 +385,11 @@
                     </tr>
                 </table>
                 <div class="tab-content" style="max-height: 700px; overflow-y: scroll;">
-                    <#list clusterInfo.nodeIds as brokerId>
-                        <#assign active = (brokerId == clusterInfo.controllerId)?then("active", "")>
-                        <div id="broker-${brokerId?c}-config" class="tab-pane ${active}">
-                            <#if clusterInfo.perBrokerConfig?api.containsKey(brokerId)>
-                                <#assign config = clusterInfo.perBrokerConfig?api.get(brokerId)>
+                    <#list clusterInfo.nodeIds as nodeId>
+                        <#assign active = (nodeId == clusterInfo.controllerId)?then("active", "")>
+                        <div id="node-${nodeId?c}-config" class="tab-pane ${active}">
+                            <#if clusterInfo.perBrokerConfig?api.containsKey(nodeId)>
+                                <#assign config = clusterInfo.perBrokerConfig?api.get(nodeId)>
                                 <#include "../common/existingConfig.ftl">
                             <#else>
                                 ---

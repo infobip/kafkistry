@@ -17,8 +17,8 @@ class ReplicationFactorOneRule : ValidationRule {
         if (!topicDescriptionView.presentOnCluster) {
             return valid()
         }
-        val clusterNodes = clusterMetadata.info?.nodeIds ?: return valid()
-        if (clusterNodes.size < 2) {
+        val clusterBrokers = clusterMetadata.info?.brokerIds ?: return valid()
+        if (clusterBrokers.size < 2) {
             return valid()
         }
         return violated(
@@ -26,7 +26,7 @@ class ReplicationFactorOneRule : ValidationRule {
                     "Cluster has %NUM_BROKERS% brokers/nodes available",
             placeholders = mapOf(
                 "REPLICATION_FACTOR" to Placeholder("replication.factor", 1),
-                "NUM_BROKERS" to Placeholder("brokers.count", clusterNodes.size),
+                "NUM_BROKERS" to Placeholder("brokers.count", clusterBrokers.size),
             ),
             severity = RuleViolation.Severity.WARNING,
         )

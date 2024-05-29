@@ -135,7 +135,7 @@ class TopicIssuesInspector(
 
     private fun TopicInspectCtx.computeExistingTopicInfo(): ExistingTopicInfo? = if (existingTopic != null && clusterInfo != null) {
         existingTopic.toTopicInfo(
-            clusterInfo.nodeIds, currentTopicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor,
+            clusterInfo.brokerIds, currentTopicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor,
         )
     } else {
         null
@@ -338,7 +338,7 @@ class TopicIssuesInspector(
         val currentAssignments = ctx.existingTopic.currentAssignments()
         val disbalance = partitionsReplicasAssignor.assignmentsDisbalance(
             existingAssignments = currentAssignments,
-            allBrokers = ctx.clusterInfo.nodeIds,
+            allBrokers = ctx.clusterInfo.brokerIds,
             existingPartitionLoads = currentAssignments.partitionLoads(ctx.currentTopicReplicaInfos)
         )
         if (disbalance.replicasDisbalance > 0) {

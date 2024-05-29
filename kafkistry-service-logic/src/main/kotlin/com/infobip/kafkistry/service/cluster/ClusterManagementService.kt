@@ -18,7 +18,7 @@ class ClusterManagementService(
     fun applyAllBrokersThrottle(clusterIdentifier: KafkaClusterIdentifier, throttleRate: ThrottleRate) {
         val kafkaCluster = clustersRegistry.getCluster(clusterIdentifier)
         val results = clientProvider.doWithClient(kafkaCluster) { client ->
-            val brokerIds = client.clusterInfo(clusterIdentifier).get().nodeIds
+            val brokerIds = client.clusterInfo(clusterIdentifier).get().brokerIds
             val futures = brokerIds.associateWith {
                 client.updateThrottleRate(it, throttleRate)
             }
@@ -30,7 +30,7 @@ class ClusterManagementService(
         }
         if (results.values.any { it.isFailure }) {
             val failedBrokers = results.entries.filter { it.value.isFailure }.map { it.key }
-            val firstFailCause = results.values.mapNotNull { it.exceptionOrNull() }.first()
+            val firstFailCause = results.values.firstNotNullOf { it.exceptionOrNull() }
             throw KafkaClusterManagementException("Applying throttle $throttleRate failed for brokers: $failedBrokers", firstFailCause)
         }
     }

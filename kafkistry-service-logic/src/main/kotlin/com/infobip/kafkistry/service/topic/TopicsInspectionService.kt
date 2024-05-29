@@ -1,9 +1,6 @@
 package com.infobip.kafkistry.service.topic
 
-import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafka.ExistingConfig
-import com.infobip.kafkistry.kafka.KafkaExistingTopic
-import com.infobip.kafkistry.kafka.Partition
+import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
@@ -238,14 +235,14 @@ class TopicsInspectionService(
         val expectedProperties = topicDescription.propertiesForCluster(clusterRef)
         val clusterData = kafkaClustersStateProvider.getLatestClusterStateValue(clusterRef.identifier)
         val clusterBrokersLoad = inspectClusterBrokersLoad(clusterData)
-        val allBrokers = clusterData.clusterInfo.nodeIds
+        val allBrokers = clusterData.clusterInfo.brokerIds
         val existingTopic = clusterData.topics
                 .find { it.name == topicName }
                 ?: throw KafkistryIllegalStateException("There is no topic '$topicName' found on cluster '${clusterRef.identifier}'")
         val currentAssignments = existingTopic.currentAssignments()
         val topicReplicaInfos = replicaDirsService.topicReplicaInfos(clusterRef.identifier, topicName)
         val partitionReAssignments = reAssignmentsMonitorService.topicReAssignments(clusterRef.identifier, topicName)
-        val existingTopicInfo = existingTopic.toTopicInfo(clusterData.clusterInfo.nodeIds, topicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor)
+        val existingTopicInfo = existingTopic.toTopicInfo(clusterData.clusterInfo.brokerIds, topicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor)
         val actualProperties = existingTopicInfo.properties
         val partitions = expectedProperties.partitionCount comparingTo actualProperties.partitionCount
         val replication = expectedProperties.replicationFactor comparingTo actualProperties.replicationFactor

@@ -4,9 +4,7 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.NamedType
 import com.infobip.kafkistry.service.StatusLevel
 import org.apache.kafka.clients.admin.ConfigEntry
-import org.apache.kafka.clients.admin.QuorumInfo
 import java.io.Serializable
-import java.util.*
 
 data class ConnectionDefinition(
     val connectionString: String,
@@ -58,7 +56,8 @@ data class ReplicaAssignment(
 
 typealias ExistingConfig = Map<String, ConfigValue>
 typealias Partition = Int
-typealias BrokerId = Int
+typealias NodeId = Int
+typealias BrokerId = NodeId
 
 data class ConfigValue(
     val value: String?,
@@ -72,12 +71,12 @@ data class ClusterInfo(
     val clusterId: KafkaClusterId,
     val identifier: KafkaClusterIdentifier,
     val config: ExistingConfig,
-    val perBrokerConfig: Map<BrokerId, ExistingConfig>,
+    val perBrokerConfig: Map<NodeId, ExistingConfig>,
     val perBrokerThrottle: Map<BrokerId, ThrottleRate>,
     val controllerId: Int,
-    val nodeIds: List<BrokerId>,
-    val onlineNodeIds: List<BrokerId>,
-    val brokers: List<ClusterBroker>,
+    val nodeIds: List<NodeId>,
+    val onlineNodeIds: List<NodeId>,
+    val nodes: List<ClusterNode>,
     val connectionString: String,
     val zookeeperConnectionString: String,
     val clusterVersion: Version?,
@@ -85,14 +84,24 @@ data class ClusterInfo(
     val kraftEnabled: Boolean,
     val features: ClusterFeatures,
     val quorumInfo: ClusterQuorumInfo,
-)
+) {
 
-data class ClusterBroker(
-    val brokerId: BrokerId,
+    val brokerIds: List<BrokerId> = nodes.filter { ClusterNodeRole.BROKER in it.roles }.map { it.nodeId }
+    val controllerIds: List<NodeId> = nodes.filter { ClusterNodeRole.CONTROLLER in it.roles }.map { it.nodeId }
+}
+
+
+data class ClusterNode(
+    val nodeId: NodeId,
     val host: String,
     val port: Int,
+    val roles: List<ClusterNodeRole>,
     val rack: String? = null,
 )
+
+enum class ClusterNodeRole {
+    BROKER, CONTROLLER,
+}
 
 data class Version(
     val numbers: List<Int>,

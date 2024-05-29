@@ -431,6 +431,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         val clusterInfo = doOnKafka { it.clusterInfo("test-id").get() }
         assertThat(clusterInfo.clusterVersion).isEqualTo(expectedClusterVersion)
         assertThat(clusterInfo.nodeIds).hasSize(3)
+        assertThat(clusterInfo.brokerIds).hasSize(3)
         assertThat(clusterInfo.kraftEnabled).`as`("kraft enabled").isEqualTo(expectedKraftEnabled)
         if (expectedKraftEnabled) {
             assertThat(clusterInfo.quorumInfo.voters).hasSize(3)

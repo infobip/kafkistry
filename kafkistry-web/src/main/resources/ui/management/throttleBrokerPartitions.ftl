@@ -39,7 +39,7 @@
             <th>Throttled brokers</th>
             <td>
                 <#list throttleBrokerTopicPartitionsSuggestion.throttleRequest.brokerIds as brokerId>
-                    <@clusterBrokerId brokerId=brokerId/>
+                    <@clusterNodeId nodeId=brokerId/>
                 </#list>
             </td>
         </tr>
@@ -102,7 +102,7 @@
             <th>Throttled brokers</th>
             <td>
                 <#list throttleBrokerTopicPartitionsSuggestion.throttleRequest.brokerIds as brokerId>
-                    <@clusterBrokerId brokerId=brokerId/>
+                    <@clusterNodeId nodeId=brokerId/>
                 </#list>
             </td>
         </tr>
@@ -124,7 +124,7 @@
         <#assign leaderBrokers = []>
         <#assign onlineBrokers = clusterInfo.onlineNodeIds>
         <#assign offlineBrokers = []>
-        <#list clusterInfo.nodeIds as brokerId>
+        <#list clusterInfo.brokerIds as brokerId>
             <#if !throttledBrokers?seq_contains(brokerId)>
                 <#assign leaderBrokers = leaderBrokers + [brokerId]>
             </#if>

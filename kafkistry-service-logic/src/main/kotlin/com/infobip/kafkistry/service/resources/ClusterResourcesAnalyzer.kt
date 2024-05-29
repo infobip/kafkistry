@@ -1,10 +1,10 @@
 package com.infobip.kafkistry.service.resources
 
 import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafkastate.BrokerDiskMetricsStateProvider
+import com.infobip.kafkistry.kafkastate.NodeDiskMetricsStateProvider
 import com.infobip.kafkistry.kafkastate.KafkaReplicasInfoProvider
 import com.infobip.kafkistry.kafkastate.ReplicaDirs
-import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
+import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.topic.ClusterTopicStatus
 import com.infobip.kafkistry.service.KafkistryException
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service
 @Service
 class ClusterResourcesAnalyzer(
     private val replicasInfoProvider: KafkaReplicasInfoProvider,
-    private val brokerDiskMetricsStateProvider: BrokerDiskMetricsStateProvider,
+    private val nodeDiskMetricsStateProvider: NodeDiskMetricsStateProvider,
     private val topicsInspectionService: TopicsInspectionService,
     private val usageLevelClassifier: UsageLevelClassifier,
     private val topicsRegistry: TopicsRegistryService,
@@ -42,7 +42,7 @@ class ClusterResourcesAnalyzer(
         val combinedDiskUsage = brokerUsages.values.map { it.usage }.fold(BrokerDiskUsage.ZERO, BrokerDiskUsage::plus)
         val combinedDiskMetrics = context.brokersMetrics.values
             .reduceOrNull { acc, metrics ->
-                BrokerDiskMetric(
+                NodeDiskMetric(
                     total = acc.total plusNullable metrics.total,
                     free = acc.free plusNullable metrics.free
                 )
@@ -101,14 +101,14 @@ class ClusterResourcesAnalyzer(
             topicsInspectionService.inspectClusterTopics(clusterRef)
         }
         val topicStatuses = clusterStatuses.statusPerTopics
-        val brokerIds = clusterStatuses.clusterInfo?.nodeIds
+        val brokerIds = clusterStatuses.clusterInfo?.brokerIds
         if (topicStatuses == null || brokerIds == null) {
             throw KafkistryIllegalStateException(
                 "Can't analyze resources of cluster '$clusterIdentifier' because it's state is ${clusterStatuses.clusterState}"
             )
         }
         val replicaDirs = replicasInfoProvider.getLatestStateValue(clusterIdentifier)
-        val brokersMetrics = brokerDiskMetricsStateProvider.getLatestState(clusterIdentifier)
+        val brokersMetrics = nodeDiskMetricsStateProvider.getLatestState(clusterIdentifier)
             .valueOrNull()
             ?.brokersMetrics
             .orEmpty()
@@ -142,7 +142,7 @@ class ClusterResourcesAnalyzer(
         val topicStatuses: List<ClusterTopicStatus>,
         val brokerIds: List<BrokerId>,
         val replicaDirs: ReplicaDirs,
-        val brokersMetrics: Map<BrokerId, BrokerDiskMetric>,
+        val brokersMetrics: Map<BrokerId, NodeDiskMetric>,
         val topicsDisks: Map<TopicName, OptionalValue<TopicClusterDiskUsage>>,
     )
 

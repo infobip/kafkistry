@@ -2,7 +2,8 @@ package com.infobip.kafkistry.kafkastate.brokerdisk
 
 import okhttp3.OkHttpClient
 import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafka.ClusterBroker
+import com.infobip.kafkistry.kafka.ClusterNode
+import com.infobip.kafkistry.kafka.NodeId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -32,9 +33,9 @@ class PrometheusBrokerDiskMetricsProperties {
 
 @Component
 @ConditionalOnProperty("app.kafka.metrics.prometheus.enabled")
-class PrometheusBrokerDiskMetricsProvider(
+class PrometheusNodeDiskMetricsProvider(
     private val properties: PrometheusBrokerDiskMetricsProperties
-) : BrokerDiskMetricsProvider {
+) : NodeDiskMetricsProvider {
 
     private val promUrl = "${properties.prometheusBaseUrl}/api/v1/query?query={query}&time={time}"
 
@@ -77,45 +78,49 @@ class PrometheusBrokerDiskMetricsProvider(
         }
     }
 
-    override fun brokersDisk(
+    override fun nodesDisk(
         clusterIdentifier: KafkaClusterIdentifier,
-        brokers: List<ClusterBroker>
-    ): Map<BrokerId, BrokerDiskMetric> {
+        nodes: List<ClusterNode>
+    ): Map<NodeId, NodeDiskMetric> {
         return if (properties.bulk) {
-            val totalDisk = properties.totalPromQuery?.let { getBulkBrokersValues(it, brokers) }
-            val freeDisk = properties.freePromQuery?.let { getBulkBrokersValues(it, brokers) }
-            brokers.associate {
-                it.brokerId to BrokerDiskMetric(total = totalDisk?.get(it.brokerId), free = freeDisk?.get(it.brokerId))
+            val totalDisk = properties.totalPromQuery?.let { getBulkBrokersValues(it, nodes) }
+            val freeDisk = properties.freePromQuery?.let { getBulkBrokersValues(it, nodes) }
+            nodes.associate {
+                it.nodeId to NodeDiskMetric(total = totalDisk?.get(it.nodeId), free = freeDisk?.get(it.nodeId))
             }
         } else {
-            brokers.associate { broker ->
+            nodes.associate { broker ->
                 val totalDisk = properties.totalPromQuery?.let { getBrokerValue(it, broker) }
                 val freeDisk = properties.freePromQuery?.let { getBrokerValue(it, broker) }
-                broker.brokerId to BrokerDiskMetric(total = totalDisk, free = freeDisk)
+                broker.nodeId to NodeDiskMetric(total = totalDisk, free = freeDisk)
             }
         }
     }
 
-    private fun getBrokerValue(queryTemplate: String, broker: ClusterBroker): Long? {
+    private fun getBrokerValue(queryTemplate: String, broker: ClusterNode): Long? {
         val promQuery = queryTemplate
+            .replace("{nodeHost}", broker.host)
+            .replace("{nodeId}", broker.nodeId.toString())
             .replace("{brokerHost}", broker.host)
-            .replace("{brokerId}", broker.brokerId.toString())
+            .replace("{brokerId}", broker.nodeId.toString())
         val promResult = restTemplate.getForObject(
             promUrl, PrometheusResponse::class.java, mapOf("query" to promQuery, "time" to time())
         )
-        return promResult?.data?.result.orEmpty().mapNotNull {
+        return promResult?.data?.result.orEmpty().firstNotNullOfOrNull {
             it.value[1].toString().toLongOrNull()
-        }.firstOrNull()
+        }
     }
 
     private fun String.applyBrokerPattern(): String? = brokerPattern.find(this)
         ?.let { if (it.groups.size >= 2) it.groupValues[1] else it.groupValues[0] }
 
 
-    private fun getBulkBrokersValues(queryTemplate: String, brokers: List<ClusterBroker>): Map<BrokerId, Long> {
+    private fun getBulkBrokersValues(queryTemplate: String, brokers: List<ClusterNode>): Map<BrokerId, Long> {
         val promQuery = queryTemplate
+            .replace("{nodeHosts}", brokers.joinToString(separator = "|") { it.host })
+            .replace("{nodeIds}", brokers.joinToString(separator = "|") { it.nodeId.toString() })
             .replace("{brokerHosts}", brokers.joinToString(separator = "|") { it.host })
-            .replace("{brokerIds}", brokers.joinToString(separator = "|") { it.brokerId.toString() })
+            .replace("{brokerIds}", brokers.joinToString(separator = "|") { it.nodeId.toString() })
         val promResult = restTemplate.getForObject(
             promUrl, PrometheusResponse::class.java, mapOf("query" to promQuery, "time" to time())
         )
@@ -127,12 +132,12 @@ class PrometheusBrokerDiskMetricsProvider(
                     brokerFromLabel.equals(
                         it.host,
                         ignoreCase = true
-                    ) || brokerFromLabel == it.brokerId.toString()
+                    ) || brokerFromLabel == it.nodeId.toString()
                 }
                 ?: brokers.find { it.host.applyBrokerPattern()?.equals(brokerFromLabel, ignoreCase = true) ?: false }
                 ?: return@mapNotNull null
             val value = promMetric.value[1].toString().toLongOrNull() ?: return@mapNotNull null
-            broker.brokerId to value
+            broker.nodeId to value
         }.toMap()
     }
 

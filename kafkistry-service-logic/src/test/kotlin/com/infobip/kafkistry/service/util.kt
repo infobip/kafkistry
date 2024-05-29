@@ -139,7 +139,12 @@ fun newClusterInfo(
     controllerId = controllerId,
     nodeIds = nodeIds,
     onlineNodeIds = onlineNodeIds,
-    brokers = nodeIds.map { ClusterBroker(it, "broker-$it", 9092) },
+    nodes = nodeIds.map { nodeId ->
+        ClusterNode(
+            nodeId, "broker-$nodeId", 9092,
+            listOfNotNull(ClusterNodeRole.BROKER, ClusterNodeRole.CONTROLLER.takeIf { nodeId == controllerId }),
+        )
+    },
     connectionString = connectionString,
     zookeeperConnectionString = zookeeperConnectionString,
     clusterVersion = clusterVersion,

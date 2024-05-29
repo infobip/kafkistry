@@ -20,7 +20,7 @@ class ClusterOps(
     // this is workaround to be aware of all nodes in cluster even if some nodes are down because
     // AdminClient.describeCluster().nodes() returns only currently online nodes
     private val topicAssignmentsUsedBrokerIdsRef = AtomicReference<Set<BrokerId>?>(null)
-    private val knownBrokers = ConcurrentHashMap<BrokerId, ClusterBroker>()
+    private val knownNodes = ConcurrentHashMap<NodeId, ClusterNode>()
 
     //holds reference to best guess if kraft is enabled on cluster
     // - null: meaning unknown yet,
@@ -85,17 +85,31 @@ class ClusterOps(
                             .distinct()
                             .sorted()
                         if (onlineNodeIds.toSet() == allKnownNodeIds.toSet()) {
-                            knownBrokers.keys.retainAll(onlineNodeIds.toSet())
+                            knownNodes.keys.retainAll(onlineNodeIds.toSet())
                         }
-                        val allKnownBrokers = nodes.asSequence()
-                            .map { ClusterBroker(it.id(), it.host(), it.port(), it.rack()) }
-                            .onEach { knownBrokers[it.brokerId] = it }
-                            .plus(knownBrokers.values)
-                            .distinctBy { it.brokerId }
-                            .sortedBy { it.brokerId }
-                            .toList()
                         val features = featuresFuture.get()
                         val quorum = quorumFuture.get()
+                        fun nodeRoles(nodeId: NodeId): List<ClusterNodeRole> {
+                            val (isBroker, isController) = if (!kraftEnabled) {
+                                true to (controllerNode.id() == nodeId)
+                            } else {
+                                val rolesStr = brokerConfigs[nodeId]?.get("process.roles")?.value.orEmpty().lowercase()
+                                ("broker" in rolesStr) to ("controller" in rolesStr)
+                            }
+                            return when {
+                                isBroker && isController -> ROLES_BROKER_CONTROLLER
+                                isBroker && !isController -> ROLES_BROKER
+                                !isBroker && isController -> ROLES_CONTROLLER
+                                else -> ROLES_NONE
+                            }
+                        }
+                        val allKnownNodes = nodes.asSequence()
+                            .map { ClusterNode(it.id(), it.host(), it.port(), nodeRoles(it.id()), it.rack()) }
+                            .onEach { knownNodes[it.nodeId] = it }
+                            .plus(knownNodes.values)
+                            .distinctBy { it.nodeId }
+                            .sortedBy { it.nodeId }
+                            .toList()
                         ClusterInfo(
                             clusterId = clusterId,
                             identifier = identifier,
@@ -105,7 +119,7 @@ class ClusterOps(
                             controllerId = controllerNode.id(),
                             nodeIds = allKnownNodeIds,
                             onlineNodeIds = onlineNodeIds,
-                            brokers = allKnownBrokers,
+                            nodes = allKnownNodes,
                             connectionString = nodes.joinToString(",") { it.host() + ":" + it.port() },
                             zookeeperConnectionString = zookeeperConnection,
                             clusterVersion = clusterVersion,
@@ -182,6 +196,13 @@ class ClusterOps(
             followerRate = get(dynamicConf.FollowerReplicationThrottledRateProp())?.value?.toLongOrNull(),
             alterDirIoRate = get(dynamicConf.ReplicaAlterLogDirsIoMaxBytesPerSecondProp())?.value?.toLongOrNull(),
         )
+    }
+
+    companion object {
+        private val ROLES_BROKER_CONTROLLER = listOf(ClusterNodeRole.BROKER, ClusterNodeRole.CONTROLLER)
+        private val ROLES_BROKER = listOf(ClusterNodeRole.BROKER)
+        private val ROLES_CONTROLLER = listOf(ClusterNodeRole.CONTROLLER)
+        private val ROLES_NONE = emptyList<ClusterNodeRole>()
     }
 
 }

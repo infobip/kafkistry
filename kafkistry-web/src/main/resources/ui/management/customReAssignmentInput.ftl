@@ -12,7 +12,7 @@
     <title>Kafkistry: Topic re-assignment</title>
     <meta name="customAssignBaseUrl"
           content="${appUrl.topicsManagement().showCustomReAssignment(topicName, clusterInfo.identifier, "")}">
-    <meta name="brokerIds" content="${clusterInfo.nodeIds?join(",")}">
+    <meta name="brokerIds" content="${clusterInfo.brokerIds?join(",")}">
 </head>
 
 <body>

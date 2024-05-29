@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.kafkastate
 
-import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetricsProvider
+import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetricsProvider
 import com.infobip.kafkistry.kafkastate.config.PoolingProperties
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
@@ -10,33 +10,35 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-class BrokerDiskMetricsStateProvider(
+class NodeDiskMetricsStateProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
     issuesRegistry: BackgroundJobIssuesRegistry,
     poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
-    brokerDiskMetricsProviders: Optional<List<BrokerDiskMetricsProvider>>,
+    nodeDiskMetricsProviders: Optional<List<NodeDiskMetricsProvider>>,
     private val clustersStateProvider: KafkaClustersStateProvider,
-) : AbstractKafkaStateProvider<ClusterBrokerMetrics>(
+) : AbstractKafkaStateProvider<ClusterNodeMetrics>(
     clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry
 ) {
     companion object {
-        const val BROKERS_DISK_METRICS = "brokers_disk_metrics"
+        const val NODES_DISK_METRICS = "nodes_disk_metrics"
     }
 
-    override val stateTypeName = BROKERS_DISK_METRICS
+    override val stateTypeName = NODES_DISK_METRICS
 
-    private val brokerDiskMetricsProviders = brokerDiskMetricsProviders.orElse(emptyList())
-    override fun fetchState(kafkaCluster: KafkaCluster): ClusterBrokerMetrics {
+    private val brokerDiskMetricsProviders = nodeDiskMetricsProviders.orElse(emptyList())
+    override fun fetchState(kafkaCluster: KafkaCluster): ClusterNodeMetrics {
         val clusterState = clustersStateProvider.getLatestClusterState(kafkaCluster.identifier)
         if (clusterState.stateType == StateType.UNKNOWN) {
-            return ClusterBrokerMetrics(emptyMap())
+            return ClusterNodeMetrics(emptyMap(), emptyMap())
         }
-        val brokers = clusterState.value().clusterInfo.brokers
+        val nodes = clusterState.value().clusterInfo.nodes
         val provider = brokerDiskMetricsProviders.find { it.canHandle(kafkaCluster.identifier) }
-            ?: BrokerDiskMetricsProvider.NoOp
-        val metrics = provider.brokersDisk(kafkaCluster.identifier, brokers)
-        return ClusterBrokerMetrics(metrics)
+            ?: NodeDiskMetricsProvider.NoOp
+        val nodeMetrics = provider.nodesDisk(kafkaCluster.identifier, nodes)
+        val brokerIds = clusterState.value().clusterInfo.brokerIds.toSet()
+        val brokerMetrics = nodeMetrics.filterKeys { it in brokerIds }
+        return ClusterNodeMetrics(nodeMetrics, brokerMetrics)
     }
 }

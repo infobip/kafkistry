@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.service.cluster.inspect
 
 import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafkastate.BrokerDiskMetricsStateProvider
+import com.infobip.kafkistry.kafkastate.NodeDiskMetricsStateProvider
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.Placeholder
 import com.infobip.kafkistry.service.RuleViolation
@@ -42,7 +42,7 @@ class LogCountDisbalanceProperties {
 class ClusterDisbalanceIssuesChecker(
     private val properties: ClusterDisbalanceIssuesCheckerProperties,
     private val globalBalancerService: GlobalBalancerService,
-    private val brokerDiskMetricsStateProvider: BrokerDiskMetricsStateProvider,
+    private val nodeDiskMetricsStateProvider: NodeDiskMetricsStateProvider,
 ) : ClusterIssueChecker {
 
     override fun checkIssues(clusterIdentifier: KafkaClusterIdentifier): List<ClusterInspectIssue> {
@@ -130,7 +130,7 @@ class ClusterDisbalanceIssuesChecker(
     }
 
     private fun ClusterBalanceStatus.maxCurrentDiskUsageOfCapacity(clusterIdentifier: KafkaClusterIdentifier): Double? {
-        val brokersMetrics = brokerDiskMetricsStateProvider.getLatestState(clusterIdentifier)
+        val brokersMetrics = nodeDiskMetricsStateProvider.getLatestState(clusterIdentifier)
             .valueOrNull()
             ?.brokersMetrics
             ?: return null

@@ -120,7 +120,7 @@
                 <label>Excluded brokers:</label>
                 <div>
                     <select name="excludedBrokerIds" class="form-control" title="Broker ids to exclude from assignments" multiple>
-                        <#list clusterInfo.nodeIds as brokerId>
+                        <#list clusterInfo.brokerIds as brokerId>
                             <option>${brokerId?c}</option>
                         </#list>
                     </select>

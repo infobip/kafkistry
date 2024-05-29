@@ -5,7 +5,7 @@ import com.infobip.kafkistry.kafka.KafkaExistingTopic
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.TopicPartitionReplica
 import com.infobip.kafkistry.kafkastate.*
-import com.infobip.kafkistry.kafkastate.brokerdisk.BrokerDiskMetric
+import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.acl.AclLinkResolver
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.fail
 internal class ClusterResourcesAnalyzerTest {
 
     private val replicasInfoProvider: KafkaReplicasInfoProvider = mock()
-    private val brokerDiskMetricsProvider: BrokerDiskMetricsStateProvider = mock()
+    private val nodeDiskMetricsProvider: NodeDiskMetricsStateProvider = mock()
     private val usageLevelClassifier = DefaultUsageLevelClassifier(UsageLevelThresholds())
     private val clustersRegistry: ClustersRegistryService = mock()
     private val topicsRegistry: TopicsRegistryService = mock()
@@ -60,7 +60,7 @@ internal class ClusterResourcesAnalyzerTest {
     )
 
     private val analyzer = ClusterResourcesAnalyzer(
-        replicasInfoProvider, brokerDiskMetricsProvider, topicsInspectionService, usageLevelClassifier, topicsRegistry, topicDiskAnalyzer
+        replicasInfoProvider, nodeDiskMetricsProvider, topicsInspectionService, usageLevelClassifier, topicsRegistry, topicDiskAnalyzer
     )
 
     private fun newCluster(
@@ -125,19 +125,19 @@ internal class ClusterResourcesAnalyzerTest {
         identifier: KafkaClusterIdentifier,
         numBrokers: Int, total: Long, free: Long,
     ) {
-        mockDiskMetrics(identifier, (1..numBrokers).associateWith { BrokerDiskMetric(total, free) })
+        mockDiskMetrics(identifier, (1..numBrokers).associateWith { NodeDiskMetric(total, free) })
     }
 
     private fun mockDiskMetrics(
         identifier: KafkaClusterIdentifier,
-        brokersMetrics: Map<BrokerId, BrokerDiskMetric>,
+        brokersMetrics: Map<BrokerId, NodeDiskMetric>,
     ) {
-        reset(brokerDiskMetricsProvider)
-        whenever(brokerDiskMetricsProvider.getLatestStateValue(any())).thenReturn(ClusterBrokerMetrics(brokersMetrics))
-        whenever(brokerDiskMetricsProvider.getLatestState(any())).thenReturn(
+        reset(nodeDiskMetricsProvider)
+        whenever(nodeDiskMetricsProvider.getLatestStateValue(any())).thenReturn(ClusterNodeMetrics(brokersMetrics, brokersMetrics))
+        whenever(nodeDiskMetricsProvider.getLatestState(any())).thenReturn(
             StateData(
                 StateType.VISIBLE, identifier, "mock_disk_metrics",
-                System.currentTimeMillis(), ClusterBrokerMetrics(brokersMetrics),
+                System.currentTimeMillis(), ClusterNodeMetrics(brokersMetrics, brokersMetrics),
             )
         )
     }

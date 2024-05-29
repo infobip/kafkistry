@@ -2,6 +2,7 @@
 
 package com.infobip.kafkistry.sql.sources
 
+import com.infobip.kafkistry.kafka.NodeId
 import com.infobip.kafkistry.kafka.QuorumReplicaState
 import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.model.KafkaCluster
@@ -21,7 +22,7 @@ import java.time.Instant
 class ClustersDataSource(
     private val clustersRegistry: ClustersRegistryService,
     private val kafkaStateProvider: KafkaClustersStateProvider,
-    private val brokerDiskMetricsStateProvider: BrokerDiskMetricsStateProvider,
+    private val nodeDiskMetricsStateProvider: NodeDiskMetricsStateProvider,
     private val clusterIssuesInspectorService: ClusterIssuesInspectorService,
 ) : SqlDataSource<Cluster> {
 
@@ -30,7 +31,7 @@ class ClustersDataSource(
     override fun supplyEntities(): List<Cluster> {
         val allClusters = clustersRegistry.listClusters()
         val allClusterStates = kafkaStateProvider.getAllLatestClusterStates()
-        val brokersDiskMetrics = brokerDiskMetricsStateProvider.getAllLatestStates()
+        val brokersDiskMetrics = nodeDiskMetricsStateProvider.getAllLatestStates()
         return allClusters.map { cluster ->
             val clusterState = allClusterStates[cluster.identifier]
             val clusterDiskMetrics = brokersDiskMetrics[cluster.identifier]
@@ -50,7 +51,7 @@ class ClustersDataSource(
     private fun mapCluster(
         kafkaCluster: KafkaCluster,
         clusterState: StateData<KafkaClusterState>?,
-        diskMetricsState: StateData<ClusterBrokerMetrics>?,
+        diskMetricsState: StateData<ClusterNodeMetrics>?,
         clusterIssues: List<ClusterInspectIssue>,
     ): Cluster {
         return Cluster().apply {
@@ -79,9 +80,9 @@ class ClustersDataSource(
                     }
                 }
             }
-            brokerDiskMetrics = diskMetricsState?.valueOrNull()?.brokersMetrics.orEmpty().map { (broker, diskMetrics) ->
-                BrokerDiskMetrics().apply {
-                    brokerId = broker
+            nodeDiskMetrics = diskMetricsState?.valueOrNull()?.nodesMetrics.orEmpty().map { (node, diskMetrics) ->
+                NodeDiskMetrics().apply {
+                    nodeId = node
                     totalBytes = diskMetrics.total
                     freeBytes = diskMetrics.free
                 }
@@ -155,8 +156,8 @@ class Cluster {
     var metadata: ClusterMetadata? = null
 
     @ElementCollection
-    @JoinTable(name = "Clusters_BrokerDiskMetrics")
-    lateinit var brokerDiskMetrics: List<BrokerDiskMetrics>
+    @JoinTable(name = "Clusters_NodeDiskMetrics")
+    lateinit var nodeDiskMetrics: List<NodeDiskMetrics>
 
     @ElementCollection
     @JoinTable(name = "Clusters_Issues")
@@ -187,16 +188,16 @@ class ClusterMetadata {
 class BrokerConfigEntry {
 
     @Column(nullable = false)
-    var brokerId: Int? = null
+    var brokerId: NodeId? = null
 
     lateinit var existingEntry: ExistingConfigEntry
 }
 
 @Embeddable
-class BrokerDiskMetrics {
+class NodeDiskMetrics {
 
     @Column(nullable = false)
-    var brokerId: Int? = null
+    var nodeId: NodeId? = null
 
     var totalBytes: Long? = null
     var freeBytes: Long? = null
@@ -238,7 +239,7 @@ class ClusterFeature {
 @Embeddable
 class ClusterQuorumMetadata {
 
-    var leaderId: Int = 0
+    var leaderId: NodeId = 0
     var leaderEpoch: Long = 0
     var highWatermark: Long = 0
 
@@ -253,7 +254,7 @@ class ClusterQuorumMetadata {
 
 @Embeddable
 class ClusterQuorumReplicaState {
-    var replicaId: Int = 0
+    var replicaId: NodeId = 0
     var logEndOffset: Long = 0
     var lastFetchTimestamp: Instant? = null
     var lastCaughtUpTimestamp: Instant? = null

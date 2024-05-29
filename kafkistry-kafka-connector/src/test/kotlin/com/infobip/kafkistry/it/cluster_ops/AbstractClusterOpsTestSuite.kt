@@ -53,14 +53,17 @@ abstract class AbstractClusterOpsTestSuite {
     abstract val clusterConnection: String
 
     protected var clusterBrokerIds: List<BrokerId> = emptyList()
+    protected var clusterNodeIds: List<BrokerId> = emptyList()
 
     @BeforeEach
     fun setup() {
         doOnKafka { client ->
             client.deleteAllOnCluster()
-            clusterBrokerIds = client.clusterInfo("").get().nodeIds
+            val clusterInfo = client.clusterInfo("").get()
+            clusterBrokerIds = clusterInfo.brokerIds
+            clusterNodeIds = clusterInfo.nodeIds
         }
-        assertThat(clusterBrokerIds).`as`("Node IDs of cluster")
+        assertThat(clusterNodeIds).`as`("Node IDs of cluster")
             .containsExactlyInAnyOrder(0, 1, 2)
             .hasSize(3)
     }
