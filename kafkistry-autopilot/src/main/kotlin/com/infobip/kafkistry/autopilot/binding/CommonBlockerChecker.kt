@@ -13,9 +13,9 @@ class CommonBlockerChecker(
     private val checkingCache: CheckingCache,
 ) {
 
-    fun allBrokersOnline(clusterIdentifier: KafkaClusterIdentifier): AutopilotActionBlocker? {
-        return checkingCache.cache("AllBrokersOnline", clusterIdentifier) {
-            allBrokersOnlineImpl(clusterIdentifier)
+    fun allNodesOnline(clusterIdentifier: KafkaClusterIdentifier): AutopilotActionBlocker? {
+        return checkingCache.cache("AllNodesOnline", clusterIdentifier) {
+            allNodesOnlineImpl(clusterIdentifier)
         }
     }
 
@@ -27,17 +27,17 @@ class CommonBlockerChecker(
 
     private fun ok(): AutopilotActionBlocker? = null
 
-    private fun allBrokersOnlineImpl(clusterIdentifier: KafkaClusterIdentifier): AutopilotActionBlocker? {
+    private fun allNodesOnlineImpl(clusterIdentifier: KafkaClusterIdentifier): AutopilotActionBlocker? {
         val clusterStatus = inspectApi.inspectClusterStatus(clusterIdentifier)
         val clusterInfo = clusterStatus.clusterInfo ?: return AutopilotActionBlocker(
             message = "Not having cluster info, state is %CLUSTER_STATE%",
             placeholders = mapOf("CLUSTER_STATE" to Placeholder("cluster.state", clusterStatus.clusterState)),
         )
-        val offlineBrokers = clusterInfo.nodeIds - clusterInfo.onlineNodeIds.toSet()
-        if (offlineBrokers.isNotEmpty()) {
+        val offlineNodes = clusterInfo.nodeIds - clusterInfo.onlineNodeIds.toSet()
+        if (offlineNodes.isNotEmpty()) {
             return AutopilotActionBlocker(
-                message = "Cluster has offline brokers/nodes: %OFFLINE_BROKER_IDS%",
-                placeholders = mapOf("OFFLINE_BROKER_IDS" to Placeholder("broker.ids", offlineBrokers)),
+                message = "Cluster has offline brokers/nodes: %OFFLINE_NODE_IDS%",
+                placeholders = mapOf("OFFLINE_NODE_IDS" to Placeholder("node.ids", offlineNodes)),
             )
         }
         return ok()

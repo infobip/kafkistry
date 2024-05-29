@@ -55,11 +55,11 @@ class TopicsAutopilotBinding(
     override fun checkBlockers(action: TopicAutopilotAction): List<AutopilotActionBlocker> {
         return when (action) {
             is CreateMissingTopicAction -> listOfNotNull(
-                commonBlockerChecker.allBrokersOnline(action.clusterRef.identifier),
+                commonBlockerChecker.allNodesOnline(action.clusterRef.identifier),
                 commonBlockerChecker.clusterHavingOverPromisedRetention(action.clusterRef.identifier),
             )
             is DeleteUnwantedTopicAction -> listOfNotNull(
-                commonBlockerChecker.allBrokersOnline(action.clusterRef.identifier),
+                commonBlockerChecker.allNodesOnline(action.clusterRef.identifier),
                 action.inspectionResult.types.takeUnless { EMPTY in it }?.let {
                     AutopilotActionBlocker(message = "Topic is not empty")
                 },
@@ -77,7 +77,7 @@ class TopicsAutopilotBinding(
                     },
             )
             is AlterTopicConfigurationAction -> listOfNotNull(
-                commonBlockerChecker.allBrokersOnline(action.clusterRef.identifier),
+                commonBlockerChecker.allNodesOnline(action.clusterRef.identifier),
                 action.inspectionResult.types.takeIf { HAS_REPLICATION_THROTTLING in it }?.let {
                     AutopilotActionBlocker(message = "Topic is being throttled")
                 },

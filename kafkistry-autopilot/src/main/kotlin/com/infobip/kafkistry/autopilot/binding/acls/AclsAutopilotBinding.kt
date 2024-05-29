@@ -49,7 +49,7 @@ class AclsAutopilotBinding(
     override fun checkBlockers(action: AclAutopilotAction): List<AutopilotActionBlocker> {
         return when (action) {
             is CreateMissingAclAction -> listOfNotNull(
-                commonBlockerChecker.allBrokersOnline(action.clusterRef.identifier),
+                commonBlockerChecker.allNodesOnline(action.clusterRef.identifier),
                 action.aclStatus.conflictingAcls.takeIf { it.isNotEmpty() }?.let { rules ->
                     AutopilotActionBlocker(
                         message = "ACL rule is in conflict with other %RULE_COUNT% rules: %RULES_LIST%",
@@ -61,7 +61,7 @@ class AclsAutopilotBinding(
                 }
             )
             is DeleteUnwantedAclAction -> listOfNotNull(
-                commonBlockerChecker.allBrokersOnline(action.clusterRef.identifier),
+                commonBlockerChecker.allNodesOnline(action.clusterRef.identifier),
             )
         }
     }
