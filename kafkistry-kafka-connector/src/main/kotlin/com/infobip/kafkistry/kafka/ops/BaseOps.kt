@@ -38,9 +38,12 @@ abstract class BaseOps(
         val currentClusterVersionRef: AtomicReference<Version?>,
         val zkConnectionRef: AtomicReference<String?>,
         val zkClientLazy: Lazy<KafkaZkClient>,
+        val controllerConnectionRef: AtomicReference<String?>,
+        val controllerClientLazy: Lazy<AdminClient>,
     )
 
     protected val adminClient: AdminClient = ctx.adminClient
+    protected val controllersAdminClient: AdminClient by ctx.controllerClientLazy
     protected val zkClient: KafkaZkClient by ctx.zkClientLazy
     protected val clusterVersion: Version get() = ctx.currentClusterVersionRef.get() ?: VERSION_0
 

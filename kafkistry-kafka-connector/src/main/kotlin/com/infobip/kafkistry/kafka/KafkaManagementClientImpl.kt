@@ -4,6 +4,7 @@ import com.infobip.kafkistry.kafka.ops.*
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSampler
 import com.infobip.kafkistry.model.*
 import kafka.zk.KafkaZkClient
+import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.utils.Time
 import org.apache.zookeeper.client.ZKClientConfig
@@ -13,20 +14,23 @@ import java.util.concurrent.atomic.AtomicReference
 //support clusters 2.0.0 or greater
 
 class KafkaManagementClientImpl(
-    adminClient: AdminClient,
+    connectionDefinition: ConnectionDefinition,
+    clientFactory: ClientFactory,
     readRequestTimeoutMs: Long,
     writeRequestTimeoutMs: Long,
     consumerSupplier: ClientFactory.ConsumerSupplier,
     private val recordReadSampler: RecordReadSampler,
     zookeeperConnectionResolver: ZookeeperConnectionResolver,
     eagerlyConnectToZookeeper: Boolean = false,
+    controllersConnectionResolver: ControllersConnectionResolver,
 ) : KafkaManagementClient {
 
     private val currentClusterVersionRef = AtomicReference<Version?>(null)
     private val zkConnectionRef = AtomicReference<String?>(null)
+    private val controllerConnectionRef = AtomicReference<String?>(null)
 
     private val clientCtx = BaseOps.ClientCtx(
-        adminClient,
+        adminClient = clientFactory.createAdmin(connectionDefinition),
         readRequestTimeoutMs, writeRequestTimeoutMs,
         currentClusterVersionRef, zkConnectionRef,
         zkClientLazy = lazy {
@@ -41,10 +45,17 @@ class KafkaManagementClientImpl(
                 "SessionExpireListener",
                 false,
             )
+        },
+        controllerConnectionRef,
+        controllerClientLazy = lazy {
+            clientFactory.createAdmin(connectionDefinition) {
+                it.remove(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG)
+                it[AdminClientConfig.BOOTSTRAP_CONTROLLERS_CONFIG] = controllerConnectionRef.get()
+            }
         }
     )
 
-    private val clientOps = ClientOps(clientCtx, zookeeperConnectionResolver, recordReadSampler)
+    private val clientOps = ClientOps(clientCtx, zookeeperConnectionResolver, recordReadSampler, controllersConnectionResolver)
     private val clusterOps = ClusterOps(clientCtx)
     private val configOps = ConfigOps(clientCtx)
     private val topicOps = TopicOps(clientCtx, clusterOps)

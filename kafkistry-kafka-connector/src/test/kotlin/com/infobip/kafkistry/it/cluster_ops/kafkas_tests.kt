@@ -6,6 +6,8 @@ import kafka.security.authorizer.AclAuthorizer
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
 import com.infobip.kafkistry.it.cluster_ops.testsupport.asTestKafkaLifecycle
 import com.infobip.kafkistry.kafka.Version
+import com.infobip.kafkistry.utils.getFieldReflective
+import kafka.testkit.KafkaClusterTestKit
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.kafka.test.EmbeddedKafkaZKBroker
@@ -20,7 +22,7 @@ class ClusterOpsKafkaZkEmbeddedTest : ClusterNoAclOperationsTestSuite() {
     }
 
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
-    override val expectedClusterVersion = Version.of("3.6")
+    override val expectedClusterVersion = Version.of("3.7")
     override val expectedKraftEnabled: Boolean = false
 }
 
@@ -34,7 +36,8 @@ class ClusterOpsKafkaKraftEmbeddedTest : ClusterNoAclOperationsTestSuite() {
     }
 
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
-    override val expectedClusterVersion = Version.of("3.6")
+    override val controllersConnection: String get() = kafka.kafkaCluster.getFieldReflective<KafkaClusterTestKit>("cluster").bootstrapControllers()
+    override val expectedClusterVersion = Version.of("3.7")
     override val expectedKraftEnabled: Boolean = true
 }
 

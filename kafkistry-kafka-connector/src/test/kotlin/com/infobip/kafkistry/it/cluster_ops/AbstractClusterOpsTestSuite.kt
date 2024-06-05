@@ -18,39 +18,43 @@ abstract class AbstractClusterOpsTestSuite {
 
     protected val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    companion object {
-        val kafkaClientProvider = KafkaClientProvider(
-                ClientFactory(
-                        KafkaManagementClientProperties(),
-                        RecordReadSamplerFactory(),
-                        zookeeperConnectionResolver = Optional.of(object : ZookeeperConnectionResolver {
-                            override fun resolveZkConnection(brokerZkConnection: String): String {
-                                //replace zk host of docker-compose service name
-                                return if (brokerZkConnection.startsWith("zookeeper:")) {
-                                    brokerZkConnection.replaceFirst("zookeeper", "localhost")
-                                } else {
-                                    brokerZkConnection
-                                }
-                            }
-                        })
-                ),
-            KafkaManagementClientProperties().apply {
-                clusterConcurrency = 2
-            }
-        )
-    }
+    private val kafkaClientProvider = KafkaClientProvider(
+        ClientFactory(
+            KafkaManagementClientProperties(),
+            RecordReadSamplerFactory(),
+            zookeeperConnectionResolver = Optional.of(object : ZookeeperConnectionResolver {
+                override fun resolveZkConnection(brokerZkConnection: String): String {
+                    //replace zk host of docker-compose service name
+                    return if (brokerZkConnection.startsWith("zookeeper:")) {
+                        brokerZkConnection.replaceFirst("zookeeper", "localhost")
+                    } else {
+                        brokerZkConnection
+                    }
+                }
+            }),
+            controllersConnectionResolver = Optional.of(object : ControllersConnectionResolver {
+                override fun resolveQuorumControllersConnection(quorumControllersConnection: String): String {
+                    return controllersConnection ?: hostsPorts(quorumControllersConnection)
+                }
+            }),
+        ),
+        KafkaManagementClientProperties().apply {
+            clusterConcurrency = 2
+        }
+    )
 
     protected fun <R> doOnKafka(operation: (KafkaManagementClient) -> R): R {
         return kafkaClientProvider.doWithClient(
-                KafkaCluster(
-                    "test", "test-id", clusterConnection,
-                    sslEnabled = false, saslEnabled = false, tags = emptyList()
-                ),
-                operation
+            KafkaCluster(
+                "test", "test-id", clusterConnection,
+                sslEnabled = false, saslEnabled = false, tags = emptyList()
+            ),
+            operation
         )
     }
 
     abstract val clusterConnection: String
+    open val controllersConnection: String? = null
 
     protected var clusterBrokerIds: List<BrokerId> = emptyList()
     protected var clusterNodeIds: List<BrokerId> = emptyList()

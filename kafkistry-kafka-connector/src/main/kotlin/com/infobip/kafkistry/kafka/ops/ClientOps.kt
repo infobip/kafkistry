@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.kafka.ops
 
+import com.infobip.kafkistry.kafka.ControllersConnectionResolver
 import com.infobip.kafkistry.kafka.Version
 import com.infobip.kafkistry.kafka.ZookeeperConnectionResolver
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSampler
@@ -12,6 +13,7 @@ class ClientOps(
     private val clientCtx: ClientCtx,
     private val zookeeperConnectionResolver: ZookeeperConnectionResolver,
     private val recordReadSampler: RecordReadSampler,
+    private val controllersConnectionResolver: ControllersConnectionResolver,
 ) : BaseOps(clientCtx) {
 
     fun bootstrapClusterVersionAndZkConnection() {
@@ -43,6 +45,12 @@ class ClientOps(
         zookeeperConnectionResolver.resolveZkConnection(zookeeperConnection).also {
             clientCtx.zkConnectionRef.set(it)
         }
+        controllerConfig["controller.quorum.voters"]?.value?.also { voters ->
+            val resolvedControllersConnection = controllersConnectionResolver
+                .resolveQuorumControllersConnection(voters)
+                .takeIf { it.isNotEmpty() }
+            clientCtx.controllerConnectionRef.set(resolvedControllersConnection)
+        }
     }
 
     fun close() {
@@ -50,6 +58,9 @@ class ClientOps(
         recordReadSampler.close()
         if (clientCtx.zkClientLazy.isInitialized()) {
             clientCtx.zkClientLazy.value.close()
+        }
+        if (clientCtx.controllerClientLazy.isInitialized()) {
+            clientCtx.controllerClientLazy.value.close()
         }
     }
 

@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 class ClusterOps(
-    clientCtx: ClientCtx
+    private val clientCtx: ClientCtx
 ): BaseOps(clientCtx) {
 
     private val currentClusterVersionRef = clientCtx.currentClusterVersionRef
@@ -36,7 +36,7 @@ class ClusterOps(
         val clusterResult = adminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
         val clusterIdFuture = clusterResult.clusterId().asCompletableFuture("describe clusterId")
         val controllerNodeFuture = clusterResult.controller().asCompletableFuture("describe cluster controller")
-        val nodesFuture = clusterResult.nodes().asCompletableFuture("describe cluster nodes")
+        val brokerNodesFuture = clusterResult.nodes().asCompletableFuture("describe cluster nodes")
         val featuresFuture = adminClient.describeFeatures(DescribeFeaturesOptions().withReadTimeout())
             .featureMetadata().asCompletableFuture("describe cluster features")
         val quorumFuture = when (kraftEnabledRef.get()) {
@@ -52,25 +52,49 @@ class ClusterOps(
                 }
             false -> CompletableFuture.completedFuture(null) //don't even attempt to fetch kraft's quorum info
         }
+        val controllerNodesFuture = if (kraftEnabledRef.get() != false && clientCtx.controllerConnectionRef.get() != null) {
+            controllersAdminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
+                .nodes().asCompletableFuture("describe cluster controller nodes")
+        } else {
+            CompletableFuture.completedFuture(emptyList())
+        }
         return CompletableFuture
-            .allOf(clusterIdFuture, controllerNodeFuture, nodesFuture, featuresFuture, quorumFuture)
+            .allOf(clusterIdFuture, controllerNodeFuture, brokerNodesFuture, featuresFuture, quorumFuture, controllerNodesFuture)
             .thenCompose {
                 val clusterId = clusterIdFuture.get()
                 val controllerNode = controllerNodeFuture.get()
-                val nodes = nodesFuture.get()
-                val nodeConfigResources = nodes.map { node ->
+                val brokerNodes = brokerNodesFuture.get()
+                val controllerNodes = controllerNodesFuture.get()
+                val brokerNodeConfigResources = brokerNodes.map { node ->
                     ConfigResource(ConfigResource.Type.BROKER, node.id().toString())
                 }
-                adminClient
-                    .describeConfigs(nodeConfigResources, DescribeConfigsOptions().withReadTimeout())
+                val controllerNodeConfigResources = controllerNodes.map { node ->
+                    ConfigResource(ConfigResource.Type.BROKER, node.id().toString())
+                }
+                val brokerConfigsFuture = adminClient
+                    .describeConfigs(brokerNodeConfigResources, DescribeConfigsOptions().withReadTimeout())
                     .all()
-                    .asCompletableFuture("describe cluster all brokers configs")
-                    .thenApply { configsResponse ->
-                        val brokerConfigs = configsResponse
+                    .asCompletableFuture("describe cluster brokers configs")
+                val controllerConfigsFuture = if (controllerNodes.isNotEmpty()) {
+                    controllersAdminClient
+                        .describeConfigs(controllerNodeConfigResources, DescribeConfigsOptions().withReadTimeout())
+                        .all()
+                        .asCompletableFuture("describe cluster controllers configs")
+                } else {
+                    CompletableFuture.completedFuture(emptyMap())
+                }
+                CompletableFuture
+                    .allOf(brokerConfigsFuture, controllerConfigsFuture)
+                    .thenApply {
+                        val brokerConfigs = brokerConfigsFuture.get()
                             .mapKeys { it.key.name().toInt() }
                             .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
-                        val controllerConfig = brokerConfigs[controllerNode.id()]
-                            ?: brokerConfigs.values.first()
+                        val controllersConfigs = controllerConfigsFuture.get()
+                            .mapKeys { it.key.name().toInt() }
+                            .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
+                        val nodesConfigs = controllersConfigs + brokerConfigs
+                        val controllerConfig = nodesConfigs[controllerNode.id()]
+                            ?: nodesConfigs.values.first()
                         val zookeeperConnection = controllerConfig["zookeeper.connect"]?.value ?: ""
                         val majorVersion = controllerConfig["inter.broker.protocol.version"]?.value
                         val clusterVersion = majorVersion?.let { Version.parse(it) }
@@ -79,7 +103,8 @@ class ClusterOps(
                         val kraftEnabled = (controllerConfig["process.roles"]?.value?.isNotEmpty() == true).also {
                             kraftEnabledRef.set(it)
                         }
-                        val onlineNodeIds = nodes.map { it.id() }.sorted()
+                        val allNodes = (brokerNodes + controllerNodes)
+                        val onlineNodeIds = allNodes.map { it.id() }.sorted()
                         val allKnownNodeIds = onlineNodeIds
                             .plus(topicAssignmentsUsedBrokerIdsRef.get() ?: emptySet())
                             .distinct()
@@ -93,7 +118,7 @@ class ClusterOps(
                             val (isBroker, isController) = if (!kraftEnabled) {
                                 true to (controllerNode.id() == nodeId)
                             } else {
-                                val rolesStr = brokerConfigs[nodeId]?.get("process.roles")?.value.orEmpty().lowercase()
+                                val rolesStr = nodesConfigs[nodeId]?.get("process.roles")?.value.orEmpty().lowercase()
                                 ("broker" in rolesStr) to ("controller" in rolesStr)
                             }
                             return when {
@@ -103,7 +128,7 @@ class ClusterOps(
                                 else -> ROLES_NONE
                             }
                         }
-                        val allKnownNodes = nodes.asSequence()
+                        val allKnownNodes = allNodes.asSequence()
                             .map { ClusterNode(it.id(), it.host(), it.port(), nodeRoles(it.id()), it.rack()) }
                             .onEach { knownNodes[it.nodeId] = it }
                             .plus(knownNodes.values)
@@ -114,13 +139,13 @@ class ClusterOps(
                             clusterId = clusterId,
                             identifier = identifier,
                             config = controllerConfig,
-                            perBrokerConfig = brokerConfigs,
-                            perBrokerThrottle = brokerConfigs.mapValues { it.value.extractThrottleRate() },
+                            perBrokerConfig = nodesConfigs,
+                            perBrokerThrottle = nodesConfigs.mapValues { it.value.extractThrottleRate() },
                             controllerId = controllerNode.id(),
                             nodeIds = allKnownNodeIds,
                             onlineNodeIds = onlineNodeIds,
                             nodes = allKnownNodes,
-                            connectionString = nodes.joinToString(",") { it.host() + ":" + it.port() },
+                            connectionString = brokerNodes.joinToString(",") { it.host() + ":" + it.port() },
                             zookeeperConnectionString = zookeeperConnection,
                             clusterVersion = clusterVersion,
                             securityEnabled = securityEnabled,

@@ -90,7 +90,7 @@
         <docker.to-image>infobip/kafkistry</docker.to-image>
 
         <!-- DEPENDENCIES -->
-        <kafka.version>3.6.1</kafka.version>
+        <kafka.version>3.7.0</kafka.version>
         <org.eclipse.jgit.version>6.8.0.202311291450-r</org.eclipse.jgit.version>
         <sshd-git.version>2.11.0</sshd-git.version> <!-- Apache MINA -->
         <jsoup.version>1.15.4</jsoup.version>

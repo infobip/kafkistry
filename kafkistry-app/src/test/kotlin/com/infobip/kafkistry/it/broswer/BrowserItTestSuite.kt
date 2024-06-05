@@ -118,7 +118,8 @@ class BrowserItTestSuite {
         val clientFactory = ClientFactory(
                 KafkaManagementClientProperties(),
                 RecordReadSamplerFactory(),
-                Optional.empty()
+                Optional.empty(),
+                Optional.empty(),
         )
 
         val browser: RemoteWebDriver by lazy {

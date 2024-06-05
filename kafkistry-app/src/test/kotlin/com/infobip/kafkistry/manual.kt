@@ -39,13 +39,14 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.core.env.get
-import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.kafka.test.EmbeddedKafkaZKBroker
+import org.springframework.stereotype.Component
 import java.io.File
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
@@ -122,7 +123,7 @@ class DataStateInitializer(
     private val kraft = true
 
     private val kafka = if (kraft) {
-        EmbeddedKafkaKraftBroker(6, 1).apply {
+        EmbeddedKafkaKraftCustomBroker(2, 4, 0).apply {
             brokerProperty("log.retention.bytes", "123456789")
             brokerProperty("log.segment.bytes", "12345678")
             brokerProperty("authorizer.class.name", org.apache.kafka.metadata.authorizer.StandardAuthorizer::class.java.name)
@@ -139,6 +140,9 @@ class DataStateInitializer(
         log.info("EmbeddedKafka starting...")
         afterPropertiesSet()
         log.info("EmbeddedKafka started: {}", brokersAsString)
+        if (this is EmbeddedKafkaKraftCustomBroker) {
+            StaticMockedControllerConnectionResolver.kraftControllers.set(controllersAsString())
+        }
     }
 
     private fun <T> doRetrying(retries: Int = 5, operation: () -> T): T? {
@@ -585,6 +589,19 @@ class DataStateInitializer(
             .plus("localhost")
             .forEach { log.info("server: http://$it:$serverPort$rootPath/topics/") }
 
+    }
+
+}
+
+@Component
+class StaticMockedControllerConnectionResolver : ControllersConnectionResolver {
+
+    companion object {
+        val kraftControllers = AtomicReference<String?>(null)
+    }
+
+    override fun resolveQuorumControllersConnection(quorumControllersConnection: String): String {
+        return kraftControllers.get() ?: hostsPorts(quorumControllersConnection)
     }
 
 }

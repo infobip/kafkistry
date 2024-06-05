@@ -15,7 +15,8 @@ import java.util.*
 class ClientFactory(
     private val properties: KafkaManagementClientProperties,
     private val recordReadSamplerFactory: RecordReadSamplerFactory,
-    private val zookeeperConnectionResolver: Optional<ZookeeperConnectionResolver>
+    private val zookeeperConnectionResolver: Optional<ZookeeperConnectionResolver>,
+    private val controllersConnectionResolver: Optional<ControllersConnectionResolver>,
 ) {
 
     fun createAdmin(
@@ -38,18 +39,16 @@ class ClientFactory(
 
     fun createManagementClient(
             connectionDefinition: ConnectionDefinition,
-            configurer: (Properties) -> Unit = {}
     ): KafkaManagementClient {
         return KafkaManagementClientImpl(
-                adminClient = createAdmin(connectionDefinition, configurer),
+                connectionDefinition = connectionDefinition,
+                clientFactory = this,
                 readRequestTimeoutMs = properties.readRequestTimeoutMs,
                 writeRequestTimeoutMs = properties.writeRequestTimeoutMs,
                 consumerSupplier = object : ConsumerSupplier {
-                    private val defaultConfigurer = configurer
 
                     override fun createNewConsumer(configurer: (Properties) -> Unit): KafkaConsumer<ByteArray, ByteArray> =
                             createConsumer(connectionDefinition) {
-                                defaultConfigurer(it)
                                 configurer(it)
                             }
                 },
@@ -60,6 +59,7 @@ class ClientFactory(
                 },
                 zookeeperConnectionResolver = zookeeperConnectionResolver.orElse(ZookeeperConnectionResolver.DEFAULT),
                 eagerlyConnectToZookeeper = properties.eagerlyConnectToZookeeper,
+                controllersConnectionResolver = controllersConnectionResolver.orElse(ControllersConnectionResolver.DEFAULT),
         )
     }
 

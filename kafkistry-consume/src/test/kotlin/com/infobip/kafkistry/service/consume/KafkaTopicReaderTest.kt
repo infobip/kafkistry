@@ -76,7 +76,8 @@ class KafkaTopicReaderTest {
             clientFactory = ClientFactory(
                     properties = KafkaManagementClientProperties(),
                     RecordReadSamplerFactory(),
-                    Optional.empty()
+                    Optional.empty(),
+                    Optional.empty(),
             )
     )
 
