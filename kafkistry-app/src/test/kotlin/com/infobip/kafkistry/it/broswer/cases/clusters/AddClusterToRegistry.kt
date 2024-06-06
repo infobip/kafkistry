@@ -40,7 +40,7 @@ abstract class AddClusterToRegistry(contextSupplier: () -> Context) : UITestCase
         }
 
         //go back to clusters
-        browser.findElementWithText("Back").click()
+        browser.findElementWithText("Clusters").click()
         await("to go back to /clusters page") {
             browser.assertPageText().contains("Status of clusters registry")
         }
