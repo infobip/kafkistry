@@ -29,7 +29,8 @@ class LagMetricsCollector(
     lagProperties: LagMetricsProperties,
     private val consumersService: ConsumersService,
     private val clustersRegistryService: ClustersRegistryService,
-    clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>
+    clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>,
+    additionalLabelsProvider: ObjectProvider<LagMetricsAdditionalLabels>,
 ) : Collector() {
 
     //default: kafkistry_consumer_lag
@@ -41,9 +42,13 @@ class LagMetricsCollector(
         DefaultClusterMetricLabelProvider()
     }
 
+    private val additionalLabels = additionalLabelsProvider.getIfAvailable {
+        EmptyLagMetricsAdditionalLabels()
+    }
+
     private val labelNames = listOf(
         labelProvider.labelName(), "consumer_group", "topic", "partition", "consumer_host"
-    )
+    ) + additionalLabels.labelNames()
 
     override fun collect(): List<MetricFamilySamples> {
         val samples = consumersService.allConsumersData()
@@ -100,6 +105,11 @@ class LagMetricsCollector(
             topicMembers.topicName,
             partitionMember.partition.toString(),
             partitionMember.member?.host ?: "unassigned"
+        ) + additionalLabels.labelValues(
+            clusterIdentifier = clusterIdentifier,
+            topic = topicMembers.topicName,
+            consumerGroupId = consumerGroup.groupId,
+            partitionMember = partitionMember,
         ),
         lagAmount.toDouble()
     )
