@@ -12,6 +12,7 @@ import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.RuleViolation
+import com.infobip.kafkistry.service.StatusLevel
 import com.infobip.kafkistry.service.renderMessage
 import com.infobip.kafkistry.service.topic.validation.rules.renderMessage
 import com.infobip.kafkistry.sql.*
@@ -83,6 +84,7 @@ class ClusterTopicDataSource(
                     } else {
                         "Expected value '$expected', actual value: '$actual'"
                     }
+                    level = wrongValue.type.level
                 }
             } ?: emptyList()
             val ruleViolations = sequence {
@@ -96,6 +98,7 @@ class ClusterTopicDataSource(
                     message = ruleViolation.renderMessage()
                     ruleClassName = ruleViolation.violation.ruleClassName
                     severity = ruleViolation.violation.severity
+                    level = ruleViolation.type.level
                 }
             }.toList()
             val describedStatuses = topicClusterStatus.status.typeDescriptions
@@ -105,6 +108,7 @@ class ClusterTopicDataSource(
                         issueCategory = it.type.category
                         valid = it.type.valid
                         message = it.renderMessage()
+                        level = it.type.level
                     }
                 }
             val processedStatusTypeNames = sequenceOf(
@@ -117,6 +121,7 @@ class ClusterTopicDataSource(
                         type = it.name
                         issueCategory = it.category
                         valid = it.valid
+                        level = it.level
                     }
                 }
             statuses = wrongValueStatuses + ruleViolations + describedStatuses + otherStatuses
@@ -302,6 +307,8 @@ class TopicOnClusterStatus {
     var ruleClassName: String? = null
     @Enumerated(EnumType.STRING)
     var severity: RuleViolation.Severity? = null
+    @Enumerated(EnumType.STRING)
+    var level: StatusLevel? = null
 }
 
 @Embeddable
