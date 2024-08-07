@@ -58,6 +58,7 @@ data class AclRuleStatus(
 data class PrincipalAclsClusterInspection(
     val principal: PrincipalId,
     val clusterIdentifier: KafkaClusterIdentifier,
+    val clusterTags: List<Tag>,
     val statuses: List<AclRuleStatus>,
     val status: AclStatus,
     val availableOperations: List<AvailableAclOperation>,

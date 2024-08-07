@@ -30,7 +30,7 @@ class TopicStatusesMetricsCollector(
     clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>,
 ) : KafkistryMetricsCollector {
 
-    //default: kafkistry_consumer_lag
+    //default: kafkistry_topic_status
     private val statusMetricName = promProperties.prefix + "topic_status"
 
     private val filter = ClusterTopicFilter(properties.enabledOn)

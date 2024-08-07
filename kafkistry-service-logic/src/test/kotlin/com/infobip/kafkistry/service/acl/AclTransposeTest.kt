@@ -45,7 +45,7 @@ class AclTransposeTest {
 
         val rulesOnCluster1 = PrincipalAclsClusterInspection(
                 principal = "P",
-                clusterIdentifier = "c_1",
+                clusterIdentifier = "c_1", clusterTags = emptyList(),
                 status = AclStatus(true, listOf(OK has 2)),
                 statuses = listOf(rule1_c1, rule2_c1),
                 availableOperations = emptyList(),
@@ -53,7 +53,7 @@ class AclTransposeTest {
         )
         val rulesOnCluster2 = PrincipalAclsClusterInspection(
                 principal = "P",
-                clusterIdentifier = "c_2",
+                clusterIdentifier = "c_2", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(OK has 1, MISSING has 1, UNKNOWN has 1)),
                 statuses = listOf(rule1_c2, rule2_c2, rule3_c2),
                 availableOperations = listOf(CREATE_MISSING_ACLS, DELETE_UNWANTED_ACLS, EDIT_PRINCIPAL_ACLS),
@@ -61,7 +61,7 @@ class AclTransposeTest {
         )
         val rulesOnCluster3 = PrincipalAclsClusterInspection(
                 principal = "P",
-                clusterIdentifier = "c_3",
+                clusterIdentifier = "c_3", clusterTags = emptyList(),
                 status = AclStatus(true, listOf(OK has 1, NOT_PRESENT_AS_EXPECTED has 1)),
                 statuses = listOf(rule1_c3, rule2_c3),
                 availableOperations = emptyList(),

@@ -51,7 +51,7 @@ class AclsIssuesInspector(
         val clusterData = clusterState.valueOrNull()
         if (principalAcls == null) {
             return if (clusterData?.acls == null) {
-                emptyInspection(principal, clusterRef.identifier, clusterState.stateType)
+                emptyInspection(principal, clusterRef, clusterState.stateType)
             } else {
                 val statuses = clusterData.acls
                         .filter { it.principal == principal }
@@ -59,6 +59,7 @@ class AclsIssuesInspector(
                 PrincipalAclsClusterInspection(
                         principal = principal,
                         clusterIdentifier = clusterRef.identifier,
+                        clusterTags = clusterRef.tags,
                         statuses = statuses,
                         status = AclStatus.from(statuses),
                         availableOperations = statuses.mergeAvailableOps { it.availableOperations },
@@ -132,6 +133,7 @@ class AclsIssuesInspector(
         }
         return PrincipalAclsClusterInspection(
                 clusterIdentifier = clusterRef.identifier,
+                clusterTags = clusterRef.tags,
                 principal = principal,
                 statuses = statuses,
                 status = AclStatus.from(statuses),
@@ -161,6 +163,7 @@ class AclsIssuesInspector(
         val allStatuses = statuses + unknownStatuses
         return PrincipalAclsClusterInspection(
                 clusterIdentifier = clusterRef.identifier,
+                clusterTags = clusterRef.tags,
                 principal = principalAcls.principal,
                 statuses = allStatuses,
                 status = AclStatus.from(allStatuses),
@@ -180,18 +183,19 @@ class AclsIssuesInspector(
 
     private fun emptyInspection(
         principal: PrincipalId,
-        clusterIdentifier: KafkaClusterIdentifier,
+        clusterRef: ClusterRef,
         clusterStateType: StateType
     ) = PrincipalAclsClusterInspection(
         principal = principal,
-        clusterIdentifier = clusterIdentifier,
+        clusterIdentifier = clusterRef.identifier,
+        clusterTags = clusterRef.tags,
         statuses = emptyList(),
         status = AclStatus(
             ok = clusterStateType == VISIBLE,
             statusCounts = emptyList(),
         ),
         availableOperations = emptyList(),
-        affectingQuotaEntities = aclLinkResolver.findPrincipalAffectingQuotas(principal, clusterIdentifier),
+        affectingQuotaEntities = aclLinkResolver.findPrincipalAffectingQuotas(principal, clusterRef.identifier),
     )
 
     private fun Iterable<KafkaAclRule>.asUnknownRules(

@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.metric
 
+import com.infobip.kafkistry.service.acl.AclsInspectionService
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.consumers.ConsumersService
 import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
@@ -19,6 +20,7 @@ class KafkistryMetricsExporterCollector(
     private val topicOffsetsService: TopicOffsetsService,
     private val oldestRecordAgeService: Optional<OldestRecordAgeService>,
     private val replicaDirsService: ReplicaDirsService,
+    private val aclsInspectionService: AclsInspectionService,
 ) : Collector() {
 
     override fun collect(): List<MetricFamilySamples> {
@@ -30,6 +32,7 @@ class KafkistryMetricsExporterCollector(
             allClustersTopicOldestAges = oldestRecordAgeService.orElse(null)
                 ?.allClustersTopicOldestRecordAges().orEmpty(),
             allClustersTopicReplicaInfos = replicaDirsService.allClustersTopicReplicaInfos(),
+            aclPrincipalInspections = aclsInspectionService.inspectAllPrincipals() + aclsInspectionService.inspectUnknownPrincipals(),
         )
         return kafkistryCollectors.flatMap { it.expose(context) }
     }

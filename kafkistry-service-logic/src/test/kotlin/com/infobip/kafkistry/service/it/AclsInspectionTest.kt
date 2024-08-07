@@ -273,7 +273,7 @@ class AclsInspectionTest {
         //instantiate expected response model
         val expected_P1_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P1",
-                clusterIdentifier = "c_1",
+                clusterIdentifier = "c_1", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(OK has 1, CONFLICT has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
@@ -284,7 +284,7 @@ class AclsInspectionTest {
         )
         val expected_P2_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P2",
-                clusterIdentifier = "c_1",
+                clusterIdentifier = "c_1", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(OK has 1, UNKNOWN has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf()),
@@ -295,7 +295,7 @@ class AclsInspectionTest {
         )
         val expected_P3_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
-                clusterIdentifier = "c_1",
+                clusterIdentifier = "c_1", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(OK has 1, UNEXPECTED has 1, CONFLICT has 1, DETACHED has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
@@ -307,7 +307,7 @@ class AclsInspectionTest {
         )
         val expected_P4_on_c1 = PrincipalAclsClusterInspection(
                 principal = "User:P4",
-                clusterIdentifier = "c_1",
+                clusterIdentifier = "c_1", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(UNKNOWN has 2, CONFLICT has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(UNKNOWN), rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
@@ -319,7 +319,7 @@ class AclsInspectionTest {
 
         val expected_P1_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P1",
-                clusterIdentifier = "c_2",
+                clusterIdentifier = "c_2", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(OK has 1, CONFLICT has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
@@ -330,7 +330,7 @@ class AclsInspectionTest {
         )
         val expected_P2_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P2",
-                clusterIdentifier = "c_2",
+                clusterIdentifier = "c_2", clusterTags = emptyList(),
                 status = AclStatus(true, listOf(OK has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
@@ -340,7 +340,7 @@ class AclsInspectionTest {
         )
         val expected_P3_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
-                clusterIdentifier = "c_2",
+                clusterIdentifier = "c_2", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(OK has 1, CONFLICT has 1, DETACHED has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
@@ -352,7 +352,7 @@ class AclsInspectionTest {
         )
         val expected_P4_on_c2 = PrincipalAclsClusterInspection(
                 principal = "User:P4",
-                clusterIdentifier = "c_2",
+                clusterIdentifier = "c_2", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(UNKNOWN has 2, CONFLICT has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(UNKNOWN), rule_p4_r1, listOf("t1"), listOf(), listOf(DELETE_UNWANTED_ACLS, IMPORT_PRINCIPAL), listOf()),
@@ -364,7 +364,7 @@ class AclsInspectionTest {
 
         val expected_P1_on_c3 = PrincipalAclsClusterInspection(
                 principal = "User:P1",
-                clusterIdentifier = "c_3",
+                clusterIdentifier = "c_3", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(OK has 1, CONFLICT has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p1_r1, listOf("t1"), listOf(), listOf(), listOf()),
@@ -375,7 +375,7 @@ class AclsInspectionTest {
         )
         val expected_P2_on_c3 = PrincipalAclsClusterInspection(
                 principal = "User:P2",
-                clusterIdentifier = "c_3",
+                clusterIdentifier = "c_3", clusterTags = emptyList(),
                 status = AclStatus(true, listOf(OK has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(OK), rule_p2_r1, listOf("t1"), listOf(), listOf(), listOf())
@@ -385,7 +385,7 @@ class AclsInspectionTest {
         )
         val expected_P3_on_c3 = PrincipalAclsClusterInspection(
                 principal = "User:P3",
-                clusterIdentifier = "c_3",
+                clusterIdentifier = "c_3", clusterTags = emptyList(),
                 status = AclStatus(false, listOf(NOT_PRESENT_AS_EXPECTED has 1, CONFLICT has 1, DETACHED has 1)),
                 statuses = listOf(
                         AclRuleStatus(listOf(NOT_PRESENT_AS_EXPECTED), rule_p3_r1, listOf("t1"), listOf(), listOf(), listOf()),
@@ -397,7 +397,7 @@ class AclsInspectionTest {
         )
         val expected_P4_on_c3 = PrincipalAclsClusterInspection(
                 principal = "User:P4",
-                clusterIdentifier = "c_3",
+                clusterIdentifier = "c_3", clusterTags = emptyList(),
                 status = AclStatus(true, listOf()),
                 statuses = listOf(),
                 availableOperations = emptyList(),
