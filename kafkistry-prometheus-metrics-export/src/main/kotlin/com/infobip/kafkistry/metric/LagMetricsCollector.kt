@@ -1,9 +1,9 @@
 package com.infobip.kafkistry.metric
 
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
-import io.prometheus.client.Collector
+import io.prometheus.client.Collector.MetricFamilySamples
+import io.prometheus.client.Collector.Type
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.consumers.*
 import com.infobip.kafkistry.utils.ClusterTopicConsumerGroupFilter
 import com.infobip.kafkistry.utils.ClusterTopicConsumerGroupFilterProperties
@@ -27,11 +27,9 @@ class LagMetricsProperties {
 class LagMetricsCollector(
     promProperties: PrometheusMetricsProperties,
     lagProperties: LagMetricsProperties,
-    private val consumersService: ConsumersService,
-    private val clustersRegistryService: ClustersRegistryService,
     clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>,
     additionalLabelsProvider: ObjectProvider<LagMetricsAdditionalLabels>,
-) : Collector() {
+) : KafkistryMetricsCollector {
 
     //default: kafkistry_consumer_lag
     private val lagMetricName = promProperties.prefix + "consumer_lag"
@@ -50,10 +48,8 @@ class LagMetricsCollector(
         labelProvider.labelName(), "consumer_group", "topic", "partition", "consumer_host"
     ) + additionalLabels.labelNames()
 
-    override fun collect(): List<MetricFamilySamples> {
-        val samples = consumersService.allConsumersData()
-            .clustersGroups
-            .partitionLagSamples()
+    override fun expose(context: MetricsDataContext): List<MetricFamilySamples> {
+        val samples = context.partitionLagSamples()
         return mutableListOf(
             MetricFamilySamples(
                 lagMetricName,
@@ -64,13 +60,11 @@ class LagMetricsCollector(
         )
     }
 
-    private fun List<ClusterConsumerGroup>.partitionLagSamples(): List<MetricFamilySamples.Sample> {
-        val clusterRefs = clustersRegistryService.listClustersRefs()
-            .associateBy { it.identifier }
-        return asSequence().flatMap { clusterGroup ->
+    private fun MetricsDataContext.partitionLagSamples(): List<MetricFamilySamples.Sample> {
+        return clustersGroups.asSequence().flatMap { clusterGroup ->
             val consumerGroup = clusterGroup.consumerGroup
             consumerGroup.topicMembers.asSequence().flatMap { topicMembers ->
-                val clusterRef = clusterRefs[clusterGroup.clusterIdentifier]
+                val clusterRef = clusters[clusterGroup.clusterIdentifier]
                 if (clusterRef != null && !filter(clusterRef, topicMembers.topicName, consumerGroup.groupId)) {
                     emptySequence()
                 } else {

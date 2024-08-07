@@ -1,13 +1,13 @@
 package com.infobip.kafkistry.metric
 
-import io.prometheus.client.Collector
+import io.prometheus.client.Collector.MetricFamilySamples
+import io.prometheus.client.Collector.Type
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.PartitionOffsets
 import com.infobip.kafkistry.kafkastate.ClusterTopicOffsets
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.utils.*
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -28,9 +28,8 @@ class TopicOffsetsMetricsProperties {
 class TopicOffsetsCollector(
     promProperties: PrometheusMetricsProperties,
     properties: TopicOffsetsMetricsProperties,
-    private val topicOffsetsService: TopicOffsetsService,
     clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>
-) : Collector() {
+) : KafkistryMetricsCollector {
 
     //default: kafkistry_topic_begin_offset
     private val beginOffsetMetricName = promProperties.prefix + "topic_begin_offset"
@@ -48,17 +47,16 @@ class TopicOffsetsCollector(
         labelProvider.labelName(), "topic", "partition"
     )
 
-    override fun collect(): List<MetricFamilySamples> {
-        val allClustersTopicsOffsets = topicOffsetsService.allClustersTopicsOffsets()
+    override fun expose(context: MetricsDataContext): List<MetricFamilySamples> {
         val beginOffsetSamples =
-            allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
+            context.allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
                 MetricFamilySamples.Sample(
                     beginOffsetMetricName, labelNames,
                     listOf(labelProvider.labelValue(cluster.identifier), topic, partition.toString()),
                     partitionOffsets.begin.toDouble()
                 )
             }
-        val endOffsetSamples = allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
+        val endOffsetSamples = context.allClustersTopicsOffsets.metricSamplesBy { cluster, topic, partition, partitionOffsets ->
             MetricFamilySamples.Sample(
                 endOffsetMetricName, labelNames,
                 listOf(labelProvider.labelValue(cluster.identifier), topic, partition.toString()),

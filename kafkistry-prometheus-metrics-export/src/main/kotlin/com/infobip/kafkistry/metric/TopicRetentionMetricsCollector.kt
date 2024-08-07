@@ -1,15 +1,13 @@
 package com.infobip.kafkistry.metric
 
-import io.prometheus.client.Collector
+import io.prometheus.client.Collector.MetricFamilySamples
+import io.prometheus.client.Collector.Type
 import org.apache.kafka.common.config.TopicConfig
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.topic.TopicsInspectionService
-import com.infobip.kafkistry.service.oldestrecordage.OldestRecordAgeService
-import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.utils.ClusterTopicFilter
 import com.infobip.kafkistry.utils.ClusterTopicFilterProperties
 import org.springframework.beans.factory.ObjectProvider
@@ -17,7 +15,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
 @ConfigurationProperties("app.metrics.topic-retention")
@@ -32,11 +29,8 @@ class RetentionMetricsProperties {
 class RetentionMetricsCollector(
     promProperties: PrometheusMetricsProperties,
     properties: RetentionMetricsProperties,
-    private val inspectionService: TopicsInspectionService,
-    private val oldestRecordAgeService: Optional<OldestRecordAgeService>,
-    private val replicaDirsService: ReplicaDirsService,
     clusterLabelProvider: ObjectProvider<ClusterMetricLabelProvider>
-) : Collector() {
+) : KafkistryMetricsCollector {
 
     companion object {
         const val INF_RETENTION = -1L
@@ -59,8 +53,8 @@ class RetentionMetricsCollector(
 
     private val labelNames = listOf(labelProvider.labelName(), "topic", "partition")
 
-    override fun collect(): List<MetricFamilySamples> {
-        val allTopicPartitionStats = getAllTopicPartitionStats()
+    override fun expose(context: MetricsDataContext): List<MetricFamilySamples> {
+        val allTopicPartitionStats = context.getAllTopicPartitionStats()
         val timeRetentionUsageSamples = allTopicPartitionStats.mapNotNull {
             MetricFamilySamples.Sample(
                 timeRetentionUsageMetricName, labelNames,
@@ -101,11 +95,7 @@ class RetentionMetricsCollector(
         )
     }
 
-    private fun getAllTopicPartitionStats(): List<TopicPartitionStats> {
-        val topicInspections = inspectionService.inspectAllTopics() + inspectionService.inspectUnknownTopics()
-        val allClustersTopicOldestAges = oldestRecordAgeService.orElse(null)
-            ?.allClustersTopicOldestRecordAges().orEmpty()
-        val allClustersTopicReplicaInfos = replicaDirsService.allClustersTopicReplicaInfos()
+    private fun MetricsDataContext.getAllTopicPartitionStats(): List<TopicPartitionStats> {
         return topicInspections.flatMap { topicStatuses ->
             val topicName = topicStatuses.topicName
             topicStatuses.statusPerClusters.flatMap TopicCluster@{ topicStatus ->

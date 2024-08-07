@@ -25,6 +25,7 @@
    + [Consumers lag metric](#consumer-lag)
    + [Topic offsets](#topic-offsets-metrics)
    + [Topic retention](#topic-retention-metrics)
+   + [Topic status](#topic-status-metrics)
  - [Security / Users](#security-for-web---kafkistry-users)
    + [Static users list](#static-users-list)
    + [Custom authentication provider](#implementing-custom-authentication-provider)
@@ -560,6 +561,37 @@ Available configuration properties
 | `app.metrics.topic-retention.enabled`                                    | `true`  | Enable/disable exporting topic partition retention metric at all                         |
 | `app.metrics.topic-retention.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include retention metric. See [filtering options](#filter-options) |
 | `app.metrics.topic-retention.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include retention metric. See [filtering options](#filter-options)   |
+
+
+
+### Topic status metrics
+
+Exposing all statuses of topic per different cluster using following metric name `kafkistry_topic_status`.
+
+Used labels:
+- `cluster` - on which kafka cluster it is (one of clusters added into Kafkistry).
+  This can be customized by implementing [ClusterLabelMetricProvider](kafkistry-prometheus-metrics-export/src/main/kotlin/com/infobip/kafkistry/metric/ClusterLabelMetricProvider.kt)
+  See more about [writing custom plugins](#writing-custom-plugins)
+- `topic` - topic name
+- `status` - which partition of topic
+  - Example statuses:
+    - `OK`
+    - `MISSING`
+    - `WRONG_REPLICATION_FACTOR`
+    - ... See all statuses in [here](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/model.kt) in class `TopicInspectionResultType`. **Note** that custom statuses can be implemented via [TopicExternalInspector](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/TopicExternalInspector.kt)
+- `valid` - `true` / `false`
+- `category` - one of following enum values [`IssueCategory`](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/model.kt)
+- `level` - one of following enum values [`StatusLevel`](kafkistry-common/src/main/kotlin/com/infobip/kafkistry/service/NamedType.kt)
+- `owners` - declared owner of topic in TopicDescription or `unknown` for topic which are not in kafkistry but exist on cluster
+
+Available configuration properties:
+
+| Property                                                              | Default | Description                                                                                                                                                        |
+|-----------------------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.metrics.topic-status.enabled`                                    | `true`  | Enable/disable exporting topic statuses state metric at all                                                                                                        |
+| `app.metrics.topic-status.include-disabled-clusters`                  | `false` | When `false` statuses for clusters that are disabled will be omitted, on `true` there will be included `CLUSTER_DISABLED` metric status for all disabled clusters. |
+| `app.metrics.topic-status.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include status metric. See [filtering options](#filter-options)                                                                              |
+| `app.metrics.topic-status.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include status metric. See [filtering options](#filter-options)                                                                                |
 
 
 

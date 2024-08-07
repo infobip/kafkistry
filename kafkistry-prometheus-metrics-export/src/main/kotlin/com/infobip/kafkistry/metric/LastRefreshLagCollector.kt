@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.metric
 
-import io.prometheus.client.Collector
+import io.prometheus.client.Collector.MetricFamilySamples
+import io.prometheus.client.Collector.Type
 import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import org.springframework.stereotype.Component
@@ -9,14 +10,14 @@ import org.springframework.stereotype.Component
 class LastRefreshLagCollector(
     promProperties: PrometheusMetricsProperties,
     private val providers: List<AbstractKafkaStateProvider<*>>
-) : Collector() {
+) : KafkistryMetricsCollector {
 
     //default: kafkistry_pool_refresh_lag
     private val metricName = promProperties.prefix + "pool_refresh_lag"
 
     val labelNames = listOf("cluster", "type")
 
-    override fun collect(): MutableList<MetricFamilySamples> {
+    override fun expose(context: MetricsDataContext): List<MetricFamilySamples> {
         val now = System.currentTimeMillis()
         val allSamples = providers.flatMap { provider ->
             val latestStates = provider.getAllLatestStates()
