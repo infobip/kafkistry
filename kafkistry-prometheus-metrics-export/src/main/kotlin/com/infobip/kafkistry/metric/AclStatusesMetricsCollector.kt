@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component
 class AclStatusesMetricsProperties {
     var enabled = true
     var includeDisabledClusters = false
+    var omitOkStatuses = false
     @NestedConfigurationProperty
     var enabledOn = ClusterFilterProperties()
 }
@@ -61,16 +62,18 @@ class AclStatusesMetricsCollector(
                             clusterRulesStatuses.statuses
                                 .flatMap { ruleStatuses ->
                                     val aclRule = ruleStatuses.rule.asString()
-                                    ruleStatuses.statusTypes.map {
-                                        MetricFamilySamples.Sample(
-                                            statusMetricName, labelNames,
-                                            listOf(
-                                                clusterLabel, aclRule, it.name, it.valid.toString(),
-                                                it.level.name, owner,
-                                            ),
-                                            1.0,
-                                        )
-                                    }
+                                    ruleStatuses.statusTypes
+                                        .filter { !properties.omitOkStatuses || it != AclInspectionResultType.OK }
+                                        .map {
+                                            MetricFamilySamples.Sample(
+                                                statusMetricName, labelNames,
+                                                listOf(
+                                                    clusterLabel, aclRule, it.name, it.valid.toString(),
+                                                    it.level.name, owner,
+                                                ),
+                                                1.0,
+                                            )
+                                        }
                                 }
                         } else {
                             emptyList()
