@@ -591,6 +591,7 @@ Available configuration properties:
 | `app.metrics.topic-status.enabled`                                    | `true`  | Enable/disable exporting topic statuses state metric at all                                                                                                        |
 | `app.metrics.topic-status.omit-status-names`                          | _empty_ | List of status names not to be included in metrics samples with goal to reduce number of exported metric samples.                                                  |
 | `app.metrics.topic-status.include-disabled-clusters`                  | `false` | When `false` statuses for clusters that are disabled will be omitted, on `true` there will be included `CLUSTER_DISABLED` metric status for all disabled clusters. |
+| `app.metrics.topic-status.group-without-topic-name`                   | `false` | When `true` metric won't have label `topic` and metric value will correspond to number of topics with equal other labels.                                          |
 | `app.metrics.topic-status.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include status metric. See [filtering options](#filter-options)                                                                              |
 | `app.metrics.topic-status.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include status metric. See [filtering options](#filter-options)                                                                                |
 
