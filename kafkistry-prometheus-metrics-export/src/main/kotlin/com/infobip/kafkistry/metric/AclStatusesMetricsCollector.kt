@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component
 class AclStatusesMetricsProperties {
     var enabled = true
     var includeDisabledClusters = false
-    var omitOkStatuses = false
+    var omitStatusNames = mutableSetOf<String>()
     @NestedConfigurationProperty
     var enabledOn = ClusterFilterProperties()
 }
@@ -63,7 +63,7 @@ class AclStatusesMetricsCollector(
                                 .flatMap { ruleStatuses ->
                                     val aclRule = ruleStatuses.rule.asString()
                                     ruleStatuses.statusTypes
-                                        .filter { !properties.omitOkStatuses || it != AclInspectionResultType.OK }
+                                        .filter { it.name !in properties.omitStatusNames }
                                         .map {
                                             MetricFamilySamples.Sample(
                                                 statusMetricName, labelNames,

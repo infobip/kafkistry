@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
 class TopicStatusesMetricsProperties {
     var enabled = true
     var includeDisabledClusters = false
-    var omitOkStatuses = false
+    var omitStatusNames = mutableSetOf<String>()
     @NestedConfigurationProperty
     var enabledOn = ClusterTopicFilterProperties()
 }
@@ -58,7 +58,7 @@ class TopicStatusesMetricsCollector(
                         if (properties.includeDisabledClusters || !clusterDisabled) {
                             val clusterLabel = clusterLabelProvider.labelValue(clusterStatus.clusterIdentifier)
                             clusterStatus.status.types
-                                .filter { !properties.omitOkStatuses || it != TopicInspectionResultType.OK }
+                                .filter { it.name !in properties.omitStatusNames }
                                 .map {
                                     MetricFamilySamples.Sample(
                                         statusMetricName, labelNames,
