@@ -9,11 +9,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.config.annotation.ObjectPostProcessor
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.session.SessionRegistry
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.access.intercept.AuthorizationFilter
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter
 import org.springframework.security.web.header.HeaderWriterFilter
 import org.springframework.stereotype.Component
@@ -24,6 +26,8 @@ import java.util.*
 class WebSecurityProperties {
     var enabled = true
     var csrfEnabled = true
+    var explainDeniedAccess = true
+    var deniedAccessHelpMessage = "Please contact your Kafkistry administrator!"
 }
 
 @Configuration
@@ -70,6 +74,9 @@ class WebSecurityConfig(
                         .sessionRegistry(sessionRegistry)
                 }
                 addFilterBefore(preAuthUserFilter(), AbstractPreAuthenticatedProcessingFilter::class.java)
+                if (securityProperties.explainDeniedAccess) {
+                    configureExplainingDenyAccess()
+                }
                 authorizeHttpRequests { configurer ->
                     authorizationConfigurers.forEach { it.configure(configurer) }
                 }
@@ -84,7 +91,6 @@ class WebSecurityConfig(
                         }
                     }
                 }
-
                 httpBasic {}
                 exceptionHandling {
                     it
@@ -101,4 +107,20 @@ class WebSecurityConfig(
         return http.build()
     }
 
+    private fun HttpSecurity.configureExplainingDenyAccess() {
+        authorizeHttpRequests { configurer ->
+            configurer.withObjectPostProcessor(object : ObjectPostProcessor<AuthorizationFilter> {
+                override fun <O : AuthorizationFilter> postProcess(authFilter: O): O {
+                    @Suppress("UNCHECKED_CAST")
+                    return AuthorizationFilter(
+                        ExplainingDenyExceptionAuthorizationManager(
+                            authFilter.authorizationManager, securityProperties.deniedAccessHelpMessage
+                        )
+                    ) as O
+                }
+            })
+        }
+    }
+
 }
+

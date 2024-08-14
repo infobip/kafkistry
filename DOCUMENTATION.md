@@ -740,6 +740,16 @@ In larger organizations you may want to restrict who can manage which consumer g
 Implementation class for above listed properties is [ConsumerAlterPermissionAuthorizer](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/consumers/ConsumerAlterPermissionAuthorizer.kt)
 
 
+### General security configurable properties
+
+| Property                                  | Default                                          | Description                                                                                                                                                                                                                                                                                                                |
+|-------------------------------------------|--------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.security.enabled`                    | `true`                                           | Weather or not any security access is enforced, not recommended to disable for production deployments.                                                                                                                                                                                                                     |
+| `app.security.csrf-enabled`               | `true`                                           | Weather or not CSRF protection is enabled, not recommended to disable for production deployments. CSRF works by injecting csrf token in every UI view, then all ajax calls to backend are decorated by csrf http header obtained from served html.                                                                         |
+| `app.security.explain-denied-access`      | `true`                                           | By default, on unauthorized access Spring security throws `AccessDeniedException` without any details of deny cause. When explanation is enabled, more details about deny decision are included in denying exception message. Use with caution as it might allow attacker to better understand authorization requirements. |
+| `app.security.denied-access-help-message` | `"Please contact your Kafkistry administrator!"` | Addition to deny explanation message to give users help directions.                                                                                                                                                                                                                                                        |
+
+
 
 ## High Availability (HA) setup - multiple Kafkistry nodes
 
