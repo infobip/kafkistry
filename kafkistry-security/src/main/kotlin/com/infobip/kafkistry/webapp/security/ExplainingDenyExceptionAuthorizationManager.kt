@@ -51,6 +51,7 @@ class ExplainingDenyExceptionAuthorizationManager(
     private fun cause(decision: AuthorizationDecision, authorities: List<String>): String {
         return when (decision) {
             is AuthorityAuthorizationDecision -> "\n - required authorities: ${decision.authorities}\n - having authorities: $authorities"
+            is DescribedAuthorizationDecision -> cause(decision.decision, authorities) + "\n - description: ${decision.description}"
             else -> decision.toString()
         }
     }

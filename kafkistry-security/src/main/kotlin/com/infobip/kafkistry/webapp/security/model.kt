@@ -40,7 +40,8 @@ data class User(
 fun User.isAdmin(): Boolean = role.name == UserRole.ADMIN.name
 
 data class UserAuthority(
-        val name: String
+    val name: String,
+    val description: String? = null,
 ) : GrantedAuthority {
 
     companion object {

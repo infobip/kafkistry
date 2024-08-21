@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
+import org.springframework.security.authorization.AuthorityAuthorizationManager
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.stereotype.Component
 
@@ -40,8 +42,16 @@ interface RequestAuthorizationPermissionsConfigurer {
         HttpMethod.values().filter { it != httpMethod }.forEach { configurer(antMatchers(it, antPattern)) }
     }
 
-    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl.hasAuthority(authority: UserAuthority) {
-        hasAuthority(authority.authority)
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl.hasAuthority(
+        authority: UserAuthority, description: String? = null,
+    ) {
+        val desc = description ?: authority.description
+        if (desc != null) {
+            val authManager = AuthorityAuthorizationManager.hasAuthority<RequestAuthorizationContext>(authority.authority)
+            access(DescribedAuthorizationManager(authManager, desc))
+        } else {
+            hasAuthority(authority.authority)
+        }
     }
 
 }
