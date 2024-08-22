@@ -596,6 +596,35 @@ Available configuration properties:
 | `app.metrics.topic-status.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include status metric. See [filtering options](#filter-options)                                                                                |
 
 
+### Cluster status metrics
+
+Exposing all statuses of cluster using following metric name `kafkistry_cluster_status`.
+
+Used labels:
+- `cluster` - on which kafka cluster it is (one of clusters added into Kafkistry).
+  This can be customized by implementing [ClusterLabelMetricProvider](kafkistry-prometheus-metrics-export/src/main/kotlin/com/infobip/kafkistry/metric/ClusterLabelMetricProvider.kt)
+  See more about [writing custom plugins](#writing-custom-plugins)
+- `status` - which partition of topic
+  - Example statuses:
+    - `VISIBLE`
+    - `UNREACHABLE`
+    - `DISK_USAGE_DISBALANCE`
+    - `OVER_PROMISED_RETENTION`
+    - ... See all statuses in [here](kafkistry-state-scraping/src/main/kotlin/com/infobip/kafkistry/kafkastate/model.kt) of enum `StateType`. **Note** that custom statuses can be implemented via [ClusterIssueChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterIssueChecker.kt)
+- `valid` - `true` / `false`
+- `level` - one of following enum values [`StatusLevel`](kafkistry-common/src/main/kotlin/com/infobip/kafkistry/service/NamedType.kt)
+
+Available configuration properties:
+
+| Property                                                                | Default | Description                                                                                                                                                        |
+|-------------------------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.metrics.cluster-status.enabled`                                    | `true`  | Enable/disable exporting cluster statuses state metric at all                                                                                                      |
+| `app.metrics.cluster-status.omit-status-names`                          | _empty_ | List of status names not to be included in metrics samples with goal to reduce number of exported metric samples.                                                  |
+| `app.metrics.cluster-status.include-disabled-clusters`                  | `false` | When `false` statuses for clusters that are disabled will be omitted, on `true` there will be included `CLUSTER_DISABLED` metric status for all disabled clusters. |
+| `app.metrics.cluster-status.group-without-topic-name`                   | `false` | When `true` metric won't have label `topic` and metric value will correspond to number of topics with equal other labels.                                          |
+| `app.metrics.cluster-status.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include status metric. See [filtering options](#filter-options)                                                                              |
+
+
 
 ## Security for web - Kafkistry users
 

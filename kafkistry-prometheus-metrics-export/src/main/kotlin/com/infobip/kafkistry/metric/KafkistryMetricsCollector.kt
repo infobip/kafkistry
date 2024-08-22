@@ -7,6 +7,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.acl.PrincipalAclsInspection
+import com.infobip.kafkistry.service.cluster.ClusterStatusIssues
 import com.infobip.kafkistry.service.consumers.ClusterConsumerGroup
 import com.infobip.kafkistry.service.topic.TopicStatuses
 import io.prometheus.client.Collector.MetricFamilySamples
@@ -18,6 +19,7 @@ interface KafkistryMetricsCollector {
 
 data class MetricsDataContext(
     val clusters: Map<KafkaClusterIdentifier, ClusterRef>,
+    val clusterStatuses: List<ClusterStatusIssues>,
     val topicInspections: List<TopicStatuses>,
     val clustersGroups: List<ClusterConsumerGroup>,
     val allClustersTopicsOffsets: Map<ClusterRef, ClusterTopicOffsets>,
