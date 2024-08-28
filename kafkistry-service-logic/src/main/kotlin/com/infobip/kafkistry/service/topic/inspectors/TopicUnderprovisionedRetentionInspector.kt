@@ -80,7 +80,7 @@ class TopicUnderprovisionedRetentionInspector(
         outputCallback.setExternalInfo(partitionResults)
 
         val drasticPartitionStats = partitionResults.filter {
-            it.value.percentOfRetentionMs < properties.drasticOldnessRatioToRetentionMs
+            it.value.percentOfRetentionMs < 100 * properties.drasticOldnessRatioToRetentionMs
         }
         val drasticStats = drasticPartitionStats.values
             .minByOrNull { it.percentOfRetentionMs }
