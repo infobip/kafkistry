@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.service.topic.inspectors
 
 import com.infobip.kafkistry.kafka.Partition
+import com.infobip.kafkistry.service.NamedType
 import com.infobip.kafkistry.service.NamedTypeCauseDescription
 import com.infobip.kafkistry.service.Placeholder
 import com.infobip.kafkistry.service.StatusLevel
@@ -20,11 +21,20 @@ val UNDERPROVISIONED_RETENTION = TopicInspectionResultType(
     doc = "Topic has more traffic than expected so that configured retention.bytes deletes messages soner than reaching configured retention.ms",
 )
 
+val DRASTICALLY_UNDERPROVISIONED_RETENTION = TopicInspectionResultType(
+    name = "CRITICALLY_UNDERPROVISIONED_RETENTION",
+    level = StatusLevel.ERROR,
+    category = IssueCategory.RUNTIME_ISSUE,
+    doc = "Topic has way more traffic than expected so that configured retention.bytes deletes messages much soner than reaching configured retention.ms",
+)
+
 @Configuration
 @ConfigurationProperties("app.topic-inspection.underprovisioned-retention")
 class TopicUnderprovisionedRetentionInspectorProperties {
     var minOldnessRatioToRetentionMs = 0.8
     var requiredRatioToRetentionBytes = 0.8
+    var drasticOldnessRatioToRetentionMs = 0.1
+    var drasticOldnessMs = 1000L * 3600 //1h
 }
 
 @Component
@@ -64,20 +74,42 @@ class TopicUnderprovisionedRetentionInspector(
             ?: return
         val lowPartitions: List<Partition> = partitionResults.keys.sorted()
         outputCallback.addDescribedStatusType(
-            NamedTypeCauseDescription(
-                type = UNDERPROVISIONED_RETENTION,
-                message = "Topic has partition with oldest record of age %OLDEST_AGE% which is only " +
-                        "%RETENTION_PERCENT% of expected time retention.ms of %RETENTION_MS%. " +
-                        "Low retention partitions are %PARTITIONS_LIST%",
-                placeholders = mapOf(
-                    "OLDEST_AGE" to Placeholder("age.ms", worstStats.oldestRecordAgeMs),
-                    "RETENTION_PERCENT" to Placeholder("retention.percent", worstStats.percentOfRetentionMs),
-                    "RETENTION_MS" to Placeholder("retention.ms", retentionMs),
-                    "PARTITIONS_LIST" to Placeholder("partitions", lowPartitions),
-                ),
+            newUnderProvisionedDescription(
+                UNDERPROVISIONED_RETENTION, worstStats, retentionMs, lowPartitions
             )
         )
         outputCallback.setExternalInfo(partitionResults)
+
+        val drasticPartitionStats = partitionResults.filter {
+            it.value.percentOfRetentionMs < properties.drasticOldnessRatioToRetentionMs ||
+                it.value.oldestRecordAgeMs < properties.drasticOldnessMs
+        }
+        val drasticStats = drasticPartitionStats.values
+            .minByOrNull { it.percentOfRetentionMs }
+            ?: return
+        val drasticLowPartitions: List<Partition> = drasticPartitionStats.keys.sorted()
+        outputCallback.addDescribedStatusType(
+            newUnderProvisionedDescription(
+                DRASTICALLY_UNDERPROVISIONED_RETENTION, drasticStats, retentionMs, drasticLowPartitions
+            )
+        )
+    }
+
+    private fun <T : NamedType> newUnderProvisionedDescription(
+        type: T, worstStats: UnderprovisionedPartitionStats, retentionMs: Long, lowPartitions: List<Partition>,
+    ): NamedTypeCauseDescription<T> {
+        return NamedTypeCauseDescription(
+            type = type,
+            message = "Topic has partition with oldest record of age %OLDEST_AGE% which is only " +
+                "%RETENTION_PERCENT% of expected time retention.ms of %RETENTION_MS%. " +
+                "Low retention partitions are %PARTITIONS_LIST%",
+            placeholders = mapOf(
+                "OLDEST_AGE" to Placeholder("age.ms", worstStats.oldestRecordAgeMs),
+                "RETENTION_PERCENT" to Placeholder("retention.percent", worstStats.percentOfRetentionMs),
+                "RETENTION_MS" to Placeholder("retention.ms", retentionMs),
+                "PARTITIONS_LIST" to Placeholder("partitions", lowPartitions),
+            ),
+        )
     }
 
 }
