@@ -22,7 +22,7 @@ val UNDERPROVISIONED_RETENTION = TopicInspectionResultType(
 )
 
 val DRASTICALLY_UNDERPROVISIONED_RETENTION = TopicInspectionResultType(
-    name = "CRITICALLY_UNDERPROVISIONED_RETENTION",
+    name = "DRASTICALLY_UNDERPROVISIONED_RETENTION",
     level = StatusLevel.ERROR,
     category = IssueCategory.RUNTIME_ISSUE,
     doc = "Topic has way more traffic than expected so that configured retention.bytes deletes messages much soner than reaching configured retention.ms",
