@@ -1163,7 +1163,6 @@ app.topic-inspection:
      | `app.topic-inspection.underprovisioned-retention.min-oldness-ratio-to-retention-ms`     | `0.8`            | Trigger this status when oldest record in partition is younger than 80% of topic's `retention.ms`                                            |
      | `app.topic-inspection.underprovisioned-retention.required-ratio-to-retention-bytes`     | `0.8`            | Prevent this status from triggering unless partition is "loaded" with data; i.e. partition size is at least 80% of topic's `retention.bytes` |
      | `app.topic-inspection.underprovisioned-retention.drastic-oldness-ratio-to-retention-ms` | `0.1`            | Trigger drastic variant of this status when oldest record in partition is younger than 10% of topic's `retention.ms`                         |
-     | `app.topic-inspection.underprovisioned-retention.drastic-oldness-ms`                    | `3600000` _(1h)_ | Trigger drastic variant this status when oldest record in partition is configured value (default 1h)                                         |
    
 - [TopicOverprovisionedRetentionInspector](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/inspectors/TopicOverprovisionedRetentionInspector.kt)
    - Check if topic has partitions such that configured `retention.bytes` is mush bigger than actual size of partition because messages are being deleted before by `retention.ms`

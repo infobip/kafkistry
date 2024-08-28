@@ -34,7 +34,6 @@ class TopicUnderprovisionedRetentionInspectorProperties {
     var minOldnessRatioToRetentionMs = 0.8
     var requiredRatioToRetentionBytes = 0.8
     var drasticOldnessRatioToRetentionMs = 0.1
-    var drasticOldnessMs = 1000L * 3600 //1h
 }
 
 @Component
@@ -81,8 +80,7 @@ class TopicUnderprovisionedRetentionInspector(
         outputCallback.setExternalInfo(partitionResults)
 
         val drasticPartitionStats = partitionResults.filter {
-            it.value.percentOfRetentionMs < properties.drasticOldnessRatioToRetentionMs ||
-                it.value.oldestRecordAgeMs < properties.drasticOldnessMs
+            it.value.percentOfRetentionMs < properties.drasticOldnessRatioToRetentionMs
         }
         val drasticStats = drasticPartitionStats.values
             .minByOrNull { it.percentOfRetentionMs }
