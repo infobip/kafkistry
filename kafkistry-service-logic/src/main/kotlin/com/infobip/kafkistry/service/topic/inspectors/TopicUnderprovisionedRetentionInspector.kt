@@ -70,27 +70,27 @@ class TopicUnderprovisionedRetentionInspector(
     ) {
         val worstStats = partitionResults.values
             .minByOrNull { it.percentOfRetentionMs }
-            ?: return
-        val lowPartitions: List<Partition> = partitionResults.keys.sorted()
-        outputCallback.addDescribedStatusType(
-            newUnderProvisionedDescription(
-                UNDERPROVISIONED_RETENTION, worstStats, retentionMs, lowPartitions
-            )
-        )
-        outputCallback.setExternalInfo(partitionResults)
+            ?: return   //not a single partition is under-provisioned, nothing more to do
 
         val drasticPartitionStats = partitionResults.filter {
             it.value.percentOfRetentionMs < 100 * properties.drasticOldnessRatioToRetentionMs
         }
         val drasticStats = drasticPartitionStats.values
             .minByOrNull { it.percentOfRetentionMs }
-            ?: return
-        val drasticLowPartitions: List<Partition> = drasticPartitionStats.keys.sorted()
-        outputCallback.addDescribedStatusType(
-            newUnderProvisionedDescription(
-                DRASTICALLY_UNDERPROVISIONED_RETENTION, drasticStats, retentionMs, drasticLowPartitions
+        if (drasticStats != null) {
+            outputCallback.addDescribedStatusType(
+                newUnderProvisionedDescription(
+                    DRASTICALLY_UNDERPROVISIONED_RETENTION, drasticStats, retentionMs, drasticPartitionStats.keys.sorted()
+                )
             )
-        )
+        } else {
+            outputCallback.addDescribedStatusType(
+                newUnderProvisionedDescription(
+                    UNDERPROVISIONED_RETENTION, worstStats, retentionMs, partitionResults.keys.sorted()
+                )
+            )
+        }
+        outputCallback.setExternalInfo(partitionResults)
     }
 
     private fun <T : NamedType> newUnderProvisionedDescription(
