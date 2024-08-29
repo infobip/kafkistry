@@ -35,7 +35,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.2.5</version>
+        <version>3.3.3</version>
         <relativePath />
     </parent>
 
@@ -90,9 +90,9 @@
         <docker.to-image>infobip/kafkistry</docker.to-image>
 
         <!-- DEPENDENCIES -->
-        <kafka.version>3.7.0</kafka.version>
+        <kafka.version>3.7.1</kafka.version>
         <org.eclipse.jgit.version>6.8.0.202311291450-r</org.eclipse.jgit.version>
-        <sshd-git.version>2.11.0</sshd-git.version> <!-- Apache MINA -->
+        <sshd-git.version>2.13.2</sshd-git.version> <!-- Apache MINA -->
         <jsoup.version>1.15.4</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
         <zookeeper.version>3.8.3</zookeeper.version>
@@ -115,16 +115,6 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bitbucket.b_c</groupId>
-                <artifactId>jose4j</artifactId>
-                <version>0.9.4</version> <!-- override version to fix CWE vulnerability; com.infobip.kafkistry:kafkistry-kafka-connector@0.6.2-SNAPSHOT > org.apache.kafka:kafka_2.13@3.6.1 > org.bitbucket.b_c:jose4j@0.9.3 -->
-            </dependency>
-            <dependency>
-                <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk18on</artifactId>
-                <version>1.78</version> <!-- override version to fix CWE vulnerability: org.infobip.kafkistry:infobip-kafkistry-plugins@0.0.10-SNAPSHOT > com.infobip.kafkistry:kafkistry-app@0.7.1-SNAPSHOT > com.infobip.kafkistry:kafkistry-repository@0.7.1-SNAPSHOT > org.apache.sshd:sshd-git@2.11.0 > org.bouncycastle:bcprov-jdk18on@1.76 -->
             </dependency>
         </dependencies>
     </dependencyManagement>

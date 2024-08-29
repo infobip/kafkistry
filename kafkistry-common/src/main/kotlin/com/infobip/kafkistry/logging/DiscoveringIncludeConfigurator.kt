@@ -16,10 +16,10 @@ import org.springframework.stereotype.Component
 class DiscoveringIncludeConfigurator  : ContextAwareBase(), Configurator, ApplicationListener<ApplicationEnvironmentPreparedEvent> {
     override fun configure(loggerContext: LoggerContext): Configurator.ExecutionStatus {
         addInfo("Starting configuring")
-        val jc = JoranConfigurator().apply { context = loggerContext }
         val resources = PathMatchingResourcePatternResolver().getResources("classpath*:logback-kafkistry-*.xml")
         resources.forEach {
             addInfo("Configuring discovered config: $it")
+            val jc = JoranConfigurator().apply { context = loggerContext }
             jc.doConfigure(it.inputStream)
         }
         addInfo("Completed configuring")

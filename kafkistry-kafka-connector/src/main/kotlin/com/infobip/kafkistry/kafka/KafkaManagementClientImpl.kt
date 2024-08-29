@@ -44,6 +44,7 @@ class KafkaManagementClientImpl(
                 "kr.zk.kafka.server",
                 "SessionExpireListener",
                 false,
+                true,
             )
         },
         controllerConnectionRef,

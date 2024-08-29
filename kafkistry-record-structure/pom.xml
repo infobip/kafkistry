@@ -18,7 +18,6 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
-            <version>${prometheus-client.version}</version>
         </dependency>
     </dependencies>
 </project>

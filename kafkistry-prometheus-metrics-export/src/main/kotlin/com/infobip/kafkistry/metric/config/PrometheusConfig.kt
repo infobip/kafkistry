@@ -1,11 +1,11 @@
 package com.infobip.kafkistry.metric.config
 
 import io.micrometer.core.instrument.Clock
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.client.Collector
-import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.hotspot.DefaultExports
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -25,7 +25,7 @@ class PrometheusConfigs(
         //static instance which is re-used when separate ApplicationContext-s spin up within same JVM
         // to avoid duplicate meters registrations into same prometheus CollectorRegistry.defaultRegistry
         private val prometheusRegistry = PrometheusMeterRegistry(
-            PrometheusConfig.DEFAULT, CollectorRegistry.defaultRegistry, Clock.SYSTEM
+            PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM
         )
     }
 
