@@ -313,7 +313,7 @@ class OperationSuggestionService(
             }
             .takeWhile { (_, suggestion) ->
                 topicPartitionsSum.accumulateAndGet(
-                    suggestion.assignmentsChange.newAssignments.size,
+                    suggestion.assignmentsChange.reAssignedPartitionsCount,
                     Int::plus
                 ) <= options.topicPartitionCountLimit
             }
