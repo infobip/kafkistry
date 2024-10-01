@@ -9,6 +9,8 @@
 <#-- @ftlvariable name="backgroundJobIssueGroups"  type="java.util.List<com.infobip.kafkistry.service.background.BackgroundJobIssuesGroup>" -->
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="imageProps"  type="com.infobip.kafkistry.webapp.ImageProperties" -->
+<#-- @ftlvariable name="customUserDetailsTemplate"  type="java.lang.String" -->
+
 
 <#import "common/documentation.ftl" as _doc>
 <#import "common/infoIcon.ftl" as _info>
@@ -98,6 +100,14 @@
                   </#list>
                 </td>
               </tr>
+              <#if customUserDetailsTemplate??>
+                <#assign userDetailsTemplate = '<#include "/${customUserDetailsTemplate}.ftl">'?interpret>
+                <tr>
+                    <td>
+                        <@userDetailsTemplate/>
+                    </td>
+                </tr>
+              </#if>
             </table>
         </#assign>
         <@_info.icon tooltip=userTooltip/>

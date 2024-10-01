@@ -36,6 +36,7 @@ app:
     caching: true
     custom-js-scripts-csv: ${CUSTOM_JS_SCRIPTS_CSV:}
     force-tag-for-presence: ${FORCE_TAG_FOR_PRESENCE:false}
+    custom-user-details-template: ${CUSTOM_USER_DETAILS_TEMPLATE:}
   consume:
     enabled: ${CONSUME_ENABLED:true}
     max-records: ${CONSUME_MAX_RECORDS:5000}

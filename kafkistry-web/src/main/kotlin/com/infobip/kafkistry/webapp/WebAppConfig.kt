@@ -25,6 +25,7 @@ class WebUIProperties {
     var caching = true
     var customJsScriptsCsv = ""
     var forceTagForPresence = false
+    var customUserDetailsTemplate = ""
 
     @NestedConfigurationProperty
     val image = ImageProperties()

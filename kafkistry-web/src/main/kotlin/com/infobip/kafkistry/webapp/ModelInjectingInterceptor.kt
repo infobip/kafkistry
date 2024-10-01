@@ -105,6 +105,9 @@ class PropertiesInjectingInterceptor(
             webUIProperties.customJsScriptsCsv.ifNotBlank {
                 addObject("customJsScripts", it.split(',').filter(String::isNotBlank))
             }
+            webUIProperties.customUserDetailsTemplate.ifNotBlank {
+                addObject("customUserDetailsTemplate", it)
+            }
             addObject("imageProps", webUIProperties.image)
             gitBrowseProperties?.branchBaseUrl.ifNotBlank { addObject("gitBranchBaseUrl", it) }
             gitBrowseProperties?.commitBaseUrl.ifNotBlank {
