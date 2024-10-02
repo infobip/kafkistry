@@ -53,6 +53,7 @@
  - [Slack integration](#slack-integration---auditing)
  - [Jira integration](#jira-integration)
  - [Miscellaneous UI Settings](#miscellaneous-ui-settings)
+ - [Miscellaneous Backend Settings](#miscellaneous-backend-settings)
  - [Logging](#logging)
    + [Console output](#logging-to-console-output)
    + [Files](#logging-to-files)
@@ -1476,6 +1477,17 @@ When having JIRA_BASE_URL, Kafkistry UI will inject links to JIRA
 | `app.hostname.value`           | _(empty/none)_                                                                                 | Name of hostname to be shown in UI as `Served by: <hostname>`                                                                                                                      | 
 | `app.hostname.property`        | _(empty/none)_                                                                                 | Name of system property or environment variable to resolve hostname from, to be shown in UI as `Served by: <hostname>`                                                             | 
 | `FORCE_TAG_FOR_PRESENCE`       | _false_                                                                                        | When set to `true` then only **Cluster Tag** presence option for topics/acls/quotas will be enabled while **All**/**Only on**/**Not on** will be disabled.                         | 
+
+
+
+
+## Miscellaneous Backend settings
+
+| Property                                              | Default                                                                                        | Description                                                                                                                                                |
+|-------------------------------------------------------|------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.consumer-group-principal-resolver.refresh-ms`    | `20000` _(20sec)_                                                                              | How often to refresh relations between consumer groups and principals that have ACL permission to join those groups.                                       |
+| `app.consumer-group-principal-resolver.cache-enabled` | `true`                                                                                         | Weather or not to persist cached relations between consumer groups and principals that have permission to join specific consumer groups.                   |
+| `CONSUMER_GROUPS_PRINCIPALS_CACHE_DIR`                | `kafkistry/consumer-group-principal-relations`                                                 | Directory where to persist local cache of consumer group to principal and principal owners relations.                                                      |
 
 
 

@@ -111,6 +111,8 @@ app:
       enabled: ${AUTOPILOT_ACTIONS_ENABLED:false}
     repository:
       storage-dir: ${AUTOPILOT_STORAGE_DIR:kafkistry/autopilot}
+  consumer-group-principal-resolver:
+    cache-storage-dir: ${CONSUMER_GROUPS_PRINCIPALS_CACHE_DIR:kafkistry/consumer-group-principal-relations}
 
 app.repository:
   git:
