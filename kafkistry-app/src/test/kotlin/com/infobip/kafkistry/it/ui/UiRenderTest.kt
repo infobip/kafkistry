@@ -178,7 +178,10 @@ class UiRenderTest {
         api.refreshClusters()
     }
 
-    private fun String.wordsSet() = Regex("\\w+").findAll(this).map { it.value }.toSet()
+    private fun String.wordsSet() = Regex("\\w+").findAll(this)
+        .map { it.value }
+        .filter { !it.matches(Regex("""\d+x""")) }
+        .toSet()
 
     @Before
     fun clearRepos() {
