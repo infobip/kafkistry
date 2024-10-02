@@ -35,7 +35,7 @@
             <td><@util.ok ok = clusterStatuses.status.ok/></td>
             <td>
                 <#list clusterStatuses.status.statusCounts as statusCount>
-                    <@util.namedTypeStatusAlert type = statusCount.type/>
+                    <@util.namedTypeStatusAlert type = statusCount.type quantity = statusCount.quantity/>
                 </#list>
             </td>
             <td>

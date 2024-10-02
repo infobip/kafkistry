@@ -82,9 +82,8 @@
                     <td><span class="text-primary text-monospace small">[undefined]</span></td>
                 </#if>
                 <td>
-                    <#assign allTopicStatusTypes = util.allTopicStatusTypes(topic.statusPerClusters)>
-                    <#list allTopicStatusTypes as statusType>
-                        <@util.namedTypeStatusAlert type = statusType/>
+                    <#list topic.topicsStatusCounts as statusTypeCount>
+                        <@util.namedTypeStatusAlert type = statusTypeCount.type quantity = statusTypeCount.quantity/>
                     </#list>
                 </td>
             </tr>

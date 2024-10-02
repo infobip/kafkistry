@@ -83,7 +83,7 @@
                             </td>
                             <td>
                                 <#list principalStatus.status.statusCounts as statusCount>
-                                    <@util.namedTypeStatusAlert type = statusCount.type/>
+                                    <@util.namedTypeStatusAlert type = statusCount.type quantity = statusCount.quantity/>
                                 </#list>
                             </td>
                         </tr>

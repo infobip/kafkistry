@@ -62,19 +62,6 @@
     <#return allTypes>
 </#function>
 
-<#function allTopicStatusTypes statusPerClusters>
-<#-- @ftlvariable name="statusPerClusters"  type="java.util.List<com.infobip.kafkistry.service.topic.TopicClusterStatus>" -->
-    <#assign allTypes = []>
-    <#list statusPerClusters as clusterStatus>
-        <#list clusterStatus.status.types as statusType>
-            <#if !allTypes?seq_contains(statusType)>
-                <#assign allTypes = allTypes + [statusType]>
-            </#if>
-        </#list>
-    </#list>
-    <#return allTypes>
-</#function>
-
 <#macro newTag>
     <span class="bg-danger text-light" style="border-radius: 3px; padding: 2px; font-size: 7px; font-weight: bold;">
       NEW
@@ -268,7 +255,7 @@
     </span>
 </#macro>
 
-<#macro namedTypeStatusAlert type alertInline=true small=false>
+<#macro namedTypeStatusAlert type alertInline=true small=false quantity=1>
 <#-- @ftlvariable name="type" type="com.infobip.kafkistry.service.NamedType" -->
     <#import "infoIcon.ftl" as infoForAlert>
     <div role="alert" class="alert text-nowrap
@@ -278,6 +265,9 @@
         "
     >
         ${type?api.getName()} <#-- workaround for to work both for enums and normal data classes -->
+        <#if quantity gt 1>
+            <span class='small font-weight-bold' title='Repeats ${quantity} times'>${quantity}x</span>
+        </#if>
         <#assign tooltip>
             <#if type.valid>
                 <span class='badge badge-success'>VALID</span>
