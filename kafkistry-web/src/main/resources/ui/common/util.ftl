@@ -1,4 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
+<#-- @ftlvariable name="kafkistryUser"  type="com.infobip.kafkistry.webapp.security.User" -->
 
 <#function enumListToStringList enumList>
 <#-- @ftlvariable name="enumList" type="java.util.List<? extends java.lang.Enum>" -->
@@ -304,5 +305,14 @@
     </#switch>
     <#return "">
 </#function>
+
+<#macro yourOwned what>
+    <#if kafkistryUser??>
+        <#assign asUser = " as ${kafkistryUser.fullName} ">
+    <#else>
+        <#assign asUser = " ">
+    </#if>
+    <span class="badge badge-danger" title="You${asUser}own this ${what}">YOUR</span>
+</#macro>
 
 

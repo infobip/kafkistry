@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="principals"  type="java.util.List<com.infobip.kafkistry.service.acl.PrincipalAclsClustersPerRuleInspection>" -->
+<#-- @ftlvariable name="principalsOwned" type="java.util.Map<java.lang.String, java.lang.Boolean>" -->
 <#-- @ftlvariable name="pendingPrincipalRequests"  type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.AclsRequest>>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 
@@ -69,6 +70,9 @@
                             <td>
                                 <#if principalStatus.principalAcls??>
                                     ${principalStatus.principalAcls.owner}
+                                    <#if principalsOwned[principalStatus.principal]>
+                                        <@util.yourOwned what="principal"/>
+                                    </#if>
                                 <#else>
                                     <span class="text-primary text-monospace small">[none]</span>
                                 </#if>

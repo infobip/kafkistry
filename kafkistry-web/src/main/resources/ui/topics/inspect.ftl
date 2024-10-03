@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="topicName"  type="java.lang.String" -->
+<#-- @ftlvariable name="topicOwned"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="clusterIdentifier"  type="java.lang.String" -->
 <#-- @ftlvariable name="topicStatus"  type="com.infobip.kafkistry.service.topic.TopicClusterStatus" -->
 <#-- @ftlvariable name="expectedTopicInfo"  type="com.infobip.kafkistry.service.topic.ExpectedTopicInfo" -->
@@ -53,6 +54,9 @@
                 <#assign presentInRegistry = !statusTypes?seq_contains("UNKNOWN")>
                 <#if presentInRegistry>
                     <a href="${appUrl.topics().showTopic(topicName)}">${topicName}</a>
+                    <#if topicOwned>
+                        <@util_.yourOwned what="topic"/>
+                    </#if>
                 <#else>
                     ${topicName}
                 </#if>

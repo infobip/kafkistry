@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="consumerGroupId" type="java.lang.String" -->
+<#-- @ftlvariable name="groupOwned" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="consumerGroup" type="com.infobip.kafkistry.service.consumers.KafkaConsumerGroup" -->
 <#-- @ftlvariable name="newConsumerGroup" type="java.lang.Boolean" -->
 
@@ -12,7 +13,12 @@
 <table class="table table-sm m-0">
     <tr>
         <th>Group Id</th>
-        <td class="h6"><a href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, consumerGroupId)}">${consumerGroupId}</a></td>
+        <td class="h6">
+            <a href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, consumerGroupId)}">${consumerGroupId}</a>
+            <#if groupOwned?? && groupOwned>
+                <@util.yourOwned what="consumer group"/>
+            </#if>
+        </td>
     </tr>
     <tr>
         <th>Cluster</th>

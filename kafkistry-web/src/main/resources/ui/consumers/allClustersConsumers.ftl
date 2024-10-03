@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="consumersData" type="com.infobip.kafkistry.service.consumers.AllConsumersData" -->
+<#-- @ftlvariable name="groupsOwned" type="java.util.Map<java.lang.String, java.lang.Boolean>" -->
 <#-- @ftlvariable name="clusterIdentifiers" type="java.util.List<java.lang.String>" -->
 
 <html lang="en">
@@ -131,6 +132,9 @@
                                class="btn btn-sm btn-outline-dark mb-1">
                                 ${consumerGroup.groupId} @ ${clusterGroup.clusterIdentifier} 🔍
                             </a>
+                            <#if groupsOwned[consumerGroup.groupId]>
+                                <@util.yourOwned what="consumer group"/>
+                            </#if>
                         </td>
                         <td>
                             <@util.namedTypeStatusAlert type=consumerGroup.status/>

@@ -88,5 +88,5 @@
     </#switch>
 </#list>
 <#if availableActions?size == 0>
-    ------
+    ----
 </#if>

@@ -47,6 +47,7 @@ data class ExpectedTopicInfo(
 
 data class TopicClusterStatus(
     val status: TopicOnClusterInspectionResult,
+    val topicDescription: TopicDescription?,
     val lastRefreshTime: Long,
     val clusterIdentifier: KafkaClusterIdentifier,
     val clusterTags: List<Tag>,
@@ -62,6 +63,7 @@ data class TopicClusterStatus(
             status = TopicOnClusterInspectionResult.Builder()
                 .addResultType(TopicInspectionResultType.UNAVAILABLE)
                 .build(),
+            topicDescription = null,
             lastRefreshTime = System.currentTimeMillis() / 1000,
             configEntryStatuses = null,
             existingTopicInfo = null,

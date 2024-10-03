@@ -3,6 +3,7 @@
 <#-- @ftlvariable name="topics"  type="java.util.List<com.infobip.kafkistry.service.topic.TopicStatuses>" -->
 <#-- @ftlvariable name="pendingTopicsUpdates"  type="java.util.Map<java.lang.String, java.util.List<com.infobip.kafkistry.service.history.TopicRequest>>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="topicsOwned"  type="java.util.Map<java.lang.String, java.lang.Boolean>" -->
 
 <html lang="en">
 
@@ -75,7 +76,12 @@
                     </a>
                 </td>
                 <#if topic.topicDescription??>
-                    <td>${topic.topicDescription.owner}</td>
+                    <td>
+                        ${topic.topicDescription.owner}
+                        <#if topicsOwned[topicName]>
+                            <@util.yourOwned what="topic"/>
+                        </#if>
+                    </td>
                     <td><@util.presence presence = topic.topicDescription.presence inline = false/></td>
                 <#else>
                     <td><span class="text-primary text-monospace small">[none]</span></td>

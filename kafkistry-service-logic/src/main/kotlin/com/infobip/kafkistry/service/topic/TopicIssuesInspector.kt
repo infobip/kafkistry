@@ -90,6 +90,7 @@ class TopicIssuesInspector(
             val externInfo = checkExternalInspectors(ctx)
             TopicClusterStatus(
                 status = prepareAndBuild(),
+                topicDescription = ctx.topicDescription,
                 lastRefreshTime = ctx.latestClusterState.lastRefreshTime,
                 clusterIdentifier = ctx.clusterRef.identifier,
                 clusterTags = ctx.clusterRef.tags,

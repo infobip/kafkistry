@@ -2,6 +2,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="principalRuleClusters"  type="com.infobip.kafkistry.service.acl.PrincipalAclsClustersPerRuleInspection" -->
 <#-- @ftlvariable name="principalClusterRules"  type="com.infobip.kafkistry.service.acl.PrincipalAclsInspection" -->
+<#-- @ftlvariable name="principalOwned"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="selectedRule"  type="java.lang.String" -->
 <#-- @ftlvariable name="selectedCluster"  type="java.lang.String" -->
 <#-- @ftlvariable name="pendingPrincipalRequests"  type="java.util.List<com.infobip.kafkistry.service.history.AclsRequest>" -->
@@ -63,6 +64,9 @@
             <td>
                 <#if existInRegistry>
                     ${principalRuleClusters.principalAcls.owner}
+                    <#if principalOwned>
+                        <@util.yourOwned what="principal"/>
+                    </#if>
                 <#else>
                     <span class="text-primary text-monospace small">[none]</span>
                 </#if>

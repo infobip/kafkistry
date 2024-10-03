@@ -5,6 +5,7 @@ import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.model.PrincipalId
+import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.acl.AvailableAclOperation
 import com.infobip.kafkistry.service.acl.transpose
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS
@@ -29,11 +30,12 @@ import org.springframework.web.servlet.ModelAndView
 @Controller
 @RequestMapping("\${app.http.root-path}$ACLS")
 class AclsController(
-        private val inspectApi: InspectApi,
-        private val suggestionApi: SuggestionApi,
-        private val aclsApi: AclsApi,
-        private val autopilotApi: AutopilotApi,
-        private val existingValuesApi: ExistingValuesApi,
+    private val inspectApi: InspectApi,
+    private val suggestionApi: SuggestionApi,
+    private val aclsApi: AclsApi,
+    private val autopilotApi: AutopilotApi,
+    private val existingValuesApi: ExistingValuesApi,
+    private val ownershipClassifier: UserOwnershipClassifier,
 ) : BaseController() {
 
     @GetMapping
@@ -42,9 +44,13 @@ class AclsController(
         val unknownPrincipalsInspection = inspectApi.inspectUnknownPrincipals()
         val principals = (principalsInspection + unknownPrincipalsInspection).map { it.transpose() }
         val pendingPrincipalRequests = aclsApi.pendingPrincipalRequests()
+        val principalsOwned = principals.associate {
+            it.principal to ownershipClassifier.isOwnerOfPrincipal(it.principalAcls)
+        }
         return ModelAndView("acls/principals", mapOf(
-                "principals" to principals,
-                "pendingPrincipalRequests" to pendingPrincipalRequests
+            "principals" to principals,
+            "principalsOwned" to principalsOwned,
+            "pendingPrincipalRequests" to pendingPrincipalRequests
         ))
     }
 
@@ -58,9 +64,11 @@ class AclsController(
         val principalInspectionRuleClusters = principalInspectionClusterRules.transpose()
         val pendingPrincipalAclsRequests = aclsApi.pendingPrincipalRequests(principal)
         val autopilotActions = autopilotApi.findPrincipalActions(principal)
+        val principalOwned = ownershipClassifier.isOwnerOfPrincipal(principalInspectionRuleClusters.principalAcls)
         return ModelAndView("acls/principal", mapOf(
             "principalRuleClusters" to principalInspectionRuleClusters,
             "principalClusterRules" to principalInspectionClusterRules,
+            "principalOwned" to principalOwned,
             "selectedRule" to selectedRule,
             "selectedCluster" to selectedClusterIdentifier,
             "pendingPrincipalRequests" to pendingPrincipalAclsRequests,

@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="topic"  type="com.infobip.kafkistry.service.topic.TopicStatuses" -->
+<#-- @ftlvariable name="topicOwned"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="pendingTopicRequests"  type="java.util.List<com.infobip.kafkistry.service.history.PendingRequest>" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
@@ -45,6 +46,9 @@
             <td>
                 <#if existInRegistry>
                     ${topic.topicDescription.owner}
+                    <#if topicOwned>
+                        <@util.yourOwned what="topic"/>
+                    </#if>
                 <#else>
                     <span class="text-primary text-monospace small">[none]</span>
                 </#if>

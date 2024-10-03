@@ -8,6 +8,7 @@ import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_CLONE
@@ -30,6 +31,7 @@ class ConsumerGroupsController(
     private val kStreamAppsApi: KStreamAppsApi,
     private val existingValuesApi: ExistingValuesApi,
     private val clusterEnabledFilter: ClusterEnabledFilter,
+    private val ownershipClassifier: UserOwnershipClassifier,
 ) : BaseController() {
 
     @GetMapping
@@ -38,9 +40,14 @@ class ConsumerGroupsController(
         val clusterIdentifiers = existingValuesApi.all().clusterRefs
             .filter { clusterEnabledFilter.enabled(it) }
             .map { it.identifier }
+        val groupsOwned = consumersData.clustersGroups.asSequence()
+            .map { it.consumerGroup.groupId }
+            .distinct()
+            .associateWith { ownershipClassifier.isOwnerOfConsumerGroup(it) }
         return ModelAndView("consumers/allClustersConsumers", mapOf(
-                "consumersData" to consumersData,
-                "clusterIdentifiers" to clusterIdentifiers,
+            "consumersData" to consumersData,
+            "groupsOwned" to groupsOwned,
+            "clusterIdentifiers" to clusterIdentifiers,
         ))
     }
 
@@ -53,13 +60,15 @@ class ConsumerGroupsController(
         val consumerGroupIds = consumersApi.listClusterConsumerGroupIds(clusterIdentifier)
         val consumerGroup = consumersApi.clusterConsumerGroup(clusterIdentifier, consumerGroupId)
         val kafkaStreamsApp = kStreamAppsApi.consumerGroupKStreamApps(consumerGroupId, clusterIdentifier)
+        val groupOwned = ownershipClassifier.isOwnerOfConsumerGroup(consumerGroupId)
         return ModelAndView("consumers/consumerGroup", mapOf(
-                "clusterIdentifier" to clusterIdentifier,
-                "consumerGroupId" to consumerGroupId,
-                "consumerGroup" to consumerGroup,
-                "kafkaStreamsApp" to kafkaStreamsApp,
-                "shownTopic" to shownTopic,
-                "consumerGroupIds" to consumerGroupIds,
+            "clusterIdentifier" to clusterIdentifier,
+            "groupOwned" to groupOwned,
+            "consumerGroupId" to consumerGroupId,
+            "consumerGroup" to consumerGroup,
+            "kafkaStreamsApp" to kafkaStreamsApp,
+            "shownTopic" to shownTopic,
+            "consumerGroupIds" to consumerGroupIds,
         ))
     }
 
@@ -74,10 +83,12 @@ class ConsumerGroupsController(
                                 consumerGroupId, clusterIdentifier
                         )
                 )
+        val groupOwned = ownershipClassifier.isOwnerOfConsumerGroup(consumerGroupId)
         return ModelAndView("consumers/consumerGroupDelete", mapOf(
-                "clusterIdentifier" to clusterIdentifier,
-                "consumerGroupId" to consumerGroupId,
-                "consumerGroup" to consumerGroup
+            "clusterIdentifier" to clusterIdentifier,
+            "consumerGroupId" to consumerGroupId,
+            "consumerGroup" to consumerGroup,
+            "groupOwned" to groupOwned,
         ))
     }
 
@@ -90,11 +101,13 @@ class ConsumerGroupsController(
         val topicsOffsets = consumerGroup?.topicMembers?.associate {
             it.topicName to topicOffsetsApi.getTopicOffsets(it.topicName, clusterIdentifier)
         } ?: emptyMap()
+        val groupOwned = ownershipClassifier.isOwnerOfConsumerGroup(consumerGroupId)
         return ModelAndView("consumers/consumerGroupReset", mapOf(
-                "clusterIdentifier" to clusterIdentifier,
-                "consumerGroupId" to consumerGroupId,
-                "consumerGroup" to consumerGroup,
-                "topicsOffsets" to topicsOffsets
+            "clusterIdentifier" to clusterIdentifier,
+            "consumerGroupId" to consumerGroupId,
+            "groupOwned" to groupOwned,
+            "consumerGroup" to consumerGroup,
+            "topicsOffsets" to topicsOffsets
         ))
     }
 
@@ -110,12 +123,12 @@ class ConsumerGroupsController(
             it.topicName to topicOffsetsApi.getTopicOffsets(it.topicName, clusterIdentifier)
         } ?: emptyMap()
         return ModelAndView("consumers/cloneGroup", mapOf(
-                "clusterIdentifier" to clusterIdentifier,
-                "fromConsumerGroupId" to fromConsumerGroupId,
-                "fromConsumerGroup" to fromConsumerGroup,
-                "intoConsumerGroupId" to intoConsumerGroupId,
-                "intoConsumerGroup" to intoConsumerGroup,
-                "topicsOffsets" to topicsOffsets
+            "clusterIdentifier" to clusterIdentifier,
+            "fromConsumerGroupId" to fromConsumerGroupId,
+            "fromConsumerGroup" to fromConsumerGroup,
+            "intoConsumerGroupId" to intoConsumerGroupId,
+            "intoConsumerGroup" to intoConsumerGroup,
+            "topicsOffsets" to topicsOffsets,
         ))
     }
 
@@ -129,12 +142,14 @@ class ConsumerGroupsController(
             it.topicName to topicOffsetsApi.getTopicOffsets(it.topicName, clusterIdentifier)
         } ?: emptyMap()
         val allTopicsOffsets = topicOffsetsApi.getTopicsOffsets(clusterIdentifier)
+        val groupOwned = ownershipClassifier.isOwnerOfConsumerGroup(consumerGroupId)
         return ModelAndView("consumers/consumerGroupPreset", mapOf(
-                "clusterIdentifier" to clusterIdentifier,
-                "consumerGroupId" to consumerGroupId,
-                "consumerGroup" to consumerGroup,
-                "topicsOffsets" to topicsOffsets,
-                "allTopicsOffsets" to allTopicsOffsets,
+            "clusterIdentifier" to clusterIdentifier,
+            "consumerGroupId" to consumerGroupId,
+            "consumerGroup" to consumerGroup,
+            "topicsOffsets" to topicsOffsets,
+            "allTopicsOffsets" to allTopicsOffsets,
+            "groupOwned" to groupOwned,
         ))
     }
 
@@ -147,11 +162,13 @@ class ConsumerGroupsController(
         val topicsOffsets = consumerGroup?.topicMembers?.associate {
             it.topicName to topicOffsetsApi.getTopicOffsets(it.topicName, clusterIdentifier)
         } ?: emptyMap()
+        val groupOwned = ownershipClassifier.isOwnerOfConsumerGroup(consumerGroupId)
         return ModelAndView("consumers/consumerGroupDeleteOffsets", mapOf(
             "clusterIdentifier" to clusterIdentifier,
             "consumerGroupId" to consumerGroupId,
             "consumerGroup" to consumerGroup,
-            "topicsOffsets" to topicsOffsets
+            "topicsOffsets" to topicsOffsets,
+            "groupOwned" to groupOwned,
         ))
     }
 

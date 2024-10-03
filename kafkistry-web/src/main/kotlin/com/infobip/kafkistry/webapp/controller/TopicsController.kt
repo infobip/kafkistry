@@ -6,6 +6,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.KafkistryIntegrityException
 import com.infobip.kafkistry.service.KafkistryValidationException
 import com.infobip.kafkistry.service.topic.toAssignmentsInfo
@@ -51,6 +52,7 @@ class TopicsController(
     private val kStreamAppsApi: KStreamAppsApi,
     private val autopilotApi: AutopilotApi,
     private val clusterEnabledFilter: ClusterEnabledFilter,
+    private val ownershipClassifier: UserOwnershipClassifier,
 ) : BaseController() {
 
     @GetMapping
@@ -59,9 +61,13 @@ class TopicsController(
         val unknownTopics = inspectApi.inspectUnknownTopics()
         val pendingTopicsRequests = topicsApi.pendingTopicsRequests()
         val allTopics = (topics + unknownTopics).sortedBy { it.topicName }
+        val topicsOwned = allTopics.associate {
+            it.topicName to ownershipClassifier.isOwnerOfTopic(it.topicDescription)
+        }
         return ModelAndView("topics/all", mutableMapOf(
-                "topics" to allTopics,
-                "pendingTopicsUpdates" to pendingTopicsRequests
+            "topics" to allTopics,
+            "pendingTopicsUpdates" to pendingTopicsRequests,
+            "topicsOwned" to topicsOwned,
         ))
     }
 
@@ -162,10 +168,12 @@ class TopicsController(
         val topicStatuses = inspectApi.inspectTopic(topicName)
         val pendingTopicRequests = topicsApi.pendingTopicRequests(topicName)
         val autopilotActions = autopilotApi.findTopicActions(topicName)
+        val topicOwned = ownershipClassifier.isOwnerOfTopic(topicStatuses.topicDescription)
         return ModelAndView("topics/topic", mutableMapOf(
             "topic" to topicStatuses,
             "pendingTopicRequests" to pendingTopicRequests,
             "autopilotActions" to autopilotActions,
+            "topicOwned" to topicOwned,
         ))
     }
 
@@ -183,6 +191,7 @@ class TopicsController(
             @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier
     ): ModelAndView {
         val topicStatus = inspectApi.inspectTopicOnCluster(topicName, clusterIdentifier)
+        val topicOwned = ownershipClassifier.isOwnerOfTopic(topicStatus.topicDescription)
         val clusterInfo = clustersApi.getClusterState(clusterIdentifier).valueOrNull()?.clusterInfo
         val expectedTopicInfo = try {
             suggestionApi.expectedTopicInfoOnCluster(topicName, clusterIdentifier)
@@ -222,6 +231,7 @@ class TopicsController(
         val autopilotActions = autopilotApi.findTopicOnClusterActions(topicName, clusterIdentifier)
         return ModelAndView("topics/inspect", mutableMapOf(
             "topicName" to topicName,
+            "topicOwned" to topicOwned,
             "clusterIdentifier" to clusterIdentifier,
             "topicStatus" to topicStatus,
             "expectedTopicInfo" to expectedTopicInfo,
