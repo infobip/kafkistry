@@ -69,16 +69,17 @@
         <tbody>
         <#list topics as topic>
             <tr class="topic-row table-row">
-                <td data-toggle="tooltip">
-                    <#assign topicName = topic.topicName>
+                <#assign topicName = topic.topicName>
+                <#assign topicOwned = topicsOwned[topicName]>
+                <td data-toggle="tooltip" data-order="${topicOwned?then("0", "1")}_${topicName}">
                     <a href="${appUrl.topics().showTopic(topicName)}">
                         ${topicName}
                     </a>
                 </td>
                 <#if topic.topicDescription??>
-                    <td>
+                    <td data-order="${topicOwned?then("0", "1")}_${topic.topicDescription.owner}">
                         ${topic.topicDescription.owner}
-                        <#if topicsOwned[topicName]>
+                        <#if topicOwned>
                             <@util.yourOwned what="topic"/>
                         </#if>
                     </td>

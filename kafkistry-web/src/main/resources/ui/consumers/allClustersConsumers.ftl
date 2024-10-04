@@ -124,15 +124,16 @@
                 </thead>
                 <#list consumersData.clustersGroups as clusterGroup>
                     <#assign consumerGroup = clusterGroup.consumerGroup>
+                    <#assign groupOwned = groupsOwned[consumerGroup.groupId]>
                     <tr class="consumer-group-row"
                         data-consumer-group-id="${consumerGroup.groupId}"
                         data-cluster-identifier="${clusterGroup.clusterIdentifier}">
-                        <td>
+                        <td data-order="${groupOwned?then("0", "1")}_${consumerGroup.groupId}_${clusterGroup.clusterIdentifier}">
                             <a href="${appUrl.consumerGroups().showConsumerGroup(clusterGroup.clusterIdentifier, consumerGroup.groupId)}"
                                class="btn btn-sm btn-outline-dark mb-1">
                                 ${consumerGroup.groupId} @ ${clusterGroup.clusterIdentifier} 🔍
                             </a>
-                            <#if groupsOwned[consumerGroup.groupId]>
+                            <#if groupOwned>
                                 <@util.yourOwned what="consumer group"/>
                             </#if>
                         </td>

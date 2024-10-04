@@ -59,24 +59,27 @@
                 <tbody>
                     <#list principals as principalStatus>
                         <#assign principalUrl = "acls/principal?principal=${principalStatus.principal?url}">
+                        <#assign principalOwned = principalsOwned[principalStatus.principal]>
                         <tr>
-                            <td>
+                            <td data-order="${principalOwned?then("0", "1")}_${principalStatus.principal}">
                                 <a href="${appUrl.acls().showAllPrincipalAcls(principalStatus.principal)}"
                                    class="btn btn-sm btn-outline-dark mb-1"
                                    title="Inspect this principal...">
                                     ${principalStatus.principal}
                                 </a>
                             </td>
-                            <td>
-                                <#if principalStatus.principalAcls??>
+                            <#if principalStatus.principalAcls??>
+                                <td data-order="${principalOwned?then("0", "1")}_${principalStatus.principalAcls.owner}">
                                     ${principalStatus.principalAcls.owner}
-                                    <#if principalsOwned[principalStatus.principal]>
+                                    <#if principalOwned>
                                         <@util.yourOwned what="principal"/>
                                     </#if>
-                                <#else>
+                                </td>
+                            <#else>
+                                <td data-order="00_[none]">
                                     <span class="text-primary text-monospace small">[none]</span>
-                                </#if>
-                            </td>
+                                </td>
+                            </#if>
                             <td><@util.ok ok = principalStatus.status.ok/></td>
                             <td>
                                 <#if principalStatus.principalAcls??>
