@@ -196,6 +196,13 @@ class ClusterTopicDataSource(
                 }
                 ?: emptyList()
             replicas = assignedReplicas + orphanReplicas
+
+            val actualRetentionBytes = existingTopicInfo?.config?.get(TopicConfig.RETENTION_BYTES_CONFIG)?.value?.toLongOrNull()
+            val actualRetentionMs = existingTopicInfo?.config?.get(TopicConfig.RETENTION_MS_CONFIG)?.value?.toLongOrNull()
+            val actualPartitionSizeBytes = topicReplicas?.partitionBrokerReplicas?.mapValues { (_, it) ->
+                it.values.maxOfOrNull { it.sizeBytes } ?: 0
+            }
+
             if (topicOffsets != null) {
                 partitions = topicOffsets.partitionsOffsets.map { (p, offsets) ->
                     TopicPartition().apply {
@@ -205,7 +212,15 @@ class ClusterTopicDataSource(
                         count = offsets.end - offsets.begin
                         producerRate = topicOffsets.partitionMessageRate[p]?.upTo15MinRate
                         producerDayAvgRate = topicOffsets.partitionMessageRate[p]?.upTo24HRate
-                        oldestRecordAgeMs = oldestRecordAges?.get(p)
+                        val oldestRecordAge = oldestRecordAges?.get(p)
+                        oldestRecordAgeMs = oldestRecordAge
+                        if (actualRetentionMs != null && oldestRecordAge != null && actualRetentionMs > 0) {
+                            timeRetentionRatio = oldestRecordAge.toDouble() / actualRetentionMs
+                        }
+                        val partitionSizeBytes = actualPartitionSizeBytes?.get(p)
+                        if (actualRetentionBytes != null && partitionSizeBytes != null && actualRetentionBytes > 0) {
+                            sizeRetentionRatio = partitionSizeBytes.toDouble() / actualRetentionBytes
+                        }
                     }
                 }
                 numMessages = topicOffsets.size
@@ -398,6 +413,9 @@ class TopicPartition {
     var producerDayAvgRate: Double? = null
 
     var oldestRecordAgeMs: Long? = null
+
+    var timeRetentionRatio: Double? = null
+    var sizeRetentionRatio: Double? = null
 }
 
 @Embeddable
