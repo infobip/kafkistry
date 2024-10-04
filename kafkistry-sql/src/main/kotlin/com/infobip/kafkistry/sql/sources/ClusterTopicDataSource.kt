@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component
 import java.io.Serializable
 import java.util.*
 import jakarta.persistence.*
+import org.apache.kafka.common.config.TopicConfig
 
 @Component
 class ClusterTopicDataSource(
@@ -48,7 +49,14 @@ class ClusterTopicDataSource(
                 val topicOffsets = topicOffsetsService.topicOffsets(it.clusterIdentifier, topicName)
                 val replicaInfos = allClustersTopicReplicaInfos[it.clusterIdentifier]?.get(topicName)
                 val oldestRecordAges = allClustersTopicOldestAges[it.clusterIdentifier]?.get(topicName)
-                mapClusterTopic(topicName, topicStatuses.topicDescription, it, topicOffsets, replicaInfos, oldestRecordAges)
+                mapClusterTopic(
+                    topicName,
+                    topicStatuses.topicDescription,
+                    it,
+                    topicOffsets,
+                    replicaInfos,
+                    oldestRecordAges
+                )
             }
         }
     }
@@ -132,6 +140,8 @@ class ClusterTopicDataSource(
                 expectedConfig = topicDescription.configForCluster(clusterRef).map {
                     it.toKafkaConfigEntry()
                 }
+            } else {
+                expectedConfig = emptyList()
             }
             val existingTopicInfo = topicClusterStatus.existingTopicInfo
             if (existingTopicInfo != null) {
@@ -141,6 +151,8 @@ class ClusterTopicDataSource(
                 actualConfig = existingTopicInfo.config.map {
                     it.toExistingKafkaConfigEntry()
                 }
+            } else {
+                actualConfig = emptyList()
             }
             val usedReplicas = mutableSetOf<Pair<Partition, BrokerId>>()
             val assignedReplicas = existingTopicInfo?.partitionsAssignments
@@ -208,6 +220,23 @@ class ClusterTopicDataSource(
                     producerRateLast6Hours = topicOffsets.messagesRate?.last6H
                     producerRateLast12Hours = topicOffsets.messagesRate?.last12H
                     producerRateLast24Hours = topicOffsets.messagesRate?.last24H
+                }
+            }
+            possibleDiskUsagePerPartitionReplicaBytes = run {
+                existingTopicInfo?.config?.let { cfg ->
+                    val retentionBytes = cfg[TopicConfig.RETENTION_BYTES_CONFIG]?.value?.toLongOrNull()
+                    val segmentBytes = cfg[TopicConfig.SEGMENT_BYTES_CONFIG]?.value?.toLongOrNull()
+                    retentionBytes to segmentBytes
+                } ?: expectedConfig.let { cfg ->
+                    val retentionBytes = cfg.find { it.key == TopicConfig.RETENTION_BYTES_CONFIG }?.value?.toLongOrNull()
+                    val segmentBytes = cfg.find { it.key == TopicConfig.RETENTION_BYTES_CONFIG }?.value?.toLongOrNull()
+                    retentionBytes to segmentBytes
+                }
+            }.let { (retentionBytes, segmentBytes) ->
+                if (retentionBytes != null && segmentBytes != null && retentionBytes != -1L) {
+                    retentionBytes + segmentBytes
+                } else {
+                    null
                 }
             }
             topicClusterStatus.resourceRequiredUsages.value?.also { usages ->
@@ -278,6 +307,7 @@ class Topic {
     @JoinTable(name = "Topics_Partitions")
     lateinit var partitions: List<TopicPartition>
     var numMessages: Long? = null
+    var possibleDiskUsagePerPartitionReplicaBytes: Long? = null
 
     @Embedded
     lateinit var producerRate: ProducerRate
@@ -305,8 +335,10 @@ class TopicOnClusterStatus {
 
     //for rule violations
     var ruleClassName: String? = null
+
     @Enumerated(EnumType.STRING)
     var severity: RuleViolation.Severity? = null
+
     @Enumerated(EnumType.STRING)
     var level: StatusLevel? = null
 }
