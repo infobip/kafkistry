@@ -9,6 +9,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.NamedType
 import com.infobip.kafkistry.service.StatusLevel
+import com.infobip.kafkistry.service.eachCountDescending
 
 data class ClusterConsumerGroups(
     val clusterIdentifier: KafkaClusterIdentifier,
@@ -41,9 +42,8 @@ data class ConsumerTopicPartitionMember(
 )
 
 data class AllConsumersData(
-        val clustersDataStatuses: List<ClusterDataStatus>,
-        val consumersStats: ConsumersStats,
-        val clustersGroups: List<ClusterConsumerGroup>
+    val clustersDataStatuses: List<ClusterDataStatus>,
+    val clustersGroups: List<ClusterConsumerGroup>,
 )
 
 data class ClusterConsumerGroup(
@@ -73,6 +73,14 @@ data class ConsumersStats(
     val clusterCounts: Map<KafkaClusterIdentifier, Int>,
     val lagStatusCounts: Map<LagStatus, Int>,
     val consumerStatusCounts: Map<ConsumerGroupStatus, Int>,
-    val partitionAssignorCounts: Map<String, Int>
+    val partitionAssignorCounts: Map<String, Int>,
 )
+
+fun List<ClusterConsumerGroup>.computeStats() = ConsumersStats(
+    clusterCounts = groupingBy { it.clusterIdentifier }.eachCountDescending(),
+    lagStatusCounts = groupingBy { it.consumerGroup.lag.status }.eachCountDescending(),
+    partitionAssignorCounts = groupingBy { it.consumerGroup.partitionAssignor }.eachCountDescending(),
+    consumerStatusCounts = groupingBy { it.consumerGroup.status }.eachCountDescending()
+)
+
 

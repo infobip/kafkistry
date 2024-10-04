@@ -27,7 +27,49 @@
     </div>
 
     <hr/>
-    <h3 class="text-center">Status counts / quick navigate</h3>
+    <h3 class="text-center">Your owned Status counts / quick navigate</h3>
+
+    <div class="form-row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <@_util.yourOwned what="topics"/>
+                    <span class="h5">Topics</span>
+                </div>
+                <div class="card-body p-0" id="topics-your-stats-container">
+                    <#assign statusId = "topics-your-stats">
+                    <#include "../common/serverOpStatus.ftl">
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <@_util.yourOwned what="consumer groups"/>
+                    <span class="h5">Consumers</span>
+                </div>
+                <div class="card-body p-0" id="consumer-groups-your-stats-container">
+                    <#assign statusId = "consumer-groups-your-stats">
+                    <#include "../common/serverOpStatus.ftl">
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <@_util.yourOwned what="principal ACLs"/>
+                    <span class="h5">ACLs</span>
+                </div>
+                <div class="card-body p-0" id="acls-your-stats-container">
+                    <#assign statusId = "acls-your-stats">
+                    <#include "../common/serverOpStatus.ftl">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr/>
+    <h3 class="text-center">All Status counts / quick navigate</h3>
 
     <div class="form-row mb-2">
         <div class="col-4">
@@ -57,7 +99,7 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <span class="h5">Topics</span>
+                    <span class="h5">All Topics</span>
                 </div>
                 <div class="card-body p-0" id="topics-stats-container">
                     <#assign statusId = "topics-stats">
@@ -68,7 +110,7 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <span class="h5">Consumers</span>
+                    <span class="h5">All Consumers</span>
                 </div>
                 <div class="card-body p-0" id="consumer-groups-stats-container">
                     <#assign statusId = "consumer-groups-stats">
@@ -79,7 +121,7 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <span class="h5">ACLs</span>
+                    <span class="h5">All ACLs</span>
                 </div>
                 <div class="card-body p-0" id="acls-stats-container">
                     <#assign statusId = "acls-stats">
@@ -88,7 +130,7 @@
             </div>
             <div class="card mt-2">
                 <div class="card-header">
-                    <span class="h5">Quotas</span>
+                    <span class="h5">All Quotas</span>
                 </div>
                 <div class="card-body p-0" id="quotas-stats-container">
                     <#assign statusId = "quotas-stats">

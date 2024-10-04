@@ -10,6 +10,8 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
+import com.infobip.kafkistry.service.consumers.ConsumersStats
+import com.infobip.kafkistry.service.consumers.computeStats
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_CLONE
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_DELETE
@@ -44,8 +46,10 @@ class ConsumerGroupsController(
             .map { it.consumerGroup.groupId }
             .distinct()
             .associateWith { ownershipClassifier.isOwnerOfConsumerGroup(it) }
+        val consumersStats = consumersData.clustersGroups.computeStats()
         return ModelAndView("consumers/allClustersConsumers", mapOf(
             "consumersData" to consumersData,
+            "consumersStats" to consumersStats,
             "groupsOwned" to groupsOwned,
             "clusterIdentifiers" to clusterIdentifiers,
         ))

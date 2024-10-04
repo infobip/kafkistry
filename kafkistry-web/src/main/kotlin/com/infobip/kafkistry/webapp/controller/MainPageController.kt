@@ -2,11 +2,17 @@ package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.api.*
 import com.infobip.kafkistry.kafkastate.StateType
+import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.KafkistryException
 import com.infobip.kafkistry.service.RuleViolation
+import com.infobip.kafkistry.service.acl.PrincipalAclsInspection
 import com.infobip.kafkistry.service.cluster.inspect.ClusterInspectIssue
+import com.infobip.kafkistry.service.consumers.ClusterConsumerGroup
+import com.infobip.kafkistry.service.consumers.ConsumersStats
+import com.infobip.kafkistry.service.consumers.computeStats
 import com.infobip.kafkistry.service.eachCountDescending
 import com.infobip.kafkistry.service.sortedByValueDescending
+import com.infobip.kafkistry.service.topic.TopicStatuses
 import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.ACLS_STATS
 import com.infobip.kafkistry.webapp.url.MainUrls.Companion.CLUSTER_STATS
@@ -30,6 +36,7 @@ class MainPageController(
     private val quotasApi: QuotasApi,
     private val inspectApi: InspectApi,
     private val consumersApi: ConsumersApi,
+    private val ownershipClassifier: UserOwnershipClassifier,
 ) : BaseController() {
 
     @GetMapping("/", HOME)
@@ -96,42 +103,56 @@ class MainPageController(
 
     @GetMapping(TOPIC_STATS)
     fun showTopicsStats(): ModelAndView {
-        val topicsStats = (inspectApi.inspectTopics() + inspectApi.inspectUnknownTopics())
-            .asSequence()
+        fun List<TopicStatuses>.computeStats() = asSequence()
             .flatMap { it.statusPerClusters }
             .flatMap { it.status.types }
             .groupingBy { it }
             .eachCountDescending()
+        val allTopicsInspections = inspectApi.inspectTopics() + inspectApi.inspectUnknownTopics()
+        val topicsStats = allTopicsInspections.computeStats()
+        val ownedTopicsStats = allTopicsInspections
+            .filter { ownershipClassifier.isOwnerOfTopic(it.topicDescription) }
+            .computeStats()
         return ModelAndView(
             "home/topicsStats", mutableMapOf(
                 "topicsStats" to topicsStats,
+                "ownedTopicsStats" to ownedTopicsStats,
             )
         )
     }
 
     @GetMapping(CONSUMER_GROUPS_STATS)
     fun showConsumerGroupsStats(): ModelAndView {
-        val consumersStats = consumersApi.allConsumersData().consumersStats
+        val allConsumersInspections = consumersApi.allConsumersData().clustersGroups
+        val consumersStats = allConsumersInspections.computeStats()
+        val ownedConsumersStats = allConsumersInspections
+            .filter { ownershipClassifier.isOwnerOfConsumerGroup(it.consumerGroup.groupId) }
+            .computeStats()
         return ModelAndView(
             "home/consumerGroupsStats", mutableMapOf(
                 "consumersStats" to consumersStats,
+                "ownedConsumersStats" to ownedConsumersStats,
             )
         )
     }
 
     @GetMapping(ACLS_STATS)
     fun showAclsStats(): ModelAndView {
-        val aclsStats = inspectApi.inspectAllPrincipals()
-            .asSequence()
-            .plus(inspectApi.inspectUnknownPrincipals().asSequence())
+        fun List<PrincipalAclsInspection>.computeStats() = asSequence()
             .flatMap { it.clusterInspections }
             .flatMap { it.statuses }
             .flatMap { it.statusTypes }
             .groupingBy { it }
             .eachCountDescending()
+        val allAclsInspections = inspectApi.inspectAllPrincipals() + inspectApi.inspectUnknownPrincipals()
+        val aclsStats = allAclsInspections.computeStats()
+        val ownedAclsStats = allAclsInspections
+            .filter { ownershipClassifier.isOwnerOfPrincipal(it.principalAcls) }
+            .computeStats()
         return ModelAndView(
             "home/aclsStats", mutableMapOf(
                 "aclsStats" to aclsStats,
+                "ownedAclsStats" to ownedAclsStats,
             )
         )
     }

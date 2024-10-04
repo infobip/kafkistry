@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="consumersData" type="com.infobip.kafkistry.service.consumers.AllConsumersData" -->
+<#-- @ftlvariable name="consumersStats"  type="com.infobip.kafkistry.service.consumers.ConsumersStats" -->
 <#-- @ftlvariable name="groupsOwned" type="java.util.Map<java.lang.String, java.lang.Boolean>" -->
 <#-- @ftlvariable name="clusterIdentifiers" type="java.util.List<java.lang.String>" -->
 
@@ -52,7 +53,6 @@
             <span class="h5">Statistics/counts</span>
         </div>
         <div class="card-body p-1">
-            <#assign consumersStats = consumersData.consumersStats>
             <#include "../consumers/consumerGroupsCounts.ftl">
         </div>
     </div>

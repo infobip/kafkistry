@@ -37,13 +37,7 @@ class ConsumersService(
         val clustersConsumers = clusterConsumerGroups.flatMap {
             it.consumerGroups.map { group -> group.toClusterConsumerGroup(it.clusterIdentifier) }
         }
-        val consumersStats = ConsumersStats(
-                clusterCounts = clustersConsumers.groupingBy { it.clusterIdentifier }.eachCountDescending(),
-                lagStatusCounts = clustersConsumers.groupingBy { it.consumerGroup.lag.status }.eachCountDescending(),
-                partitionAssignorCounts = clustersConsumers.groupingBy { it.consumerGroup.partitionAssignor }.eachCountDescending(),
-                consumerStatusCounts = clustersConsumers.groupingBy { it.consumerGroup.status }.eachCountDescending()
-        )
-        return AllConsumersData(clustersDataStatuses, consumersStats, clustersConsumers)
+        return AllConsumersData(clustersDataStatuses, clustersConsumers)
     }
 
     fun listConsumerGroups(clusterIdentifier: KafkaClusterIdentifier): ClusterConsumerGroups {
