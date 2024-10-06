@@ -6,7 +6,8 @@ import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.kafka.ConfigValue
 import com.infobip.kafkistry.service.topic.ConfigValueInspectorTest.Validity.*
 import com.infobip.kafkistry.service.topic.ConfigValueInspectorTest.Inclusion.*
-import org.junit.Test
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 
 open class ConfigValueInspectorTest {
 
@@ -68,7 +69,8 @@ open class ConfigValueInspectorTest {
         )
     }
 
-    class ValidTest : ConfigValueInspectorTest() {
+    @Nested
+    inner class ValidTest {
 
         @Test
         fun `test valid - matching expected - default - cluster default`() {
@@ -201,7 +203,8 @@ open class ConfigValueInspectorTest {
         }
     }
 
-    class IncludeTest : ConfigValueInspectorTest() {
+    @Nested
+    inner class IncludeTest {
 
         @Test
         fun `test include - current non-default - cluster default different`() {
@@ -259,7 +262,8 @@ open class ConfigValueInspectorTest {
         }
     }
 
-    class ChangesTest : ConfigValueInspectorTest() {
+    @Nested
+    inner class ChangesTest {
         @Test
         fun `test no-change - current matches expected`() {
             noChange() shouldBe change("x", "1", "1".default())
