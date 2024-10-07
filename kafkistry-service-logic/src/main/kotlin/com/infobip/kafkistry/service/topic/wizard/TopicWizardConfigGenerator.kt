@@ -29,7 +29,8 @@ class TopicWizardProperties {
     var defaultPartitionCount = 1
     var partitionThresholds = "{}"
     var maxMessageToAvgRatio = 20.0
-    var maxMessageBytes = 10L * 1024 * 1024
+    var minMaxMessageBytes = 0L
+    var maxMaxMessageBytes = 10L * 1024 * 1024
 
     @NestedConfigurationProperty
     var segmentSize = SegmentSizeProperties()
@@ -147,7 +148,8 @@ class TopicWizardConfigGenerator(
         return avgMessageBytes
             .times(properties.maxMessageToAvgRatio)
             .toLong()
-            .coerceAtMost(properties.maxMessageBytes)
+            .coerceAtMost(properties.maxMaxMessageBytes)
+            .coerceAtLeast(properties.minMaxMessageBytes)
             .coerceAtLeast(avgMessageBytes)
     }
 
