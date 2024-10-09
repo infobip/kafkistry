@@ -5,6 +5,7 @@ import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
+import com.infobip.kafkistry.service.mapValue
 
 const val INF_RETENTION = -1L
 
@@ -57,7 +58,27 @@ data class ClusterDiskUsage(
     val worstCurrentUsageLevel: UsageLevel,
     val worstPossibleUsageLevel: UsageLevel,
     val errors: List<String>,
-)
+) {
+    companion object {
+        val EMPTY = ClusterDiskUsage(
+            combined = BrokerDisk(
+                usage = BrokerDiskUsage.ZERO,
+                portions = BrokerDiskPortions(
+                    usedPercentOfCapacity = null,
+                    usageLevel = UsageLevel.NONE,
+                    possibleUsedPercentOfCapacity = null,
+                    possibleUsageLevel = UsageLevel.NONE,
+                    unboundedUsedPercentOfTotalUsed = null,
+                )
+            ),
+            brokerUsages = emptyMap(),
+            topicDiskUsages = emptyMap(),
+            worstCurrentUsageLevel = UsageLevel.NONE,
+            worstPossibleUsageLevel = UsageLevel.NONE,
+            errors = emptyList(),
+        )
+    }
+}
 
 data class BrokerDisk(
     val usage: BrokerDiskUsage,
@@ -129,6 +150,17 @@ operator fun ClusterDiskUsage.minus(other: ClusterDiskUsage): ClusterDiskUsage {
         worstCurrentUsageLevel = newBrokerUsages.worstUsageLevel { usageLevel },
         worstPossibleUsageLevel = newBrokerUsages.worstUsageLevel { possibleUsageLevel },
         errors = errors - other.errors.toSet(),
+    )
+}
+
+operator fun ClusterDiskUsage.unaryMinus(): ClusterDiskUsage {
+    return ClusterDiskUsage(
+        combined = -combined,
+        brokerUsages = brokerUsages.mapValues { -it.value },
+        topicDiskUsages = topicDiskUsages.mapValues { (_, ov) -> ov.mapValue { -it } },
+        worstCurrentUsageLevel = worstCurrentUsageLevel,
+        worstPossibleUsageLevel = worstPossibleUsageLevel,
+        errors = errors,
     )
 }
 

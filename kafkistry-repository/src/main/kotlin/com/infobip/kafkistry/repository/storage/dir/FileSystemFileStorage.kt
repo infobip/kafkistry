@@ -53,6 +53,8 @@ class FileSystemFileStorage(
                 .toList()
     }
 
+    override fun listBranchFiles(branch: Branch): List<StoredFile> = listCurrentFiles() //no concept of branches on FS
+
     override fun deleteFile(writeContext: WriteContext, name: String) {
         name.toFile().delete()
     }

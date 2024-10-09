@@ -9,6 +9,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.repository.*
+import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.history.ClusterChange
 import com.infobip.kafkistry.service.history.ClusterRequest
@@ -102,6 +103,7 @@ class ClustersRegistryService(
     fun findCluster(clusterIdentifier: KafkaClusterIdentifier): KafkaCluster? = findOne(clusterIdentifier)
     fun getCluster(clusterIdentifier: KafkaClusterIdentifier): KafkaCluster = getOne(clusterIdentifier)
     fun listClusters(): List<KafkaCluster> = listAll()
+    fun listClustersAt(branch: Branch): List<KafkaCluster> = listAllAt(branch)
 
     fun listClustersIdentifiers(): List<KafkaClusterIdentifier> = listClusters().map { it.identifier }
     fun listClustersRefs(): List<ClusterRef> = listClusters().map { it.ref() }

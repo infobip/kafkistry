@@ -38,6 +38,9 @@
             <a href="${appUrl.clusters().showTags()}" class="btn btn-secondary mr-2">
                 Tags...
             </a>
+            <a href="${appUrl.clusters().showClusterResourcesInspect()}" class="btn btn-dark mr-2">
+                Resources...
+            </a>
             <button id="refresh-btn" class="btn btn-outline-secondary">Refresh all</button>
         </div>
     </div>

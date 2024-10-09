@@ -14,6 +14,8 @@ class GitFileStorage(
 
     override fun listCurrentFiles(): List<StoredFile> = gitRepository.listCurrentFiles(subDir)
 
+    override fun listBranchFiles(branch: Branch): List<StoredFile> = gitRepository.listBranchFiles(subDir, branch)
+
     override fun deleteFile(writeContext: WriteContext, name: String) {
         gitRepository.deleteFile(writeContext, subDir, name)
     }

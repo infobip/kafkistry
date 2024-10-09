@@ -4,9 +4,7 @@ import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.UpdateContext
-import com.infobip.kafkistry.service.history.ChangeCommit
-import com.infobip.kafkistry.service.history.TopicChange
-import com.infobip.kafkistry.service.history.TopicRequest
+import com.infobip.kafkistry.service.history.*
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -54,6 +52,9 @@ class TopicsApi(
 
     @GetMapping("/pending-requests")
     fun pendingTopicsRequests(): Map<TopicName, List<TopicRequest>> = topicsRegistry.findAllPendingRequests()
+
+    @GetMapping("/pending-requests/branches")
+    fun pendingTopicsBranchesRequests(): List<BranchRequests<TopicRequest>> = topicsRegistry.pendingBranches()
 
     @GetMapping("/single/pending-requests")
     fun pendingTopicRequests(

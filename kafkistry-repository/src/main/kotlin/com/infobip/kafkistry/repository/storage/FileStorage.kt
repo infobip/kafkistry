@@ -10,6 +10,7 @@ interface FileStorage {
     fun fileExists(name: String): Boolean
     fun readFile(name: String): StoredFile?
     fun listCurrentFiles(): List<StoredFile>
+    fun listBranchFiles(branch: Branch): List<StoredFile>
     fun deleteFile(writeContext: WriteContext, name: String)
     fun writeFile(writeContext: WriteContext, file: StoredFile)
     fun writeFiles(writeContext: WriteContext, files: List<StoredFile>)

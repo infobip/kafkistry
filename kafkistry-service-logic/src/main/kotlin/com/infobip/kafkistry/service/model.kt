@@ -63,6 +63,14 @@ data class OptionalValue<V>(
     }
 }
 
+fun <V, R> OptionalValue<V>.mapValue(mapper: (V) -> R): OptionalValue<R> {
+    return if (value != null) {
+        OptionalValue.of(mapper(value))
+    } else {
+        OptionalValue.absent(absentReason ?: "")
+    }
+}
+
 data class ExistingValues(
     val kafkaProfiles: List<KafkaProfile>,
     val clusterIdentifiers: List<KafkaClusterIdentifier>,

@@ -124,6 +124,8 @@ abstract class AbstractRegistryService<ID : Any, T : Any, R : Repository<ID, T>,
 
     protected fun listAll(): List<T> = repository.findAll().sortedBy { it.id.toString() }
 
+    protected fun listAllAt(branch: Branch): List<T> = repository.findAllAt(branch).sortedBy { it.id.toString() }
+
     protected fun findOne(id: ID): T? = repository.findById(id)
 
     protected fun getOne(id: ID): T {

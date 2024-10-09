@@ -38,6 +38,7 @@ class GitRepositoriesProperties {
     var refreshIntervalSeconds: Int = 30
     var strictSshHostKeyChecking: Boolean = false
     var dropLocalBranchesMissingOnRemote: Boolean = false
+    var hardResetLocalBranchCheckoutConflicts: Boolean = false
 
     fun refreshIntervalMs() = 1000L * refreshIntervalSeconds
 }
@@ -110,6 +111,7 @@ class GitRepositoriesConfig(
             gitTimeoutSeconds = properties.remoteTimeoutSeconds,
             strictSshHostKeyChecking = properties.strictSshHostKeyChecking,
             dropLocalBranchesMissingOnRemote = properties.dropLocalBranchesMissingOnRemote,
+            hardResetLocalBranchCheckoutConflicts = properties.hardResetLocalBranchCheckoutConflicts,
             promProperties = promProperties,
         )
     }

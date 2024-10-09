@@ -58,6 +58,8 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
 
     override fun findAll(): List<T> = maybeRefreshAndDo { cache.values.toList() }
 
+    override fun findAllAt(branch: Branch): List<T> = delegate.findAllAt(branch)    //explicitly delegated / not using cache; wait as long as needed
+
     override fun existsById(id: ID): Boolean = maybeRefreshAndDo { id in cache.keys }
 
     override fun findById(id: ID): T? = maybeRefreshAndDo { cache[id] }

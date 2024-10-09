@@ -32,6 +32,7 @@ internal class ClusterResourcesAnalyzerTest {
     private val clustersRegistry: ClustersRegistryService = mock()
     private val topicsRegistry: TopicsRegistryService = mock()
     private val clusterStateProvider: KafkaClustersStateProvider = mock()
+    private val clusterEnabledFilter = ClusterEnabledFilter(KafkaEnabledClustersProperties())
 
     private val topicsInspectionService = TopicsInspectionService(
         topicsRegistry = topicsRegistry,
@@ -60,7 +61,8 @@ internal class ClusterResourcesAnalyzerTest {
     )
 
     private val analyzer = ClusterResourcesAnalyzer(
-        replicasInfoProvider, nodeDiskMetricsProvider, topicsInspectionService, usageLevelClassifier, topicsRegistry, topicDiskAnalyzer
+        replicasInfoProvider, nodeDiskMetricsProvider, topicsInspectionService, usageLevelClassifier, topicsRegistry,
+        clustersRegistry, clusterStateProvider, clusterEnabledFilter, topicDiskAnalyzer,
     )
 
     private fun newCluster(

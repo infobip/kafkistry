@@ -24,6 +24,8 @@ class RequestingKeyValueRepositoryStorageAdapter<T : Any>(
 
     override fun findAll(): List<T> = storage.listCurrentFiles().map { it.deserialize() }
 
+    override fun findAllAt(branch: Branch): List<T> = storage.listBranchFiles(branch).map { it.deserialize() }
+
     override fun existsById(id: ID): Boolean = storage.fileExists(id.toFileName())
 
     override fun findById(id: ID): T? = storage.readFile(id.toFileName())?.deserialize()

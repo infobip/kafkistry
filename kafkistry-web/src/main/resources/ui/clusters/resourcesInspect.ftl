@@ -7,13 +7,19 @@
 <#assign hasOrphaned = clusterResources.combined.usage.orphanedReplicasCount gt 0>
 <#assign showReplicas = !hasOrphaned>
 
-<#function signClass number>
+<#function signClass number usageLevelClass="">
 <#-- @ftlvariable name="number"  type="java.lang.Number" -->
+<#-- @ftlvariable name="usageLevelClass"  type="java.lang.String" -->
     <#if !(diffModeEnabled??) || !diffModeEnabled>
         <#return "">
     </#if>
     <#if number gt 0>
-        <#return "text-danger font-weight-bold">
+        <#if usageLevelClass?contains("bg-danger")>
+            <#-- workaround case when we have inclease and highest bg-danger, text would then be the same as background -->
+            <#return "text-warning font-weight-bold">
+        <#else>
+            <#return "text-danger font-weight-bold">
+        </#if>
     <#elseif number lt 0>
         <#return "text-success font-weight-bold">
     <#else>
@@ -113,7 +119,7 @@
         <#assign usageLevelClass = util.usageLevelToHtmlClass(disk.portions.usageLevel)>
         <td class="${usageLevelClass}">
             <#if usages.totalUsedBytes??>
-                <span class="${signClass(usages.totalUsedBytes)}">
+                <span class="${signClass(usages.totalUsedBytes, usageLevelClass)}">
                     ${util.prettyDataSize(usages.totalUsedBytes, diffModeEnabled!false)}
                 </span>
             <#else>
@@ -122,7 +128,7 @@
         </td>
         <td class="${usageLevelClass}">
             <#if disk.portions.usedPercentOfCapacity??>
-                <span class="${signClass(disk.portions.usedPercentOfCapacity)}">
+                <span class="${signClass(disk.portions.usedPercentOfCapacity, usageLevelClass)}">
                     ${util.prettyNumber(disk.portions.usedPercentOfCapacity, diffModeEnabled!false)}%
                 </span>
             <#else>
@@ -143,13 +149,13 @@
 
         <#assign possibleUsageLevelClass = util.usageLevelToHtmlClass(disk.portions.possibleUsageLevel)>
         <td class="${possibleUsageLevelClass}">
-            <span class="${signClass(usages.boundedSizePossibleUsedBytes)}">
+            <span class="${signClass(usages.boundedSizePossibleUsedBytes, possibleUsageLevelClass)}">
                 ${util.prettyDataSize(usages.boundedSizePossibleUsedBytes, diffModeEnabled!false)}
             </span>
         </td>
         <td class="${possibleUsageLevelClass}">
             <#if disk.portions.possibleUsedPercentOfCapacity??>
-                <span class="${signClass(disk.portions.possibleUsedPercentOfCapacity)}">
+                <span class="${signClass(disk.portions.possibleUsedPercentOfCapacity, possibleUsageLevelClass)}">
                     ${util.prettyNumber(disk.portions.possibleUsedPercentOfCapacity, diffModeEnabled!false)}%
                 </span>
             <#else>

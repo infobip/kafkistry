@@ -7,12 +7,12 @@ import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.repository.ChangeRequest
 import com.infobip.kafkistry.repository.EntityCommitChange
 import com.infobip.kafkistry.repository.KafkaTopicsRepository
+import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.history.TopicChange
 import com.infobip.kafkistry.service.history.TopicRequest
 import com.infobip.kafkistry.service.topic.validation.NamingValidator
 import com.infobip.kafkistry.service.topic.validation.check.TopicPreSaveChecker
-import com.infobip.kafkistry.service.topic.validation.rules.ValidationRule
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
@@ -81,6 +81,7 @@ class TopicsRegistryService(
     fun updateTopic(topicDescription: TopicDescription, updateContext: UpdateContext) = update(topicDescription, updateContext)
 
     fun listTopics(): List<TopicDescription> = listAll()
+    fun listTopicsAt(branch: Branch): List<TopicDescription> = listAllAt(branch)
     fun findTopic(topicName: TopicName): TopicDescription? = findOne(topicName)
     fun getTopic(topicName: TopicName): TopicDescription = getOne(topicName)
 

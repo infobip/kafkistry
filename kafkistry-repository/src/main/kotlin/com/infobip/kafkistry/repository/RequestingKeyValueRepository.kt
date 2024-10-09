@@ -19,6 +19,8 @@ interface RequestingKeyValueRepository<ID : Any, T : Any> {
 
     fun findAll(): List<T>
 
+    fun findAllAt(branch: Branch): List<T>
+
     fun existsById(id: ID): Boolean
 
     fun findById(id: ID): T?
@@ -110,7 +112,7 @@ data class EntityCommitChange<ID, T>(
 data class WriteContext(
         val user: Committer,
         val message: String,
-        val targetBranch: String? = null
+        val targetBranch: Branch? = null
 )
 
 data class Committer(

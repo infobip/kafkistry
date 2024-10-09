@@ -1,15 +1,14 @@
 package com.infobip.kafkistry.service.resources
 
 import com.infobip.kafkistry.kafka.BrokerId
-import com.infobip.kafkistry.kafkastate.NodeDiskMetricsStateProvider
-import com.infobip.kafkistry.kafkastate.KafkaReplicasInfoProvider
-import com.infobip.kafkistry.kafkastate.ReplicaDirs
+import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.topic.ClusterTopicStatus
+import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.service.KafkistryException
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.OptionalValue
+import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.utils.deepToString
@@ -22,22 +21,62 @@ class ClusterResourcesAnalyzer(
     private val topicsInspectionService: TopicsInspectionService,
     private val usageLevelClassifier: UsageLevelClassifier,
     private val topicsRegistry: TopicsRegistryService,
+    private val clustersRegistry: ClustersRegistryService,
+    private val clusterStateProvider: KafkaClustersStateProvider,
+    private val clusterEnabledFilter: ClusterEnabledFilter,
     private val topicDiskAnalyzer: TopicDiskAnalyzer,
 ) {
 
+    fun dryRunClustersDiskUsageForBranch(branch: Branch): Map<KafkaClusterIdentifier, OptionalValue<ClusterDiskUsage>> {
+        val allBranchTopics = topicsRegistry.listTopicsAt(branch).associateBy { it.name }
+        val allBranchClusters = clustersRegistry.listClustersAt(branch)
+        return allBranchClusters
+            .filter { clusterEnabledFilter.enabled(it.ref()) }
+            .associate { cluster ->
+                val context = collectDataForBranch(cluster.ref(), allBranchTopics)
+                val usage = try {
+                    val diskUsage = computeDiskUsageOf(context)
+                    OptionalValue.of(diskUsage)
+                } catch(e: Exception) {
+                    OptionalValue.absent("Unable to compute disk usage of '${cluster.identifier}', reason: ${e.deepToString()}")
+                }
+                cluster.identifier to usage
+            }
+    }
+
+    fun dryRunClusterDiskUsageForBranch(clusterRef: ClusterRef, branch: Branch): ClusterDiskUsage {
+        val allBranchTopics = topicsRegistry.listTopicsAt(branch).associateBy { it.name }
+        val context = collectDataForBranch(clusterRef, allBranchTopics)
+        return computeDiskUsageOf(context)
+    }
+
+    fun clustersDiskUsage(): Map<KafkaClusterIdentifier, OptionalValue<ClusterDiskUsage>> {
+        return clustersRegistry.listClustersRefs()
+            .filter { clusterEnabledFilter.enabled(it) }
+            .associate {
+                val usage = try {
+                    val diskUsage = clusterDiskUsage(it.identifier)
+                    OptionalValue.of(diskUsage)
+                } catch(e: Exception) {
+                    OptionalValue.absent("Unable to compute disk usage of '${it.identifier}', reason: ${e.deepToString()}")
+                }
+                it.identifier to usage
+            }
+    }
+
     fun clusterDiskUsage(clusterIdentifier: KafkaClusterIdentifier): ClusterDiskUsage {
-        return clusterDiskUsage(clusterIdentifier, null)
+        val context = collectData(clusterIdentifier, null)
+        return computeDiskUsageOf(context)
     }
 
     fun dryRunClusterDiskUsage(clusterRef: ClusterRef): ClusterDiskUsage {
-        return clusterDiskUsage(clusterRef.identifier, clusterRef.tags)
+        val context = collectData(clusterRef.identifier, clusterRef.tags)
+        return computeDiskUsageOf(context)
     }
 
-    private fun clusterDiskUsage(
-        clusterIdentifier: KafkaClusterIdentifier,
-        tags: List<Tag>?,
+    private fun computeDiskUsageOf(
+        context: ContextData,
     ): ClusterDiskUsage {
-        val context = collectData(clusterIdentifier, tags)
         val brokerUsages = context.computeBrokerUsages()
         val combinedDiskUsage = brokerUsages.values.map { it.usage }.fold(BrokerDiskUsage.ZERO, BrokerDiskUsage::plus)
         val combinedDiskMetrics = context.brokersMetrics.values
@@ -135,11 +174,40 @@ class ClusterResourcesAnalyzer(
                 OptionalValue.absent(ex.deepToString())
             }
         }
-        return ContextData(topicStatuses, brokerIds, replicaDirs, brokersMetrics, topicsDisks)
+        return ContextData(brokerIds, replicaDirs, brokersMetrics, topicsDisks)
+    }
+
+    private fun collectDataForBranch(
+        clusterRef: ClusterRef,
+        allBranchTopics: Map<TopicName, TopicDescription>,
+    ): ContextData {
+        val clusterState = clusterStateProvider.getLatestClusterState(clusterRef.identifier).value()
+        val brokerIds = clusterState.clusterInfo.brokerIds
+        val replicaDirs = replicasInfoProvider.getLatestStateValue(clusterRef.identifier)
+        val brokersMetrics = nodeDiskMetricsStateProvider.getLatestState(clusterRef.identifier)
+            .valueOrNull()
+            ?.brokersMetrics
+            .orEmpty()
+        val topicsExpectedToExist = allBranchTopics.values.asSequence()
+            .filter { it.presence.needToBeOnCluster(clusterRef) }
+            .map { it.name }
+            .toSet()
+        val topicNames = topicsExpectedToExist + replicaDirs.replicas.keys
+        val topicsDisks = topicNames.associateWith { topicName ->
+            try {
+                topicDiskAnalyzer.analyzeTopicDiskUsage(
+                    topic = topicName, topicDescription = allBranchTopics[topicName],
+                    clusterRef = clusterRef, preferUsingDescriptionProps = true,
+                ).let { OptionalValue.of(it) }
+            } catch (ex: KafkistryException) {
+                OptionalValue.absent(ex.deepToString())
+            }
+        }
+        return ContextData(brokerIds, replicaDirs, brokersMetrics, topicsDisks)
     }
 
     private data class ContextData(
-        val topicStatuses: List<ClusterTopicStatus>,
+        //val topicStatuses: List<ClusterTopicStatus>,
         val brokerIds: List<BrokerId>,
         val replicaDirs: ReplicaDirs,
         val brokersMetrics: Map<BrokerId, NodeDiskMetric>,

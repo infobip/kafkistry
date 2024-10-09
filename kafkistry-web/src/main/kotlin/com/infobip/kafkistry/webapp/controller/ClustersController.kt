@@ -6,6 +6,10 @@ import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.repository.storage.Branch
 import com.infobip.kafkistry.service.generator.balance.BalanceSettings
+import com.infobip.kafkistry.service.resources.ClusterDiskUsage
+import com.infobip.kafkistry.service.resources.minus
+import com.infobip.kafkistry.service.resources.subtractOptionals
+import com.infobip.kafkistry.service.resources.unaryMinus
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ADD
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_BALANCE
@@ -23,6 +27,7 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_INSPECT_
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_ISSUES
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_REMOVE
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_RESOURCES
+import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS_RESOURCES_INSPECT
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.TAGS
 import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.TAGS_ON_BRANCH
 import org.springframework.stereotype.Controller
@@ -227,6 +232,28 @@ class ClustersController(
         return ModelAndView("clusters/resources", mutableMapOf(
             "clusterIdentifier" to clusterIdentifier,
             "clusterResources" to clusterResources,
+        ))
+    }
+
+    @GetMapping(CLUSTERS_RESOURCES_INSPECT)
+    fun showAllClusterResources(
+        @RequestParam(name = "branch", required = false) branch: String?,
+    ): ModelAndView {
+        val clustersDiskUsage = resourcesAnalyzerApi.getClustersDiskUsage()
+        val clustersDiskUsageOnBranch = branch?.let {
+             resourcesAnalyzerApi.getClustersDiskUsageOnBranch(it)
+        }
+        val clustersDiskUsageDiffs = clustersDiskUsageOnBranch
+            ?.subtractOptionals(clustersDiskUsage, ClusterDiskUsage::minus, ClusterDiskUsage::unaryMinus)
+        val clustersBranches = clustersApi.pendingClustersBranchesRequests()
+        val topicsBranches = topicsApi.pendingTopicsBranchesRequests()
+        return ModelAndView("clusters/resources/index", mutableMapOf(
+            "branch" to branch,
+            "clustersDiskUsage" to clustersDiskUsage,
+            "clustersDiskUsageOnBranch" to clustersDiskUsageOnBranch,
+            "clustersDiskUsageDiffs" to clustersDiskUsageDiffs,
+            "clustersBranches" to clustersBranches,
+            "topicsBranches" to topicsBranches,
         ))
     }
 

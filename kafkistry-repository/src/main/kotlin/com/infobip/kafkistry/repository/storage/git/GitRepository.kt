@@ -11,6 +11,7 @@ import io.prometheus.client.Summary
 import org.apache.commons.io.FileUtils
 import org.apache.sshd.git.transport.GitSshdSessionFactory
 import org.eclipse.jgit.api.*
+import org.eclipse.jgit.api.errors.CheckoutConflictException
 import org.eclipse.jgit.api.errors.GitAPIException
 import org.eclipse.jgit.api.errors.JGitInternalException
 import org.eclipse.jgit.api.errors.RefNotFoundException
@@ -60,6 +61,7 @@ class GitRepository(
     private val gitTimeoutSeconds: Int = 30,
     private val strictSshHostKeyChecking: Boolean = false,
     private val dropLocalBranchesMissingOnRemote: Boolean = false,
+    private val hardResetLocalBranchCheckoutConflicts: Boolean = false,
     promProperties: PrometheusMetricsProperties,
 ) : AutoCloseable {
 
@@ -314,6 +316,18 @@ class GitRepository(
                 } else {
                     throw e
                 }
+            } catch (e: CheckoutConflictException) {
+                if (hardResetLocalBranchCheckoutConflicts) {
+                    log.warn(
+                        "Checkout to branch '{}' got conflict: {},\n\tdoing hard reset", branchName, e.deepToString()
+                    )
+                    git.reset()
+                        .setMode(ResetCommand.ResetType.HARD)
+                        .setRef(remoteBranch.name)
+                        .call()
+                } else {
+                    throw e
+                }
             }
             val localHeadRevision = currentHeadRevision()
             if (localHeadRevision.objectId.name != remoteBranch.objectId.name) {
@@ -390,11 +404,20 @@ class GitRepository(
 
     fun listCurrentFiles(subDir: String): List<StoredFile> {
         return exclusiveOnMainBranch {
-            subDir.asSubDirFile().listFiles()
-                    ?.map { StoredFile(it.name, FileUtils.readFileToString(it, Charsets.UTF_8)) }
-                    ?: throw IOException("Can't read directory $dir/$subDir")
+            readAllFiles(subDir)
         }
     }
+
+    fun listBranchFiles(subDir: String, branch: Branch): List<StoredFile> {
+        return exclusiveOnBranch(branch) {
+            readAllFiles(subDir)
+        }
+    }
+
+    private fun readAllFiles(subDir: String): List<StoredFile> = subDir.asSubDirFile()
+        .listFiles()
+        ?.map { StoredFile(it.name, FileUtils.readFileToString(it, Charsets.UTF_8)) }
+        ?: throw IOException("Can't read directory $dir/$subDir")
 
     fun deleteFile(writeContext: WriteContext, subDir: String, name: String) {
         exclusiveOnMainBranch {
@@ -651,6 +674,17 @@ class GitRepository(
         }
     }
 
+    private fun <T> exclusiveOnBranch(branch: Branch, block: () -> T): T {
+        return exclusiveOnMainBranch {
+            checkoutBranch(branch, failIfDoesNotExist = true)
+            try {
+                block()
+            } finally {
+                checkoutBranch(mainBranch)
+            }
+        }
+    }
+
     private fun <T> exclusive(refreshing: Boolean = false, block: () -> T): T {
         val totalTimer = (if (refreshing) totalLatenciesRefreshing else totalLatencies).startTimer()
         val waitTimer = (if (refreshing) waitLatenciesRefreshing else waitLatencies).startTimer()
@@ -687,10 +721,14 @@ class GitRepository(
         return headRef == null || headRef.objectId == null
     }
 
-    private fun checkoutBranch(branchName: String) {
+    private fun checkoutBranch(branchName: Branch, failIfDoesNotExist: Boolean = false) {
         val branchExists = git.branchList().call().any { it.name.toSimpleBranchName() == branchName }
         if (!branchExists) {
-            log.info("Checkout into branch '$branchName' will need to create new local branch")
+            if (failIfDoesNotExist) {
+                throw KafkistryGitException("Tried to checkout into non-existing branch '$branchName'")
+            } else {
+                log.info("Checkout into branch '$branchName' will need to create new local branch")
+            }
         }
         val (startPoint, upstreamMode) = if (noRemote) {
             branchName to CreateBranchCommand.SetupUpstreamMode.NOTRACK

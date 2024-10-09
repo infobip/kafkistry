@@ -21,6 +21,7 @@ class ClustersUrls(base: String) : BaseUrls() {
         const val CLUSTERS_INCREMENTAL_BALANCING = "/incremental-balancing"
         const val CLUSTERS_INCREMENTAL_BALANCING_SUGGESTION = "/incremental-balancing/suggestion"
         const val CLUSTERS_RESOURCES = "/resources"
+        const val CLUSTERS_RESOURCES_INSPECT = "/resources/inspect"
         const val CLUSTERS_ISSUES = "/issues"
         const val CLUSTERS_DRY_RUN_INSPECT = "/dry-run-inspect"
         const val TAGS = "/tags"
@@ -42,6 +43,7 @@ class ClustersUrls(base: String) : BaseUrls() {
     private val showIncrementalBalancing = Url("$base$CLUSTERS_INCREMENTAL_BALANCING", listOf("clusterIdentifier"))
     private val showIncrementalBalancingSuggestion = Url("$base$CLUSTERS_INCREMENTAL_BALANCING_SUGGESTION", listOf("clusterIdentifier"))
     private val showClusterResources = Url("$base$CLUSTERS_RESOURCES", listOf("clusterIdentifier"))
+    private val showClusterResourcesInspect = Url("$base$CLUSTERS_RESOURCES_INSPECT", listOf("branch"))
     private val showClusterIssues = Url("$base$CLUSTERS_ISSUES", listOf("clusterIdentifier"))
     private val showClusterDryRunInspect = Url("$base$CLUSTERS_DRY_RUN_INSPECT")
     private val showTags = Url("$base$TAGS")
@@ -103,6 +105,11 @@ class ClustersUrls(base: String) : BaseUrls() {
     fun showClusterResources(
         clusterIdentifier: KafkaClusterIdentifier
     ) = showClusterResources.render("clusterIdentifier" to clusterIdentifier)
+
+    fun showClusterResourcesInspect() = showClusterResourcesInspect.render()
+
+    fun showClusterResourcesInspectOnBranch(branch: Branch) =
+        showClusterResourcesInspect.render("branch" to branch)
 
     fun showClusterIssues(
         clusterIdentifier: KafkaClusterIdentifier
