@@ -33,8 +33,8 @@ class ClusterResourcesAnalyzer(
         return allBranchClusters
             .filter { clusterEnabledFilter.enabled(it.ref()) }
             .associate { cluster ->
-                val context = collectDataForBranch(cluster.ref(), allBranchTopics)
                 val usage = try {
+                    val context = collectDataForBranch(cluster.ref(), allBranchTopics)
                     val diskUsage = computeDiskUsageOf(context)
                     OptionalValue.of(diskUsage)
                 } catch(e: Exception) {
