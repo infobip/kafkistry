@@ -6,6 +6,9 @@ import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.OptionalValue
 import com.infobip.kafkistry.service.generator.balance.percentageOfNullable
 import com.infobip.kafkistry.service.mapValue
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 const val INF_RETENTION = -1L
 
@@ -13,6 +16,7 @@ infix fun Long?.plusNullable(other: Long?) = if (this != null && other != null) 
 infix fun Int?.plusNullable(other: Int?) = if (this != null && other != null) this + other else null
 infix fun Long?.minusNullable(other: Long?) = if (this != null && other != null) this - other else null
 infix fun Int?.minusNullable(other: Int?) = if (this != null && other != null) this - other else null
+infix fun Double?.minusNullable(other: Double?) = if (this != null && other != null) this - other else null
 
 
 ////////////////////////
@@ -170,9 +174,8 @@ fun Map<BrokerId, BrokerDisk>.worstUsageLevel(selector: BrokerDiskPortions.() ->
     ?: UsageLevel.NONE
 
 operator fun BrokerDisk.minus(other: BrokerDisk): BrokerDisk {
-    val brokerDiskMetric = NodeDiskMetric(usage.totalCapacityBytes, usage.freeCapacityBytes)
     val usageDiff = usage - other.usage
-    val diffPortions = usageDiff.portionsOf(brokerDiskMetric, UsageLevelClassifier.NONE)
+    val diffPortions = portions - other.portions
     return BrokerDisk(usageDiff.copy(totalCapacityBytes = null, freeCapacityBytes = null), diffPortions)
 }
 
@@ -187,6 +190,13 @@ operator fun BrokerDisk.unaryMinus(): BrokerDisk {
     return BrokerDisk(usageDiff.copy(totalCapacityBytes = null, freeCapacityBytes = null), diffPortions)
 }
 
+operator fun BrokerDiskPortions.minus(other: BrokerDiskPortions) = BrokerDiskPortions(
+    usedPercentOfCapacity = usedPercentOfCapacity minusNullable other.usedPercentOfCapacity,
+    usageLevel = UsageLevel.NONE,
+    possibleUsedPercentOfCapacity = possibleUsedPercentOfCapacity minusNullable other.possibleUsedPercentOfCapacity,
+    possibleUsageLevel = UsageLevel.NONE,
+    unboundedUsedPercentOfTotalUsed = unboundedUsedPercentOfTotalUsed minusNullable other.unboundedUsedPercentOfTotalUsed,
+)
 
 
 ////////////////////////

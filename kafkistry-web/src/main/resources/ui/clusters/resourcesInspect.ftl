@@ -1,11 +1,15 @@
+<#-- @ftlvariable name="tableTitle" type="java.lang.String" -->
 <#-- @ftlvariable name="clusterResources"  type="com.infobip.kafkistry.service.resources.ClusterDiskUsage" -->
 <#-- @ftlvariable name="diffModeEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="collapseEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="collapseId"  type="java.lang.String" -->
 
 <#import "../common/util.ftl" as util>
 <#import "../common/infoIcon.ftl" as info>
 
 <#assign hasOrphaned = clusterResources.combined.usage.orphanedReplicasCount gt 0>
 <#assign showReplicas = !hasOrphaned>
+<#assign collapseEnabled = (collapseEnabled!false)>
 
 <#function signClass number usageLevelClass="">
 <#-- @ftlvariable name="number"  type="java.lang.Number" -->
@@ -30,7 +34,12 @@
 <table class="table table-bordered m-0">
     <thead class="thead-dark">
     <tr>
-        <th rowspan="2">Broker</th>
+        <#assign hasTitle = tableTitle?? && tableTitle != "">
+        <#if hasTitle>
+            <th><span class="badge badge-primary">${tableTitle}</span></th>
+        <#else>
+            <th rowspan="2">Broker</th>
+        </#if>
         <th colspan="2" class="text-center">Disk capacity</th>
         <th colspan="${showReplicas?then(3, 2)}" class="text-center">
             Total used
@@ -66,6 +75,9 @@
         </#if>
     </tr>
     <tr>
+        <#if hasTitle>
+            <th>Broker</th>
+        </#if>
         <th>Total</th>
         <th>Free</th>
 
@@ -96,7 +108,13 @@
     <#macro diskUsages broker, disk>
     <#-- @ftlvariable name="disk" type="com.infobip.kafkistry.service.resources.BrokerDisk" -->
         <#assign usages = disk.usage>
-        <th>${broker}</th>
+        <th>
+            ${broker}
+            <#if collapseEnabled && broker == "ALL">
+                <span class="when-collapsed" title="expand...">▼</span>
+                <span class="when-not-collapsed" title="collapse...">△</span>
+            </#if>
+        </th>
         <td>
             <#if usages.totalCapacityBytes??>
                 <span class="${signClass(usages.totalCapacityBytes)}">
@@ -171,7 +189,9 @@
         </#if>
 
         <td>
-            ${util.prettyDataSize(usages.unboundedSizeUsedBytes)}
+            <span class="${signClass(usages.unboundedSizeUsedBytes)}">
+                 ${util.prettyDataSize(usages.unboundedSizeUsedBytes)}
+            </span>
         </td>
         <td>
             <#if disk.portions.unboundedUsedPercentOfTotalUsed??>
@@ -204,14 +224,14 @@
         </#if>
     </#macro>
 
-    <tr class="">
+    <tr <#if collapseEnabled>class="collapsed" data-target=".broker-resources-row.collapse-${collapseId}" data-toggle="collapsing"</#if>>
         <@diskUsages broker="ALL" disk = clusterResources.combined/>
     </tr>
     <tr>
         <td colspan="100" class="bg-light p-1"></td>
     </tr>
     <#list clusterResources.brokerUsages as brokerId, brokerUsages>
-        <tr class="table-sm">
+        <tr class="table-sm broker-resources-row <#if collapseEnabled>collapse-${collapseId} collapseable</#if>">
             <@diskUsages broker="${brokerId}" disk = brokerUsages/>
         </tr>
     </#list>

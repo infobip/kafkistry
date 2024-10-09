@@ -124,6 +124,8 @@
             <h2>Showing current resources</h2>
         </#if>
     <hr/>
+
+    <#assign collapseEnabled = true>
     <#list clustersDiskUsage as clusterIdentifier, optionalClusterRecources>
         <div class="card">
             <div class="card-header">
@@ -135,6 +137,8 @@
                 <#if (optionalClusterRecources.value)??>
                     <#assign clusterResources = optionalClusterRecources.value>
                     <#assign diffModeEnabled = false>
+                    <#assign tableTitle = "Current">
+                    <#assign collapseId = tableTitle + "-"+ clusterIdentifier?url>
                     <#include "../resourcesInspect.ftl">
                 <#else>
                     <div class="alert alert-danger">
@@ -148,6 +152,8 @@
                         <#if (optionalClusterRecourcesDiff.value)??>
                             <#assign clusterResources = optionalClusterRecourcesDiff.value>
                             <#assign diffModeEnabled = true>
+                            <#assign tableTitle = "Diff">
+                            <#assign collapseId = tableTitle + "-"+ clusterIdentifier?url>
                             <#include "../resourcesInspect.ftl">
                         <#else>
                             <div class="alert alert-danger">
@@ -167,6 +173,8 @@
                         <#if (optionalClusterRecourcesBranch.value)??>
                             <#assign clusterResources = optionalClusterRecourcesBranch.value>
                             <#assign diffModeEnabled = false>
+                            <#assign tableTitle = "OnBranch">
+                            <#assign collapseId = tableTitle + "-"+ clusterIdentifier?url>
                             <#include "../resourcesInspect.ftl">
                         <#else>
                             <div class="alert alert-danger">
