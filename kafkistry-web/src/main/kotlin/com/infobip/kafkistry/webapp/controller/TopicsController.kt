@@ -9,6 +9,9 @@ import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.KafkistryIntegrityException
 import com.infobip.kafkistry.service.KafkistryValidationException
+import com.infobip.kafkistry.service.resources.UsageLevel
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
 import com.infobip.kafkistry.service.topic.toAssignmentsInfo
 import com.infobip.kafkistry.webapp.TopicInspectExtensionProperties
 import com.infobip.kafkistry.webapp.WizardTopicNameProperties
@@ -258,9 +261,29 @@ class TopicsController(
     ): ModelAndView {
         val topicStatuses = inspectApi.inspectTopicUpdateDryRun(topicDescription)
         val clustersResources = resourceAnalyzerApi.getTopicStatus(topicDescription)
+        val blockers = buildList {
+            topicStatuses.statusPerClusters.forEach { clusterStatus ->
+                clusterStatus.status.types.forEach { type ->
+                    if (type in setOf(CONFIG_RULE_VIOLATIONS)) {
+                        add("'${type.name}' for cluster '${clusterStatus.clusterIdentifier}'")
+                    }
+                }
+            }
+            clustersResources.forEach { (cluster, optionalClusterResource) ->
+                val clusterResources = optionalClusterResource.value
+                if (clusterResources == null) {
+                    add("Can't analyze cluster resources of '$cluster' because of: ${optionalClusterResource.absentReason}")
+                } else {
+                    if (clusterResources.worstTotalPossibleClusterUsageLevel == UsageLevel.OVERFLOW) {
+                        add("Cluster '$cluster' might run out of disk space because of this topic")
+                    }
+                }
+            }
+        }
         return ModelAndView("topics/dryRunInspect", mutableMapOf(
-                "topicStatuses" to topicStatuses,
-                "clustersResources" to clustersResources,
+            "topicStatuses" to topicStatuses,
+            "clustersResources" to clustersResources,
+            "blockers" to blockers,
         ))
     }
 

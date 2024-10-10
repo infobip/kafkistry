@@ -246,6 +246,13 @@ function validateTopicDescription(topicDescription) {
     if (JSON.stringify(topicDescriptionDryRunInspected) !== JSON.stringify(topicDescription)) {
         errors.push("Please perform 'Dry run inspect config' before saving");
     }
+    let blockers = $("#dry-run-inspect-status .blocker-issue-item").map(() => {
+        return $(this).text();
+    }).get();
+    let blockersIgnored = $("#dry-run-inspect-status input[name=blockers-consent").is(":checked");
+    if (blockers.length > 0 && !blockersIgnored) {
+        errors.push(`There are ${blockers.length} issue(s) detected by 'Dry run inspect config', save is rejected`);
+    }
     return errors;
 }
 

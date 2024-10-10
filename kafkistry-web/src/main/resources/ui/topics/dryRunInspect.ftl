@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="topicStatuses" type="com.infobip.kafkistry.service.topic.TopicStatuses" -->
 <#-- @ftlvariable name="clustersResources" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.OptionalValue<com.infobip.kafkistry.service.resources.TopicDiskUsage>>" -->
+<#-- @ftlvariable name="blockers" type="java.util.List<java.lang.String>" -->
 
 <#import "../common/util.ftl" as util_>
 <#import "topicResourceUsages.ftl" as usages>
@@ -101,5 +102,31 @@
             </#if>
         </div>
     </#list>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Blocker issues</h4>
+        </div>
+        <div class="card-body p-0">
+            <#if blockers?size == 0>
+                <div class="alert alert-success">
+                    <span class="badge badge-success">NONE</span>
+                </div>
+            <#else>
+                <div class="alert alert-danger">
+                    <strong>There are ${blockers?size} issues:</strong>
+                    <ul>
+                        <#list blockers as blocker>
+                            <li class="blocker-issue-item">${blocker}</li>
+                        </#list>
+                    </ul>
+                    <label class="alert-warning rounded border px-3 py-1">
+                        <input name="blockers-consent" type="checkbox">
+                        Allow saving ignoring blockers
+                    </label>
+                </div>
+            </#if>
+        </div>
+    </div>
 
 </div>
