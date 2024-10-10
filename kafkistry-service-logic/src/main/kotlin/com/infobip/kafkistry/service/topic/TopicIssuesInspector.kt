@@ -12,6 +12,8 @@ import com.infobip.kafkistry.service.acl.AclLinkResolver
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.resources.RequiredResourcesInspector
 import com.infobip.kafkistry.service.resources.TopicResourceRequiredUsages
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CHANGE_PARTITION_COUNT
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CHANGE_REPLICATION_FACTOR
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_UNREACHABLE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
@@ -26,9 +28,12 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.N
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_LEADERS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.TO_CREATE
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.TO_DELETE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNAVAILABLE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNEXPECTED
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNKNOWN
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UPDATE_CONFIG
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_CONFIG
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_PARTITION_COUNT
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_REPLICATION_FACTOR
@@ -66,11 +71,12 @@ class TopicIssuesInspector(
         currentTopicReplicaInfos: TopicReplicaInfos?,
         partitionReAssignments: Map<Partition, TopicPartitionReAssignment>,
         clusterRef: ClusterRef,
-        latestClusterState: StateData<KafkaClusterState>
+        latestClusterState: StateData<KafkaClusterState>,
+        dryRun: Boolean,
     ): TopicClusterStatus = inspectTopicDataOnClusterData(
         TopicInspectCtx(
             topicName, clusterRef, latestClusterState, topicDescription, existingTopic,
-            currentTopicReplicaInfos, partitionReAssignments,
+            currentTopicReplicaInfos, partitionReAssignments, dryRun,
         )
     )
 
@@ -124,13 +130,15 @@ class TopicIssuesInspector(
         checkValidationRules(needToBeOnCluster, expectedProperties, expectedConfig, ctx)
         checkPresence(ctx.topicDescription.presence, ctx)
         if (ctx.clusterInfo != null && ctx.existingTopic != null) {
-            checkPartitionCount(expectedProperties, ctx.existingTopic)
-            checkReplicationFactor(expectedProperties, ctx.existingTopic, ctx.partitionReAssignments)
-            checkConfigValues(expectedConfig, ctx.existingTopic, ctx.clusterInfo)
-            checkExitingTopicValidationRules(ctx)
-            checkPreferredReplicaLeaders(ctx.existingTopic)
-            checkOutOfSyncReplicas(ctx.existingTopic)
-            checkReAssignment(ctx.existingTopic, ctx.partitionReAssignments)
+            checkPartitionCount(expectedProperties, ctx.existingTopic, ctx.dryDun)
+            checkReplicationFactor(expectedProperties, ctx.existingTopic, ctx.partitionReAssignments, ctx.dryDun)
+            checkConfigValues(expectedConfig, ctx.existingTopic, ctx.clusterInfo, ctx.dryDun)
+            if (!ctx.dryDun) {
+                checkExitingTopicValidationRules(ctx)
+                checkPreferredReplicaLeaders(ctx.existingTopic)
+                checkOutOfSyncReplicas(ctx.existingTopic)
+                checkReAssignment(ctx.existingTopic, ctx.partitionReAssignments)
+            }
         }
     }
 
@@ -201,7 +209,11 @@ class TopicIssuesInspector(
         if (ctx.existingTopic == null) {
             //topic does not exist on cluster
             if (needToBeOnCluster) {
-                addResultType(MISSING)
+                if (ctx.dryDun) {
+                    addResultType(TO_CREATE)
+                } else {
+                    addResultType(MISSING)
+                }
             } else {
                 addResultType(NOT_PRESENT_AS_EXPECTED)
             }
@@ -209,40 +221,49 @@ class TopicIssuesInspector(
             //topic exist on cluster
             if (!needToBeOnCluster) {
                 //but should not exist
-                addResultType(UNEXPECTED)
+                if (ctx.dryDun) {
+                    addResultType(TO_DELETE)
+                } else {
+                    addResultType(UNEXPECTED)
+                }
             }
         }
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkPartitionCount(
-            expectedProperties: TopicProperties, existingTopic: KafkaExistingTopic
+        expectedProperties: TopicProperties, existingTopic: KafkaExistingTopic, dryRun: Boolean,
     ) {
         val partitionCount = existingTopic.partitionsAssignments.size
         if (expectedProperties.partitionCount != partitionCount) {
-            addResultType(WRONG_PARTITION_COUNT)
-            addWrongValue(
-                WrongValueAssertion(
-                    type = WRONG_PARTITION_COUNT,
-                    key = "partition-count",
-                    expectedDefault = false,
-                    expected = expectedProperties.partitionCount,
-                    actual = partitionCount
-                )
+            val wrongValue = WrongValueAssertion(
+                type = if (dryRun) CHANGE_PARTITION_COUNT else WRONG_PARTITION_COUNT,
+                key = "partition-count",
+                expectedDefault = false,
+                expected = expectedProperties.partitionCount,
+                actual = partitionCount
             )
+            if (dryRun) {
+                addResultType(CHANGE_PARTITION_COUNT)
+                addUpdateValue(wrongValue)
+            } else {
+                addResultType(WRONG_PARTITION_COUNT)
+                addWrongValue(wrongValue)
+            }
         }
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkReplicationFactor(
-            expectedProperties: TopicProperties,
-            existingTopic: KafkaExistingTopic,
-            partitionReAssignments: Map<Partition, TopicPartitionReAssignment>
+        expectedProperties: TopicProperties,
+        existingTopic: KafkaExistingTopic,
+        partitionReAssignments: Map<Partition, TopicPartitionReAssignment>,
+        dryRun: Boolean,
     ) {
         existingTopic.partitionsAssignments
             .filter { it.resolveReplicationFactor(partitionReAssignments) != expectedProperties.replicationFactor }
             .groupBy { it.replicasAssignments.size }
             .map { (numReplicas, partitions) ->
                 WrongValueAssertion(
-                    type = WRONG_REPLICATION_FACTOR,
+                    type = if (dryRun) CHANGE_REPLICATION_FACTOR else WRONG_REPLICATION_FACTOR,
                     key = "replication-factor",
                     expectedDefault = false,
                     expected = expectedProperties.replicationFactor,
@@ -252,13 +273,18 @@ class TopicIssuesInspector(
             }
             .takeIf { it.isNotEmpty() }
             ?.let {
-                addResultType(WRONG_REPLICATION_FACTOR)
-                addWrongValues(it)
+                if (dryRun) {
+                    addResultType(CHANGE_REPLICATION_FACTOR)
+                    addUpdateValues(it)
+                } else {
+                    addResultType(WRONG_REPLICATION_FACTOR)
+                    addWrongValues(it)
+                }
             }
     }
 
     private fun TopicOnClusterInspectionResult.Builder.checkConfigValues(
-        expectedConfig: TopicConfigMap, existingTopic: KafkaExistingTopic, clusterInfo: ClusterInfo
+        expectedConfig: TopicConfigMap, existingTopic: KafkaExistingTopic, clusterInfo: ClusterInfo, dryRun: Boolean,
     ) {
         val clusterServerConfig = clusterInfo.config
         existingTopic.config
@@ -271,7 +297,7 @@ class TopicIssuesInspector(
             .filter { (_, valueInspection) -> !valueInspection.valid }
             .map { (tuple, valueInspection) ->
                 WrongValueAssertion(
-                    type = WRONG_CONFIG,
+                    type = if (dryRun) UPDATE_CONFIG else WRONG_CONFIG,
                     key = tuple.key,
                     expectedDefault = valueInspection.expectingClusterDefault,
                     expected = valueInspection.expectedValue,
@@ -280,8 +306,13 @@ class TopicIssuesInspector(
             }
             .takeIf { it.isNotEmpty() }
             ?.let {
-                addResultType(WRONG_CONFIG)
-                addWrongValues(it)
+                if (dryRun) {
+                    addResultType(UPDATE_CONFIG)
+                    addUpdateValues(it)
+                } else {
+                    addResultType(WRONG_CONFIG)
+                    addWrongValues(it)
+                }
             }
     }
 
@@ -308,7 +339,7 @@ class TopicIssuesInspector(
         if (ruleViolations.isNotEmpty()) {
             addResultType(CONFIG_RULE_VIOLATIONS)
             addRuleViolations(ruleViolations.map {
-                RuleViolationIssue(type = CONFIG_RULE_VIOLATIONS, violation = it,)
+                RuleViolationIssue(type = CONFIG_RULE_VIOLATIONS, violation = it)
             })
         }
     }

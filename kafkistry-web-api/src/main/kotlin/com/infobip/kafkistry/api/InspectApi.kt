@@ -67,7 +67,7 @@ class InspectApi(
     @PostMapping("/topic-inspect-dry-run")
     fun inspectTopicUpdateDryRun(
         @RequestBody topicDescription: TopicDescription,
-    ): TopicStatuses = topicsInspectionService.inspectTopic(topicDescription)
+    ): TopicStatuses = topicsInspectionService.inspectTopicDryRun(topicDescription)
 
     @GetMapping("/topics/clusters")
     fun inspectTopicsOnClusters(): List<ClusterTopicsStatuses> = topicsInspectionService.inspectAllClustersTopics()

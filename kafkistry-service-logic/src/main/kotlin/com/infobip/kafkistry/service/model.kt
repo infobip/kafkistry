@@ -6,6 +6,8 @@ import com.infobip.kafkistry.model.*
 object NamedTypeDoc {
     const val OK = "Everything is as expected"
     const val MISSING = "It should exist on kafka cluster but it is not found"
+    const val TO_CREATE = "It needs to get created on kafka cluster"
+    const val TO_DELETE = "It needs to get deleted from kafka cluster"
     const val UNEXPECTED =  "Is exists on kafka cluster but not in kafkistry"
     const val NOT_PRESENT_AS_EXPECTED = "It's configured not to exist on this cluster and it actually does not exist"
     const val UNKNOWN = "It exist on kafka cluster but not in kafkistry"

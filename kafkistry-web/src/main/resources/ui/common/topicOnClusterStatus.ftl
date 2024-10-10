@@ -6,6 +6,9 @@
 <#list (topicOnClusterStatus.wrongValues)![] as wrongValue>
     <#assign detailedStatuses = detailedStatuses + [wrongValue.type]>
 </#list>
+<#list (topicOnClusterStatus.updateValues)![] as updateValue>
+    <#assign detailedStatuses = detailedStatuses + [updateValue.type]>
+</#list>
 <#list (topicOnClusterStatus.ruleViolations)![] as ruleViolation>
     <#assign detailedStatuses = detailedStatuses + [ruleViolation.type]>
 </#list>
@@ -21,35 +24,57 @@
         <@util.namedTypeStatusAlert type=statusType/>
     </#if>
 </#list>
+
 <#assign alertInline = false>
+
+<#macro valueAssertDetail valueAssertion>
+    <#-- @ftlvariable name="valueAssertion" type="com.infobip.kafkistry.service.topic.WrongValueAssertion" -->
+    <#assign statusType = valueAssertion.type>
+    <@util.namedTypeStatusAlert type=statusType alertInline=false/>
+    <#assign wrongStatusType = !statusType.valid>
+    <div class="text-break">
+        <strong>What:</strong> "${valueAssertion.key}"<br/>
+        <#if wrongStatusType>
+            <strong>Expected:</strong>
+        <#else>
+            <strong>New:</strong>
+        </#if>
+        <#if valueAssertion.expectedDefault>
+            <i>(to be default / not-overridden)</i>
+        <#else>
+            <code>
+                <span class="conf-value" data-name="${valueAssertion.key}"
+                      data-value="${valueAssertion.expected}">${valueAssertion.expected}</span>
+            </code>
+        </#if>
+        <br/>
+        <#if wrongStatusType>
+            <strong>Actual:</strong>
+        <#else>
+            <strong>Old:</strong>
+        </#if>
+        <code>
+            <span class="conf-value" data-name="${valueAssertion.key}"
+                  data-value="${valueAssertion.actual}">${valueAssertion.actual}</span>
+        </code>
+        <#if valueAssertion.message??>
+            <br/>
+            <strong>Message:</strong> ${valueAssertion.message}
+        </#if>
+    </div>
+    <hr/>
+</#macro>
+
 <#if topicOnClusterStatus.wrongValues??>
     <#list topicOnClusterStatus.wrongValues as wrongValue>
         <#if wrongValue?is_first><br/></#if>
-        <#assign statusType = wrongValue.type>
-        <@util.namedTypeStatusAlert type=statusType alertInline=false/>
-        <div class="text-break">
-            <strong>What:</strong> "${wrongValue.key}"<br/>
-            <strong>Expected:</strong>
-            <#if wrongValue.expectedDefault>
-                <i>(to be default / not-overridden)</i>
-            <#else>
-                <code>
-                    <span class="conf-value" data-name="${wrongValue.key}"
-                          data-value="${wrongValue.expected}">${wrongValue.expected}</span>
-                </code>
-            </#if>
-            <br/>
-            <strong>Actual:</strong>
-            <code>
-                <span class="conf-value" data-name="${wrongValue.key}"
-                      data-value="${wrongValue.actual}">${wrongValue.actual}</span>
-            </code>
-            <#if wrongValue.message??>
-                <br/>
-                <strong>Message:</strong> ${wrongValue.message}
-            </#if>
-        </div>
-        <hr/>
+        <@valueAssertDetail valueAssertion=wrongValue/>
+    </#list>
+</#if>
+<#if topicOnClusterStatus.updateValues??>
+    <#list topicOnClusterStatus.updateValues as updateValue>
+        <#if updateValue?is_first><br/></#if>
+        <@valueAssertDetail valueAssertion=updateValue/>
     </#list>
 </#if>
 

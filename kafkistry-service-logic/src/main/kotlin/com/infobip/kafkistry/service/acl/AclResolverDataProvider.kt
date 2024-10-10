@@ -11,6 +11,12 @@ import org.springframework.stereotype.Component
 interface AclResolverDataProvider {
 
     fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData>
+
+    companion object {
+        val EMPTY = object : AclResolverDataProvider {
+            override fun getClustersData(): Map<KafkaClusterIdentifier, AclClusterLinkData> = emptyMap()
+        }
+    }
 }
 
 @Component

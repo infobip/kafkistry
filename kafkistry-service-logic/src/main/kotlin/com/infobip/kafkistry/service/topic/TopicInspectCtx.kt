@@ -17,6 +17,7 @@ class TopicInspectCtx(
     val existingTopic: KafkaExistingTopic?,
     val currentTopicReplicaInfos: TopicReplicaInfos?,
     val partitionReAssignments: Map<Partition, TopicPartitionReAssignment>,
+    val dryDun: Boolean,
 ) {
     val clusterInfo: ClusterInfo? = latestClusterState.valueOrNull()?.clusterInfo
 

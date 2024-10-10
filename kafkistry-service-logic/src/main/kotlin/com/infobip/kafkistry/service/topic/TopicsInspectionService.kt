@@ -32,18 +32,18 @@ class TopicsInspectionService(
 
     fun inspectAllTopics(): List<TopicStatuses> {
         val clusterRefs = clustersRegistry.listClustersRefs()
-        return loadTopics().map { analyzeTopicStatuses(it.name, it, clusterRefs) }
+        return loadTopics().map { analyzeTopicStatuses(it.name, it, clusterRefs, dryRun = false) }
     }
 
     fun inspectTopic(topicName: TopicName): TopicStatuses {
         val clusterRefs = clustersRegistry.listClustersRefs()
         val topicDescription = topicsRegistry.findTopic(topicName)
-        return analyzeTopicStatuses(topicName, topicDescription, clusterRefs)
+        return analyzeTopicStatuses(topicName, topicDescription, clusterRefs, dryRun = false)
     }
 
-    fun inspectTopic(topicDescription: TopicDescription): TopicStatuses {
+    fun inspectTopicDryRun(topicDescription: TopicDescription): TopicStatuses {
         val clusterRefs = clustersRegistry.listClustersRefs()
-        return analyzeTopicStatuses(topicDescription.name, topicDescription, clusterRefs)
+        return analyzeTopicStatuses(topicDescription.name, topicDescription, clusterRefs, dryRun = true)
     }
 
     fun inspectUnknownTopics(): List<TopicStatuses> {
@@ -76,7 +76,8 @@ class TopicsInspectionService(
                     it.name, null, it,
                     replicaDirsService.topicReplicaInfos(clusterRef.identifier, it.name),
                     reAssignmentsMonitorService.topicReAssignments(clusterRef.identifier, it.name),
-                    clusterRef, latestClusterState
+                    clusterRef, latestClusterState,
+                    dryRun = false,
                 )
             }
     }
@@ -151,7 +152,8 @@ class TopicsInspectionService(
                     topicName, topicDescription, existingTopic,
                     topicsReplicasInfos[topicName],
                     topicsPartitionReAssignments[topicName] ?: emptyMap(),
-                    cluster.ref(), latestClusterState
+                    cluster.ref(), latestClusterState,
+                    dryRun = false,
             )
             ClusterTopicStatus(topicName, inspectionResult.status, inspectionResult.existingTopicInfo)
         }
@@ -344,7 +346,7 @@ class TopicsInspectionService(
     ): TopicClusterStatus {
         val clusterRef = clustersRegistry.getCluster(clusterIdentifier).ref()
         val topicDescription = topicsRegistry.findTopic(topicName)
-        return doInspectTopicOnCluster(topicName, topicDescription, clusterRef)
+        return doInspectTopicOnCluster(topicName, topicDescription, clusterRef, dryRun = false)
     }
 
     fun AssignmentsChange.calculateDataMigration(
@@ -409,18 +411,19 @@ class TopicsInspectionService(
             clusterRef: ClusterRef
     ): TopicClusterStatus {
         val topicDescription = topicsRegistry.findTopic(topicName)
-        return doInspectTopicOnCluster(topicName, topicDescription, clusterRef)
+        return doInspectTopicOnCluster(topicName, topicDescription, clusterRef, dryRun = false)
     }
 
     fun inspectTopicOnCluster(
             topicDescription: TopicDescription,
             clusterRef: ClusterRef
-    ): TopicClusterStatus = doInspectTopicOnCluster(topicDescription.name, topicDescription, clusterRef)
+    ): TopicClusterStatus = doInspectTopicOnCluster(topicDescription.name, topicDescription, clusterRef, dryRun = false)
 
     private fun doInspectTopicOnCluster(
         topicName: TopicName,
         topicDescription: TopicDescription?,
-        clusterRef: ClusterRef
+        clusterRef: ClusterRef,
+        dryRun: Boolean,
     ): TopicClusterStatus {
         val latestClusterState = kafkaClustersStateProvider.getLatestClusterState(clusterRef.identifier)
         val existingTopic = latestClusterState.valueOrNull()?.topics?.firstOrNull { it.name == topicName }
@@ -428,17 +431,18 @@ class TopicsInspectionService(
         val partitionsReAssignments = reAssignmentsMonitorService.topicReAssignments(clusterRef.identifier, topicName)
         return topicIssuesInspector.inspectTopicDataOnClusterData(
                 topicName, topicDescription, existingTopic, topicReplicaInfos,
-                partitionsReAssignments, clusterRef, latestClusterState
+                partitionsReAssignments, clusterRef, latestClusterState,
+                dryRun = dryRun,
         )
     }
 
     private fun loadTopics() = topicsRegistry.listTopics()
 
     private fun analyzeTopicStatuses(
-        topicName: TopicName, topicDescription: TopicDescription?, clusterRefs: List<ClusterRef>
+        topicName: TopicName, topicDescription: TopicDescription?, clusterRefs: List<ClusterRef>, dryRun: Boolean,
     ): TopicStatuses {
         val statusPerClusters = clusterRefs
-            .map { doInspectTopicOnCluster(topicName, topicDescription, it) }
+            .map { doInspectTopicOnCluster(topicName, topicDescription, it, dryRun) }
             .sortedBy { if (TopicInspectionResultType.CLUSTER_DISABLED in it.status.types) 1 else 0 }
             .sortedBy {
                 val clusterRef = ClusterRef(it.clusterIdentifier, it.clusterTags)

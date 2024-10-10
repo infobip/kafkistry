@@ -121,6 +121,7 @@ data class TopicOnClusterInspectionResult(
     val flags: StatusFlags,
     val exists: Boolean? = null,
     val wrongValues: List<WrongValueAssertion>? = null,
+    val updateValues: List<WrongValueAssertion>? = null,
     val ruleViolations: List<RuleViolationIssue>? = null,
     val currentConfigRuleViolations: List<RuleViolationIssue>? = null,
     val typeDescriptions: List<NamedTypeCauseDescription<TopicInspectionResultType>>,
@@ -131,6 +132,7 @@ data class TopicOnClusterInspectionResult(
         private var types: MutableList<TopicInspectionResultType> = mutableListOf(),
         private var exists: Boolean? = null,
         private var wrongValues: MutableList<WrongValueAssertion>? = null,
+        private var updateValues: MutableList<WrongValueAssertion>? = null,
         private var ruleViolations: MutableList<RuleViolationIssue>? = null,
         private var currentConfigRuleViolations: MutableList<RuleViolationIssue>? = null,
         private var typeDescriptions: MutableList<NamedTypeCauseDescription<TopicInspectionResultType>>? = null,
@@ -152,6 +154,14 @@ data class TopicOnClusterInspectionResult(
         fun addWrongValues(wrongValues: List<WrongValueAssertion>): Builder = this.also {
             this.wrongValues = (this.wrongValues ?: mutableListOf()).also {
                 it.addAll(wrongValues)
+            }
+        }
+
+        fun addUpdateValue(updateValue: WrongValueAssertion): Builder = addUpdateValues(listOf(updateValue))
+
+        fun addUpdateValues(updateValues: List<WrongValueAssertion>): Builder = this.also {
+            this.updateValues = (this.updateValues ?: mutableListOf()).also {
+                it.addAll(updateValues)
             }
         }
 
@@ -193,6 +203,7 @@ data class TopicOnClusterInspectionResult(
                 disabled = types.any { it == TopicInspectionResultType.CLUSTER_DISABLED }
             ),
             wrongValues = wrongValues?.toList(),
+            updateValues = updateValues?.toList(),
             ruleViolations = ruleViolations?.toList(),
             currentConfigRuleViolations = currentConfigRuleViolations?.toList(),
             typeDescriptions = typeDescriptions?.toList().orEmpty(),
@@ -278,6 +289,7 @@ enum class IssueCategory(
     NONE(true),
     VISIBILITY(false),
     CONFIGURATION_MISMATCH(false),
+    CONFIGURATION_UPDATE(true),
     RULE_CHECK_VIOLATION(false),
     RUNTIME_ISSUE(false),
     INVALID_REQUEST(false)
@@ -337,6 +349,20 @@ data class TopicInspectionResultType(
         )
 
         /**
+         * Topic needs to get created on cluster
+         */
+        val TO_CREATE =  TopicInspectionResultType(
+            "TO_CREATE", INFO, CONFIGURATION_UPDATE, NamedTypeDoc.TO_CREATE,
+        )
+
+        /**
+         * Topic needs to get deleted from cluster
+         */
+        val TO_DELETE =  TopicInspectionResultType(
+            "TO_DELETE", INFO, CONFIGURATION_UPDATE, NamedTypeDoc.TO_DELETE,
+        )
+
+        /**
          * Topic is configured not to be present on cluster but actually it does exist
          */
         val UNEXPECTED =  TopicInspectionResultType(
@@ -367,12 +393,37 @@ data class TopicInspectionResultType(
         )
 
         /**
+         * Actual partition count on cluster differs from configured partition count for this cluster and needs update
+         */
+        val CHANGE_PARTITION_COUNT =  TopicInspectionResultType(
+            "CHANGE_PARTITION_COUNT", INFO, CONFIGURATION_UPDATE,
+            "Partition count needs an update comparing to actual partition count on existing topic",
+        )
+
+        /**
+         * Actual number of partition replicas differs from configured replication factor for this cluster and needs update
+         */
+        val CHANGE_REPLICATION_FACTOR =  TopicInspectionResultType(
+            "CHANGE_REPLICATION_FACTOR", INFO, CONFIGURATION_UPDATE,
+            "Replication factor needs an update comparing to  actual partition count on existing topic",
+        )
+
+        /**
          * There are non-default configuration values on actual cluster topic which differ from configured
          * non-default config values for this specific cluster
          */
         val WRONG_CONFIG =  TopicInspectionResultType(
             "WRONG_CONFIG", ERROR, CONFIGURATION_MISMATCH,
             "Some configuration value(s) do not match expected value(s)",
+        )
+
+        /**
+         * There are non-default configuration values on actual cluster topic which differ from configured
+         * non-default config values for this specific cluster and such config properties need an update/alter
+         */
+        val UPDATE_CONFIG =  TopicInspectionResultType(
+            "UPDATE_CONFIG", INFO, CONFIGURATION_UPDATE,
+            "Some configuration value(s) need to alter to match expected value(s)",
         )
 
         /**
