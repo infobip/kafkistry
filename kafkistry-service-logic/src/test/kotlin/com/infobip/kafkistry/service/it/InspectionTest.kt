@@ -25,20 +25,17 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.U
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_CONFIG
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_PARTITION_COUNT
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_REPLICATION_FACTOR
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 import java.util.function.Function
 
-@RunWith(SpringRunner::class)
 @SpringBootTest(
     properties = [
         "app.topic-validation.disabled-rules=com.infobip.kafkistry.service.topic.validation.rules.ReplicationFactorOneRule",
@@ -57,14 +54,14 @@ class InspectionTest {
     @Autowired
     private lateinit var topics: TopicsRegistryService
 
-    @Before
+    @BeforeEach
     fun before() {
         reset(stateProvider)
         topics.deleteAll(UpdateContext("test msg"))
         clusters.removeAll()
     }
 
-    @After
+    @AfterEach
     fun after() {
         clusters.removeAll()
     }
