@@ -105,8 +105,10 @@
         </#if>
     </tr>
     </thead>
-    <#macro diskUsages broker, disk>
-    <#-- @ftlvariable name="disk" type="com.infobip.kafkistry.service.resources.BrokerDisk" -->
+    <#macro diskUsages broker, disk, worstCurrentUsageLevel="NONE", worstPossibleUsageLevel="NONE">
+        <#-- @ftlvariable name="disk" type="com.infobip.kafkistry.service.resources.BrokerDisk" -->
+        <#-- @ftlvariable name="worstCurrentUsageLevel" type="com.infobip.kafkistry.service.resources.UsageLevel" -->
+        <#-- @ftlvariable name="worstPossibleUsageLevel" type="com.infobip.kafkistry.service.resources.UsageLevel" -->
         <#assign usages = disk.usage>
         <th>
             ${broker}
@@ -134,7 +136,8 @@
             </#if>
         </td>
 
-        <#assign usageLevelClass = util.usageLevelToHtmlClass(disk.portions.usageLevel)>
+        <#assign currentUsageLevel = (worstCurrentUsageLevel == "NONE")?then(disk.portions.usageLevel, worstCurrentUsageLevel)>
+        <#assign usageLevelClass = util.usageLevelToHtmlClass(currentUsageLevel)>
         <td class="${usageLevelClass}">
             <#if usages.totalUsedBytes??>
                 <span class="${signClass(usages.totalUsedBytes, usageLevelClass)}">
@@ -165,7 +168,8 @@
             </td>
         </#if>
 
-        <#assign possibleUsageLevelClass = util.usageLevelToHtmlClass(disk.portions.possibleUsageLevel)>
+        <#assign possibleUsageLevel = (worstPossibleUsageLevel == "NONE")?then(disk.portions.possibleUsageLevel, worstPossibleUsageLevel)>
+        <#assign possibleUsageLevelClass = util.usageLevelToHtmlClass(possibleUsageLevel)>
         <td class="${possibleUsageLevelClass}">
             <span class="${signClass(usages.boundedSizePossibleUsedBytes, possibleUsageLevelClass)}">
                 ${util.prettyDataSize(usages.boundedSizePossibleUsedBytes, diffModeEnabled!false)}
@@ -225,7 +229,10 @@
     </#macro>
 
     <tr <#if collapseEnabled>class="collapsed" data-target=".broker-resources-row.collapse-${collapseId}" data-toggle="collapsing"</#if>>
-        <@diskUsages broker="ALL" disk = clusterResources.combined/>
+        <@diskUsages broker="ALL" disk=clusterResources.combined
+            worstCurrentUsageLevel=clusterResources.worstCurrentUsageLevel
+            worstPossibleUsageLevel=clusterResources.worstPossibleUsageLevel
+        />
     </tr>
     <tr>
         <td colspan="100" class="bg-light p-1"></td>
