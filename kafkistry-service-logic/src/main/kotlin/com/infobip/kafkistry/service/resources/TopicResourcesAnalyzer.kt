@@ -79,16 +79,19 @@ class TopicResourcesAnalyzer(
                 )
             }
         val combinedUsage = brokerUsages.values.reduce(TopicDiskUsageExt::plus)
+        val brokerPortions = brokerUsages.mapValues { (broker, usage) ->
+            usage.portionOf(clusterDiskUsage.brokerUsages[broker]?.usage ?: BrokerDiskUsage.ZERO)
+        }
         return TopicClusterDiskUsageExt(
             unboundedSizeRetention = dryRunTopicClusterDiskUsage.unboundedSizeRetention,
             configuredReplicaRetentionBytes = dryRunTopicClusterDiskUsage.configuredReplicaRetentionBytes,
             combined = combinedUsage,
             combinedPortions = combinedUsage.portionOf(clusterDiskUsage.combined.usage),
             brokerUsages = brokerUsages,
-            brokerPortions = brokerUsages.mapValues { (broker, usage) ->
-                usage.portionOf(clusterDiskUsage.brokerUsages[broker]?.usage ?: BrokerDiskUsage.ZERO)
-            },
+            brokerPortions = brokerPortions,
             clusterDiskUsage = clusterDiskUsage,
+            worstPossibleClusterUsageLevel = brokerPortions.worstUsageLevelOf { possibleClusterUsageLevel },
+            worstTotalPossibleClusterUsageLevel = brokerPortions.worstUsageLevelOf { totalPossibleClusterUsageLevel },
         )
     }
 

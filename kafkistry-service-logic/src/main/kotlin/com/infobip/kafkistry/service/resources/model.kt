@@ -250,6 +250,8 @@ data class TopicClusterDiskUsageExt(
     val brokerUsages: Map<BrokerId, TopicDiskUsageExt>,
     val brokerPortions: Map<BrokerId, UsagePortions>,
     val clusterDiskUsage: ClusterDiskUsage,
+    val worstPossibleClusterUsageLevel: UsageLevel,
+    val worstTotalPossibleClusterUsageLevel: UsageLevel,
 )
 
 operator fun TopicDiskUsage.plus(other: TopicDiskUsage) = TopicDiskUsage(
@@ -344,5 +346,12 @@ inline fun <K, V> Map<K, OptionalValue<V>>.subtractOptionals(
     },
     negative = { it.value?.let { value -> OptionalValue.of(negative(value)) } ?: it }
 )
+
+fun Map<BrokerId, UsagePortions>.worstUsageLevelOf(selector: UsagePortions.() -> UsageLevel): UsageLevel = values
+    .map { it.selector() }
+    .maxByOrNull { it.ordinal }
+    ?: UsageLevel.NONE
+
+
 
 

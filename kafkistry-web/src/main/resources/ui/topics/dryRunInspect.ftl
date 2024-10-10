@@ -52,10 +52,14 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <h4>Expected metrics per clusters</h4>
+        <div class="card-header collapsed" data-target=".expected-metrics-body" data-toggle="collapsing">
+            <h4>
+                <span class="when-collapsed" title="expand...">▼</span>
+                <span class="when-not-collapsed" title="collapse...">△</span>
+                Expected metrics per clusters
+            </h4>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body p-0 expected-metrics-body collapseable">
             <table class="table table-sm table-bordered m-0">
                 <thead class="thead-dark">
                 <tr>

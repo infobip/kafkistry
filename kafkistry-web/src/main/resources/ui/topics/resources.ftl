@@ -85,12 +85,20 @@
                 <th>Capacity</th>
             </tr>
             </thead>
-            <#macro diskUsage broker, usage, portions, brokerUsage, brokerPortions>
+            <#macro diskUsage broker, usage, portions, brokerUsage, brokerPortions worstPossibleUsageLevel="NONE" worstTotalPossibleUsageLevel="NONE">
             <#-- @ftlvariable name="usage" type="com.infobip.kafkistry.service.resources.TopicDiskUsageExt" -->
             <#-- @ftlvariable name="portions" type="com.infobip.kafkistry.service.resources.UsagePortions" -->
             <#-- @ftlvariable name="brokerUsage" type="type="com.infobip.kafkistry.service.resources.BrokerDiskUsage" -->
             <#-- @ftlvariable name="brokerPortions" type="com.infobip.kafkistry.service.resources.BrokerDiskPortions" -->
-                <th>${broker}</th>
+            <#-- @ftlvariable name="worstPossibleUsageLevel" type="com.infobip.kafkistry.service.resources.UsageLevel" -->
+            <#-- @ftlvariable name="worstTotalPossibleUsageLevel" type="com.infobip.kafkistry.service.resources.UsageLevel" -->
+                <th>
+                    ${broker}
+                    <#if broker == "ALL">
+                        <span class="when-collapsed" title="expand...">▼</span>
+                        <span class="when-not-collapsed" title="collapse...">△</span>
+                    </#if>
+                </th>
                 <td>
                     ${usage.usage.replicasCount}
                 </td>
@@ -165,7 +173,8 @@
                     </#if>
                 </td>
                 <#if hasPossible>
-                    <#assign possibleUsageLevelClass = rUtil.usageLevelToHtmlClass(portions.possibleClusterUsageLevel)>
+                    <#assign possibleUsageLevel = (worstPossibleUsageLevel == "NONE")?then(portions.possibleClusterUsageLevel, worstPossibleUsageLevel)>
+                    <#assign possibleUsageLevelClass = rUtil.usageLevelToHtmlClass(possibleUsageLevel)>
                     <td class="${possibleUsageLevelClass}"
                         <#if portions.retentionBoundedBrokerTotalBytesPercentOfCapacity??>
                             title="${rUtil.prettyNumber(portions.retentionBoundedBrokerTotalBytesPercentOfCapacity)}%"
@@ -177,7 +186,8 @@
                             ---
                         </#if>
                     </td>
-                    <#assign totalPossibleUsageLevelClass = rUtil.usageLevelToHtmlClass(portions.totalPossibleClusterUsageLevel)>
+                    <#assign totalPossibleUsageLevel = (worstTotalPossibleUsageLevel == "NONE")?then(portions.totalPossibleClusterUsageLevel, worstTotalPossibleUsageLevel)>
+                    <#assign totalPossibleUsageLevelClass = rUtil.usageLevelToHtmlClass(totalPossibleUsageLevel)>
                     <td class="${totalPossibleUsageLevelClass}"
                         <#if portions.retentionBoundedBrokerPossibleBytesPercentOfCapacity??>
                             title="${rUtil.prettyNumber(portions.retentionBoundedBrokerPossibleBytesPercentOfCapacity)}%"
@@ -198,19 +208,21 @@
                     </#if>
                 </td>
             </#macro>
-            <tr>
+            <tr class="collapsed" data-target=".broker-resources-row.collapse-${clusterIdentifier?url}" data-toggle="collapsing">
                 <@diskUsage broker="ALL"
                     usage=topicResources.combined
                     portions=topicResources.combinedPortions
                     brokerUsage=topicResources.clusterDiskUsage.combined.usage
                     brokerPortions=topicResources.clusterDiskUsage.combined.portions
+                    worstPossibleUsageLevel=topicResources.worstPossibleClusterUsageLevel
+                    worstTotalPossibleUsageLevel=topicResources.worstTotalPossibleClusterUsageLevel
                 />
             </tr>
             <tr>
                 <td colspan="100" class="bg-light p-1"></td>
             </tr>
             <#list topicResources.brokerUsages as brokerId, brokerUsage>
-                <tr class="small table-sm">
+                <tr class="small table-sm broker-resources-row collapse-${clusterIdentifier?url} collapseable">
                     <@diskUsage broker="${brokerId}"
                         usage=brokerUsage
                         portions=topicResources.brokerPortions?api.get(brokerId)
