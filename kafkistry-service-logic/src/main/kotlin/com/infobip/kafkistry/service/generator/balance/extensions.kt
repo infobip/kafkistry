@@ -7,6 +7,7 @@ import com.infobip.kafkistry.service.generator.AssignmentsChange
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.generator.balance.BalancePriority.*
 import com.infobip.kafkistry.service.generator.balance.ChangeMode.*
+import com.infobip.kafkistry.service.generator.ids
 import com.infobip.kafkistry.service.topic.TopicNameFilter
 import kotlin.math.*
 
@@ -80,7 +81,7 @@ fun GlobalState.brokerLoads(): CollectionLoad<BrokerId, BrokerLoad> {
             }
         }
     }
-    val loads = brokerIds.associateWith { BrokerLoad.ZERO }
+    val loads = brokers.ids().associateWith { BrokerLoad.ZERO }
         .plus(result)
         .map { it }
         .sortedBy { it.key }
@@ -129,9 +130,9 @@ fun GlobalState.applyMigrations(migrations: Migrations): Pair<GlobalState, Map<T
     val migratedTopics = migrations.partitions.map { it.topicPartition.topic }.distinct()
     migratedTopics.forEach { topic ->
         val topicAssignments = mutableAssignments[topic] ?: return@forEach
-        if (assignor.leadersDisbalance(topicAssignments.partitionAssignments, brokerIds) > 0) {
+        if (assignor.leadersDisbalance(topicAssignments.partitionAssignments, brokers) > 0) {
             val balancedAssignments = assignor.reBalancePreferredLeaders(
-                topicAssignments.partitionAssignments, brokerIds
+                topicAssignments.partitionAssignments, brokers
             )
             mutableAssignments[topic] = topicAssignments.copy(partitionAssignments = balancedAssignments.newAssignments)
         }
@@ -186,7 +187,7 @@ fun GlobalState.brokerAssignments(): Map<BrokerId, BrokerAssignments> {
             }
         }
     }
-    return brokerIds.associateWith { emptyList<TopicPartition>() }
+    return brokers.ids().associateWith { emptyList<TopicPartition>() }
         .plus(brokerAssignments)
         .mapValues { (brokerId, topicPartitions) ->
             BrokerAssignments(
@@ -286,7 +287,7 @@ fun BalanceObjective.classifyLoadDiffType(
         else -> Signum.ZERO
     }
 
-    val prioritiesToUse = priorities.takeIf { it.isNotEmpty() } ?: BalancePriority.values().toList()
+    val prioritiesToUse = priorities.takeIf { it.isNotEmpty() } ?: BalancePriority.entries
     val signumSet = prioritiesToUse.map { priority ->
         when (priority) {
             SIZE -> sizeSkew.signum()
@@ -309,7 +310,9 @@ fun GlobalState.createGlobalContext(topicNameFilter: TopicNameFilter): GlobalCon
     val brokersLoad = brokerLoads()
     val topicPartitionsLoad = topicPartitionsLoad()
     val brokersAssignments = brokerAssignments()
-    val brokerTopicPartitionLoads = brokerTopicPartitionLoads(brokerIds, brokersAssignments, topicPartitionsLoad)
+    val brokerTopicPartitionLoads = brokerTopicPartitionLoads(
+        brokers.ids(), brokersAssignments, topicPartitionsLoad
+    )
     return GlobalContext(
         state = this,
         topicNameFilter = topicNameFilter,
@@ -324,7 +327,7 @@ fun GlobalState.createGlobalContext(topicNameFilter: TopicNameFilter): GlobalCon
 fun GlobalState.extractBalanceStatus(): ClusterBalanceStatus {
     val brokerLoads = brokerLoads()
     val brokersLoadDiff = brokerLoads.brokersLoadDiff()
-    val combinedLoadDiff = BalancePriority.values().associateWith { priority ->
+    val combinedLoadDiff = BalancePriority.entries.associateWith { priority ->
         brokersLoadDiff.normalize(brokerLoads.average, BalanceObjective(listOf(priority))) * 100
     }
     return ClusterBalanceStatus(
@@ -398,9 +401,9 @@ private fun brokerTopicPartitionLoads(
 }
 
 fun GlobalContext.migrationSizeBytes(migrations: Migrations): Long {
-    return migrations.partitions
-        .map { brokerTopicPartitionLoads[it.oldReplicas.first()]?.get(it.topicPartition)?.size ?: 0L }
-        .sum()
+    return migrations.partitions.sumOf {
+        brokerTopicPartitionLoads[it.oldReplicas.first()]?.get(it.topicPartition)?.size ?: 0L
+    }
 }
 
 fun GlobalContext.loadOf(topicPartition: TopicPartition): PartitionLoad? {
@@ -449,7 +452,7 @@ private data class PartitionReplicaChange(
 
 private fun AssignmentsChange.toPartitionReplicasChanges(topic: TopicName): List<PartitionReplicaChange> {
     return sequence {
-        val replicationFactor = newAssignments.values.map { it.size }.maxOrNull() ?: 0
+        val replicationFactor = newAssignments.values.maxOfOrNull { it.size } ?: 0
         addedPartitionReplicas.forEach { (partition, brokerIds) ->
             val topicPartition = TopicPartition(topic, partition)
             brokerIds.forEach { brokerId ->

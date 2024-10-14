@@ -11,6 +11,7 @@ import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.MISSING
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
@@ -49,16 +50,16 @@ class TopicManagementService(
         val clusterData = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier)
         val clusterBrokersLoad = inspectionService.inspectClusterBrokersLoad(clusterData)
         val assignments = partitionsReplicasAssignor.assignNewPartitionReplicas(
-                existingAssignments = emptyMap(),
-                allBrokers = clusterData.clusterInfo.brokerIds,
-                numberOfNewPartitions = properties.partitionCount,
-                replicationFactor = properties.replicationFactor,
-                existingPartitionLoads = inspectionResult.existingTopicInfo
-                        ?.partitionsAssignments
-                        ?.toPartitionReplicasMap()
-                        ?.partitionLoads(inspectionResult.currentTopicReplicaInfos)
-                        ?: emptyMap(),
-                clusterBrokersLoad = clusterBrokersLoad
+            existingAssignments = emptyMap(),
+            allBrokers = clusterData.clusterInfo.brokers().map { Broker(id = it.nodeId, rack = it.rack) },
+            numberOfNewPartitions = properties.partitionCount,
+            replicationFactor = properties.replicationFactor,
+            existingPartitionLoads = inspectionResult.existingTopicInfo
+                ?.partitionsAssignments
+                ?.toPartitionReplicasMap()
+                ?.partitionLoads(inspectionResult.currentTopicReplicaInfos)
+                ?: emptyMap(),
+            clusterBrokersLoad = clusterBrokersLoad
         )
         checkRuleViolations(inspectionResult.status)
         clientProvider.doWithClient(kafkaCluster) {
@@ -255,7 +256,7 @@ class TopicManagementService(
         val inspectionResult = inspectionService.inspectTopicOnCluster(topicDescription, cluster.ref())
         val validation = partitionsReplicasAssignor.validateAssignments(
                 assignments = newPartitionsAssignments,
-                allBrokers = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds,
+                allBrokerIds = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds,
                 topicProperties = topicDescription.propertiesForCluster(cluster.ref())
         )
         if (!validation.valid) {
@@ -296,7 +297,7 @@ class TopicManagementService(
                     ?: inspectionResult.existingTopicInfo.properties
             val validation = partitionsReplicasAssignor.validateAssignments(
                     assignments = newPartitionsAssignments,
-                    allBrokers = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds,
+                    allBrokerIds = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds,
                     topicProperties = topicProperties
             )
             if (!validation.valid) {

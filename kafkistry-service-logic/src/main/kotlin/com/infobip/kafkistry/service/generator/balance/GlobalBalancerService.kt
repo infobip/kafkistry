@@ -16,6 +16,7 @@ import com.infobip.kafkistry.service.topic.offsets.TopicOffsets
 import com.infobip.kafkistry.service.topic.offsets.TopicOffsetsService
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.topic.TopicNameFilter
+import com.infobip.kafkistry.service.topic.assignableBrokers
 import org.springframework.stereotype.Service
 
 @Service
@@ -53,7 +54,7 @@ class GlobalBalancerService(
             )
         }
         return GlobalState(
-            brokerIds = clusterState.clusterInfo.brokerIds, loads = topicLoads, assignments = assignments
+            brokers = clusterState.clusterInfo.assignableBrokers(), loads = topicLoads, assignments = assignments
         )
     }
 

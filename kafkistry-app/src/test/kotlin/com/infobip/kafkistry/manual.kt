@@ -7,6 +7,8 @@ import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
 import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetricsProvider
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.acl.toAclRule
+import com.infobip.kafkistry.service.asBrokers
+import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.newQuota
 import com.infobip.kafkistry.service.newTopic
@@ -166,14 +168,14 @@ class DataStateInitializer(
         topicName: TopicName,
         partitions: Int,
         replication: Int,
-        brokers: List<BrokerId>,
+        brokers: List<Broker>,
     ) {
         val assignments = assignRoundRobin(brokers, partitions, replication)
         reAssign(cluster, topicName, assignments)
     }
 
     private fun assignRoundRobin(
-        brokers: List<BrokerId>,
+        brokers: List<Broker>,
         partitions: Int,
         replication: Int,
     ): Map<Partition, List<BrokerId>> {
@@ -315,7 +317,7 @@ class DataStateInitializer(
             log.info("Creating unknown topic {}", this)
             kafkaClientProvider.doWithClient(cluster) {
                 val assignments = partitionsReplicasAssignor.assignNewPartitionReplicas(
-                    emptyMap(), listOf(1, 2, 3), 10, 2, emptyMap()
+                    emptyMap(), listOf(1, 2, 3).asBrokers(), 10, 2, emptyMap()
                 )
                 it.createTopic(KafkaTopicConfiguration(this, assignments.newAssignments, emptyMap()))
             }
@@ -381,7 +383,9 @@ class DataStateInitializer(
             doRetrying {
                 api.createMissingTopic(name, clusterIdentifier)
             }
-            val assignments = assignRoundRobin((0 until 6).toList(), 4, 3)
+            val assignments = assignRoundRobin(
+                (0 until 6).toList().asBrokers(), 4, 3
+            )
                 .asSequence()
                 .mapIndexed { index, entry ->
                     if (index % 2 == 0) {
@@ -413,7 +417,7 @@ class DataStateInitializer(
             }
             log.info("Reassigning topic {}", name)
             doRetrying {
-                reAssign(cluster, name, 6, 3, (0..3).toList())
+                reAssign(cluster, name, 6, 3, (0..3).toList().asBrokers())
             }
             val producerConfig = mapOf(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.brokersAsString

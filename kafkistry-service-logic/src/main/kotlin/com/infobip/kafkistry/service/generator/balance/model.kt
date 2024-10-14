@@ -5,6 +5,7 @@ import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.topic.DataMigration
 import com.infobip.kafkistry.service.generator.AssignmentsChange
+import com.infobip.kafkistry.service.generator.Broker
 
 /////////////////////////////
 // Load Facts
@@ -68,9 +69,9 @@ data class TopicPartitionAssignment(
 /////////////////////////////
 
 data class GlobalState(
-        val brokerIds: List<BrokerId>,
-        val loads: Map<TopicName, TopicLoad>,
-        val assignments: Map<TopicName, TopicAssignments>
+    val brokers: List<Broker>,
+    val loads: Map<TopicName, TopicLoad>,
+    val assignments: Map<TopicName, TopicAssignments>,
 )
 
 

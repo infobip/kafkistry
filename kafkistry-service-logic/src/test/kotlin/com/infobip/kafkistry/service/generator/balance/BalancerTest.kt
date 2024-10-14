@@ -6,6 +6,7 @@ import org.assertj.core.groups.Tuple.tuple
 import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.generator.balance.BalancePriority.*
+import com.infobip.kafkistry.service.generator.ids
 import org.junit.Ignore
 import org.junit.Test
 import kotlin.math.abs
@@ -269,7 +270,7 @@ class BalancerTest {
                 ?.let { TopicProperties(it.partitionAssignments.size, it.partitionAssignments.values.first().size) }
                 ?: fail("Missing topic $topic [seed = $seed]")
             val validation = assignor.validateAssignments(
-                assignmentsChange.newAssignments, state.brokerIds, topicProperties
+                assignmentsChange.newAssignments, state.brokers.ids(), topicProperties
             )
             if (!validation.valid) {
                 fail("Invalid assignment for topic $topic: $validation [seed = $seed]")

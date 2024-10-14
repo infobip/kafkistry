@@ -230,21 +230,21 @@ class TopicsInspectionService(
     }
 
     fun inspectTopicPartitionPropertiesChanges(
-            topicDescription: TopicDescription,
-            clusterRef: ClusterRef
+        topicDescription: TopicDescription,
+        clusterRef: ClusterRef,
     ): PartitionPropertiesChanges {
         val topicName = topicDescription.name
         val expectedProperties = topicDescription.propertiesForCluster(clusterRef)
         val clusterData = kafkaClustersStateProvider.getLatestClusterStateValue(clusterRef.identifier)
         val clusterBrokersLoad = inspectClusterBrokersLoad(clusterData)
-        val allBrokers = clusterData.clusterInfo.brokerIds
+        val allBrokers = clusterData.clusterInfo.assignableBrokers()
         val existingTopic = clusterData.topics
-                .find { it.name == topicName }
-                ?: throw KafkistryIllegalStateException("There is no topic '$topicName' found on cluster '${clusterRef.identifier}'")
+            .find { it.name == topicName }
+            ?: throw KafkistryIllegalStateException("There is no topic '$topicName' found on cluster '${clusterRef.identifier}'")
         val currentAssignments = existingTopic.currentAssignments()
         val topicReplicaInfos = replicaDirsService.topicReplicaInfos(clusterRef.identifier, topicName)
         val partitionReAssignments = reAssignmentsMonitorService.topicReAssignments(clusterRef.identifier, topicName)
-        val existingTopicInfo = existingTopic.toTopicInfo(clusterData.clusterInfo.brokerIds, topicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor)
+        val existingTopicInfo = existingTopic.toTopicInfo(allBrokers, topicReplicaInfos, partitionReAssignments, partitionsReplicasAssignor)
         val actualProperties = existingTopicInfo.properties
         val partitions = expectedProperties.partitionCount comparingTo actualProperties.partitionCount
         val replication = expectedProperties.replicationFactor comparingTo actualProperties.replicationFactor
@@ -258,12 +258,12 @@ class TopicsInspectionService(
             IS_AS_EXPECTED -> PartitionPropertyChange.noNeed(existingTopic.partitionsAssignments)
             NEEDS_TO_INCREASE -> {
                 val change = partitionsReplicasAssignor.assignNewPartitionReplicas(
-                        existingAssignments = currentAssignments,
-                        allBrokers = allBrokers,
-                        numberOfNewPartitions = expectedProperties.partitionCount - actualProperties.partitionCount,
-                        replicationFactor = actualProperties.replicationFactor,
-                        existingPartitionLoads = currentAssignments.partitionLoads(topicReplicaInfos),
-                        clusterBrokersLoad = clusterBrokersLoad
+                    existingAssignments = currentAssignments,
+                    allBrokers = allBrokers,
+                    numberOfNewPartitions = expectedProperties.partitionCount - actualProperties.partitionCount,
+                    replicationFactor = actualProperties.replicationFactor,
+                    existingPartitionLoads = currentAssignments.partitionLoads(topicReplicaInfos),
+                    clusterBrokersLoad = clusterBrokersLoad,
                 )
                 PartitionPropertyChange.change(
                     change,
@@ -275,7 +275,7 @@ class TopicsInspectionService(
         val replicationFactorChange = when (replication) {
             NEEDS_TO_REDUCE -> {
                 val change = partitionsReplicasAssignor.reduceReplicationFactor(
-                        currentAssignments, targetReplicationFactor = expectedProperties.replicationFactor
+                    currentAssignments, targetReplicationFactor = expectedProperties.replicationFactor
                 )
                 PartitionPropertyChange.change(
                     change,
@@ -286,46 +286,46 @@ class TopicsInspectionService(
             IS_AS_EXPECTED -> PartitionPropertyChange.noNeed(existingTopic.partitionsAssignments)
             NEEDS_TO_INCREASE -> {
                 val change = partitionsReplicasAssignor.assignPartitionsNewReplicas(
-                        existingAssignments = currentAssignments,
-                        allBrokers = allBrokers,
-                        replicationFactorIncrease = expectedProperties.replicationFactor - actualProperties.replicationFactor,
-                        existingPartitionLoads = currentAssignments.partitionLoads(topicReplicaInfos),
-                        clusterBrokersLoad = clusterBrokersLoad
+                    existingAssignments = currentAssignments,
+                    allBrokers = allBrokers,
+                    replicationFactorIncrease = expectedProperties.replicationFactor - actualProperties.replicationFactor,
+                    existingPartitionLoads = currentAssignments.partitionLoads(topicReplicaInfos),
+                    clusterBrokersLoad = clusterBrokersLoad,
                 )
                 PartitionPropertyChange.change(
                     change,
                     existingTopic.partitionsAssignments,
-                    change.calculateDataMigration(clusterRef.identifier, topicName, topicReplicaInfos)
+                    change.calculateDataMigration(clusterRef.identifier, topicName, topicReplicaInfos),
                 )
             }
         }
         return PartitionPropertiesChanges(
-                existingTopicInfo = existingTopicInfo,
-                partitionCountChange = partitionCountChange,
-                replicationFactorChange = replicationFactorChange
+            existingTopicInfo = existingTopicInfo,
+            partitionCountChange = partitionCountChange,
+            replicationFactorChange = replicationFactorChange,
         )
     }
 
     fun inspectClusterBrokersLoad(clusterData: KafkaClusterState): Map<BrokerId, BrokerLoad> {
         val brokerPartitionCounts = clusterData.topics.asSequence()
-                .flatMap { it.partitionsAssignments.asSequence() }
-                .flatMap { it.replicasAssignments.asSequence().map { replica -> replica.brokerId } }
-                .groupingBy { it }
-                .eachCount()
+            .flatMap { it.partitionsAssignments.asSequence() }
+            .flatMap { it.replicasAssignments.asSequence().map { replica -> replica.brokerId } }
+            .groupingBy { it }
+            .eachCount()
         val brokerUsedDiskSizes = replicaDirsService.clusterTopicReplicaInfos(clusterData.clusterInfo.identifier)
-                .values
-                .flatMap { it.partitionBrokerReplicas.values }
-                .flatMap { it.entries }
-                .groupBy({ it.key }, { it.value.sizeBytes })
-                .mapValues { (_, sizes) -> sizes.sum() }
+            .values
+            .flatMap { it.partitionBrokerReplicas.values }
+            .flatMap { it.entries }
+            .groupBy({ it.key }, { it.value.sizeBytes })
+            .mapValues { (_, sizes) -> sizes.sum() }
         return (brokerPartitionCounts.keys + brokerUsedDiskSizes.keys)
-                .distinct()
-                .associateWith { broker ->
-                    BrokerLoad(
-                            brokerPartitionCounts[broker] ?: 0,
-                            brokerUsedDiskSizes[broker] ?: 0L
-                    )
-                }
+            .distinct()
+            .associateWith { broker ->
+                BrokerLoad(
+            brokerPartitionCounts[broker] ?: 0,
+            brokerUsedDiskSizes[broker] ?: 0L
+                )
+            }
     }
 
     enum class Comparison {
@@ -395,13 +395,13 @@ class TopicsInspectionService(
         return DataMigration(
                 reAssignedPartitions = reAssignedPartitionsCount,
                 totalIOBytes = perBrokerTotal.values.sum(),
-                totalAddBytes = perBrokerIn.values.map { it.get() }.sum(),
-                totalReleaseBytes = perBrokerRelease.values.map { it.get() }.sum(),
+                totalAddBytes = perBrokerIn.values.sumOf { it.get() },
+                totalReleaseBytes = perBrokerRelease.values.sumOf { it.get() },
                 perBrokerTotalIOBytes = perBrokerTotal,
                 perBrokerInputBytes = perBrokerIn.mapValues { it.value.get() },
                 perBrokerOutputBytes = perBrokerOut.mapValues { it.value.get() },
                 perBrokerReleasedBytes = perBrokerRelease.mapValues { it.value.get() },
-                maxBrokerIOBytes = (perBrokerIn.values + perBrokerOut.values).map { it.get() }.maxOrNull() ?: 0L
+                maxBrokerIOBytes = (perBrokerIn.values + perBrokerOut.values).maxOfOrNull { it.get() } ?: 0L
         )
 
     }

@@ -4,6 +4,7 @@ import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.TopicReplicaInfos
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.generator.AssignmentsChange
+import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.generator.PartitionLoad
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.sumPerValue
@@ -108,7 +109,7 @@ fun List<PartitionAssignments>.toAssignmentsInfo(
 }
 
 fun KafkaExistingTopic.toTopicInfo(
-    clusterBrokerIds: List<BrokerId>,
+    clusterBrokers: List<Broker>,
     topicReplicaInfos: TopicReplicaInfos?,
     partitionReAssignments: Map<Partition, TopicPartitionReAssignment>,
     partitionsReplicasAssignor: PartitionsReplicasAssignor
@@ -125,7 +126,7 @@ fun KafkaExistingTopic.toTopicInfo(
     partitionsAssignments = partitionsAssignments,
     assignmentsDisbalance = partitionsReplicasAssignor.assignmentsDisbalance(
         existingAssignments = currentAssignments(),
-        allBrokers = clusterBrokerIds,
+        allBrokers = clusterBrokers,
         existingPartitionLoads = currentAssignments().partitionLoads(topicReplicaInfos)
     )
 )
@@ -171,3 +172,5 @@ fun Iterable<DataMigration>.merge() = DataMigration(
 ).run {
     copy(maxBrokerIOBytes = (perBrokerInputBytes.values + perBrokerOutputBytes.values).maxOrNull() ?: 0L)
 }
+
+fun ClusterInfo.assignableBrokers() = brokers().map { Broker(id = it.nodeId, rack = it.rack) }

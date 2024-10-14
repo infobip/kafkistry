@@ -1,9 +1,11 @@
 package com.infobip.kafkistry.service.generator.balance
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.service.asBrokers
+import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.generator.BrokerLoad
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
+import com.infobip.kafkistry.service.generator.ids
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.random.Random
@@ -51,7 +53,7 @@ fun state1(): GlobalState {
                     )
             )
     )
-    val brokerIds = listOf(0, 1, 2)
+    val brokerIds = listOf(0, 1, 2).asBrokers()
     return GlobalState(brokerIds, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
 }
 
@@ -120,7 +122,7 @@ fun state2(): GlobalState {
                     )
             )
     )
-    val brokerIds = listOf(0, 1, 2)
+    val brokerIds = listOf(0, 1, 2).asBrokers()
     return GlobalState(brokerIds, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
 }
 
@@ -175,7 +177,7 @@ fun state3(): GlobalState {
         t1[0]   t3[0]   t1[1]
         t2[0]           t2[1]
     */
-    val brokerIds = listOf(0, 1, 2)
+    val brokerIds = listOf(0, 1, 2).asBrokers()
     return GlobalState(brokerIds, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
 }
 
@@ -427,12 +429,12 @@ fun state5(): GlobalState {
             )
         )
     )
-    val brokerIds = listOf(0, 1, 2, 3, 4, 5)
+    val brokerIds = listOf(0, 1, 2, 3, 4, 5).asBrokers()
     return GlobalState(brokerIds, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
 }
 
 fun stateEachTopicUnevenImpactPerBroker(): GlobalState {
-    val allBrokers: List<BrokerId> = (1..4).toList()
+    val allBrokers: List<Broker> = (1..4).toList().asBrokers()
     val assignor = PartitionsReplicasAssignor()
     val assignments = (1..2).map {
         val initialAssignment = assignor.assignNewPartitionReplicas(
@@ -462,18 +464,19 @@ fun stateRandom(
 ): GlobalState {
     val random = Random(randomSeed)
     val assignor = PartitionsReplicasAssignor()
-    val brokerIds: List<BrokerId> = (1..brokers).toList()
+    val allBrokers: List<Broker> = (1..brokers).toList().asBrokers()
+    val brokerIds = allBrokers.ids()
 
     fun Random.nextLoad() = PartitionLoad(
-            size = nextLong(minLoad.size, maxLoad.size),
-            rate = nextDouble(minLoad.rate, maxLoad.rate),
-            consumers = nextInt(minLoad.consumers, maxLoad.consumers)
+        size = nextLong(minLoad.size, maxLoad.size),
+        rate = nextDouble(minLoad.rate, maxLoad.rate),
+        consumers = nextInt(minLoad.consumers, maxLoad.consumers)
     )
 
     fun Random.deviateLoad(load: PartitionLoad) = if (maxLoadDeviation > 1) PartitionLoad(
-            size = load.size.times(nextDouble(1 / maxLoadDeviation, maxLoadDeviation)).roundToLong(),
-            rate = load.rate.times(nextDouble(1 / maxLoadDeviation, maxLoadDeviation)),
-            consumers = load.consumers.times(nextDouble(1 / maxLoadDeviation, maxLoadDeviation)).roundToInt(),
+        size = load.size.times(nextDouble(1 / maxLoadDeviation, maxLoadDeviation)).roundToLong(),
+        rate = load.rate.times(nextDouble(1 / maxLoadDeviation, maxLoadDeviation)),
+        consumers = load.consumers.times(nextDouble(1 / maxLoadDeviation, maxLoadDeviation)).roundToInt(),
     ) else load
 
     fun Random.partitions(): Int = partitions[nextInt(partitions.size)]
@@ -482,15 +485,15 @@ fun stateRandom(
     fun Random.createAssignments(topic: Int): TopicAssignments {
         val numberOfNewPartitions = partitions()
         return TopicAssignments(
-                topic = "t_$topic",
-                partitionAssignments = assignor.assignNewPartitionReplicas(
-                        existingAssignments = emptyMap(),
-                        numberOfNewPartitions = numberOfNewPartitions,
-                        replicationFactor = replication(),
-                        allBrokers = brokerIds,
-                        existingPartitionLoads = (0 until numberOfNewPartitions).associateWith { com.infobip.kafkistry.service.generator.PartitionLoad(0) },
-                        clusterBrokersLoad = brokerPartitions
-                ).newAssignments
+            topic = "t_$topic",
+            partitionAssignments = assignor.assignNewPartitionReplicas(
+                existingAssignments = emptyMap(),
+                numberOfNewPartitions = numberOfNewPartitions,
+                replicationFactor = replication(),
+                allBrokers = allBrokers,
+                existingPartitionLoads = (0 until numberOfNewPartitions).associateWith { com.infobip.kafkistry.service.generator.PartitionLoad(0) },
+                clusterBrokersLoad = brokerPartitions
+            ).newAssignments
         ).also { assignments ->
             assignments.partitionAssignments.forEach { (_, brokers) ->
                 brokers.forEach { brokerPartitions.merge(it, BrokerLoad(1, 0), BrokerLoad::plus) }
@@ -502,11 +505,11 @@ fun stateRandom(
     val loads = assignments.map { topicAssignments ->
         val load = random.nextLoad()
         TopicLoad(
-                topic = topicAssignments.topic,
-                partitionLoads = topicAssignments.partitionAssignments.map { random.deviateLoad(load) }
+            topic = topicAssignments.topic,
+            partitionLoads = topicAssignments.partitionAssignments.map { random.deviateLoad(load) }
         )
     }
-    return GlobalState(brokerIds, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
+    return GlobalState(allBrokers, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
 }
 
 private operator fun BrokerLoad.plus(other: BrokerLoad) = BrokerLoad(numReplicas + other.numReplicas, diskBytes + other.diskBytes)

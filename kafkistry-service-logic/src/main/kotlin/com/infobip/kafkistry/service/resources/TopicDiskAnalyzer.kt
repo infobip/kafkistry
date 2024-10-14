@@ -8,12 +8,11 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.model.TopicProperties
-import com.infobip.kafkistry.service.topic.ExistingTopicInfo
-import com.infobip.kafkistry.service.topic.configForCluster
+import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.topic.propertiesForCluster
+import com.infobip.kafkistry.service.generator.ids
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
-import com.infobip.kafkistry.service.topic.TopicsInspectionService
+import com.infobip.kafkistry.service.topic.*
 import org.apache.kafka.common.config.TopicConfig
 import org.springframework.stereotype.Component
 
@@ -31,8 +30,9 @@ class TopicDiskAnalyzer(
         clusterRef: ClusterRef,
         preferUsingDescriptionProps: Boolean,
     ): TopicClusterDiskUsage {
-        val brokerIds: List<BrokerId> = clustersStateProvider.getLatestClusterStateValue(clusterRef.identifier)
-            .clusterInfo.brokerIds
+        val brokers: List<Broker> = clustersStateProvider.getLatestClusterStateValue(clusterRef.identifier)
+            .clusterInfo.assignableBrokers()
+        val brokerIds = brokers.ids()
         val topicClusterStatus = if (topicDescription != null) {
             topicsInspectionService.inspectTopicOnCluster(topicDescription, clusterRef)
         } else {
@@ -48,7 +48,7 @@ class TopicDiskAnalyzer(
             existingAssignments?.topicProperties() ?: topicDescription?.propertiesForCluster(clusterRef)
         }
         val brokerReplicaCounts = topicProperties
-            ?.let { brokerReplicasCount(it, brokerIds, existingAssignments) }
+            ?.let { brokerReplicasCount(it, brokers, existingAssignments) }
             ?.brokerReplicaCount()
         val existingTopicRetentionBytes = topicClusterStatus.existingTopicInfo?.config
             ?.get(TopicConfig.RETENTION_BYTES_CONFIG)?.value
@@ -139,15 +139,15 @@ class TopicDiskAnalyzer(
 
     private fun brokerReplicasCount(
         topicProperties: TopicProperties,
-        brokerIds: List<BrokerId>,
+        allBrokerIds: List<Broker>,
         existingAssignments: Map<Partition, List<BrokerId>>?,
     ): Map<Partition, List<BrokerId>> {
         if (existingAssignments == null) {
             //topic doesn't exist, generate all assignments
             return assignor.assignNewPartitionReplicas(
-                emptyMap(), brokerIds,
+                emptyMap(), allBrokerIds,
                 topicProperties.partitionCount, topicProperties.replicationFactor,
-                emptyMap()
+                emptyMap(),
             ).newAssignments
         }
         val existingTopicProperties = existingAssignments.topicProperties()
@@ -157,17 +157,17 @@ class TopicDiskAnalyzer(
                 .newAssignments
             topicProperties.replicationFactor > existingTopicProperties.replicationFactor -> assignor
                 .assignPartitionsNewReplicas(
-                    existingAssignments, brokerIds,
+                    existingAssignments, allBrokerIds,
                     replicationFactorIncrease = topicProperties.replicationFactor - existingTopicProperties.replicationFactor,
-                    emptyMap()
+                    emptyMap(),
                 ).newAssignments
             else -> existingAssignments
         }
         return if (topicProperties.partitionCount > existingTopicProperties.partitionCount) {
             assignor.assignNewPartitionReplicas(
-                correctRFAssignments, brokerIds,
+                correctRFAssignments, allBrokerIds,
                 numberOfNewPartitions = topicProperties.partitionCount - existingTopicProperties.partitionCount,
-                topicProperties.replicationFactor, emptyMap()
+                topicProperties.replicationFactor, emptyMap(),
             ).newAssignments
         } else {
             correctRFAssignments

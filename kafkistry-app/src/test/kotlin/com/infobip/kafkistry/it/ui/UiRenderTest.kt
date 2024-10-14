@@ -14,7 +14,6 @@ import com.infobip.kafkistry.service.consume.*
 import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.toKafkaCluster
-import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafka.KafkaTopicConfiguration
 import com.infobip.kafkistry.model.KafkaCluster
@@ -27,8 +26,10 @@ import com.infobip.kafkistry.repository.KafkaTopicsRepository
 import com.infobip.kafkistry.repository.OptionalEntity
 import com.infobip.kafkistry.repository.storage.Commit
 import com.infobip.kafkistry.repository.storage.CommitChange
+import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
+import com.infobip.kafkistry.service.topic.assignableBrokers
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.jsoup.nodes.Document
 import org.junit.Before
@@ -146,19 +147,19 @@ class UiRenderTest {
         }
     }
 
-    private fun KafkaCluster.getBrokerIds(): List<BrokerId> {
-        return kafkaClientsProvider.doWithClient(this) { it.clusterInfo(identifier).get().brokerIds }
+    private fun KafkaCluster.getBrokers(): List<Broker> {
+        return kafkaClientsProvider.doWithClient(this) { it.clusterInfo(identifier).get().assignableBrokers() }
     }
 
     private fun KafkaCluster.createTopic(topic: TopicDescription) {
-        val brokerIds = getBrokerIds()
+        val brokers = getBrokers()
         kafkaClientsProvider.doWithClient(this) {
             val topicProperties = topic.propertiesForCluster(ref())
             it.createTopic(KafkaTopicConfiguration(
                     name = topic.name,
                     partitionsReplicas = PartitionsReplicasAssignor().assignNewPartitionReplicas(
                             existingAssignments = emptyMap(),
-                            allBrokers = brokerIds,
+                            allBrokers = brokers,
                             numberOfNewPartitions = topicProperties.partitionCount,
                             replicationFactor = topicProperties.replicationFactor,
                             existingPartitionLoads = emptyMap()

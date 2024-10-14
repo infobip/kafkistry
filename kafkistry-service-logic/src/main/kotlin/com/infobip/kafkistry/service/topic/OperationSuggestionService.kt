@@ -9,10 +9,6 @@ import com.infobip.kafkistry.service.topic.BulkReAssignmentOptions.TopicBy.MIGRA
 import com.infobip.kafkistry.service.topic.BulkReAssignmentOptions.TopicBy.RE_ASSIGNED_PARTITIONS_COUNT
 import com.infobip.kafkistry.service.topic.ReBalanceMode.*
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.generator.AssignmentsChange
-import com.infobip.kafkistry.service.generator.OverridesMinimizer
-import com.infobip.kafkistry.service.generator.PartitionLoad
-import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.resources.RequiredResourcesInspector
 import com.infobip.kafkistry.service.topic.validation.TopicConfigurationValidator
@@ -20,6 +16,7 @@ import com.infobip.kafkistry.service.topic.validation.rules.ClusterMetadata
 import com.infobip.kafkistry.service.topic.wizard.TopicWizardConfigGenerator
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
+import com.infobip.kafkistry.service.generator.*
 import com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.SelectionLimitedCause
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_UNREACHABLE
@@ -164,7 +161,7 @@ class OperationSuggestionService(
                     existingAssignments, allClusterBrokers, partitionLoads
                 )
                 ROUND_ROBIN -> partitionsAssignor.reBalanceRoundRobin(
-                    existingAssignments, allClusterBrokers - excludedBrokerIds.toSet()
+                    existingAssignments, allClusterBrokers.filter { it.id !in excludedBrokerIds }
                 )
             }
         }
@@ -185,7 +182,7 @@ class OperationSuggestionService(
             partitionsAssignor.reAssignWithoutBrokers(
                 existingAssignments = existingAssignments,
                 allBrokers = allClusterBrokers,
-                excludedBrokers = excludedBrokers,
+                excludedBrokerIds = excludedBrokers,
                 existingPartitionLoads = partitionLoads,
             )
         }
@@ -203,26 +200,21 @@ class OperationSuggestionService(
             )
         val existingAssignments = existingTopicInfo.partitionsAssignments.toPartitionReplicasMap()
         val partitionLoads = existingAssignments.partitionLoads(topicOnCluster.currentTopicReplicaInfos)
-        val allClusterBrokerIds = clusterStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds
+        val allClusterBrokers = clusterStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo
+            .assignableBrokers()
         val assignmentsChange = newAssignmentGenerator(
-            ReAssignContext(
-                topicName, existingAssignments, partitionLoads, allClusterBrokerIds
-            )
+            ReAssignContext(topicName, existingAssignments, partitionLoads, allClusterBrokers)
         )
         return ReBalanceSuggestion(
             existingTopicInfo = existingTopicInfo,
             assignmentsChange = assignmentsChange,
             oldDisbalance = existingTopicInfo.assignmentsDisbalance,
             newDisbalance = partitionsAssignor.assignmentsDisbalance(
-                assignmentsChange.newAssignments,
-                allClusterBrokerIds,
-                partitionLoads
+                assignmentsChange.newAssignments, allClusterBrokers, partitionLoads
             ),
             dataMigration = with(inspectionService) {
                 assignmentsChange.calculateDataMigration(
-                    clusterIdentifier,
-                    topicName,
-                    topicOnCluster.currentTopicReplicaInfos
+                    clusterIdentifier, topicName, topicOnCluster.currentTopicReplicaInfos
                 )
             }
         )
@@ -344,7 +336,7 @@ class OperationSuggestionService(
         val topicName: TopicName,
         val existingAssignments: Map<Partition, List<BrokerId>>,
         val partitionLoads: Map<Partition, PartitionLoad>,
-        val allClusterBrokers: List<BrokerId>,
+        val allClusterBrokers: List<Broker>,
     )
 
 
@@ -572,11 +564,12 @@ class OperationSuggestionService(
         topics: List<KafkaExistingTopic>,
         throttledBrokerIds: List<BrokerId>,
     ): Map<TopicName, DataMigration> {
+        val throttledBrokersSet = throttledBrokerIds.toSet()
         val topicAssignments = topics.associate { it.name to it.partitionsAssignments.toPartitionReplicasMap() }
         val topicAssignmentsWithoutThrottledBrokers = topicAssignments
             .mapValues { (_, assignments) ->
                 assignments
-                    .mapValues { (_, replicas) -> replicas.minus(throttledBrokerIds) }
+                    .mapValues { (_, replicas) -> replicas.minus(throttledBrokersSet) }
                     .filterValues { it.isNotEmpty() }
             }
         val topicsReplicaInfos = replicaDirsService.clusterTopicReplicaInfos(clusterIdentifier)

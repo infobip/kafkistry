@@ -86,8 +86,11 @@ data class ClusterInfo(
     val quorumInfo: ClusterQuorumInfo,
 ) {
 
-    val brokerIds: List<BrokerId> = nodes.filter { ClusterNodeRole.BROKER in it.roles }.map { it.nodeId }
-    val controllerIds: List<NodeId> = nodes.filter { ClusterNodeRole.CONTROLLER in it.roles }.map { it.nodeId }
+    val brokerIds: List<BrokerId> = brokers().map { it.nodeId }
+    val controllerIds: List<NodeId> = controllers().map { it.nodeId }
+
+    fun brokers(): List<ClusterNode> = nodes.filter { ClusterNodeRole.BROKER in it.roles }
+    fun controllers(): List<ClusterNode> = nodes.filter { ClusterNodeRole.CONTROLLER in it.roles }
 }
 
 

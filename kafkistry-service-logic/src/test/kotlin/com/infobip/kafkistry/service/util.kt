@@ -11,6 +11,7 @@ import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.repository.storage.git.GitRepository
+import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.topic.*
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.WRONG_CONFIG
@@ -194,7 +195,7 @@ fun TopicDescription.newExistingKafkaTopic(
         partitionsAssignments = PartitionsReplicasAssignor()
                 .assignNewPartitionReplicas(
                         existingAssignments = emptyMap(),
-                        allBrokers = (1..numClusterBrokers).toList(),
+                        allBrokers = (1..numClusterBrokers).toList().asBrokers(),
                         numberOfNewPartitions = propertiesForCluster(clusterRef).partitionCount,
                         replicationFactor = propertiesForCluster(clusterRef).replicationFactor,
                         existingPartitionLoads = emptyMap(),
@@ -210,6 +211,8 @@ fun TopicDescription.newExistingKafkaTopic(
                     )
                 }
 )
+
+fun List<BrokerId>.asBrokers(): List<Broker> = map { Broker(id = it, rack = null) }
 
 private val defaultValues = mapOf(
         "compression.type" to "producer",

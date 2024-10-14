@@ -35,13 +35,20 @@ data class AssignmentsDisbalance (
     val leadersDeepDisbalance: List<Int>
 )
 
+data class Broker(
+    val id: BrokerId,
+    val rack: String? = null,
+)
+
+fun List<Broker>.ids() = map { it.id }
+
 data class BrokerLoad(
-        val numReplicas: Int,
-        val diskBytes: Long
+    val numReplicas: Int,
+    val diskBytes: Long,
 )
 
 data class PartitionLoad(
-        val diskSize: Long
+    val diskSize: Long,
 )
 
 fun Map<Partition, List<BrokerId>>.prettyString(allBrokers: List<BrokerId>): String {
