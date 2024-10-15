@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.service.generator
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafka.BrokerRack
 import com.infobip.kafkistry.kafka.Partition
 import java.lang.StringBuilder
 
@@ -27,17 +28,38 @@ data class PartitionValidation(
         val problems: List<String>
 )
 
-data class AssignmentsDisbalance (
+data class AssignmentsDisbalance(
     val replicasDisbalance: Int,
     val replicasDisbalancePercent: Double,
     val leadersDisbalance: Int,
     val leadersDisbalancePercent: Double,
-    val leadersDeepDisbalance: List<Int>
-)
+    val leadersDeepDisbalance: List<Int>,
+    val partitionsPerRackDisbalance: PartitionsPerRackDisbalance,
+) {
+    data class PartitionsPerRackDisbalance(
+        val totalDisbalance: Int,
+        val numPartitionDisbalance: Int,
+        val partitionDisbalance: Map<Partition, Int>,
+        val singleRackPartitions: List<Partition>,
+    ) {
+        companion object {
+
+            fun of(
+                partitionDisbalance: Map<Partition, Int>,
+                singleRackPartitions: List<Partition>,
+            ) = PartitionsPerRackDisbalance(
+                totalDisbalance = partitionDisbalance.values.sum(),
+                numPartitionDisbalance = partitionDisbalance.values.count { it > 0 },
+                partitionDisbalance = partitionDisbalance,
+                singleRackPartitions = singleRackPartitions,
+            )
+        }
+    }
+}
 
 data class Broker(
     val id: BrokerId,
-    val rack: String? = null,
+    val rack: BrokerRack? = null,
 )
 
 fun List<Broker>.ids() = map { it.id }

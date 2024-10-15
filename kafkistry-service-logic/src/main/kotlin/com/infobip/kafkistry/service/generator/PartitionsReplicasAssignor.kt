@@ -1,9 +1,11 @@
 package com.infobip.kafkistry.service.generator
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafka.BrokerRack
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.KafkistryValidationException
+import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor.Companion.DEBUG_LOG
 import org.springframework.stereotype.Component
 import java.lang.IllegalStateException
 import java.util.*
@@ -45,11 +47,12 @@ class PartitionsReplicasAssignor {
             repeat(replicationFactor) {
                 (initialNumPartitions until newPartitionCount).forEach { partition ->
                     selectBrokerToAssign(partition, assignmentBrokersLoadHint, replicationFactor).also { broker ->
-                            addBrokerForPartition(broker, partition)
-                        }
+                        addBrokerForPartition(broker, partition).also { changed() }
+                    }
                 }
             }
             reBalanceAssignments { it >= existingAssignments.size }
+            reBalanceReplicaRacks { it >= existingAssignments.size }
             reBalancePreferredLeaders { it >= existingAssignments.size }
             buildChanges()
         }
@@ -70,11 +73,12 @@ class PartitionsReplicasAssignor {
             repeat(replicationFactorIncrease) {
                 partitionsBrokers.keys.forEach { partition ->
                     selectBrokerToAssign(partition, clusterBrokersLoad, replicationFactor).also { broker ->
-                            addBrokerForPartition(broker, partition)
-                        }
+                        addBrokerForPartition(broker, partition).also { changed() }
+                    }
                 }
             }
             reBalanceAssignments(true)
+            reBalanceReplicaRacks(true)
             reBalancePreferredLeaders(1)
             buildChanges()
         }
@@ -96,12 +100,13 @@ class PartitionsReplicasAssignor {
                         selectBrokerToAssign(partition, clusterBrokersLoad, replicationFactor) { broker ->
                             broker !in excludedBrokerIds
                         }.also { broker ->
-                            addBrokerForPartition(broker, partition)
+                            addBrokerForPartition(broker, partition).also { changed() }
                         }
                     }
                 }
             }
             reBalanceAssignments(excludedBrokersIds = excludedBrokerIds)
+            reBalanceReplicaRacks()
             buildChanges()
         }.newAssignments
         val excludedBrokerIdsSet = excludedBrokerIds.toSet()
@@ -173,7 +178,7 @@ class PartitionsReplicasAssignor {
         allBrokers: List<Broker>,
     ): Int = existingAssignments.values.mapNotNull { it.firstOrNull() }.freqDisbalance(allBrokers.ids())
 
-    private fun List<BrokerId>.freqDisbalance(allBrokersIds: List<BrokerId>): Int {
+    private fun <T> List<T>.freqDisbalance(allBrokersIds: List<T>): Int {
         val brokerLoadCounts = this.groupingBy { it }.eachCount()
             .let { brokerLoads -> allBrokersIds.associateWith { (brokerLoads[it] ?: 0) } }.values
         val avgLoadFloor = brokerLoadCounts.sum() / allBrokersIds.size
@@ -200,6 +205,35 @@ class PartitionsReplicasAssignor {
         return listOf(disbalance) + subDisbalance
     }
 
+    fun partitionReplicaPerRackDisbalance(
+        existingAssignments: Map<Partition, List<BrokerId>>,
+        allBrokers: List<Broker>,
+    ): AssignmentsDisbalance.PartitionsPerRackDisbalance {
+        val allRacks = allBrokers.map { it.rack }.distinct()
+        val brokerRacks = allBrokers.associate { it.id to it.rack }
+        return partitionReplicaPerRackDisbalance(existingAssignments, allRacks, brokerRacks)
+    }
+
+    private fun partitionReplicaPerRackDisbalance(
+        existingAssignments: Map<Partition, List<BrokerId>>,
+        allRacks: List<BrokerRack?>,
+        brokerRacks: Map<BrokerId, BrokerRack?>,
+    ): AssignmentsDisbalance.PartitionsPerRackDisbalance {
+        val partitionRacks = existingAssignments.mapValues { (_, brokers) ->
+            brokers.map { brokerRacks[it] }
+        }
+        val singleRackPartitions = if (allRacks.distinct().size > 1) {
+            partitionRacks
+                .filterValues { it.size > 1 && it.distinct().size == 1 }
+                .keys.toList()
+        } else {
+            emptyList()
+        }
+        return AssignmentsDisbalance.PartitionsPerRackDisbalance.of(
+            partitionRacks.mapValues { it.value.freqDisbalance(allRacks) }, singleRackPartitions,
+        )
+    }
+
     fun assignmentsDisbalance(
         existingAssignments: Map<Partition, List<BrokerId>>,
         allBrokers: List<Broker>,
@@ -210,12 +244,14 @@ class PartitionsReplicasAssignor {
         val replicasDisbalance = replicasDisbalance(existingAssignments, allBrokers)
         val leadersDisbalance = leadersDisbalance(existingAssignments, allBrokers)
         val leadersDeepDisbalance = leadersDeepDisbalance(existingAssignments, allBrokers)
+        val partitionsPerRackDisbalance = partitionReplicaPerRackDisbalance(existingAssignments, allBrokers)
         return AssignmentsDisbalance(
             replicasDisbalance = replicasDisbalance,
             replicasDisbalancePercent = 100.0 * replicasDisbalance / totalNumReplicas,
             leadersDisbalance = leadersDisbalance,
             leadersDisbalancePercent = 100.0 * leadersDisbalance / numPartitions,
-            leadersDeepDisbalance = leadersDeepDisbalance
+            leadersDeepDisbalance = leadersDeepDisbalance,
+            partitionsPerRackDisbalance = partitionsPerRackDisbalance,
         )
     }
 
@@ -226,6 +262,7 @@ class PartitionsReplicasAssignor {
     ): AssignmentsChange {
         return with(initializeMappingsContext(existingAssignments, allBrokers, existingPartitionLoads)) {
             reBalanceAssignments()
+            reBalanceReplicaRacks()
             reBalancePreferredLeaders()
             buildChanges()
         }
@@ -239,6 +276,7 @@ class PartitionsReplicasAssignor {
         return with(initializeMappingsContext(existingAssignments, allBrokers, existingPartitionLoads)) {
             reBalancePreferredLeaders()
             reBalanceAssignments()
+            reBalanceReplicaRacks()
             buildChanges()
         }
     }
@@ -269,6 +307,7 @@ class PartitionsReplicasAssignor {
     ): AssignmentsChange {
         return with(initializeMappingsContext(existingAssignments, allBrokers, existingPartitionLoads)) {
             reBalanceAssignments()
+            reBalanceReplicaRacks()
             buildChanges()
         }
     }
@@ -303,6 +342,98 @@ class PartitionsReplicasAssignor {
         return computeChangeDiff(existingAssignments, newAssignments)
     }
 
+    private fun AssignmentContext.reBalanceReplicaRacks(
+        moveOnlyNewAssignments: Boolean = false,
+        partitionFilter: (Partition) -> Boolean = { true },
+    ) {
+        var iteration = 0
+        while (true) {
+            val partitionRackCounts = partitionsRacks
+                .filterKeys(partitionFilter)
+                .mapValues { (_, racks) -> racks.groupingBy { it }.eachCount() }
+            if (partitionRackCounts.isEmpty()) break
+            val maxRackCount = partitionRackCounts.maxOf { (_, rCounts) -> rCounts.values.max() }
+            val minRackCount = partitionRackCounts.minOf { (_, rCounts) -> rCounts.values.min() }
+            val givers = partitionRackCounts
+                .mapValues { (_, rCounts) -> rCounts.filterValues { it > minRackCount } }
+                .filterValues { it.isNotEmpty() }
+                .mapValues { (_, rCounts) -> rCounts.keys }
+            val takers = partitionRackCounts
+                .mapValues { (_, rCounts) -> rCounts.filterValues { it < maxRackCount } }
+                .filterValues { it.isNotEmpty() }
+                .mapValues { (_, rCounts) -> rCounts.keys }
+            if (givers.isEmpty() || takers.isEmpty()) {
+                break
+            }
+            if (DEBUG_LOG.decisions) {
+                println("givers: $givers")
+                println("takers: $takers")
+            }
+            var performedSwap = false
+            for ((giverPartition, giverRacks) in givers) {
+                val giverBrokerIds = partitionsBrokers.getValue(giverPartition)
+                    .filter { brokerRacks[it] in giverRacks }
+                    .filter { !moveOnlyNewAssignments || !brokerWasInitiallyAssignedOnPartition(it, giverPartition) }
+                if (giverBrokerIds.isEmpty()) {
+                    break
+                }
+                val takerPartitionBrokers = takers
+                    .filterKeys { it != giverPartition }
+                    .mapValues { (_, takerRacks) -> takerRacks - giverRacks }
+                    .mapValues { (takerPartition, takerRacks) ->
+                        partitionsBrokers.getValue(takerPartition)
+                            .filter { brokerRacks[it] in takerRacks }
+                            .filter { it !in giverBrokerIds }
+                            .filter { !moveOnlyNewAssignments || !brokerWasInitiallyAssignedOnPartition(it, takerPartition) }
+                    }
+                    .filterValues { it.isNotEmpty() }
+                if (takerPartitionBrokers.isEmpty()) {
+                    break
+                }
+
+                fun maybeSwap(
+                    giverBrokerId: BrokerId, giverPartition: Partition,
+                    takerBrokerId: BrokerId, takerPartition: Partition,
+                ): Boolean {
+                    val takerCurrentRacks = partitionsRacks.getValue(takerPartition)
+                    val takerNewRacks = partitionsBrokers.getValue(takerPartition)
+                        .filter { it != takerBrokerId}
+                        .plus(giverBrokerId)
+                        .map { brokerRacks[it] }
+                    val takerMaxUsedRackCount = takerCurrentRacks.groupingBy { it }.eachCount().maxOf { it.value }
+                    val takerNewMaxUsedRackCount = takerNewRacks.groupingBy { it }.eachCount().maxOf { it.value }
+                    if (takerNewMaxUsedRackCount > takerMaxUsedRackCount) {
+                        return false
+                    }
+                    if (DEBUG_LOG.decisions) {
+                        println("swapping giver=(p=$giverPartition,b=$giverBrokerId) with taker=(p=$takerPartition,b=$takerBrokerId)")
+                    }
+                    removeBrokerForPartition(giverBrokerId, giverPartition)
+                    removeBrokerForPartition(takerBrokerId, takerPartition)
+                    addBrokerForPartition(giverBrokerId, takerPartition)
+                    addBrokerForPartition(takerBrokerId, giverPartition)
+                    changed()
+                    return true
+                }
+
+                combinationsLoop@ for (giverBrokerId in giverBrokerIds) {
+                    for ((takerPartition, takerBrokerIds) in takerPartitionBrokers) {
+                        for (takerBrokerId in takerBrokerIds) {
+                            if (maybeSwap(giverBrokerId, giverPartition, takerBrokerId, takerPartition)) {
+                                performedSwap = true
+                                break@combinationsLoop
+                            }
+                        }
+                    }
+                }
+            }
+            iteration++
+            if (!performedSwap || iteration >= partitionsBrokers.size) {
+                break
+            }
+        }
+    }
+
     private fun AssignmentContext.reBalanceAssignments(
         moveOnlyNewAssignments: Boolean = false,
         excludedBrokersIds: List<BrokerId> = emptyList(),
@@ -311,7 +442,8 @@ class PartitionsReplicasAssignor {
         val partitionMoveCount = oldAssignments.keys.associateWith { 0 }.toMutableMap()
         var iteration = 0   //fail-safe for inf loop
         while (true) {
-            val brokerPartitionCounts = brokersPartitions.filterKeys { it !in excludedBrokersIds }
+            val brokerPartitionCounts = brokersPartitions
+                .filterKeys { it !in excludedBrokersIds }
                 .mapValues { (_, partitions) -> partitions.size }
             val overloadedBrokerAndCount = brokerPartitionCounts.maxByOrNull { it.value }!!
             val underloadedBrokerAndCount = brokerPartitionCounts.minByOrNull { it.value }!!
@@ -320,12 +452,9 @@ class PartitionsReplicasAssignor {
             }
             val srcBroker = overloadedBrokerAndCount.key
             val dstBroker = underloadedBrokerAndCount.key
-            val brokerPartitions = brokersPartitions[srcBroker]!!.sortedBy {
-                    partitionMoveCount[it] ?: 0
-                }  //prefer migration of replicas of partition which haven't been touched
-                .sortedBy {
-                    existingPartitionLoads[it]?.diskSize ?: 0L
-                }    //prefer migration of partitions smaller in size
+            val brokerPartitions = brokersPartitions.getValue(srcBroker)
+                .sortedBy { partitionMoveCount[it] ?: 0 }  //prefer migration of replicas of non-touched partitions
+                .sortedBy { existingPartitionLoads[it]?.diskSize ?: 0L } //prefer migration of size smaller partitions
             iteration++
             makeSwap(
                 srcBroker, dstBroker,
@@ -356,6 +485,7 @@ class PartitionsReplicasAssignor {
                 removeBrokerForPartition(src, partition)
                 addBrokerForPartition(dst, partition)
                 partitionMoveCount.merge(partition, 1, Int::plus)
+                changed()
                 break
             }
             if (moveOnlyNewAssignments && try3waySwap(src, dst, partition, partitionMoveCount, excludedBrokers)) {
@@ -392,6 +522,7 @@ class PartitionsReplicasAssignor {
                 addBrokerForPartition(dstBroker, pivotPartition)
                 partitionMoveCount.merge(partition, 1, Int::plus)
                 partitionMoveCount.merge(pivotPartition, 1, Int::plus)
+                changed()
                 return true
             }
         }
@@ -456,9 +587,11 @@ class PartitionsReplicasAssignor {
             )
             if (newLeader != null) {
                 setPreferredLeader(newLeader.first, newLeader.second, depthRank)
+                changed()
             } else {
                 val possibleUnderloadedSinks = underloadedBrokers.map { underloadedBrokerId ->
-                        (brokersPartitions[underloadedBrokerId] ?: emptyList()).filter(partitionFilter)
+                        (brokersPartitions[underloadedBrokerId] ?: emptyList())
+                            .filter(partitionFilter)
                             .filter { partitionsBrokers[it]!!.indexOf(underloadedBrokerId) >= depthRank }
                             .map { BrokerPartition(underloadedBrokerId, it) }
                     }.flatten()
@@ -475,6 +608,7 @@ class PartitionsReplicasAssignor {
                         solution.forEach {
                             setPreferredLeader(it.partition, it.broker, depthRank)
                         }
+                        changed()
                         break
                     }
                 }
@@ -496,7 +630,11 @@ class PartitionsReplicasAssignor {
     private fun AssignmentContext.findSwapRoute(
         ctx: FindRouteCtx,
         destinationSink: BrokerPartition,
+        maxDepth: Int = 20,
     ): List<BrokerPartition> {
+        if (maxDepth == 0) {
+            return emptyList()
+        }
         val sinkLeaderBroker = (partitionsBrokers[destinationSink.partition] ?: return emptyList())[ctx.depthRank]
         if (sinkLeaderBroker in ctx.overloadedBrokerIds) {
             return listOf(BrokerPartition(sinkLeaderBroker, destinationSink.partition))
@@ -508,7 +646,7 @@ class PartitionsReplicasAssignor {
             if (hopPartition in ctx.visitedPartitions) continue
             ctx.visitedPartitions.add(hopPartition)
             val nextSink = BrokerPartition(sinkLeaderBroker, hopPartition)
-            val cycle = findSwapRoute(ctx, nextSink)
+            val cycle = findSwapRoute(ctx, nextSink, maxDepth = maxDepth - 1)
             if (cycle.isNotEmpty()) {
                 return cycle.plus(nextSink)
             }
@@ -521,12 +659,16 @@ class PartitionsReplicasAssignor {
         underloadedBrokers: Collection<BrokerId>,
         depthRank: Int,
     ): Pair<Partition, BrokerId>? {
-        return underloadedBrokers.asSequence().mapNotNull { underloadedBrokerId ->
-                partitionsWithLeaderOnOverloadedBrokers.firstOrNull { partition ->
+        return underloadedBrokers.asSequence()
+            .mapNotNull { underloadedBrokerId ->
+                partitionsWithLeaderOnOverloadedBrokers
+                    .firstOrNull { partition ->
                         val brokersOfPartition = partitionsBrokers[partition]!!
                         underloadedBrokerId in brokersOfPartition.subList(depthRank, brokersOfPartition.size)
-                    }?.let { partition -> partition to underloadedBrokerId }
-            }.firstOrNull()
+                    }
+                    ?.let { partition -> partition to underloadedBrokerId }
+            }
+            .firstOrNull()
     }
 
     fun computeChangeDiff(
@@ -547,10 +689,12 @@ class PartitionsReplicasAssignor {
     }
 
     private fun Map<Partition, List<BrokerId>>.replicasDiff(assignments: Map<Partition, List<BrokerId>>): Map<Partition, List<BrokerId>> {
-        return assignments.mapNotNull { (partition, brokerIds) ->
+        return assignments
+            .mapNotNull { (partition, brokerIds) ->
                 val thisBrokerIds = this[partition] ?: return@mapNotNull partition to brokerIds
                 (partition to brokerIds.filter { it !in thisBrokerIds }).takeIf { it.second.isNotEmpty() }
-            }.associate { it }
+            }
+            .associate { it }
     }
 
     private fun Map<Partition, List<BrokerId>>.leadersDiff(assignments: Map<Partition, List<BrokerId>>): Map<Partition, BrokerId> {
@@ -563,8 +707,18 @@ class PartitionsReplicasAssignor {
         allBrokers: List<Broker>,
         existingPartitionLoads: Map<Partition, PartitionLoad>,
     ): AssignmentContext {
-        val partitionsBrokers: PartitionsBrokers =
-            existingAssignments.mapValues { it.value.toMutableList() }.toMutableMap()
+        val brokerRacks = allBrokers.associate { it.id to it.rack }
+        val partitionsBrokers: PartitionsBrokers = existingAssignments
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
+        val partitionRacks = existingAssignments
+            .mapValues { (_, brokerIds) -> brokerIds.map { brokerRacks[it] }.toMutableList() }
+            .toMutableMap()
+        val racksPartitions = existingAssignments
+            .flatMap { (partition, brokers) ->
+                brokers.map { brokerRacks[it] to partition }.toMutableSet()
+            }
+            .groupByTo(LinkedHashMap(), { it.first }, { it.second })
         val brokersPartitions: BrokersPartitions =
             allBrokers.map { it.id }.associateWith { mutableListOf<Partition>() }.toMutableMap().apply {
                     partitionsBrokers.forEach { (partition, brokers) ->
@@ -576,12 +730,15 @@ class PartitionsReplicasAssignor {
         val lastPartitionLastBroker = existingAssignments.maxByOrNull { it.key }?.value?.lastOrNull() ?: -1
         return AssignmentContext(
             allBrokers,
+            brokerRacks,
             existingAssignments,
             partitionsBrokers,
+            partitionRacks,
             brokersPartitions,
+            racksPartitions,
             lastPartitionLastBroker,
             existingPartitionLoads
-        )
+        ).also { it.changed() }
     }
 
     private fun AssignmentContext.selectBrokerToAssign(
@@ -590,31 +747,51 @@ class PartitionsReplicasAssignor {
         replicationFactor: Int,
         brokerFilter: (BrokerId) -> Boolean = { true },
     ): BrokerId {
+        val occupiedRacks = partitionsRacks[partition].orEmpty()
         //find broker that has least amount of replicas but does not have selecting partition
         val comparator = nothingComparing<BrokerPartitions>()
             //prefer brokers with smallest number partitions of same topic
-            .thenComparing { partitions: BrokerPartitions -> partitions.value.size }
+            .thenComparing("num-partitions") { partitions: BrokerPartitions -> partitions.value.size }
+            //prefer brokers on different rack than the ones where the partition is already assigned
+            .thenComparing("occupied-rack") { (brokerId, _) -> if (brokerRacks[brokerId] in occupiedRacks) 1 else 0 }
+            //prefer brokers that are on rack which is a rack of more brokers
+            .thenComparing("frequent-rack") { (brokerId, _) -> -rackBrokers[brokerRacks[brokerId]].orEmpty().size }
+            //prefer brokers on rack that has the least partitions
+            //.thenComparing("num-per-racks") { (brokerId, _) -> racksPartitions[brokerRacks[brokerId]]?.size ?: 0 }
             //prefer brokers with lower disk usage in general (from other topics)
-            .thenComparing { partitions: BrokerPartitions -> clusterBrokersLoad[partitions.key]?.diskBytes ?: 0L }
+            .thenComparing("disk-load") { partitions: BrokerPartitions -> clusterBrokersLoad[partitions.key]?.diskBytes ?: 0L }
             //prefer brokers with lower number of partition replicas in general (from other topics)
-            .thenComparing { partitions: BrokerPartitions -> clusterBrokersLoad[partitions.key]?.numReplicas ?: 0 }
-            //prefer brokers with greater id than previously selected
-            .thenComparing { (brokerId, _): BrokerPartitions ->
+            .thenComparing("num-replicas") { partitions: BrokerPartitions -> clusterBrokersLoad[partitions.key]?.numReplicas ?: 0 }
+            //lastly, prefer brokers with greater id than previously selected
+            .thenComparing("order-id") { (brokerId, _): BrokerPartitions ->
                 when {
                     brokerId > lastSelected -> -1
                     else -> 1
                 }
             }
-        return brokersPartitions.asSequence().filter { partition !in it.value }.filter { brokerFilter(it.key) }
-            .minWithOrNull(comparator)?.key ?: throw KafkistryValidationException(
-            "There are no available brokers to generate assignment, num brokers: %d, wanted replication factor: %d".format(
-                brokersPartitions.size, replicationFactor
-            )
+        return brokersPartitions.asSequence()
+            .filter { partition !in it.value }
+            .filter { brokerFilter(it.key) }
+            .minWithOrNull(comparator)?.key
+            ?: throw KafkistryValidationException(
+                "There are no available brokers to generate assignment, num brokers: %d, wanted replication factor: %d".format(
+                    brokersPartitions.size, replicationFactor
+                )
         )
     }
 
+    private fun <T : Comparable<T>> Comparator<BrokerPartitions>.thenComparing(what: String, extractor: (BrokerPartitions) -> T): Comparator<BrokerPartitions> {
+        return thenComparing { brokerPartitions ->
+            extractor(brokerPartitions).also {
+                if (DEBUG_LOG.decisions) {
+                    println("Comparing broker=${brokerPartitions.key} by $what -> $it")
+                }
+            }
+        }
+    }
+
+
     private fun AssignmentContext.buildChanges(): AssignmentsChange {
-        //prettyPrint()
         val newAssignments = partitionsBrokers.toImmutableAssignments()
         return computeChangeDiff(oldAssignments, newAssignments)
     }
@@ -668,29 +845,48 @@ class PartitionsReplicasAssignor {
         constructor(range: IntRange) : this(range.first, range.last)
     }
 
+    enum class LogInclude(val state: Boolean, val decisions: Boolean) {
+        NONE(false, false),
+        STATE(true, false),
+        STATE_DECISIONS(true, true),
+    }
+
+    companion object {
+        var DEBUG_LOG: LogInclude = LogInclude.NONE
+    }
+
 }
 
 private data class AssignmentContext(
     val allBrokers: List<Broker>,
+    val brokerRacks: Map<BrokerId, BrokerRack?>,
     val oldAssignments: Map<Partition, List<BrokerId>>,
     val partitionsBrokers: PartitionsBrokers,
+    val partitionsRacks: PartitionsRacks,
     val brokersPartitions: BrokersPartitions,
+    val racksPartitions: RacksPartitions,
     var lastSelected: BrokerId,
     val existingPartitionLoads: Map<Partition, PartitionLoad>,
 ) {
-    //init { prettyPrint() }
 
     val allBrokerIds: List<BrokerId> = allBrokers.ids()
+    val allRacks: List<BrokerRack?> = allBrokers.map { it.rack }.distinct()
+    val rackBrokers: Map<BrokerRack?, List<BrokerId>> = allBrokers.groupBy ({ it.rack }, { it.id })
 
     fun addBrokerForPartition(broker: BrokerId, partition: Partition) {
         lastSelected = broker
         partitionsBrokers.putPartitionReplica(partition, broker)
         brokersPartitions.putBrokersReplica(broker, partition)
+        val rack = brokerRacks[broker]
+        partitionsRacks.putPartitionRack(partition, rack)
+        racksPartitions.putRackPartition(rack, partition)
     }
 
     fun removeBrokerForPartition(broker: BrokerId, partition: Partition) {
         partitionsBrokers.removePartitionReplica(partition, broker)
         brokersPartitions.removeBrokersReplica(broker, partition)
+        partitionsRacks.reComputePartition(partition)
+        racksPartitions.reComputeRack(brokerRacks[broker])
     }
 
     fun brokerAssignedOnPartition(broker: BrokerId, partition: Partition): Boolean {
@@ -703,9 +899,10 @@ private data class AssignmentContext(
 
     fun setPreferredLeader(partition: Partition, leaderBrokerId: BrokerId, rank: Int) {
         val partitionReplicas = partitionsBrokers[partition]!!
-        //println("Setting preferred leader: partition=$partition broker=$leaderBrokerId rank=$rank")
+        if (DEBUG_LOG.decisions) {
+            println("Setting preferred leader: partition=$partition broker=$leaderBrokerId rank=$rank")
+        }
         partitionReplicas.subList(rank, partitionReplicas.size).preferredLeader(leaderBrokerId)
-        //prettyPrint()
     }
 
     fun brokersLeaders(depthRank: Int): Map<BrokerId, List<Partition>> {
@@ -728,6 +925,14 @@ private data class AssignmentContext(
         this.computeIfAbsent(partition) { mutableListOf() }.add(broker)
     }
 
+    private fun PartitionsRacks.putPartitionRack(partition: Partition, rack: BrokerRack?) {
+        this.computeIfAbsent(partition) { mutableListOf() }.add(rack)
+    }
+
+    private fun RacksPartitions.putRackPartition(rack: BrokerRack?, partition: Partition) {
+        this.computeIfAbsent(rack) { mutableListOf() }.add(partition)
+    }
+
     private fun BrokersPartitions.putBrokersReplica(broker: BrokerId, partition: Partition) {
         this.computeIfAbsent(broker) { mutableListOf() }.add(partition)
     }
@@ -740,12 +945,30 @@ private data class AssignmentContext(
         this[broker]?.remove(partition)
     }
 
+    private fun PartitionsRacks.reComputePartition(partition: Partition) {
+        this[partition] = partitionsBrokers[partition].orEmpty().map { brokerRacks[it] }.toMutableList()
+    }
+
+    private fun RacksPartitions.reComputeRack(rack: BrokerRack?) {
+        this[rack] = partitionsRacks.entries.asSequence()
+            .filter { rack in it.value }
+            .map { it.key }
+            .toMutableList()
+    }
+
+    fun changed() {
+        if (DEBUG_LOG.state) {
+            prettyPrint()
+        }
+    }
+
     fun prettyPrint() {
+        val hasRacks = brokerRacks.values.toSet() != setOf(null)
         val result = StringBuilder().apply {
-            append("    |")
-            allBrokers.forEach { append("%3d ".format(it)) }
-            append("\n")
-            append("----+").append("----".repeat(allBrokers.size)).append("\n")
+            append(" P\\B|")
+            allBrokers.ids().forEach { append("%3d ".format(it)) }
+            append("|\n")
+            append("----+").append("----".repeat(allBrokers.size)).append("+----").append("\n")
             val numPartitions = partitionsBrokers.size
             for (partition: Partition in (0 until numPartitions)) {
                 append("%3d ".format(partition)).append("|")
@@ -761,31 +984,38 @@ private data class AssignmentContext(
                         }
                     )
                 }
-                append(" ").append(partitionsBrokers[partition]).append("\n")
+                append("| ").append(partitionsBrokers[partition]?.map { it.toString().padStart(2)})
+                if (hasRacks) {
+                    append(" ").append(partitionsBrokers[partition].orEmpty().map { brokerRacks[it] })
+                }
+                append("\n")
             }
-            append("----+").append("----".repeat(allBrokers.size)).append("\n")
+            append("----+").append("----".repeat(allBrokers.size)).append("+----").append("\n")
             append("BrId|")
-            allBrokers.forEach { append("%3d ".format(it)) }
-            append("\n")
+            allBrokers.forEach { append("%3d ".format(it.id)) }
+            append("|\n")
             append(" #R |")
             allBrokers.forEach { broker ->
                 append("%3d ".format(brokersPartitions[broker.id].orEmpty().size))
             }
-            append("\n")
+            append("|\n")
             append(" #L |")
             allBrokers.forEach { broker ->
                 val numLeaders = partitionsBrokers.count { (_, brokers) -> broker.id == brokers[0] }
                 append("%3d ".format(numLeaders))
             }
-            append("\n")
+            append("|\n")
         }
         println(result)
     }
+
 }
 
 private fun PartitionsBrokers.toImmutableAssignments(): Map<Partition, List<BrokerId>> = mapValues { it.value.toList() }
 private fun <T> nothingComparing(): Comparator<T> = comparing { 0 }
 private typealias PartitionsBrokers = MutableMap<Partition, MutableList<BrokerId>>
+private typealias PartitionsRacks = MutableMap<Partition, MutableList<BrokerRack?>>
+private typealias RacksPartitions = MutableMap<BrokerRack?, MutableList<Partition>>
 private typealias BrokersPartitions = MutableMap<BrokerId, MutableList<Partition>>
 private typealias BrokerPartitions = Map.Entry<BrokerId, MutableList<Partition>>
 

@@ -58,6 +58,7 @@ typealias ExistingConfig = Map<String, ConfigValue>
 typealias Partition = Int
 typealias NodeId = Int
 typealias BrokerId = NodeId
+typealias BrokerRack = String
 
 data class ConfigValue(
     val value: String?,
@@ -99,7 +100,7 @@ data class ClusterNode(
     val host: String,
     val port: Int,
     val roles: List<ClusterNodeRole>,
-    val rack: String? = null,
+    val rack: BrokerRack? = null,
 )
 
 enum class ClusterNodeRole {
