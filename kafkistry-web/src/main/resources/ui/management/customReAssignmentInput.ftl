@@ -12,7 +12,7 @@
     <title>Kafkistry: Topic re-assignment</title>
     <meta name="customAssignBaseUrl"
           content="${appUrl.topicsManagement().showCustomReAssignment(topicName, clusterInfo.identifier, "")}">
-    <meta name="brokerIds" content="${clusterInfo.brokerIds?join(",")}">
+    <meta name="brokerIds" content="${clusterInfo.brokerIds?map(b -> "${b?c}")?join(",")}">
 </head>
 
 <body>
@@ -71,13 +71,13 @@
                 </td>
                 <td>
                     <code class="current-replicas" data-partition="${partition?c}"
-                          data-replicas="${replicas?join(",")}">
-                        ${replicas?join(", ")}
+                          data-replicas="${replicas?map(r -> "${r?c}")?join(",")}">
+                        ${replicas?map(r -> "${r?c}")?join(",")}
                     </code>
                 </td>
                 <td>
                     <label>
-                        <input class="form-control new-replicas-input" type="text" value="${replicas?join(", ")}"
+                        <input class="form-control new-replicas-input" type="text" value="${replicas?map(r -> "${r?c}")?join(",")}"
                                data-partition="${partition?c}">
                     </label>
                 </td>
