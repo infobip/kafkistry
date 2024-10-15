@@ -3,6 +3,17 @@
 <#macro clusterNodeId nodeId>
     <#assign online = clusterInfo.onlineNodeIds?seq_contains(nodeId)>
     <#assign controller = clusterInfo.controllerId == nodeId>
+    <#assign rackSet = false>
+    <#assign processRoles = []>
+    <#list clusterInfo.nodes as node>
+        <#if node.nodeId == nodeId>
+            <#assign processRoles = node.roles>
+            <#if node.rack??>
+                <#assign rackSet = true>
+                <#assign brokerRack = node.rack>
+            </#if>
+        </#if>
+    </#list>
     <#if clusterInfo.kraftEnabled>
         <#assign voter = false>
         <#assign observer = false>
@@ -13,16 +24,10 @@
             <#assign observer = observer || replica.replicaId == nodeId>
         </#list>
         <#assign quorumRole = voter?then("VOTER", observer?then("OBSERVER", "NONE"))>
-        <#assign processRoles = []>
-        <#list clusterInfo.nodes as node>
-            <#if node.nodeId == nodeId>
-                <#assign processRoles = node.roles>
-            </#if>
-        </#list>
         <#assign isBroker = processRoles?seq_contains("BROKER")>
         <#assign isController = processRoles?seq_contains("CONTROLLER")>
         <#assign availableStatus = online?then("ONLINE", "OFFLINE")>
-        <#assign tooltip = processRoles?join("/")?lower_case + " ${availableStatus}, quorum role: ${quorumRole}">
+        <#assign tooltip = processRoles?join("&")?lower_case + " ${availableStatus}, quorum role: ${quorumRole}">
         <#if !online>
             <#assign alertClass = "alert-danger">
         <#elseif isBroker && isController>
@@ -38,7 +43,13 @@
         <#assign alertClass = controller?then("alert-primary", online?then("alert-success", "alert-danger"))>
         <#assign tooltip = controller?then("node ${nodeId}: CONTROLLER", online?then("broker ${nodeId}: ONLINE", "node ${nodeId}: OFFLINE"))>
     </#if>
-    <span class="alert alert-sm alert-inline m-0 p-1 pl-2 pr-2 ${alertClass}" title="${tooltip}">${nodeId?c}</span>
+    <span class="alert alert-sm alert-inline m-0 p-1 pl-2 pr-2 text-center ${alertClass}" title="${tooltip}">
+        ${nodeId?c}
+        <#if rackSet>
+            <br/>
+            <span class="small" title="Broker rack"><code>${brokerRack}</code></span>
+        </#if>
+    </span>
 </#macro>
 
 <#list clusterInfo.nodeIds as nodeId>
