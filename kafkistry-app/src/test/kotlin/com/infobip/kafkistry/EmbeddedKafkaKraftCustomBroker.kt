@@ -1,5 +1,6 @@
 package com.infobip.kafkistry
 
+import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.utils.getFieldReflective
 import kafka.server.KafkaConfig
 import kafka.testkit.*
@@ -17,20 +18,28 @@ class EmbeddedKafkaKraftCustomBroker(
 	private val combinedBrokerControllers: Int = 0,
 	private val justBrokers: Int = 0,
 	private val justControllers: Int = 0,
-//	private val combined: Boolean = true,
-//  private val brokers: Int = 1,
-//  private val controllers: Int = brokers,
 ): EmbeddedKafkaBroker {
+
+	companion object {
+		const val START_BROKER_ID = 0
+		const val START_CONTROLLER_ID = 3000
+		const val START_COMBINED_ID = 10_0000
+	}
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     private val brokerProperties = Properties()
+	private var brokerOverridePropertiesSupplier: (BrokerId) -> Map<String, String> = { emptyMap() }
 
     private lateinit var cluster: KafkaClusterTestKit
 
     fun brokerProperty(property: String, value: String): EmbeddedKafkaKraftCustomBroker {
         this.brokerProperties[property] = value
 		return this
+	}
+
+	fun brokerPropertyOverride(supplier: (BrokerId) -> Map<String, String>) {
+		brokerOverridePropertiesSupplier = supplier
 	}
 
 	override fun destroy() {
@@ -52,12 +61,9 @@ class EmbeddedKafkaKraftCustomBroker(
     private fun start() {
 		try {
 			val nodes = TestKitNodes.Builder().apply {
-//				setCombined(combined)
-//				setNumBrokerNodes(brokers)
-//				setNumControllerNodes(controllers)
-				var nextBrokerId = 0
-				var nextControllerId = 3000
-				var nextCombinedId = 10_000
+				var nextBrokerId = START_BROKER_ID
+				var nextControllerId = START_CONTROLLER_ID
+				var nextCombinedId = START_COMBINED_ID
 				repeat(combinedBrokerControllers) {
 					val nodeId = nextCombinedId++
 					addNode(BrokerNode.Builder().setId(nodeId))
@@ -110,6 +116,8 @@ class EmbeddedKafkaKraftCustomBroker(
 		addNode(node.id(), node, "controllerNodeBuilders")
 	}
 	private fun TestKitNodes.Builder.addNode(node: BrokerNode.Builder) {
+		val overrides = brokerOverridePropertiesSupplier(node.id())
+		node.getFieldReflective<MutableMap<String, String>>("propertyOverrides").putAll(overrides)
 		addNode(node.id(), node, "brokerNodeBuilders")
 	}
 	private fun <NODE> TestKitNodes.Builder.addNode(nodeId: Int, node: NODE, mapFieldName: String ) {

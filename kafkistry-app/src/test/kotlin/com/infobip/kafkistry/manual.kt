@@ -1,5 +1,7 @@
 package com.infobip.kafkistry
 
+import com.infobip.kafkistry.EmbeddedKafkaKraftCustomBroker.Companion.START_BROKER_ID
+import com.infobip.kafkistry.EmbeddedKafkaKraftCustomBroker.Companion.START_COMBINED_ID
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
@@ -130,6 +132,17 @@ class DataStateInitializer(
             brokerProperty("log.segment.bytes", "12345678")
             brokerProperty("authorizer.class.name", org.apache.kafka.metadata.authorizer.StandardAuthorizer::class.java.name)
             brokerProperty("super.users", "User:ANONYMOUS")
+            val brokerRack = mapOf(
+                START_BROKER_ID to "rck-A",
+                START_BROKER_ID + 1 to "rck-A",
+                START_BROKER_ID + 2 to "rck-B",
+                START_BROKER_ID + 3 to "rck-B",
+                START_COMBINED_ID to "rck-C",
+                START_COMBINED_ID + 1 to "rck-C",
+            )
+            brokerPropertyOverride { brokerId ->
+                brokerRack[brokerId]?.let { mapOf("broker.rack" to it) }.orEmpty()
+            }
         }
     } else {
         EmbeddedKafkaZKBroker(6).apply {
