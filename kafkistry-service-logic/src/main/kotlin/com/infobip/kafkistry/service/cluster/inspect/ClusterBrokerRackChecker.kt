@@ -87,7 +87,7 @@ class ClusterBrokerRackChecker(
                     violation = RuleViolation(
                         ruleClassName = checkerClassName,
                         severity = RuleViolation.Severity.WARNING,
-                        message = "%NUM_NODES% %NODE_ROLE%(s) %BROKER_IDS% do not have %RACK_PROPERTY% defined",
+                        message = "%NUM_NODES% %NODE_ROLE%(s) %NODE_IDS% do not have %RACK_PROPERTY% defined",
                         placeholders = mapOf(
                             "NUM_NODES" to Placeholder("num.nodes", nodeIds.size),
                             "NODE_IDS" to Placeholder("node.ids", undefinedRackNodeIds),
