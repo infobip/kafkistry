@@ -99,18 +99,23 @@
 
             <#import "../clusters/clusterNodesList.ftl" as brokerBadge>
 
-            <div style="overflow-x: scroll;">
-                <table id="assignments" class="partitions-assignments table table-sm m-0">
-                    <thead>
-                    <tr class="bg-light">
-                        <th></th>
-                        <#if assignmentStatus.clusterHasRacks><th></th></#if>
-                        <th class="text-center" colspan="100">Brokers</th>
-                    </tr>
+            <div style="overflow-x: auto; max-height: 90vh;">
+                <table id="assignments" class="partitions-assignments table table-sm sticky-table-headers m-0">
+                    <thead class="sticky-header">
                     <tr class="thead-dark">
-                        <th class="text-center">Partition</th>
+                        <th class="sticky-header text-center">
+                            <div class="text-right">
+                                Brokers
+                            </div>
+                            <div style="height: 6px;" class="align-content-center">
+                                <div style="height: 1px; background-color: white; transform: rotate(10deg)"></div>
+                            </div>
+                            <div class="text-left">
+                                Partition
+                            </div>
+                        </th>
                         <#if assignmentStatus.clusterHasRacks><th></th></#if>
-                        <#list clusterInfo.brokerIds as brokerId>
+                        <#list (clusterInfo.brokerIds) as brokerId>
                             <th class="text-center" style="width: ${100/(1+clusterInfo.nodeIds?size)}%">
                                 <@brokerBadge.clusterNodeId nodeId=brokerId/>
                             </th>
@@ -118,9 +123,10 @@
                     </tr>
                     <#if topicReplicas??>
                         <tr class="thead-light">
-                            <th class="text-center">
-                                ALL<br/>
-                                ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
+                            <th class="sticky-header text-center">
+                                <span title="All size sum">
+                                    ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
+                                </span>
                             </th>
                             <#if assignmentStatus.clusterHasRacks>
                                 <th>Racks</th>
@@ -139,7 +145,7 @@
                         <tr>
                             <#assign rackUsageDisbalanced = assignmentsDisbalance?? && assignmentsDisbalance.partitionsPerRackDisbalance.partitionDisbalance?api.get(partition.partition) gt 0>
                             <#assign singleRackWarning = assignmentStatus.clusterHasRacks && partition.singleRackReplicas>
-                            <td class="font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning</#if>">
+                            <td class="sticky-header font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning</#if>">
                                 ${partition.partition}
                             </td>
                             <#if assignmentStatus.clusterHasRacks>

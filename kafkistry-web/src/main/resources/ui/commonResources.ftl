@@ -67,6 +67,7 @@
 <link rel="stylesheet" href="static/css/record.css?ver=${lastCommit}">
 <link rel="stylesheet" href="static/css/topicForm.css?ver=${lastCommit}">
 <link rel="stylesheet" href="static/css/collapsing.css?ver=${lastCommit}">
+<link rel="stylesheet" href="static/css/stickyTableHeaders.css?ver=${lastCommit}">
 
 <link rel="icon" href="static/img/${imageProps.dirPath}/${imageProps.icon}?ver=${lastCommit}"/>
 

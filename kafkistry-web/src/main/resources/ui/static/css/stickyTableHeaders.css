@@ -1,0 +1,22 @@
+
+.sticky-table-headers table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.sticky-table-headers tr.sticky-header, .sticky-table-headers thead.sticky-header {
+    top: 0;
+    z-index: 2;
+    position: sticky;
+}
+.sticky-table-headers tr > .sticky-header {
+    left: 0;
+    z-index: 1;
+    position: sticky;
+}
+
+.sticky-table-headers .sticky-header th {
+    border-width: 0 !important;
+}
+
+
