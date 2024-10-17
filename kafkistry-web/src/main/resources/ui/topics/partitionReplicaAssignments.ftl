@@ -145,7 +145,7 @@
                         <tr>
                             <#assign rackUsageDisbalanced = assignmentsDisbalance?? && assignmentsDisbalance.partitionsPerRackDisbalance.partitionDisbalance?api.get(partition.partition) gt 0>
                             <#assign singleRackWarning = assignmentStatus.clusterHasRacks && partition.singleRackReplicas>
-                            <td class="sticky-header font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning</#if>">
+                            <td class="sticky-header font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning<#else>bg-white</#if>">
                                 ${partition.partition}
                             </td>
                             <#if assignmentStatus.clusterHasRacks>
