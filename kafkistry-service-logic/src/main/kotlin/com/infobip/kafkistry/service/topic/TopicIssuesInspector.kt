@@ -27,6 +27,8 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.N
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_LEADERS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_DISBALANCE
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_ON_SINGLE_RACK
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_RACKS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.TO_CREATE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.TO_DELETE
@@ -378,6 +380,12 @@ class TopicIssuesInspector(
         }
         if (disbalance.leadersDisbalance > 0) {
             addResultType(PARTITION_LEADERS_DISBALANCE)
+        }
+        if (disbalance.partitionsPerRackDisbalance.singleRackPartitions.isNotEmpty()) {
+            addResultType(PARTITION_REPLICAS_ON_SINGLE_RACK)
+        }
+        if (disbalance.partitionsPerRackDisbalance.totalDisbalance > 0) {
+            addResultType(PARTITION_REPLICAS_RACKS_DISBALANCE)
         }
     }
 

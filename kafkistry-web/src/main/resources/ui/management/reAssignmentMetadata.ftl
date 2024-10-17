@@ -40,6 +40,13 @@
             all partitions)
         </td>
     </tr>
+    <tr>
+        <th>Racks disbalance</th>
+        <td>
+            Old sum: ${oldDisbalance.partitionsPerRackDisbalance.totalDisbalance},
+            New sum: ${newDisbalance.partitionsPerRackDisbalance.totalDisbalance}
+        </td>
+    </tr>
 </table>
 
 <#include "../topics/partitionReplicaAssignments.ftl">

@@ -10,8 +10,8 @@ import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.KafkistryIntegrityException
 import com.infobip.kafkistry.service.KafkistryValidationException
 import com.infobip.kafkistry.service.resources.UsageLevel
-import com.infobip.kafkistry.service.topic.TopicInspectionResultType
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CONFIG_RULE_VIOLATIONS
+import com.infobip.kafkistry.service.topic.assignableBrokers
 import com.infobip.kafkistry.service.topic.toAssignmentsInfo
 import com.infobip.kafkistry.webapp.TopicInspectExtensionProperties
 import com.infobip.kafkistry.webapp.WizardTopicNameProperties
@@ -206,7 +206,7 @@ class TopicsController(
                 ?.filter { it in listOf("partition-count", "replication-factor") }
                 ?: emptyList()
         val assignmentStatus = topicStatus.existingTopicInfo?.partitionsAssignments
-                ?.toAssignmentsInfo(null, clusterInfo?.brokerIds ?: emptyList())
+                ?.toAssignmentsInfo(null, clusterInfo?.assignableBrokers() ?: emptyList())
         val topicConsumerGroups = consumersApi.clusterTopicConsumers(clusterIdentifier, topicName)
         val topicOffsets = topicOffsetsApi.getTopicOffsets(topicName, clusterIdentifier)
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)

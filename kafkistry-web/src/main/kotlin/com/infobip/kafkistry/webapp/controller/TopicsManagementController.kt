@@ -292,7 +292,7 @@ class TopicsManagementController(
         )
         val clusterInfo = clustersApi.getClusterStateValue(clusterIdentifier).clusterInfo
         val assignmentStatus = changesSuggestion.existingTopicInfo.partitionsAssignments
-                .toAssignmentsInfo(changesSuggestion.partitionCountChange.change, clusterInfo.brokerIds)
+                .toAssignmentsInfo(changesSuggestion.partitionCountChange.change, clusterInfo.assignableBrokers())
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)
         return ModelAndView("management/partitionCountChange", mutableMapOf(
                 "topicName" to topicName,
@@ -313,7 +313,7 @@ class TopicsManagementController(
         )
         val clusterInfo = clustersApi.getClusterStateValue(clusterIdentifier).clusterInfo
         val assignmentStatus = changesSuggestion.existingTopicInfo.partitionsAssignments
-                .toAssignmentsInfo(changesSuggestion.replicationFactorChange.change, clusterInfo.brokerIds)
+                .toAssignmentsInfo(changesSuggestion.replicationFactorChange.change, clusterInfo.assignableBrokers())
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)
         return ModelAndView("management/replicationFactorChange", mutableMapOf(
                 "topicName" to topicName,
@@ -335,7 +335,7 @@ class TopicsManagementController(
         )
         val clusterInfo = clustersApi.getClusterStateValue(clusterIdentifier).clusterInfo
         val assignmentStatus = reBalanceSuggestion.existingTopicInfo.partitionsAssignments
-                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.brokerIds)
+                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.assignableBrokers())
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)
         return ModelAndView("management/reBalanceTopic", mutableMapOf(
                 "topicName" to topicName,
@@ -358,7 +358,7 @@ class TopicsManagementController(
         )
         val clusterInfo = clustersApi.getClusterStateValue(clusterIdentifier).clusterInfo
         val assignmentStatus = reBalanceSuggestion.existingTopicInfo.partitionsAssignments
-                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.nodeIds)
+                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.assignableBrokers())
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)
         return ModelAndView("management/reAssignTopicUnwantedLeader", mutableMapOf(
                 "topicName" to topicName,
@@ -381,7 +381,7 @@ class TopicsManagementController(
         )
         val clusterInfo = clustersApi.getClusterStateValue(clusterIdentifier).clusterInfo
         val assignmentStatus = reBalanceSuggestion.existingTopicInfo.partitionsAssignments
-                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.nodeIds)
+                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.assignableBrokers())
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)
         return ModelAndView("management/reAssignTopicExcludedBrokers", mutableMapOf(
                 "topicName" to topicName,
@@ -432,7 +432,7 @@ class TopicsManagementController(
         )
         val clusterInfo = clustersApi.getClusterStateValue(clusterIdentifier).clusterInfo
         val assignmentStatus = reBalanceSuggestion.existingTopicInfo.partitionsAssignments
-                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.nodeIds)
+                .toAssignmentsInfo(reBalanceSuggestion.assignmentsChange, clusterInfo.assignableBrokers())
         val topicReplicas = topicReplicasApi.getTopicReplicas(topicName, clusterIdentifier)
         return ModelAndView("management/reAssignTopicCustomAssignment", mutableMapOf(
                 "topicName" to topicName,

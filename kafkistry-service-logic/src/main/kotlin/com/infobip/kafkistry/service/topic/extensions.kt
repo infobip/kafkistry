@@ -53,7 +53,7 @@ fun Map<Partition, List<BrokerId>>.partitionLoads(topicReplicaInfos: TopicReplic
 
 fun List<PartitionAssignments>.toAssignmentsInfo(
     assignmentsChange: AssignmentsChange?,
-    allBrokers: List<BrokerId>
+    allBrokers: List<Broker>,
 ): PartitionsAssignmentsStatus {
     val existingAssignments = associate {
         it.partition to it.replicasAssignments.associateBy { replica -> replica.brokerId }
@@ -64,47 +64,69 @@ fun List<PartitionAssignments>.toAssignmentsInfo(
         existingAssignments.keys
     }.sorted()
     val partitions = allPartitions.map { partition ->
-        val brokerReplicasStatuses = allBrokers.sorted().map { brokerId ->
-            val currentStatus = existingAssignments[partition]?.get(brokerId)
+        val brokerReplicasStatuses = allBrokers.sortedBy { it.id }.map { broker ->
+            val currentStatus = existingAssignments[partition]?.get(broker.id)
             if (assignmentsChange != null) {
                 BrokerReplicaAssignmentStatus(
-                    brokerId = brokerId,
+                    brokerId = broker.id,
                     currentStatus = currentStatus,
-                    added = brokerId in assignmentsChange.addedPartitionReplicas[partition].orEmpty(),
-                    removed = brokerId in assignmentsChange.removedPartitionReplicas[partition].orEmpty(),
-                    newLeader = brokerId == assignmentsChange.newLeaders[partition],
-                    exLeader = brokerId == assignmentsChange.exLeaders[partition],
+                    added = broker.id in assignmentsChange.addedPartitionReplicas[partition].orEmpty(),
+                    removed = broker.id in assignmentsChange.removedPartitionReplicas[partition].orEmpty(),
+                    newLeader = broker.id == assignmentsChange.newLeaders[partition],
+                    exLeader = broker.id == assignmentsChange.exLeaders[partition],
                     rank = assignmentsChange.newAssignments[partition]
-                        ?.indexOf(brokerId)
+                        ?.indexOf(broker.id)
                         ?.takeIf { it >= 0 }
                         ?: currentStatus?.rank
-                        ?: -1
+                        ?: -1,
+                    rack = broker.rack
                 )
             } else {
                 BrokerReplicaAssignmentStatus(
-                    brokerId = brokerId,
+                    brokerId = broker.id,
                     currentStatus = currentStatus,
                     added = false, removed = false, newLeader = false, exLeader = false,
-                    rank = currentStatus?.rank ?: -1
+                    rank = currentStatus?.rank ?: -1,
+                    rack = broker.rack,
                 )
             }
         }
-        val numAddedAssignments = brokerReplicasStatuses.filter { it.added }.size
-        val numRemovedAssignments = brokerReplicasStatuses.filter { it.removed }.size
-        val numExLeaders = brokerReplicasStatuses.filter { it.exLeader }.size
+        val numAddedAssignments = brokerReplicasStatuses.count { it.added }
+        val numRemovedAssignments = brokerReplicasStatuses.count { it.removed }
+        val numExLeaders = brokerReplicasStatuses.count { it.exLeader }
+        val rackCounts = brokerReplicasStatuses.asSequence()
+            .filter { it.rank > -1 }    //take only involved
+            .groupBy { it.rack }
+            .mapValues { (rack, r) ->
+                val added = r.count { it.added }
+                val removed = r.count { it.removed }
+                PartitionBrokerRackCount(
+                    rack = rack,
+                    oldCount = r.size - added,
+                    newCount = r.size - removed,
+                )
+            }
+            .values.toList()
+        val userRacks = brokerReplicasStatuses.asSequence()
+            .filter { it.rank > -1 && !it.removed }    //take only current/after state
+            .map { it.rack }
+            .toSet()
         PartitionAssignmentsStatus(
             partition = partition,
             brokerReplicas = brokerReplicasStatuses,
             newReplicasCount = numAddedAssignments - numRemovedAssignments,
             movedReplicasCount = numRemovedAssignments,
-            reElectedLeadersCount = numExLeaders
+            reElectedLeadersCount = numExLeaders,
+            rackCounts = rackCounts,
+            singleRackReplicas = userRacks.size == 1,
         )
     }
     return PartitionsAssignmentsStatus(
         partitions = partitions,
         newReplicasCount = partitions.sumOf { it.newReplicasCount },
         movedReplicasCount = partitions.sumOf { it.movedReplicasCount },
-        reElectedLeadersCount = partitions.sumOf { it.reElectedLeadersCount }
+        reElectedLeadersCount = partitions.sumOf { it.reElectedLeadersCount },
+        clusterHasRacks = allBrokers.distinctBy { it.rack }.size > 1,
     )
 }
 

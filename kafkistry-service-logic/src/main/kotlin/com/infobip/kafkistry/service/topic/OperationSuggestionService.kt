@@ -313,7 +313,7 @@ class OperationSuggestionService(
         val topicsReBalanceStatuses = topicsReBalanceSuggestions.mapValues {
             it.value.existingTopicInfo.partitionsAssignments.toAssignmentsInfo(
                 it.value.assignmentsChange,
-                clusterInfo.brokerIds
+                clusterInfo.assignableBrokers(),
             )
         }
         val totalDataMigration = topicsReBalanceSuggestions.values

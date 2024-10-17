@@ -41,26 +41,55 @@
         <#if clusterInfo??>
             <#if assignmentsDisbalance??>
                 <div class="p-2">
-                    <#if assignmentsDisbalance.replicasDisbalance == 0 && assignmentsDisbalance.leadersDisbalance == 0>
+                    <#if assignmentsDisbalance.replicasDisbalance == 0 && assignmentsDisbalance.leadersDisbalance == 0
+                        && assignmentsDisbalance.partitionsPerRackDisbalance.totalDisbalance == 0>
                         <div class="alert alert-success">Partition and leader assignments over brokers is optimal</div>
                     <#else>
-                        <#if assignmentsDisbalance.replicasDisbalance gt 0>
-                            <div class="alert alert-warning">Partition assignments disbalance
-                                is ${assignmentsDisbalance.replicasDisbalance} (# of needed replica migrations)
-                                | ${assignmentsDisbalance.replicasDisbalancePercent?string["0.##"]}% of all replicas
+                        <div class="row m-0">
+                            <div class="col p-1">
+                                <#if assignmentsDisbalance.replicasDisbalance gt 0>
+                                    <div class="alert alert-warning">Partition assignments disbalance
+                                        is ${assignmentsDisbalance.replicasDisbalance} (# of needed replica migrations)
+                                        | ${assignmentsDisbalance.replicasDisbalancePercent?string["0.##"]}% of all replicas
+                                    </div>
+                                <#else>
+                                    <div class="alert alert-success">Partition replicas placement over brokers is optimal</div>
+                                </#if>
                             </div>
-                        <#else>
-                            <div class="alert alert-success">Partition replicas placement over brokers is optimal</div>
-                        </#if>
-                        <#if assignmentsDisbalance.leadersDisbalance gt 0>
-                            <div class="alert alert-warning">Partition leaders disbalance
-                                is ${assignmentsDisbalance.leadersDisbalance} (# of needed re-orders with elections)
-                                | ${assignmentsDisbalance.leadersDisbalancePercent?string["0.##"]}% of all partitions
+                            <div class="col p-1">
+                                <#if assignmentsDisbalance.leadersDisbalance gt 0>
+                                    <div class="alert alert-warning">Partition leaders disbalance
+                                        is ${assignmentsDisbalance.leadersDisbalance} (# of needed re-orders with elections)
+                                        | ${assignmentsDisbalance.leadersDisbalancePercent?string["0.##"]}% of all partitions
+                                    </div>
+                                <#else>
+                                    <div class="alert alert-success">
+                                        Partition leaders distribution over brokers is optimal
+                                    </div>
+                                </#if>
                             </div>
-                        <#else>
-                            <div class="alert alert-success">Partition leaders distribution over brokers is optimal
+                            <div class="col p-1">
+                                <#if assignmentsDisbalance.partitionsPerRackDisbalance.totalDisbalance gt 0>
+                                    <div class="alert alert-warning">
+                                        <#assign singleRckPart = assignmentsDisbalance.partitionsPerRackDisbalance.singleRackPartitions>
+                                        <#if singleRckPart?size gt 0>
+                                            Partitions [<#list singleRckPart as p><code>${p}</code><#if p?has_next>, </#if></#list>]
+                                            have replicas on brokers of the same rack.
+                                        </#if>
+                                        <#assign disbalancedRckPart = []>
+                                        <#list assignmentsDisbalance.partitionsPerRackDisbalance.partitionDisbalance as p, d>
+                                            <#if d gt 0 && !singleRckPart?seq_contains(p)>
+                                                <#assign disbalancedRckPart += [p]>
+                                            </#if>
+                                        </#list>
+                                        <#if disbalancedRckPart?size gt 0>
+                                            Partitions [<#list disbalancedRckPart as p><code>${p}</code><#if p?has_next>, </#if></#list>]
+                                            have un-even distribution across brokers on different racks.
+                                        </#if>
+                                    </div>
+                                </#if>
                             </div>
-                        </#if>
+                        </div>
                         <a href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterInfo.identifier, "REPLICAS_THEN_LEADERS")}">
                             <button class="btn btn-info btn-sm mb-1">Suggest re-balance...</button>
                         </a>
@@ -75,33 +104,93 @@
                     <thead>
                     <tr class="bg-light">
                         <th></th>
+                        <#if assignmentStatus.clusterHasRacks><th></th></#if>
                         <th class="text-center" colspan="100">Brokers</th>
                     </tr>
                     <tr class="thead-dark">
                         <th class="text-center">Partition</th>
+                        <#if assignmentStatus.clusterHasRacks><th></th></#if>
                         <#list clusterInfo.brokerIds as brokerId>
                             <th class="text-center" style="width: ${100/(1+clusterInfo.nodeIds?size)}%">
                                 <@brokerBadge.clusterNodeId nodeId=brokerId/>
                             </th>
                         </#list>
                     </tr>
-                    <tr class="thead-light">
-                        <th class="text-center">
-                            ALL<br/>
-                            ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
-                        </th>
-                        <#list clusterInfo.brokerIds as brokerId>
+                    <#if topicReplicas??>
+                        <tr class="thead-light">
                             <th class="text-center">
-                                <#assign brokerTotalBytes = (topicReplicas.brokerTotalSizes?api.get(brokerId))!0>
-                                ${_util.prettyDataSize(brokerTotalBytes)}
+                                ALL<br/>
+                                ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
                             </th>
-                        </#list>
-                    </tr>
+                            <#if assignmentStatus.clusterHasRacks>
+                                <th>Racks</th>
+                            </#if>
+                            <#list clusterInfo.brokerIds as brokerId>
+                                <th class="text-center <#if tinyMode>small font-weight-bold</#if>">
+                                    <#assign brokerTotalBytes = (topicReplicas.brokerTotalSizes?api.get(brokerId))!0>
+                                    ${_util.prettyDataSize(brokerTotalBytes)}
+                                </th>
+                            </#list>
+                        </tr>
+                    </#if>
                     </thead>
                     <#list assignmentStatus.partitions as partition>
                         <tbody class="<#if tinyMode>small</#if>">
                         <tr>
-                            <td class="font-weight-bold text-center align-middle">${partition.partition}</td>
+                            <#assign rackUsageDisbalanced = assignmentsDisbalance?? && assignmentsDisbalance.partitionsPerRackDisbalance.partitionDisbalance?api.get(partition.partition) gt 0>
+                            <#assign singleRackWarning = assignmentStatus.clusterHasRacks && partition.singleRackReplicas>
+                            <td class="font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning</#if>">
+                                ${partition.partition}
+                            </td>
+                            <#if assignmentStatus.clusterHasRacks>
+                                <td class="small <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning</#if>">
+                                    <#if singleRackWarning>
+                                        <span class="badge badge-warning" title="This partition is hosted by brokers of same rack">Single rack</span>
+                                    </#if>
+                                    <#list partition.rackCounts as rackStatus>
+                                        <#assign rackTitle = (rackStatus.oldCount == rackStatus.newCount)?then(
+                                            "Rack=${rackStatus.rack}, #replicas=${rackStatus.newCount}",
+                                            "Rack=${rackStatus.rack}, #replicas-before=${rackStatus.oldCount}, #replicas-after=${rackStatus.newCount}"
+                                        )>
+                                        <div class="text-nowrap <#if rackStatus.newCount == 0>crossed</#if>"
+                                             title="${rackTitle}<#if rackStatus.newCount == 0>, to remove</#if>">
+                                            <#if rackStatus.oldCount == rackStatus.newCount>
+                                                <span class="badge badge-secondary">${rackStatus.newCount}</span>
+                                            <#else>
+                                                <#if rackStatus.newCount gt rackStatus.oldCount>
+                                                    <#if rackStatus.oldCount == 0>
+                                                        <span class="badge badge-success">+${rackStatus.newCount}</span>
+                                                    <#else>
+                                                        <span class="btn-group">
+                                                            <span class="badge badge-secondary" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                                                ${rackStatus.oldCount}
+                                                            </span>
+                                                            <span class="badge badge-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                                +${rackStatus.newCount-rackStatus.oldCount}
+                                                            </span>
+                                                        </span>
+                                                    </#if>
+                                                </#if>
+                                                <#if rackStatus.oldCount gt rackStatus.newCount>
+                                                    <#if rackStatus.newCount == 0>
+                                                        <span class="badge badge-danger">-${rackStatus.oldCount}</span>
+                                                    <#else>
+                                                        <span class="btn-group">
+                                                            <span class="badge badge-secondary" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                                                ${rackStatus.oldCount}
+                                                            </span>
+                                                            <span class="badge badge-danger" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                                -${rackStatus.oldCount-rackStatus.newCount}
+                                                            </span>
+                                                        </span>
+                                                    </#if>
+                                                </#if>
+                                            </#if>
+                                            <code>${rackStatus.rack}</code>
+                                        </div>
+                                    </#list>
+                                </td>
+                            </#if>
 
                             <#assign hasReAssignment = (partitionReAssignments?api.get(partition.partition))??>
                             <#if hasReAssignment>
@@ -201,6 +290,14 @@
                                                             </li>
                                                         </#if>
                                                     </#if>
+                                                    <li>
+                                                        Broker rack:
+                                                        <#if brokerReplica.rack??>
+                                                            <code>${brokerReplica.rack}</code>
+                                                        <#else>
+                                                            <i>(NULL)</i>
+                                                        </#if>
+                                                    </li>
                                                 </ul>
                                             </#assign>
                                             <span class="p-1">

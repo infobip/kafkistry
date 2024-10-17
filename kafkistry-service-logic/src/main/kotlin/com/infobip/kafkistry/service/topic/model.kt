@@ -463,6 +463,22 @@ data class TopicInspectionResultType(
         )
 
         /**
+         * Actual topic partitions have replicas on brokers within single rack
+         */
+        val PARTITION_REPLICAS_ON_SINGLE_RACK = TopicInspectionResultType(
+            "PARTITION_REPLICAS_ON_SINGLE_RACK", WARNING, RUNTIME_ISSUE,
+            "Actual topic partitions have replicas on brokers within single rack",
+        )
+
+        /**
+         * Actual topic partitions have replicas unevenly distributed across different racks
+         */
+        val PARTITION_REPLICAS_RACKS_DISBALANCE = TopicInspectionResultType(
+            "PARTITION_REPLICAS_RACKS_DISBALANCE", IGNORE, RUNTIME_ISSUE,
+            "Actual topic partitions have replicas unevenly distributed across different racks",
+        )
+
+        /**
          * It means that it is that there has been re-assignment that is completed and not yet
          * verified manually by executing verify action
          */
@@ -528,7 +544,8 @@ data class PartitionsAssignmentsStatus(
     val partitions: List<PartitionAssignmentsStatus>,
     val newReplicasCount: Int,
     val movedReplicasCount: Int,
-    val reElectedLeadersCount: Int
+    val reElectedLeadersCount: Int,
+    val clusterHasRacks: Boolean,
 )
 
 data class PartitionAssignmentsStatus(
@@ -536,11 +553,20 @@ data class PartitionAssignmentsStatus(
     val brokerReplicas: List<BrokerReplicaAssignmentStatus>,
     val newReplicasCount: Int,
     val movedReplicasCount: Int,
-    val reElectedLeadersCount: Int
+    val reElectedLeadersCount: Int,
+    val rackCounts: List<PartitionBrokerRackCount>,
+    val singleRackReplicas: Boolean,
+)
+
+data class PartitionBrokerRackCount(
+    val rack: BrokerRack?,
+    val oldCount: Int,
+    val newCount: Int,
 )
 
 data class BrokerReplicaAssignmentStatus(
     val brokerId: BrokerId,
+    val rack: BrokerRack?,
     val currentStatus: ReplicaAssignment?,
     val added: Boolean,
     val removed: Boolean,
