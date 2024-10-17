@@ -2,6 +2,8 @@
 
 package com.infobip.kafkistry.sql.sources
 
+import com.infobip.kafkistry.kafka.BrokerRack
+import com.infobip.kafkistry.kafka.ClusterNodeRole
 import com.infobip.kafkistry.kafka.NodeId
 import com.infobip.kafkistry.kafka.QuorumReplicaState
 import com.infobip.kafkistry.kafkastate.*
@@ -59,6 +61,15 @@ class ClustersDataSource(
             state = clusterState?.stateType ?: StateType.UNKNOWN
             usingSsl = kafkaCluster.sslEnabled
             usingSasl = kafkaCluster.saslEnabled
+            nodes = clusterState?.valueOrNull()?.clusterInfo?.nodes?.map {
+                ClusterNode().apply {
+                    nodeId = it.nodeId
+                    host = it.host
+                    port = it.port
+                    roles = it.roles.joinToString(",")
+                    rack = it.rack
+                }
+            }.orEmpty()
             tags = kafkaCluster.tags
             profiles = kafkaCluster.profiles.joinToString(",")
             metadata = clusterState?.valueOrNull()?.clusterInfo?.let {
@@ -149,6 +160,10 @@ class Cluster {
     var profiles: String? = null
 
     @ElementCollection
+    @JoinTable(name = "Clusters_Nodes")
+    lateinit var nodes: List<ClusterNode>
+
+    @ElementCollection
     @JoinTable(name = "Clusters_Tags")
     @Column(name = "tag")
     lateinit var tags: List<Tag>
@@ -166,6 +181,15 @@ class Cluster {
     lateinit var features: ClusterFeaturesMetadata
     lateinit var quorumInfo: ClusterQuorumMetadata
 
+}
+
+@Embeddable
+class ClusterNode {
+    var nodeId: NodeId? = null
+    lateinit var host: String
+    var port: Int? = null
+    lateinit var roles: String //CSV of List<ClusterNodeRole>
+    var rack: BrokerRack? = null
 }
 
 @Embeddable
