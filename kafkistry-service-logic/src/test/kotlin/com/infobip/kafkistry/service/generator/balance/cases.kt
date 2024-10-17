@@ -184,7 +184,14 @@ fun state3(): GlobalState {
 fun state4(): GlobalState {
     val json = """
         {
-          "brokerIds" : [ 0, 1, 2, 3, 4, 5 ],
+          "brokers" : [ 
+            {"id": 0},
+            {"id": 1},
+            {"id": 2},
+            {"id": 3},
+            {"id": 4},
+            {"id": 5}
+          ],
           "loads" : {
             "__consumer_offsets" : {
               "topic" : "__consumer_offsets",
