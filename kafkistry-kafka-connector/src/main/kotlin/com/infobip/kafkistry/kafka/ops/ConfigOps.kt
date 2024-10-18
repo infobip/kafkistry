@@ -42,32 +42,59 @@ class ConfigOps(
         configResource: ConfigResource,
         alterConfigs: () -> Config,
         alterConfigOps: () -> Collection<AlterConfigOp>,
+    ): CompletableFuture<Unit> = updateConfigs(
+        mapOf(configResource to AlterConfigsSupplier(alterConfigs, alterConfigOps))
+    )
+
+    private data class AlterConfigsSupplier(
+        val alterConfigs: () -> Config,
+        val alterConfigOps: () -> Collection<AlterConfigOp>,
+    )
+
+    @SuppressWarnings("kotlin:S1874")   //sonar: deprecation usage
+    private fun updateConfigs(
+        resourceUpdates: Map<ConfigResource, AlterConfigsSupplier>
     ): CompletableFuture<Unit> {
         val alterConfigsResult = if (clusterVersion < VERSION_2_3) {
-            if (configResource.type() == ConfigResource.Type.BROKER) {
-                runOperation("alter broker config") {
-                    val adminZkClient = newZKAdminClient()
-                    val brokerConfigs = adminZkClient.fetchEntityConfig("brokers", configResource.name())
-                    alterConfigOps().forEach { alterOp ->
-                        when (alterOp.opType()) {
-                            AlterConfigOp.OpType.SET -> brokerConfigs[alterOp.configEntry().name()] = alterOp.configEntry().value()
-                            AlterConfigOp.OpType.DELETE -> brokerConfigs.remove(alterOp.configEntry().name())
-                            else -> throw UnsupportedOperationException("Unsupported operation type ${alterOp.opType()}")
-                        }
-                    }
-                    adminZkClient.changeConfigs("brokers", configResource.name(), brokerConfigs, true)
-                }
-                return CompletableFuture.completedFuture(Unit)
-            } else {
+            val brokerUpdates = resourceUpdates.filterKeys {
+                it.type() == ConfigResource.Type.BROKER
+            }
+            val nonBrokerUpdates = resourceUpdates.filterKeys {
+                it.type() != ConfigResource.Type.BROKER
+            }
+            val nonBrokersResult = nonBrokerUpdates.takeIf { it.isNotEmpty() }?.let { updates ->
                 //suppressing since it's deprecated for version 2.3.0 but, it's the only way for older broker versions
                 @Suppress("DEPRECATION")
                 adminClient.alterConfigs(
-                    mapOf(configResource to alterConfigs()), AlterConfigsOptions().withWriteTimeout()
+                    updates.mapValues { it.value.alterConfigs() }, AlterConfigsOptions().withWriteTimeout()
                 )
+            }
+            if (nonBrokersResult != null && brokerUpdates.isEmpty()) {
+                nonBrokersResult
+            } else {
+                //have broker update, need to have blocking implementation
+                runOperation("alter broker config") {
+                    val adminZkClient = newZKAdminClient()
+                    brokerUpdates.forEach { (configResource, configSupplier) ->
+                        val brokerConfigs = adminZkClient.fetchEntityConfig("brokers", configResource.name())
+                        configSupplier.alterConfigOps().forEach { alterOp ->
+                            when (alterOp.opType()) {
+                                AlterConfigOp.OpType.SET -> brokerConfigs[alterOp.configEntry().name()] = alterOp.configEntry().value()
+                                AlterConfigOp.OpType.DELETE -> brokerConfigs.remove(alterOp.configEntry().name())
+                                else -> throw UnsupportedOperationException("Unsupported operation type ${alterOp.opType()}")
+                            }
+                        }
+                        adminZkClient.changeConfigs("brokers", configResource.name(), brokerConfigs, true)
+                    }
+                }
+                return nonBrokersResult?.all()
+                    ?.asCompletableFuture("alter configs")
+                    ?.thenApply { }
+                    ?: CompletableFuture.completedFuture(Unit)
             }
         } else {
             adminClient.incrementalAlterConfigs(
-                mapOf(configResource to alterConfigOps()), AlterConfigsOptions().withWriteTimeout()
+                resourceUpdates.mapValues { it.value.alterConfigOps() }, AlterConfigsOptions().withWriteTimeout()
             )
         }
         return alterConfigsResult
@@ -77,10 +104,17 @@ class ConfigOps(
     }
 
     fun updateTopicConfig(topicName: TopicName, updatingConfig: TopicConfigMap): CompletableFuture<Unit> {
-        return updateConfig(
-            configResource = ConfigResource(ConfigResource.Type.TOPIC, topicName),
-            alterConfigs = { updatingConfig.toKafkaConfig() },
-            alterConfigOps = { updatingConfig.toToTopicAlterOps() },
+        return updateTopicsConfigs(mapOf(topicName to updatingConfig))
+    }
+
+    fun updateTopicsConfigs(topicsConfigs: Map<TopicName, TopicConfigMap>): CompletableFuture<Unit> {
+        return updateConfigs(
+            topicsConfigs.entries.associate { (topicName, updatingConfig) ->
+                ConfigResource(ConfigResource.Type.TOPIC, topicName) to AlterConfigsSupplier(
+                    alterConfigs = { updatingConfig.toKafkaConfig() },
+                    alterConfigOps = { updatingConfig.toToTopicAlterOps() },
+                )
+            }
         )
     }
 

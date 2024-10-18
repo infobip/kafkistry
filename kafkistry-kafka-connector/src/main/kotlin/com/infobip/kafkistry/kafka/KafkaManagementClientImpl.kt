@@ -116,6 +116,10 @@ class KafkaManagementClientImpl(
         return configOps.updateTopicConfig(topicName, updatingConfig)
     }
 
+    override fun updateTopicsConfigs(topicsConfigs: Map<TopicName, TopicConfigMap>): CompletableFuture<Unit> {
+        return configOps.updateTopicsConfigs(topicsConfigs)
+    }
+
     override fun setBrokerConfig(brokerId: BrokerId, config: Map<String, String>): CompletableFuture<Unit> {
         return configOps.setBrokerConfig(brokerId, config)
     }

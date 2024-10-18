@@ -19,6 +19,7 @@ interface KafkaManagementClient : AutoCloseable {
     fun topicFullyExists(topicName: TopicName): CompletableFuture<Boolean>
     fun deleteTopic(topicName: TopicName): CompletableFuture<Unit>
     fun updateTopicConfig(topicName: TopicName, updatingConfig: TopicConfigMap): CompletableFuture<Unit>
+    fun updateTopicsConfigs(topicsConfigs: Map<TopicName, TopicConfigMap>): CompletableFuture<Unit>
     fun setBrokerConfig(brokerId: BrokerId, config: Map<String, String>): CompletableFuture<Unit>
     fun unsetBrokerConfig(brokerId: BrokerId, configKeys: Set<String>): CompletableFuture<Unit>
     fun updateThrottleRate(brokerId: BrokerId, throttleRate: ThrottleRate): CompletableFuture<Unit>
