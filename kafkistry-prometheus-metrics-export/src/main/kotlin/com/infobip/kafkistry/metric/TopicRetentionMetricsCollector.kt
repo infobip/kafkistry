@@ -43,7 +43,7 @@ class RetentionMetricsCollector(
     private val timeRetentionUsageMetricName = promProperties.prefix + "topic_time_retention_usage"
 
     //default: kafkistry_topic_size_retention_usage
-    private val sizeRetentionUsageMetricName = promProperties.prefix + "topic_topic_size_retention_usage"
+    private val sizeRetentionUsageMetricName = promProperties.prefix + "topic_size_retention_usage"
 
     private val labelProvider = clusterLabelProvider.getIfAvailable {
         DefaultClusterMetricLabelProvider()
