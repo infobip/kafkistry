@@ -13,7 +13,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Configuration
-@ConditionalOnProperty(APP_METRICS_ENABLED_PROPERTY, matchIfMissing = true)
+@ConditionalOnProperty(APP_METRICS_ENDPOINT_ENABLED_PROPERTY, matchIfMissing = true)
 class PrometheusConfigs(
     collectorBeans: Optional<List<Collector>>,
     prometheusProperties: PrometheusMetricsProperties,

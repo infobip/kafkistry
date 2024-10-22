@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.metric
 
+import com.infobip.kafkistry.metric.config.APP_METRICS_ENABLED_PROPERTY
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.service.acl.AclsInspectionService
 import com.infobip.kafkistry.service.background.BackgroundJob
@@ -19,7 +20,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 @Component
-@ConditionalOnProperty("app.metrics.enabled", matchIfMissing = true)
+@ConditionalOnProperty(APP_METRICS_ENABLED_PROPERTY, matchIfMissing = true)
 class KafkistryMetricsExporterCollector(
     private val properties: PrometheusMetricsProperties,
     private val backgroundJobs: BackgroundJobIssuesRegistry,
