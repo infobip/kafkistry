@@ -415,6 +415,7 @@ It exports some metrics about itself and metrics about consumer's lag.
 By default, metrics can be scraped on `/kafkistry/prometheus/metrics` HTTP endpoint.
 
 Path is configurable by: `HTTP_ROOT_PATH` (default=`/kafkistry`) and `PROMETHEUS_PATH` (default=`/prometheus/metrics`)
+Where HTTP endpoint will be: `HTTP_ROOT_PATH`+`PROMETHEUS_PATH` (default=`/kafkistry/prometheus/metrics`)
 
 ### JVM metrics
 
@@ -427,6 +428,20 @@ There are numerous metrics showing how is Kafkistry operating.
 
 All Kafkistry-specific metrics have default naming starting with `kafkistry_`*.
 This prefix can be configured via `APP_METRICS_PREFIX` property.
+
+### Available general metrics properties
+
+| Property                                     | Default               | Description                                                                                                                                                                                                                                               |
+|----------------------------------------------|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.metrics.enabled`                        | `true`                | Enable/disable all metrics / no endpoint available when disabled.                                                                                                                                                                                         |
+| `app.metrics.prefix` or `APP_METRICS_PREFIX` | `kafkistry_`          | See [Kafkistry operating metrics](#kafkistry-operating-metrics)                                                                                                                                                                                           |
+| `app.metrics.default-metrics`                | `true`                | See [JVM metrics](#jvm-metrics)                                                                                                                                                                                                                           |
+| `app.metrics.api-calls`                      | `true`                | Weather or not to track metrics around API beans method calls                                                                                                                                                                                             |
+| `app.metrics.http-calls`                     | `true`                | Weather or not to track metrics around incoming HTTP calls                                                                                                                                                                                                |
+| `app.metrics.http-path` or `PROMETHEUS_PATH` | `/prometheus/metrics` | See [Prometheus' metrics](#prometheus-metrics)                                                                                                                                                                                                            |
+| `app.metrics.pre-cached`                     | `false`               | Option to enable precomputation of all samples. Useful when dealing with huge number of samples when each scrape takes long time to compute. With this enabled, computation is performed in another thread, and scrape always gets last computed samples. |
+| `app.metrics.pre-cache-refresh-sec`          | `10` _(10sec)_:       | Interval how often to pre-compute samples.                                                                                                                                                                                                                |
+
 
 ### Consumer lag
 

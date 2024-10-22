@@ -14,4 +14,8 @@ class PrometheusMetricsProperties {
     var apiCalls = true
     var httpCalls = true
     var httpPath: String? = null    //defined to generate properties metadata
+    var preCached = false
+    var preCacheRefreshSec = 10L
+
+    fun preCacheRefreshMs() = 1000L * preCacheRefreshSec
 }
