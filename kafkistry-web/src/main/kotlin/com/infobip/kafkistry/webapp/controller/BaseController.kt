@@ -50,8 +50,8 @@ abstract class BaseController {
         }
         val attrsDump = if (webHttpProperties.dumpRequestAttributes) {
             request.attributeNames.toList().associateWith {
-                when (val attr = request.getAttribute(it)) {
-                    is Exception -> attr.deepToString()
+                when (val attr = request.getAttribute(it) ?: null) {
+                    is Throwable -> attr.deepToString()
                     else -> attr.toString()
                 }
             }
