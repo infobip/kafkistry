@@ -7,4 +7,5 @@ import org.springframework.stereotype.Component
 @ConfigurationProperties("app.http")
 class WebHttpProperties {
     lateinit var rootPath: String
+    var dumpRequestAttributes = false
 }

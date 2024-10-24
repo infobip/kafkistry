@@ -2,6 +2,7 @@ package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.CompositeRequestInterceptor
+import com.infobip.kafkistry.webapp.WebHttpProperties
 import com.infobip.kafkistry.webapp.menu.MenuItemsInjector
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,6 +26,9 @@ abstract class BaseController {
     @Autowired
     private lateinit var menuItemsInjector: MenuItemsInjector
 
+    @Autowired
+    private lateinit var webHttpProperties: WebHttpProperties
+
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     fun handleKafkistryException(
@@ -44,14 +48,25 @@ abstract class BaseController {
             HttpStatus.FORBIDDEN -> "Access denied for '" + request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) + "'"
             else -> error.deepToString()
         }
+        val attrsDump = if (webHttpProperties.dumpRequestAttributes) {
+            request.attributeNames.toList().associateWith {
+                when (val attr = request.getAttribute(it)) {
+                    is Exception -> attr.deepToString()
+                    else -> attr.toString()
+                }
+            }
+        } else {
+            emptyMap()
+        }
         return ModelAndView(
             if (ajaxRequest) "registryExceptionAlert" else "registryException",
             mutableMapOf(
                 "httpStatus" to httpStatus,
                 "exceptionMessage" to exceptionMessage,
+                "attrsDump" to attrsDump,
             )
         ).also {
-            log.error("Exception occurred on {} '{}'", request.method, request.requestURI, exception)
+            log.error("Exception occurred on {} '{}'\nattrsDump={}", request.method, request.requestURI, attrsDump, exception)
             //injecting model to view because injecting interceptor is not invoked on error handling
             compositeInterceptor.injectModel(it, request)
             menuItemsInjector.injectMenuItems(it)
