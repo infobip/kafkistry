@@ -88,7 +88,7 @@ class TopicsInspectionService(
                     it.statusPerTopics
                             ?: throw KafkistryIllegalStateException("Can't list cluster topics because cluster state is ${it.clusterState}")
                 }
-                .filter { TopicInspectionResultType.MISSING in it.status.types }
+                .filter { TopicInspectionResultType.MISSING in it.topicClusterStatus.status.types }
                 .map { topicsRegistry.getTopic(it.topicName) }
     }
 
@@ -114,10 +114,10 @@ class TopicsInspectionService(
                             "Can't list cluster topics because cluster state is ${it.clusterState}"
                     )
                 }
-                .filter { TopicInspectionResultType.NEEDS_LEADER_ELECTION in it.status.types }
+                .filter { TopicInspectionResultType.NEEDS_LEADER_ELECTION in it.topicClusterStatus.status.types }
                 .map {
-                    it.existingTopicInfo ?: throw KafkistryIllegalStateException(
-                            "Can't read topic's '${it.topicName}' info because its state is: ${it.status.types}")
+                    it.topicClusterStatus.existingTopicInfo ?: throw KafkistryIllegalStateException(
+                            "Can't read topic's '${it.topicName}' info because its state is: ${it.topicClusterStatus.status.types}")
                 }
     }
 
@@ -155,10 +155,12 @@ class TopicsInspectionService(
                     cluster.ref(), latestClusterState,
                     dryRun = false,
             )
-            ClusterTopicStatus(topicName, inspectionResult.status, inspectionResult.existingTopicInfo)
+            ClusterTopicStatus(topicName, inspectionResult)
         }
-        val topicsStatusCounts = statusPerTopics.statusTypeCounts { it.status.types }
-        val statusFlags = statusPerTopics.map { it.status.flags }.aggregate()
+        val topicsStatusCounts = statusPerTopics.statusTypeCounts {
+            it.topicClusterStatus.status.types
+        }
+        val statusFlags = statusPerTopics.map { it.topicClusterStatus.status.flags }.aggregate()
         return ClusterTopicsStatuses(
                 latestClusterState.lastRefreshTime, cluster,
                 latestClusterData.clusterInfo, latestClusterState.stateType,

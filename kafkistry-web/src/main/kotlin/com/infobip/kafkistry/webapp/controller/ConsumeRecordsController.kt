@@ -64,7 +64,7 @@ class ConsumeRecordsController(
         }
         val clusterTopics = inspectApi.inspectTopicsOnClusters().associate { clusterTopics ->
             clusterTopics.cluster.identifier to (clusterTopics.statusPerTopics ?: emptyList())
-                .filter { it.status.exists ?: false }
+                .filter { it.topicClusterStatus.status.exists ?: false }
                 .map { it.topicName }
         }
         val clusterIdentifiers = existingValuesApi.all().clusterRefs

@@ -126,7 +126,7 @@ class TopicsManagementController(
     ): ModelAndView {
         val unwantedTopics = inspectApi.inspectTopicsOnCluster(clusterIdentifier)
             .statusPerTopics.orEmpty()
-            .filter { AvailableAction.DELETE_TOPIC_ON_KAFKA in it.status.availableActions }
+            .filter { AvailableAction.DELETE_TOPIC_ON_KAFKA in it.topicClusterStatus.status.availableActions }
             .map { it.topicName }
         val topicsConsumerGroups = unwantedTopics.associateWith {
             consumersApi.clusterTopicConsumers(clusterIdentifier, it)
@@ -165,7 +165,7 @@ class TopicsManagementController(
                             "Can't show topics which have unverified assignments because cluster status is: " + inspection.clusterState
                     )
                 }
-                .filter { HAS_UNVERIFIED_REASSIGNMENTS in it.status.types }
+                .filter { HAS_UNVERIFIED_REASSIGNMENTS in it.topicClusterStatus.status.types }
                 .map { it.topicName }
         return ModelAndView("management/bulkVerifyReAssignments", mutableMapOf(
                 "clusterIdentifier" to clusterIdentifier,
@@ -454,7 +454,7 @@ class TopicsManagementController(
                 if (clusterInfo == null || statusPerTopics == null) {
                     throw KafkistryIllegalStateException("Can't get cluster info and topics because cluster state is: " + it.clusterState)
                 }
-                clusterInfo to statusPerTopics.filter { topicStatus -> topicStatus.existingTopicInfo != null }
+                clusterInfo to statusPerTopics.filter { it.topicClusterStatus.existingTopicInfo != null }
             }
         val topicsOffsets = topicOffsetsApi.getTopicsOffsets(clusterIdentifier)
         val topicsReplicas = topicReplicasApi.getClusterTopicsReplicas(clusterIdentifier)

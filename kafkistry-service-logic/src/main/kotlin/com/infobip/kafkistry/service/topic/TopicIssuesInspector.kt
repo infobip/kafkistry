@@ -375,6 +375,7 @@ class TopicIssuesInspector(
             allBrokers = ctx.clusterInfo.assignableBrokers(),
             existingPartitionLoads = currentAssignments.partitionLoads(ctx.currentTopicReplicaInfos)
         )
+        setAssignmentDisbalance(disbalance)
         if (disbalance.replicasDisbalance > 0) {
             addResultType(PARTITION_REPLICAS_DISBALANCE)
         }

@@ -36,6 +36,11 @@ data class AssignmentsDisbalance(
     val leadersDeepDisbalance: List<Int>,
     val partitionsPerRackDisbalance: PartitionsPerRackDisbalance,
 ) {
+    fun hasReplicasDisbalance(): Boolean = replicasDisbalance != 0
+    fun hasLeadersDisbalance(): Boolean = leadersDisbalance != 0
+    fun hasRacksDisbalance(): Boolean = partitionsPerRackDisbalance.totalDisbalance != 0
+    fun hasDisbalance(): Boolean = hasReplicasDisbalance() || hasLeadersDisbalance() || hasRacksDisbalance()
+
     data class PartitionsPerRackDisbalance(
         val totalDisbalance: Int,
         val numPartitionDisbalance: Int,

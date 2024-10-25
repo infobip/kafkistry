@@ -18,7 +18,7 @@
     <#if clusterTopics.statusPerTopics??>
         <#list clusterTopics.statusPerTopics as topicStatus>
             <#assign topicName = topicStatus.topicName>
-            <#assign statusTypes = util.namedTypeListToStringList(topicStatus.status.types)>
+            <#assign statusTypes = util.namedTypeListToStringList(topicStatus.topicClusterStatus.status.types)>
             <#assign presentInRegistry = !statusTypes?seq_contains("UNKNOWN")>
             <tr class="topic-row table-row">
                 <td>
@@ -34,11 +34,11 @@
                     </a>
                 </td>
                 <td style="width: 200px;">
-                    <#assign topicOnClusterStatus = topicStatus.status>
+                    <#assign topicOnClusterStatus = topicStatus.topicClusterStatus.status>
                     <#include "../common/topicOnClusterStatus.ftl">
                 </td>
                 <td>
-                    <#assign availableActions = topicStatus.status.availableActions>
+                    <#assign availableActions = topicStatus.topicClusterStatus.status.availableActions>
                     <#include "../common/topicOnClusterAction.ftl">
                 </td>
             </tr>

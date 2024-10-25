@@ -288,13 +288,13 @@ class TopicManagementService(
         topicPartitionReAssignments.forEach { (topicName, newPartitionsAssignments) ->
             val topicDescription = topicDescriptions[topicName]
             val inspectionResult = topicInspectionResults[topicName]
-            if (inspectionResult?.existingTopicInfo == null) {
+            if (inspectionResult?.topicClusterStatus?.existingTopicInfo == null) {
                 throw KafkistryIllegalStateException(
                         "Can't do validation of topic assignments for topic '$topicName' which is missing kafka cluster"
                 )
             }
             val topicProperties = topicDescription?.propertiesForCluster(cluster.ref())
-                    ?: inspectionResult.existingTopicInfo.properties
+                    ?: inspectionResult.topicClusterStatus.existingTopicInfo.properties
             val validation = partitionsReplicasAssignor.validateAssignments(
                     assignments = newPartitionsAssignments,
                     allBrokerIds = kafkaStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo.brokerIds,
@@ -303,7 +303,7 @@ class TopicManagementService(
             if (!validation.valid) {
                 throw KafkaClusterManagementException("Aborting re-assignment of partition replicas for topic '$topicName', got invalid assignments $validation")
             }
-            checkRuleViolations(inspectionResult.status)
+            checkRuleViolations(inspectionResult.topicClusterStatus.status)
         }
         clientProvider.doWithClient(cluster) {
             it.reAssignPartitions(topicPartitionReAssignments, throttleBytesPerSec).get()

@@ -84,10 +84,10 @@ class ClusterEditTagsInspectService(
             filter: (ClusterTopicStatus) -> Boolean
         ): List<TopicName> = filter(filter).map { it.topicName }
 
-        val topicsToCreate = topicsAfter.topicsWhich { CREATE_TOPIC in it.status.availableActions }
-        val topicsToDelete = topicsAfter.topicsWhich { DELETE_TOPIC_ON_KAFKA in it.status.availableActions }
-        val topicsToReconfigure = topicsAfter.topicsWhich { ALTER_TOPIC_CONFIG in it.status.availableActions }
-        val topicsToReScale = topicsAfter.topicsWhich { ALTER_PARTITION_COUNT in it.status.availableActions }
+        val topicsToCreate = topicsAfter.topicsWhich { CREATE_TOPIC in it.availableActions() }
+        val topicsToDelete = topicsAfter.topicsWhich { DELETE_TOPIC_ON_KAFKA in it.availableActions() }
+        val topicsToReconfigure = topicsAfter.topicsWhich { ALTER_TOPIC_CONFIG in it.availableActions() }
+        val topicsToReScale = topicsAfter.topicsWhich { ALTER_PARTITION_COUNT in it.availableActions() }
         val topicToShrinkPartitions = topicsToReducePartitionCount(topicsAfter)
         return TopicsDryRunDiff(
             problems = sequence {
@@ -108,9 +108,9 @@ class ClusterEditTagsInspectService(
 
     private fun topicsToReducePartitionCount(topicsStatuses: List<ClusterTopicStatus>): Map<TopicName, Pair<Int, Int>> =
         topicsStatuses
-            .filter { ALTER_PARTITION_COUNT in it.status.availableActions }
+            .filter { ALTER_PARTITION_COUNT in it.availableActions() }
             .mapNotNull { topicStatus ->
-                topicStatus.status.wrongValues
+                topicStatus.topicClusterStatus.status.wrongValues
                     ?.find { it.key == "partition-count" }
                     ?.let {
                         val expected = it.expected?.toIntOrNull() ?: 0

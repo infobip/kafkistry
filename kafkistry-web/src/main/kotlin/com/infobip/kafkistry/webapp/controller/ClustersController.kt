@@ -202,7 +202,7 @@ class ClustersController(
         val balanceStatus = clusterBalancingApi.getStatus(clusterIdentifier)
         val topicNames =  inspectApi.inspectTopicsOnCluster(clusterIdentifier)
             .statusPerTopics
-            ?.filter { it.existingTopicInfo != null }
+            ?.filter { it.topicClusterStatus.existingTopicInfo != null }
             ?.map { it.topicName }
             .orEmpty()
         return ModelAndView("clusters/incrementalBalancing", mutableMapOf(

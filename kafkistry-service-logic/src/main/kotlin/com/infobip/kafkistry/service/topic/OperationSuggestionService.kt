@@ -32,6 +32,7 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.N
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.OK
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_LEADERS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_DISBALANCE
+import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_ON_SINGLE_RACK
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNAVAILABLE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNEXPECTED
@@ -256,13 +257,13 @@ class OperationSuggestionService(
             }
         }
 
-        fun ClusterTopicStatus.hasDisbalance() = status.types.any {
-            it == PARTITION_REPLICAS_DISBALANCE || it == PARTITION_LEADERS_DISBALANCE
-        }
+        fun ClusterTopicStatus.hasDisbalance() = topicClusterStatus.status.assignmentsDisbalance?.run {
+            hasReplicasDisbalance() || hasLeadersDisbalance()
+        } ?: false
 
         fun ClusterTopicStatus.usesExcludedBroker(): Boolean {
             if (options.excludedBrokerIds.isEmpty()) return false
-            val assignments = existingTopicInfo?.partitionsAssignments
+            val assignments = topicClusterStatus.existingTopicInfo?.partitionsAssignments
                 ?: return false
             val usedBrokerIds = assignments.asSequence()
                 .flatMap { it.replicasAssignments }

@@ -123,7 +123,7 @@ class InspectionTest {
             assertThat(status.statusPerTopics)
                 .extracting(
                     Function { it.topicName },
-                    Function { it.status.types }
+                    Function { it.topicClusterStatus.status.types },
                 )
                 .containsExactly(tuple(topic.name, listOf(UNKNOWN)))
             assertThat(statuses).`as`("all clusters statuses").containsExactly(status)
@@ -794,7 +794,7 @@ class InspectionTest {
                     .`as`(clusterStatus.statusPerTopics.toString())
                     .extracting(
                         Function { it.topicName },
-                        Function { it.status.types }
+                        Function { it.topicClusterStatus.status.types },
                     )
                     .containsExactly(tuple(topicName, types))
             } else {

@@ -112,8 +112,7 @@ data class ClusterTopicsStatuses(
 
 data class ClusterTopicStatus(
     val topicName: TopicName,
-    val status: TopicOnClusterInspectionResult,
-    val existingTopicInfo: ExistingTopicInfo?
+    val topicClusterStatus: TopicClusterStatus,
 )
 
 data class TopicOnClusterInspectionResult(
@@ -127,6 +126,7 @@ data class TopicOnClusterInspectionResult(
     val typeDescriptions: List<NamedTypeCauseDescription<TopicInspectionResultType>>,
     val availableActions: List<AvailableAction>,
     val affectingAclRules: List<KafkaAclRule>,
+    val assignmentsDisbalance: AssignmentsDisbalance? = null,
 ) {
     data class Builder(
         private var types: MutableList<TopicInspectionResultType> = mutableListOf(),
@@ -137,7 +137,8 @@ data class TopicOnClusterInspectionResult(
         private var currentConfigRuleViolations: MutableList<RuleViolationIssue>? = null,
         private var typeDescriptions: MutableList<NamedTypeCauseDescription<TopicInspectionResultType>>? = null,
         private var availableActions: List<AvailableAction> = emptyList(),
-        private var affectingAclRules: List<KafkaAclRule> = emptyList()
+        private var affectingAclRules: List<KafkaAclRule> = emptyList(),
+        private var assignmentsDisbalance: AssignmentsDisbalance? = null,
     ) {
         fun types() = types.toList()
 
@@ -191,6 +192,10 @@ data class TopicOnClusterInspectionResult(
             affectingAclRules = aclRules
         }
 
+        fun setAssignmentDisbalance(disbalance: AssignmentsDisbalance): Builder = this.also {
+            assignmentsDisbalance = disbalance
+        }
+
         fun build() = TopicOnClusterInspectionResult(
             types = types.toList(),
             exists = exists,
@@ -208,7 +213,8 @@ data class TopicOnClusterInspectionResult(
             currentConfigRuleViolations = currentConfigRuleViolations?.toList(),
             typeDescriptions = typeDescriptions?.toList().orEmpty(),
             availableActions = availableActions,
-            affectingAclRules = affectingAclRules
+            affectingAclRules = affectingAclRules,
+            assignmentsDisbalance = assignmentsDisbalance,
         )
     }
 }
