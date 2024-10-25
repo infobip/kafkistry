@@ -112,6 +112,85 @@ class PartitionsReplicasAssignorTest {
         assertThat(disbalance.leadersDisbalance).isEqualTo(0)
     }
 
+    @Test
+    fun `reproduce encountered issue 2`() {
+        val existingAssignments = mapOf(
+            0 to listOf(5, 6, 4),
+            1 to listOf(8, 4, 7),
+            2 to listOf(9, 4, 5),
+            3 to listOf(6, 4, 5),
+            4 to listOf(5, 6, 7),
+            5 to listOf(6, 7, 8),
+            6 to listOf(8, 9, 7),
+            7 to listOf(8, 9, 4),
+            8 to listOf(9, 6, 5),
+            9 to listOf(9, 7, 8),
+            10 to listOf(5, 6, 4),
+            11 to listOf(8, 9, 7),
+            12 to listOf(6, 4, 5),
+            13 to listOf(8, 4, 7),
+            14 to listOf(9, 4, 5),
+            15 to listOf(5, 6, 4),
+            16 to listOf(5, 6, 7),
+            17 to listOf(6, 7, 8),
+            18 to listOf(9, 7, 8),
+            19 to listOf(8, 9, 4),
+            20 to listOf(9, 5, 6),
+            21 to listOf(8, 9, 7),
+            22 to listOf(6, 4, 5),
+            23 to listOf(9, 7, 8),
+        )
+        val allBrokers = listOf(
+            Broker(1, "AZ1"),
+            Broker(2, "AZ1"),
+            Broker(3, "AZ1"),
+            Broker(4, "AZ2"),
+            Broker(5, "AZ2"),
+            Broker(6, "AZ2"),
+            Broker(7, "AZ2"),
+            Broker(8, "AZ2"),
+            Broker(9, "AZ2"),
+            Broker(10, "AZ1"),
+            Broker(11, "AZ1"),
+            Broker(12, "AZ1"),
+        )
+        val partitionLoads = mapOf(
+            0 to PartitionLoad(103769335L),
+            1 to PartitionLoad(105690254L),
+            2 to PartitionLoad(103783086L),
+            3 to PartitionLoad(104653288L),
+            4 to PartitionLoad(105239256L),
+            5 to PartitionLoad(103451323L),
+            6 to PartitionLoad(103683072L),
+            7 to PartitionLoad(105596898L),
+            8 to PartitionLoad(105519438L),
+            9 to PartitionLoad(105351495L),
+            10 to PartitionLoad(106145198L),
+            11 to PartitionLoad(104225225L),
+            12 to PartitionLoad(62109610L),
+            13 to PartitionLoad(104770896L),
+            14 to PartitionLoad(104958292L),
+            15 to PartitionLoad(105423958L),
+            16 to PartitionLoad(105099121L),
+            17 to PartitionLoad(106809223L),
+            18 to PartitionLoad(105533415L),
+            19 to PartitionLoad(104188518L),
+            20 to PartitionLoad(104408597L),
+            21 to PartitionLoad(102041069L),
+            22 to PartitionLoad(41038013L),
+            23 to PartitionLoad(104718313L),
+        )
+        val assignments = reBalanceReplicasThenLeaders(existingAssignments, allBrokers, partitionLoads)
+
+        val validation = assignor.validateAssignments(
+            assignments.newAssignments,
+            allBrokers.ids(),
+            TopicProperties(24, 3)
+        )
+
+        assertThat(validation.valid).`as`("Validation $validation").isTrue()
+    }
+
     ///////////////////////////////////////////////////////////
     // tests for adding new partitions to existing assignments
     ///////////////////////////////////////////////////////////
