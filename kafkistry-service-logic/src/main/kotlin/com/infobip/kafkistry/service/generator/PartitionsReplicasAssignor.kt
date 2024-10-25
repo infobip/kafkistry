@@ -419,6 +419,12 @@ class PartitionsReplicasAssignor {
                 combinationsLoop@ for (giverBrokerId in giverBrokerIds) {
                     for ((takerPartition, takerBrokerIds) in takerPartitionBrokers) {
                         for (takerBrokerId in takerBrokerIds) {
+                            if (takerBrokerId in partitionsBrokers[giverPartition].orEmpty()) {
+                                continue
+                            }
+                            if (giverBrokerId in partitionsBrokers[takerPartition].orEmpty()) {
+                                continue
+                            }
                             if (maybeSwap(giverBrokerId, giverPartition, takerBrokerId, takerPartition)) {
                                 performedSwap = true
                                 break@combinationsLoop
