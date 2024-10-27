@@ -912,7 +912,7 @@ Table shows what would be proposed partition count given some expected message r
 |---------------|--------------|---------------|--------------|------------------------------|
 | 10 msg/sec    | 1 partition  | 2 partitions  | 1 partition  | 20 partitions                |          
 | 200 msg/sec   | 2 partitions | 10 partitions | 5 partitions | 20 partitions                |          
-| 3000 msg/sec  | 4 partitions | 30 partitions | 5 partitions | 20 partitions                |          
+| 3000 msg/sec  | 4 partitions | 30 partitions | 5 partitions | 20 partitions                |
 
 ### Topic name generator
 
@@ -929,6 +929,17 @@ Options for customizing topic name UI inputs:
 | `app.topic-wizard.topic-name.template-name` | `defaultWizardTopicName` _([implementation](kafkistry-web/src/main/resources/ui/topics/defaultWizardTopicName.ftl))_      | UI component (html) for input attributes for topic name generator (default implementation only asks for `name`)             | Must be classpath resource located in `ui/topics/`       |
 | `app.topic-wizard.topic-name.js-name`       | `defaultWizardTopicName` _([implementation](kafkistry-web/src/main/resources/ui/static/topic/defaultWizardTopicName.js))_ | UI component (js) for extracting needed custom attributes from UI to be used for `TopicNameGenerator`                       | Must be classpath resource located in `ui/static/topic/` |
 | `app.topic-wizard.topic-name.name-label`    | `Check topic name`                                                                                                        | Not important for logic, but makes more sense to define something like `Generated topic name` when custom generator is used | _none_                                                   |
+
+### Max message bytes
+
+Topic wizard proposes topic property `max.message.bytes` value based on expected average message size.
+It is possible to define thresholds for lowest possible value wizard will generate for this property, 
+as well as the highest possible value.
+
+| Property                | Default             | Description                                                                                |
+|-------------------------|---------------------|--------------------------------------------------------------------------------------------|
+| `MIN_MAX_MESSAGE_BYTES` | `0`                 | Lowest possible value wizard can suggest for this property, by default there is no limit   |
+| `MAX_MAX_MESSAGE_BYTES` | `10485760` _(10MB)_ | By default, most wizard will suggest regardless of average message size is 10 MB           |
 
 
 

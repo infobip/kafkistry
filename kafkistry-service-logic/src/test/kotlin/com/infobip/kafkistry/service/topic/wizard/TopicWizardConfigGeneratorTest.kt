@@ -49,6 +49,9 @@ class TopicWizardConfigGeneratorTest {
                       }
                     }
                     """.trimIndent()
+                maxMessageToAvgRatio = 20.0
+                minMaxMessageBytes = 100L * 1024
+                maxMaxMessageBytes = 10L * 1024 * 1024
             }
     )
 
@@ -164,6 +167,15 @@ class TopicWizardConfigGeneratorTest {
             assertThat(generator.determineSegmentBytes(5L * Int.MAX_VALUE)) shouldEqual Int.MAX_VALUE.toLong() / 2   //big, not capped yet
             assertThat(generator.determineSegmentBytes(20L * Int.MAX_VALUE)) shouldEqual Int.MAX_VALUE.toLong()   //capped at max-int
         }
+    }
+
+    @Test
+    fun `max message bytes all calculations`() {
+        assertThat(generator.determineMaxMessageSize(1L * 1024)) shouldEqual 100L * 1024                   //avg <= avg * ratio <= min <= max -> min
+        assertThat(generator.determineMaxMessageSize(50L * 1024)) shouldEqual 1_000L * 1024                //avg <= min <= avg * ratio <= max -> avg * ratio
+        assertThat(generator.determineMaxMessageSize(200L * 1024)) shouldEqual 4_000L * 1024               //min <= avg <= avg * ratio <= max -> avg * ratio
+        assertThat(generator.determineMaxMessageSize(1L * 1024 * 1024)) shouldEqual 10L * 1024 * 1024      //min <= avg <= max <= avg * ratio -> max
+        assertThat(generator.determineMaxMessageSize(20L * 1024 * 1024)) shouldEqual 10L * 1024 * 1024     //min <= max <= avg <= avg * ratio -> max
     }
 
     private fun partitionCountForMessages(
