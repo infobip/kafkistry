@@ -32,6 +32,8 @@ app:
   topic-wizard:
     default-partition-count: ${WIZARD_DEFAULT_PARTITIONS:1}
     partition-thresholds: ${WIZARD_PARTITION_THRESHOLDS:{"default":{"100":10,"2000":30,"5000":60}}}
+    min-max-message-bytes: ${MIN_MAX_MESSAGE_BYTES:0}
+    max-max-message-bytes: ${MAX_MAX_MESSAGE_BYTES:10485760}    # 10 MB default
   ui:
     caching: true
     custom-js-scripts-csv: ${CUSTOM_JS_SCRIPTS_CSV:}

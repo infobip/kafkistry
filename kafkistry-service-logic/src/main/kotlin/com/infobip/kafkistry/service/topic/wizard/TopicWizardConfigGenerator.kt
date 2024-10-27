@@ -148,9 +148,8 @@ class TopicWizardConfigGenerator(
         return avgMessageBytes
             .times(properties.maxMessageToAvgRatio)
             .toLong()
-            .coerceAtMost(properties.maxMaxMessageBytes)
             .coerceAtLeast(properties.minMaxMessageBytes)
-            .coerceAtLeast(avgMessageBytes)
+            .coerceAtMost(properties.maxMaxMessageBytes)
     }
 
     fun determinePartitionCount(
