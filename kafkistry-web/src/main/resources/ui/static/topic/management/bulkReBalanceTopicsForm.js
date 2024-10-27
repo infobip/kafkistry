@@ -75,6 +75,9 @@ function extractBulkReBalanceOptions() {
     }
     return {
         reBalanceMode: $("select[name=reBalanceMode]").val(),
+        objectives: $("input[name=objective]:checked").map(function () {
+            return $(this).val();
+        }).get().join(","),
         includeTopicNamePattern: includeTopicNamePattern,
         excludeTopicNamePattern: excludeTopicNamePattern,
         topicSelectOrder: $("select[name=topicSelectOrder]").val(),

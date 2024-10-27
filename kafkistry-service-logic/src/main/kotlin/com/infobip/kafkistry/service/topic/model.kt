@@ -667,6 +667,7 @@ data class ThrottleBrokerTopicPartitionsSuggestion(
 
 data class BulkReAssignmentOptions(
     val reBalanceMode: ReBalanceMode,
+    val objectives: List<ReAssignObjective>,
     val includeTopicNamePattern: String?,
     val excludeTopicNamePattern: String?,
     val topicSelectOrder: TopicSelectOrder,
@@ -684,6 +685,14 @@ data class BulkReAssignmentOptions(
     enum class TopicSelectOrder {
         TOP, BOTTOM
     }
+
+    enum class ReAssignObjective {
+        BALANCE_REPLICAS,
+        BALANCE_LEADERS,
+        BALANCE_RACKS,
+        AVOID_SINGLE_RACKS,
+        EXCLUDE_BROKERS,
+    }
 }
 
 data class BulkReAssignmentSuggestion(
@@ -691,6 +700,7 @@ data class BulkReAssignmentSuggestion(
     val topicsReBalanceSuggestions: Map<TopicName, ReBalanceSuggestion>,
     val topicsReBalanceStatuses: Map<TopicName, PartitionsAssignmentsStatus>,
     val totalDataMigration: DataMigration,
+    val counts: Counts,
     val selectionLimitedBy: List<SelectionLimitedCause>,
 ) {
 
@@ -701,4 +711,12 @@ data class BulkReAssignmentSuggestion(
         INCLUSION_FILTERED,
         EXCLUSION_FILTERED,
     }
+
+    data class Counts(
+        val all: Int,
+        val filtered: Int,
+        val qualified: Int,
+        val candidates: Int,
+        val selected: Int,
+    )
 }

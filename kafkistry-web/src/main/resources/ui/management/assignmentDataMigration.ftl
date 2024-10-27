@@ -43,7 +43,7 @@
             </#list>
             <#list involvedBrokers?sort as broker>
                 <tr>
-                    <th>${broker}</th>
+                    <th>${broker?c}</th>
                     <td>
                         <#if dataMigration.perBrokerTotalIOBytes?api.containsKey(broker)>
                             ${__util.prettyDataSize(dataMigration.perBrokerTotalIOBytes?api.get(broker))}

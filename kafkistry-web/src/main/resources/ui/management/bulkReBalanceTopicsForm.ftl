@@ -32,10 +32,9 @@
     </p>
 
     <div class="form">
-
-       <div class="form-row form-group">
-            <label class="col-">Topic(s) name filter:</label>
+        <div class="form-row form-group">
             <div class="col">
+                <label>Topic(s) name filter:</label>
                 <div class="input-group">
                     <div class="input-group-append">
                         <select class="form-control" name="patternFilterType" title="Include/Exclude" data-style="alert-secondary">
@@ -81,6 +80,22 @@
 
         <div class="form-row form-group">
             <div class="col">
+                <label>Re-assign objectives:</label>
+                <div>
+                    <#assign topicObjectives = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$ReAssignObjective"]>
+                    <#list topicObjectives as objective, enum>
+                        <#assign selected = true>
+                        <label class="btn btn-sm btn-outline-secondary">
+                            <input name="objective" type="checkbox" value="${objective}" checked>
+                            ${objective?replace("_", " ")}
+                        </label>
+                    </#list>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row form-group">
+            <div class="col">
                 <label>Topics to re-balance selection order:</label>
                 <div class="input-group">
                     <div class="input-group-append">
@@ -98,7 +113,7 @@
                         <#assign topicByTypes = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicBy"]>
                         <#list topicByTypes as topicBy, enum>
                             <#assign selected = topicBy == defaultTopicBy>
-                            <option <#if selected>selected</#if>>${topicBy}</option>
+                            <option value="${topicBy}" <#if selected>selected</#if>>${topicBy?replace("_", " ")}</option>
                         </#list>
                     </select>
                 </div>
@@ -111,7 +126,7 @@
                         <#assign reBalanceModes = enums["com.infobip.kafkistry.service.topic.ReBalanceMode"]>
                         <#list reBalanceModes as reBalanceMode, enum>
                             <#assign selected = reBalanceMode == defaultReBalanceMode>
-                            <option <#if selected>selected</#if>>${reBalanceMode}</option>
+                            <option value="${reBalanceMode}" <#if selected>selected</#if>>${reBalanceMode?replace("_", " ")}</option>
                         </#list>
                     </select>
                 </div>

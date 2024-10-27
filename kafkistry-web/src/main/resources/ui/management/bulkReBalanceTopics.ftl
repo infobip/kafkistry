@@ -2,6 +2,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
+<#-- @ftlvariable name="counts" type="com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.Counts" -->
 <#-- @ftlvariable name="topicsReBalanceSuggestions" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.ReBalanceSuggestion>" -->
 <#-- @ftlvariable name="topicsReBalanceStatuses" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus>" -->
 <#-- @ftlvariable name="totalDataMigration" type="com.infobip.kafkistry.service.topic.DataMigration" -->
@@ -47,6 +48,19 @@
             </#list>
         </#if>
     </p>
+
+    <div class="row">
+        <div class="col text-center"><span class="badge badge-dark">ALL</span><br/>${counts.all}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-dark">FILTERED</span><br/>${counts.filtered}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-dark">QUALIFIED</span><br/>${counts.qualified}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-dark">CANDIDATES</span><br/>${counts.candidates}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-dark">SELECTED</span><br/>${counts.selected}</div>
+    </div>
+    <br/>
 
 
     <#list topicsReBalanceSuggestions as topicName, reBalanceSuggestion>

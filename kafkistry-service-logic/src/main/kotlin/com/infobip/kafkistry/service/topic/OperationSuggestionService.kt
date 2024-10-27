@@ -17,6 +17,7 @@ import com.infobip.kafkistry.service.topic.wizard.TopicWizardConfigGenerator
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.generator.*
+import com.infobip.kafkistry.service.topic.BulkReAssignmentOptions.ReAssignObjective.*
 import com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.SelectionLimitedCause
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.CLUSTER_UNREACHABLE
@@ -32,7 +33,6 @@ import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.N
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.OK
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_LEADERS_DISBALANCE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_DISBALANCE
-import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.PARTITION_REPLICAS_ON_SINGLE_RACK
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.RE_ASSIGNMENT_IN_PROGRESS
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNAVAILABLE
 import com.infobip.kafkistry.service.topic.TopicInspectionResultType.Companion.UNEXPECTED
@@ -243,54 +243,101 @@ class OperationSuggestionService(
                 )
             }
 
-        val topicCountSum = AtomicInteger()
-        val migrationBytesSum = AtomicLong()
-        val topicPartitionsSum = AtomicInteger()
-        val inclusionLimited = AtomicBoolean(false)
-        val exclusionLimited = AtomicBoolean(false)
-
-        fun ((TopicName) -> Boolean).recordFilteredOut(boolean: AtomicBoolean): (TopicName) -> Boolean {
-            return { topicName ->
-                this(topicName).also {
-                    if (!it) boolean.set(true)
-                }
-            }
+        fun ((TopicName) -> Boolean).recordFilteredOut(boolean: AtomicBoolean): (TopicName) -> Boolean = { topicName ->
+            this(topicName).also { if (!it) boolean.set(true) }
         }
 
-        fun ClusterTopicStatus.hasDisbalance() = topicClusterStatus.status.assignmentsDisbalance?.run {
-            hasReplicasDisbalance() || hasLeadersDisbalance()
-        } ?: false
+        fun ClusterTopicStatus.disbalance(extract: AssignmentsDisbalance.() -> Boolean) =
+            topicClusterStatus.status.assignmentsDisbalance?.extract() ?: false
 
-        fun ClusterTopicStatus.usesExcludedBroker(): Boolean {
-            if (options.excludedBrokerIds.isEmpty()) return false
-            val assignments = topicClusterStatus.existingTopicInfo?.partitionsAssignments
-                ?: return false
-            val usedBrokerIds = assignments.asSequence()
+        fun ExistingTopicInfo.usesExcludedBroker(): Boolean {
+            val usedBrokerIds = partitionsAssignments.asSequence()
                 .flatMap { it.replicasAssignments }
                 .map { it.brokerId }
                 .toSet()
             return options.excludedBrokerIds.any { it in usedBrokerIds }
         }
 
+        fun ClusterTopicStatus.usesExcludedBroker(): Boolean {
+            if (options.excludedBrokerIds.isEmpty()) return false
+            return topicClusterStatus.existingTopicInfo?.usesExcludedBroker() ?: false
+        }
+
+        fun ClusterTopicStatus.isObjectiveQualified(): Boolean {
+            if (EXCLUDE_BROKERS in options.objectives && usesExcludedBroker()) {
+                return true
+            }
+            if (BALANCE_REPLICAS in options.objectives && disbalance { hasReplicasDisbalance() }) {
+                return true
+            }
+            if (BALANCE_LEADERS in options.objectives && disbalance { hasLeadersDisbalance() }) {
+                return true
+            }
+            if (BALANCE_RACKS in options.objectives && disbalance { hasRacksDisbalance() }) {
+                return true
+            }
+            if (AVOID_SINGLE_RACKS in options.objectives && disbalance { hasSingleRackPartitions() }) {
+                return true
+            }
+            return false
+        }
+
+        fun ReBalanceSuggestion.improvesObjectives(): Boolean {
+            if (EXCLUDE_BROKERS in options.objectives && existingTopicInfo.usesExcludedBroker()) {
+                return true
+            }
+            if (BALANCE_REPLICAS in options.objectives && oldDisbalance.replicasDisbalance > newDisbalance.replicasDisbalance) {
+                return true
+            }
+            if (BALANCE_LEADERS in options.objectives && oldDisbalance.leadersDisbalance > newDisbalance.leadersDisbalance) {
+                return true
+            }
+            val oldRacksStatus = oldDisbalance.partitionsPerRackDisbalance
+            val newRacksStatus = newDisbalance.partitionsPerRackDisbalance
+            if (BALANCE_RACKS in options.objectives && oldRacksStatus.totalDisbalance > newRacksStatus.totalDisbalance) {
+                return true
+            }
+            if (AVOID_SINGLE_RACKS in options.objectives && oldRacksStatus.singleRackPartitions.size > newRacksStatus.singleRackPartitions.size) {
+                return true
+            }
+            return false
+        }
+
+        fun <T> Sequence<T>.observeCount(counter: AtomicInteger): Sequence<T> = onEach { counter.incrementAndGet() }
+        fun <T, R> Sequence<T>.filterBy(filter: (R) -> Boolean, by: (T) -> R): Sequence<T> = filter { filter(by(it)) }
+
+        val filteredTopicsCount = AtomicInteger()
+        val qualifiedTopicsCount = AtomicInteger()
+        val candidateTopicsCount = AtomicInteger()
+
+        val topicCountSum = AtomicInteger()
+        val migrationBytesSum = AtomicLong()
+        val topicPartitionsSum = AtomicInteger()
+        val inclusionLimited = AtomicBoolean(false)
+        val exclusionLimited = AtomicBoolean(false)
+
         val topicsReBalanceSuggestions = statusPerTopics.asSequence()
-            .filter { it.usesExcludedBroker() || it.hasDisbalance() }
-            .map { it.topicName }
-            .filter(topicNameFilter.includeFilter.recordFilteredOut(inclusionLimited))
-            .filter(topicNameFilter.excludeFilter.recordFilteredOut(exclusionLimited))
+            .filterBy(topicNameFilter.includeFilter.recordFilteredOut(inclusionLimited)) { it.topicName }
+            .filterBy(topicNameFilter.excludeFilter.recordFilteredOut(exclusionLimited)) { it.topicName }
+            .observeCount(filteredTopicsCount)
+            .filter { it.isObjectiveQualified() }
+            .observeCount(qualifiedTopicsCount)
             .map {
-                it to try {
-                    reBalanceTopicAssignments(it, clusterIdentifier, options.reBalanceMode, options.excludedBrokerIds)
+                it.topicName to try {
+                    reBalanceTopicAssignments(it.topicName, clusterIdentifier, options.reBalanceMode, options.excludedBrokerIds)
                 } catch (ex: KafkistryValidationException) {
-                    throw KafkistryIllegalStateException("Can't re-assign topic: '$it'", ex)
+                    throw KafkistryIllegalStateException("Can't re-assign topic: '${it.topicName}'", ex)
                 }
             }
             .filter { (_, suggestion) -> suggestion.assignmentsChange.hasChange }
-            .sortedByDescending { (_, suggestion) ->
-                val factor = when (options.topicSelectOrder) {
-                    BulkReAssignmentOptions.TopicSelectOrder.TOP -> 1
-                    BulkReAssignmentOptions.TopicSelectOrder.BOTTOM -> -1
+            .filter { (_, suggestion) -> suggestion.improvesObjectives() }
+            .observeCount(candidateTopicsCount)
+            .sortedBy { (_, suggestion) ->
+                val orderFactor = when (options.topicSelectOrder) {
+                    BulkReAssignmentOptions.TopicSelectOrder.TOP -> -1
+                    BulkReAssignmentOptions.TopicSelectOrder.BOTTOM -> 1
                 }
-                factor * when (options.topicBy) {
+                orderFactor * when (options.topicBy) {
                     MIGRATION_BYTES -> suggestion.dataMigration.totalAddBytes
                     RE_ASSIGNED_PARTITIONS_COUNT -> suggestion.assignmentsChange.reAssignedPartitionsCount.toLong()
                 }
@@ -323,6 +370,13 @@ class OperationSuggestionService(
 
         return BulkReAssignmentSuggestion(
             clusterInfo, topicsReBalanceSuggestions, topicsReBalanceStatuses, totalDataMigration,
+            counts = BulkReAssignmentSuggestion.Counts(
+                all = statusPerTopics.size,
+                filtered = filteredTopicsCount.get(),
+                qualified = qualifiedTopicsCount.get(),
+                candidates = candidateTopicsCount.get(),
+                selected = topicsReBalanceSuggestions.size,
+            ),
             selectionLimitedBy = listOfNotNull(
                 SelectionLimitedCause.INCLUSION_FILTERED.takeIf { inclusionLimited.get() },
                 SelectionLimitedCause.EXCLUSION_FILTERED.takeIf { exclusionLimited.get() },

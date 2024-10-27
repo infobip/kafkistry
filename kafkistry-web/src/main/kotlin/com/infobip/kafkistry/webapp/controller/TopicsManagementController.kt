@@ -193,6 +193,7 @@ class TopicsManagementController(
     fun showBulkReBalanceTopics(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
         @RequestParam(name = "reBalanceMode", required = false) reBalanceMode: ReBalanceMode?,
+        @RequestParam(name = "objectives", required = false) reAssignObjectives: List<BulkReAssignmentOptions.ReAssignObjective>? = null,
         @RequestParam(name = "includeTopicNamePattern", required = false) includeTopicNamePattern: String?,
         @RequestParam(name = "excludeTopicNamePattern", required = false) excludeTopicNamePattern: String?,
         @RequestParam(name = "topicSelectOrder", required = false) topicSelectOrder: BulkReAssignmentOptions.TopicSelectOrder?,
@@ -205,6 +206,7 @@ class TopicsManagementController(
         val bulkReBalanceTopics = suggestionApi.bulkReBalanceTopics(
             clusterIdentifier, BulkReAssignmentOptions(
                 reBalanceMode = reBalanceMode ?: ReBalanceMode.REPLICAS_THEN_LEADERS,
+                objectives = reAssignObjectives ?: BulkReAssignmentOptions.ReAssignObjective.entries,
                 includeTopicNamePattern = includeTopicNamePattern,
                 excludeTopicNamePattern  = excludeTopicNamePattern,
                 topicSelectOrder = topicSelectOrder ?: BulkReAssignmentOptions.TopicSelectOrder.TOP,
@@ -219,6 +221,7 @@ class TopicsManagementController(
         return ModelAndView("management/bulkReBalanceTopics", mutableMapOf(
             "clusterIdentifier" to clusterIdentifier,
             "clusterInfo" to bulkReBalanceTopics.clusterInfo,
+            "counts" to bulkReBalanceTopics.counts,
             "topicsReBalanceSuggestions" to bulkReBalanceTopics.topicsReBalanceSuggestions,
             "topicsReBalanceStatuses" to bulkReBalanceTopics.topicsReBalanceStatuses,
             "totalDataMigration" to bulkReBalanceTopics.totalDataMigration,

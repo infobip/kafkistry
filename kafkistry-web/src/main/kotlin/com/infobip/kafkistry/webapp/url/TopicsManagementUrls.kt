@@ -93,7 +93,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
     private val showBulkReBalanceTopics = Url(
         "$base$TOPICS_MANAGEMENT_BULK_RE_BALANCE",
         listOf(
-            "clusterIdentifier", "reBalanceMode",
+            "clusterIdentifier", "reBalanceMode", "objectives",
             "includeTopicNamePattern", "excludeTopicNamePattern",
             "topicSelectOrder", "topicBy",
             "topicCountLimit", "topicPartitionCountLimit", "totalMigrationBytesLimit",
@@ -154,6 +154,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
     fun showBulkReBalanceTopics(
         clusterIdentifier: KafkaClusterIdentifier,
         reBalanceMode: String,
+        objectives: String,
         includeTopicNamePattern: String,
         excludeTopicNamePattern: String,
         topicSelectOrder: String,
@@ -164,6 +165,7 @@ class TopicsManagementUrls(base: String) : BaseUrls() {
         excludedBrokerIds: String,
     ) = showBulkReBalanceTopics.render("clusterIdentifier" to clusterIdentifier,
         "reBalanceMode" to reBalanceMode,
+        "objectives" to objectives,
         "includeTopicNamePattern"  to includeTopicNamePattern,
         "excludeTopicNamePattern" to excludeTopicNamePattern,
         "topicSelectOrder" to topicSelectOrder,
