@@ -7,6 +7,10 @@ $(document).ready(function () {
         return $(this).attr("data-topic-name");
     }).get();
     initPatternAutocomplete();
+    setTimeout(function () {
+        //when navigating back from submitted and browser restores previously picked options
+        $("select").selectpicker("refresh");
+    }, 50);
 });
 
 let topicNames = [];
