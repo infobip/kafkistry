@@ -147,7 +147,9 @@
 
     <div class="form-row">
         <a id="bulkReBalanceUrl" class="btn btn-primary width-full" href="#">
+            <div class="suggest-loading spinner-border spinner-border-sm" role="status" style="display: none;"></div>
             Propose re-assignments for re-balance
+            <div class="suggest-loading spinner-border spinner-border-sm" role="status" style="display: none;"></div>
         </a>
     </div>
 

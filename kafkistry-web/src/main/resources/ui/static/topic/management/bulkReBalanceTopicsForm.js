@@ -11,6 +11,9 @@ $(document).ready(function () {
         //when navigating back from submitted and browser restores previously picked options
         $("select").selectpicker("refresh");
     }, 50);
+    $("#bulkReBalanceUrl").click(function () {
+        $(".suggest-loading").show();
+    })
 });
 
 let topicNames = [];
