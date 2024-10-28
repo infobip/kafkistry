@@ -781,7 +781,7 @@ class PartitionsReplicasAssignor {
             .minWithOrNull(comparator)?.key
             ?: throw KafkistryValidationException(
                 "There are no available brokers to generate assignment, num brokers: %d, wanted replication factor: %d".format(
-                    brokersPartitions.size, replicationFactor
+                    allBrokerIds.filter(brokerFilter).size, replicationFactor
                 )
         )
     }
