@@ -700,7 +700,7 @@ data class BulkReAssignmentSuggestion(
     val topicsReBalanceSuggestions: Map<TopicName, ReBalanceSuggestion>,
     val topicsReBalanceStatuses: Map<TopicName, PartitionsAssignmentsStatus>,
     val totalDataMigration: DataMigration,
-    val counts: Counts,
+    val stats: SuggestionStats,
     val selectionLimitedBy: List<SelectionLimitedCause>,
 ) {
 
@@ -718,5 +718,19 @@ data class BulkReAssignmentSuggestion(
         val qualified: Int,
         val candidates: Int,
         val selected: Int,
+    )
+
+    data class SuggestionStats(
+        val counts: Counts,
+        val filter: List<TopicSuggestStage>,
+        val qualify: List<TopicSuggestStage>,
+        val candidate: List<TopicSuggestStage>,
+        val constraints: List<TopicSuggestStage>,
+    )
+
+    data class TopicSuggestStage(
+        val topic: TopicName,
+        val passed: Boolean,
+        val explanations: List<String>,
     )
 }

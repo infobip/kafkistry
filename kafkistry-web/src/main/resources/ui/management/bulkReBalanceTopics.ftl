@@ -2,7 +2,7 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="clusterInfo" type="com.infobip.kafkistry.kafka.ClusterInfo" -->
-<#-- @ftlvariable name="counts" type="com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.Counts" -->
+<#-- @ftlvariable name="stats" type="com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.SuggestionStats" -->
 <#-- @ftlvariable name="topicsReBalanceSuggestions" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.ReBalanceSuggestion>" -->
 <#-- @ftlvariable name="topicsReBalanceStatuses" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.PartitionsAssignmentsStatus>" -->
 <#-- @ftlvariable name="totalDataMigration" type="com.infobip.kafkistry.service.topic.DataMigration" -->
@@ -37,7 +37,19 @@
     <p><strong>Cluster</strong>: <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a>
     </p>
 
-
+    <h4>Selection pipeline:</h4>
+    <div class="row">
+        <div class="col text-center"><span class="badge badge-primary p-2">ALL</span><br/>${stats.counts.all}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-danger p-2">FILTERED</span><br/>${stats.counts.filtered}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-info p-2">QUALIFIED</span><br/>${stats.counts.qualified}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-warning p-2">CANDIDATES</span><br/>${stats.counts.candidates}</div>
+        <div class="col- h4">&rarr;</div>
+        <div class="col text-center"><span class="badge badge-success p-2">SELECTED</span><br/>${stats.counts.selected}</div>
+    </div>
+    <br/>
     <p>
         <#if selectionLimitedBy?size == 0>
             Selection of topic was not limited by any constraints
@@ -47,18 +59,78 @@
                 <span class="badge badge-dark">${causeType}</span>
             </#list>
         </#if>
+        <button role="button" data-toggle="collapse" data-target="#pipeline-selection-details"
+                class="btn btn-sm btn-secondary mx-2">
+            Pipeline selection details...
+        </button>
     </p>
 
-    <div class="row">
-        <div class="col text-center"><span class="badge badge-dark">ALL</span><br/>${counts.all}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-dark">FILTERED</span><br/>${counts.filtered}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-dark">QUALIFIED</span><br/>${counts.qualified}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-dark">CANDIDATES</span><br/>${counts.candidates}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-dark">SELECTED</span><br/>${counts.selected}</div>
+    <div id="pipeline-selection-details" class="collapse">
+        <#macro filterStageDisplay filterStages>
+        <#-- @ftlvariable name="filterStages" type="java.util.List<com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.TopicSuggestStage>" -->
+            <table class="table table-sm">
+                <tr class="thead-dark">
+                    <th>Topic</th>
+                    <th>Outcome</th>
+                    <th>Explanation</th>
+                </tr>
+                <#list filterStages as filterStage>
+                    <tr>
+                        <td>
+                            <a href="${appUrl.topics().showInspectTopicOnCluster(filterStage.topic, clusterIdentifier)}">
+                                ${filterStage.topic}
+                            </a>
+                        </td>
+                        <td>
+                            <#if filterStage.passed>
+                                <span class="badge badge-success">PASSED</span>
+                            <#else>
+                                <span class="badge badge-danger">DROPPED</span>
+                            </#if>
+                        </td>
+                        <td>
+                            <#list filterStage.explanations as explanation>
+                                <span class="small <#if filterStage.passed>text-success<#else>text-danger</#if>">
+                                    ${explanation}
+                                </span>
+                                <#if explanation?has_next>/</#if>
+                            </#list>
+                        </td>
+                    </tr>
+                </#list>
+                <#if filterStages?size == 0>
+                    <tr><td colspan="100"><i>(no topics)</i></td></tr>
+                </#if>
+            </table>
+        </#macro>
+        <div class="card">
+            <div class="card-header h4">Filter stage</div>
+            <div class="card-body overflow-auto p-0" style="max-height: 60vh;">
+                <@filterStageDisplay filterStages=stats.filter/>
+            </div>
+        </div>
+        <br/>
+        <div class="card">
+            <div class="card-header h4">Qualify stage</div>
+            <div class="card-body overflow-auto p-0" style="max-height: 60vh;">
+                <@filterStageDisplay filterStages=stats.qualify/>
+            </div>
+        </div>
+        <br/>
+        <div class="card">
+            <div class="card-header h4">Candidates stage</div>
+            <div class="card-body overflow-auto p-0" style="max-height: 60vh;">
+                <@filterStageDisplay filterStages=stats.candidate/>
+            </div>
+        </div>
+        <br/>
+        <div class="card">
+            <div class="card-header h4">Constraints stage</div>
+            <div class="card-body overflow-auto p-0" style="max-height: 60vh;">
+                <@filterStageDisplay filterStages=stats.constraints/>
+            </div>
+        </div>
+        <br/>
     </div>
     <br/>
 

@@ -3,8 +3,8 @@ package com.infobip.kafkistry.service.topic
 import com.infobip.kafkistry.model.TopicName
 
 class TopicNameFilter(
-    includeTopicNamePattern: String?,
-    excludeTopicNamePattern: String?,
+    val includeTopicNamePattern: String?,
+    val excludeTopicNamePattern: String?,
 ): (TopicName) -> Boolean {
 
     val includeFilter = includeTopicNamePattern

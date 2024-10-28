@@ -221,7 +221,7 @@ class TopicsManagementController(
         return ModelAndView("management/bulkReBalanceTopics", mutableMapOf(
             "clusterIdentifier" to clusterIdentifier,
             "clusterInfo" to bulkReBalanceTopics.clusterInfo,
-            "counts" to bulkReBalanceTopics.counts,
+            "stats" to bulkReBalanceTopics.stats,
             "topicsReBalanceSuggestions" to bulkReBalanceTopics.topicsReBalanceSuggestions,
             "topicsReBalanceStatuses" to bulkReBalanceTopics.topicsReBalanceStatuses,
             "totalDataMigration" to bulkReBalanceTopics.totalDataMigration,
