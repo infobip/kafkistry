@@ -70,12 +70,14 @@
         <#-- @ftlvariable name="filterStages" type="java.util.List<com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.TopicSuggestStage>" -->
             <table class="table table-sm">
                 <tr class="thead-dark">
+                    <th>#</th>
                     <th>Topic</th>
                     <th>Outcome</th>
                     <th>Explanation</th>
                 </tr>
                 <#list filterStages as filterStage>
                     <tr>
+                        <td>${filterStage?index + 1})</td>
                         <td>
                             <a href="${appUrl.topics().showInspectTopicOnCluster(filterStage.topic, clusterIdentifier)}">
                                 ${filterStage.topic}
