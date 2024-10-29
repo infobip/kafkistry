@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.nio.charset.StandardCharsets
+import java.nio.file.NoSuchFileException
 
 class FileSystemFileStorage(
         dirPath: String,
@@ -42,6 +43,8 @@ class FileSystemFileStorage(
             val content = FileUtils.readFileToString(name.toFile(), StandardCharsets.UTF_8)
             StoredFile(name, content)
         } catch (e: FileNotFoundException) {
+            null
+        } catch (e: NoSuchFileException) {
             null
         }
     }
