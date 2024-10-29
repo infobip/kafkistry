@@ -20,7 +20,9 @@ import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.QuotaProperties
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
+import com.infobip.kafkistry.utils.rootCause
 import org.apache.kafka.common.config.TopicConfig
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException
 import org.assertj.core.api.SoftAssertions
 import org.assertj.core.api.StringAssert
 import org.junit.jupiter.api.AfterEach
@@ -1335,8 +1337,16 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         Awaitility.await("For topic '$topic' to be created")
             .atMost(5, TimeUnit.SECONDS)
             .untilAsserted {
-                repeat(6) {
-                    assertThat(listAllTopicNames().get()).contains(topic)
+                repeat(4) {
+                    try {
+                        assertThat(listAllTopics().get().map { it.name }).contains(topic)
+                    } catch (ex: Exception) {
+                        if (ex.rootCause() is UnknownTopicOrPartitionException) {
+                            fail<Unit>("not yet created")
+                        } else {
+                            throw ex
+                        }
+                    }
                 }
             }
     }
