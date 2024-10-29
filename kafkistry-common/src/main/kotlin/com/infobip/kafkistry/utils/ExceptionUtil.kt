@@ -14,3 +14,5 @@ private fun Throwable.deepToString(remainingDepth: Int): String {
         false -> ""
     }
 }
+
+fun Throwable.rootCause(): Throwable = this.cause?.rootCause() ?: this

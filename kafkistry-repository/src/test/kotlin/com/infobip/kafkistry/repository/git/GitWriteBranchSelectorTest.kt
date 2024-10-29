@@ -3,7 +3,7 @@ package com.infobip.kafkistry.repository.git
 import io.kotlintest.matchers.shouldBe
 import io.kotlintest.matchers.shouldNotBe
 import com.infobip.kafkistry.repository.storage.git.GitWriteBranchSelector
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class GitWriteBranchSelectorTest {
 

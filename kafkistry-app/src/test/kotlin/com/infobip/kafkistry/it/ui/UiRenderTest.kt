@@ -1,7 +1,31 @@
 package com.infobip.kafkistry.it.ui
 
+import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.kafka.KafkaClientProvider
+import com.infobip.kafkistry.kafka.KafkaTopicConfiguration
+import com.infobip.kafkistry.model.KafkaCluster
+import com.infobip.kafkistry.model.Presence
+import com.infobip.kafkistry.model.PresenceType
+import com.infobip.kafkistry.model.TopicDescription
+import com.infobip.kafkistry.repository.ChangeRequest
+import com.infobip.kafkistry.repository.KafkaTopicsRepository
+import com.infobip.kafkistry.repository.OptionalEntity
+import com.infobip.kafkistry.repository.storage.ChangeType
+import com.infobip.kafkistry.repository.storage.Commit
+import com.infobip.kafkistry.repository.storage.CommitChange
+import com.infobip.kafkistry.service.consume.*
+import com.infobip.kafkistry.service.generator.Broker
+import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
+import com.infobip.kafkistry.service.newTopic
+import com.infobip.kafkistry.service.toKafkaCluster
+import com.infobip.kafkistry.service.topic.assignableBrokers
+import com.infobip.kafkistry.service.topic.configForCluster
+import com.infobip.kafkistry.service.topic.propertiesForCluster
+import com.infobip.kafkistry.utils.rootCause
 import com.nhaarman.mockitokotlin2.whenever
+import jakarta.annotation.PostConstruct
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.AbstractListAssert
@@ -10,47 +34,23 @@ import org.assertj.core.api.Assertions.tuple
 import org.assertj.core.api.ObjectAssert
 import org.assertj.core.groups.Tuple
 import org.awaitility.Awaitility
-import com.infobip.kafkistry.service.consume.*
-import com.infobip.kafkistry.TestDirsPathInitializer
-import com.infobip.kafkistry.service.newTopic
-import com.infobip.kafkistry.service.toKafkaCluster
-import com.infobip.kafkistry.kafka.KafkaClientProvider
-import com.infobip.kafkistry.kafka.KafkaTopicConfiguration
-import com.infobip.kafkistry.model.KafkaCluster
-import com.infobip.kafkistry.model.Presence
-import com.infobip.kafkistry.model.PresenceType
-import com.infobip.kafkistry.model.TopicDescription
-import com.infobip.kafkistry.repository.ChangeRequest
-import com.infobip.kafkistry.repository.storage.ChangeType
-import com.infobip.kafkistry.repository.KafkaTopicsRepository
-import com.infobip.kafkistry.repository.OptionalEntity
-import com.infobip.kafkistry.repository.storage.Commit
-import com.infobip.kafkistry.repository.storage.CommitChange
-import com.infobip.kafkistry.service.generator.Broker
-import com.infobip.kafkistry.service.topic.configForCluster
-import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
-import com.infobip.kafkistry.service.topic.assignableBrokers
-import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.jsoup.nodes.Document
-import org.junit.Before
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule
+import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
-import jakarta.annotation.PostConstruct
 
-@RunWith(SpringRunner::class)
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = [
@@ -71,21 +71,33 @@ class UiRenderTest {
 
     companion object {
 
-        @ClassRule
-        @JvmField
-        val kafka1 = EmbeddedKafkaRule(1).apply {
+        private val kafka1 = EmbeddedKafkaKraftBroker(1, 2).apply {
             brokerProperty("log.retention.bytes", "102400")
             brokerProperty("log.segment.bytes", "10240")
             brokerProperty("message.max.bytes", "1024")
         }
 
-        @ClassRule
-        @JvmField
-        val kafka2 = EmbeddedKafkaRule(3).apply {
+        private val kafka2 = EmbeddedKafkaKraftBroker(3, 2).apply {
             brokerProperty("log.retention.bytes", "102400")
             brokerProperty("log.segment.bytes", "10240")
             brokerProperty("message.max.bytes", "1024")
         }
+
+        @BeforeAll
+        @JvmStatic
+        fun startKafka1() = kafka1.afterPropertiesSet()
+
+        @BeforeAll
+        @JvmStatic
+        fun startKafka2() = kafka2.afterPropertiesSet()
+
+        @AfterAll
+        @JvmStatic
+        fun stopKafka1() = kafka1.destroy()
+
+        @AfterAll
+        @JvmStatic
+        fun stopKafka2() = kafka2.destroy()
 
         val topic1 = newTopic(
                 name = "topic_ok"
@@ -130,8 +142,8 @@ class UiRenderTest {
     @PostConstruct
     fun initialize() {
         api = ApiClient("localhost", port, "/kafkistry")
-        val clusterInfo1 = api.testClusterConnection(kafka1.embeddedKafka.brokersAsString)
-        val clusterInfo2 = api.testClusterConnection(kafka2.embeddedKafka.brokersAsString)
+        val clusterInfo1 = api.testClusterConnection(kafka1.brokersAsString)
+        val clusterInfo2 = api.testClusterConnection(kafka2.brokersAsString)
         cluster1 = clusterInfo1.toKafkaCluster().copy(identifier = "c_1", sslEnabled = false, saslEnabled = false)
         cluster2 = clusterInfo2.toKafkaCluster().copy(identifier = "c_2", sslEnabled = false, saslEnabled = false)
         ensureTopicsCreated()
@@ -140,8 +152,16 @@ class UiRenderTest {
     private fun KafkaCluster.awaitTopicsCreated(vararg topics: TopicDescription) {
         Awaitility.await().timeout(10, TimeUnit.SECONDS).until {
             kafkaClientsProvider.doWithClient(this) { client ->
-                client.listAllTopics().get().map { it.name }.containsAll(
-                        topics.map { it.name }
+                client.listAllTopics()
+                    .exceptionally { ex ->
+                        if (ex.rootCause() is UnknownTopicOrPartitionException) {
+                            emptyList()
+                        } else {
+                            throw ex
+                        }
+                    }
+                    .get().map { it.name }
+                    .containsAll(topics.map { it.name }
                 )
             }
         }
@@ -184,7 +204,7 @@ class UiRenderTest {
         .filter { !it.matches(Regex("""\d+x""")) }
         .toSet()
 
-    @Before
+    @BeforeEach
     fun clearRepos() {
         val topics = api.listAllTopics()
         topics.forEach { api.deleteTopic(it.name) }
@@ -192,7 +212,7 @@ class UiRenderTest {
         clusters.forEach { api.deleteCluster(it.identifier) }
     }
 
-    @Before
+    @BeforeEach
     fun resetMocks() {
         reset(topicsRepository)
     }

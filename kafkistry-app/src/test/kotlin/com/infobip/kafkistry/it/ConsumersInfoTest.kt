@@ -1,14 +1,6 @@
 package com.infobip.kafkistry.it
 
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.serialization.ByteArrayDeserializer
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
-import org.assertj.core.api.Assertions.assertThat
+import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.ConsumerGroupStatus.EMPTY
 import com.infobip.kafkistry.kafka.ConsumerGroupStatus.STABLE
@@ -20,24 +12,31 @@ import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consumers.KafkaConsumerGroup
 import com.infobip.kafkistry.service.poolAll
 import com.infobip.kafkistry.service.toKafkaCluster
-import com.infobip.kafkistry.TestDirsPathInitializer
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.runner.RunWith
+import jakarta.annotation.PostConstruct
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.ByteArrayDeserializer
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.StringSerializer
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule
+import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
-import jakarta.annotation.PostConstruct
 
-@RunWith(SpringRunner::class)
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = ["ALLOW_ACCESS_TO_CONSUMER_GROUPS_NO_OWNERS=true"],
@@ -47,11 +46,19 @@ import jakarta.annotation.PostConstruct
 class ConsumersInfoTest {
 
     companion object {
-        @ClassRule
-        @JvmField
-        val kafka = EmbeddedKafkaRule(1, false, "test-topic")
 
-        val log = LoggerFactory.getLogger(ConsumersInfoTest::class.java)!!
+        private val kafka = EmbeddedKafkaKraftBroker(1, 2, "test-topic")
+
+        val log: Logger = LoggerFactory.getLogger(ConsumersInfoTest::class.java)
+
+        @BeforeAll
+        @JvmStatic
+        fun startKafka() = kafka.afterPropertiesSet()
+
+        @AfterAll
+        @JvmStatic
+        fun stopKafka() = kafka.destroy()
+
     }
 
     @LocalServerPort
@@ -68,7 +75,7 @@ class ConsumersInfoTest {
     @PostConstruct
     fun initialize() {
         api = ApiClient("localhost", port, "/kafkistry")
-        val clusterInfo = api.testClusterConnection(kafka.embeddedKafka.brokersAsString)
+        val clusterInfo = api.testClusterConnection(kafka.brokersAsString)
         val cluster = clusterInfo.toKafkaCluster().copy(identifier = "kfk-test")
         api.addCluster(cluster)
     }
@@ -194,7 +201,7 @@ class ConsumersInfoTest {
     private fun createConsumerAndSubscribe(): KafkaConsumer<String, ByteArray> {
         val props = Properties().also { props ->
             props[ConsumerConfig.GROUP_ID_CONFIG] = "kafkistry-test"
-            props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafka.embeddedKafka.brokersAsString
+            props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafka.brokersAsString
             props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = "false"
             props[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "10"
             props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
@@ -213,7 +220,7 @@ class ConsumersInfoTest {
 
     private fun produceToTopic(topic: TopicName, partition: Partition) {
         val props = Properties().also { props ->
-            props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafka.embeddedKafka.brokersAsString
+            props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafka.brokersAsString
         }
         KafkaProducer(props, StringSerializer(), StringSerializer()).use {
             it.send(ProducerRecord(

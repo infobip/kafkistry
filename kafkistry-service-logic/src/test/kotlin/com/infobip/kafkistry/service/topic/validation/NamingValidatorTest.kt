@@ -2,7 +2,7 @@ package com.infobip.kafkistry.service.topic.validation
 
 import io.kotlintest.matchers.fail
 import com.infobip.kafkistry.service.KafkistryValidationException
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class NamingValidatorTest {
 

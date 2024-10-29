@@ -7,11 +7,11 @@ import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.generator.balance.BalancePriority.*
 import com.infobip.kafkistry.service.generator.ids
-import org.junit.Ignore
-import org.junit.Test
+import io.kotlintest.matchers.fail
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import kotlin.math.abs
 import kotlin.system.measureTimeMillis
-import kotlin.test.fail
 
 class BalancerTest {
 
@@ -155,7 +155,7 @@ class BalancerTest {
     fun `test balancing random by different objectives`() {
         val randomSeed = System.currentTimeMillis()
         val state = stateRandom(randomSeed)
-        BalancePriority.values().forEach { balancePriority ->
+        BalancePriority.entries.forEach { balancePriority ->
             val objective = BalanceObjective.of(balancePriority)
             val duration = measureTimeMillis {
                 val proposedMigrations = performBalancing(
@@ -210,7 +210,7 @@ class BalancerTest {
     }
 
     @Test
-    @Ignore("slow execution - used for profiling")
+    @Disabled("slow execution - used for profiling")
     fun `test balancing performance`() {
         fun execute(seed: Long): Long {
             val state = stateRandom(randomSeed = seed)

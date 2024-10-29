@@ -2,7 +2,7 @@ package com.infobip.kafkistry.repository
 
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.repository.storage.FileNameEncoding
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 
 class FileNameEncodingTest {

@@ -1,29 +1,20 @@
 package com.infobip.kafkistry.it
 
-import org.assertj.core.api.Assertions.assertThat
+import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.TestDirsPathInitializer
-import com.infobip.kafkistry.model.AclOperation
-import com.infobip.kafkistry.model.AclResource
-import com.infobip.kafkistry.model.AclRule
-import com.infobip.kafkistry.model.PrincipalAclRules
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.runner.RunWith
+import jakarta.annotation.PostConstruct
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 import java.util.concurrent.TimeUnit
-import jakarta.annotation.PostConstruct
 import org.apache.kafka.common.config.TopicConfig as KafkaConfigKey
 
-@RunWith(SpringRunner::class)
 @SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
 @ActiveProfiles("defaults", "defaults", "it", "dir")
@@ -33,12 +24,6 @@ class TopicRegistryRestApiItTest {
     var port = 0
 
     lateinit var apiClient: ApiClient
-
-    companion object {
-        @ClassRule
-        @JvmField
-        val kafka = EmbeddedKafkaRule(3).brokerProperty("log.retention.bytes", "123456789")!!
-    }
 
     @PostConstruct
     fun init() {

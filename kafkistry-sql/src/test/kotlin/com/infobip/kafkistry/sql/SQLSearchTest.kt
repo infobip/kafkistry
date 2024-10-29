@@ -8,7 +8,7 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.sql.sources.RegistryTopicsDataSource
 import com.infobip.kafkistry.utils.test.newTestFolder
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class SQLSearchTest {
 

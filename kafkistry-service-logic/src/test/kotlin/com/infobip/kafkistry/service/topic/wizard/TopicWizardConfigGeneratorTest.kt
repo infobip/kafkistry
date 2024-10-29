@@ -15,7 +15,7 @@ import com.infobip.kafkistry.service.topic.validation.NamingValidator
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.Tag
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.concurrent.TimeUnit
 

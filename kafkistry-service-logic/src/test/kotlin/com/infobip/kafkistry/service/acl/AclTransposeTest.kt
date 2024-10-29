@@ -12,7 +12,7 @@ import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_P
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
 import com.infobip.kafkistry.service.acl.AvailableAclOperation.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 @Suppress("LocalVariableName")
 class AclTransposeTest {

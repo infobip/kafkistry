@@ -34,6 +34,7 @@ import org.eclipse.jgit.util.FS
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
+import java.nio.file.NoSuchFileException
 import java.io.IOException
 import java.net.URI
 import java.nio.charset.StandardCharsets
@@ -396,7 +397,9 @@ class GitRepository(
             val file = subDir.asSubDirFile().child(name)
             try {
                 StoredFile(name, FileUtils.readFileToString(file, Charsets.UTF_8))
-            } catch (ex: FileNotFoundException) {
+            } catch (_: FileNotFoundException) {
+                null
+            } catch (_: NoSuchFileException) {
                 null
             }
         }

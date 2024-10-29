@@ -8,7 +8,7 @@ import com.infobip.kafkistry.service.newClusterInfo
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.DataRetention
 import com.infobip.kafkistry.model.ClusterRef
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
 class RequiredResourcesInspectorTest {

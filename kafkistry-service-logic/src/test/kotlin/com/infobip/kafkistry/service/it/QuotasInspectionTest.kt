@@ -25,9 +25,9 @@ import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNEXPECTED
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.UNKNOWN
 import com.infobip.kafkistry.service.quotas.QuotasInspectionResultType.Companion.WRONG_VALUE
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,8 +37,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 
-@Suppress("PrivatePropertyName", "LocalVariableName")
-@RunWith(SpringRunner::class)
+@Suppress("LocalVariableName")
 @SpringBootTest
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
 @ActiveProfiles("it", "dir")
@@ -59,14 +58,14 @@ class QuotasInspectionTest {
     @Autowired
     private lateinit var clusters: ClustersRegistryService
 
-    @Before
+    @BeforeEach
     fun before() {
         Mockito.reset(stateProvider)
         clusters.removeAll()
         quotas.deleteAll(UpdateContext("test msg"))
     }
 
-    @After
+    @AfterEach
     fun after() {
         clusters.removeAll()
     }

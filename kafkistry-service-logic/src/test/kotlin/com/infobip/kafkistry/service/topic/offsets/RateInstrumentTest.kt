@@ -1,7 +1,8 @@
 package com.infobip.kafkistry.service.topic.offsets
 
 import io.kotlintest.matchers.shouldBe
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class RateInstrumentTest {
 
@@ -13,16 +14,20 @@ class RateInstrumentTest {
         instrument.rate(10) shouldBe null
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `test out of range too big`() {
-        val instrument = RateInstrument(10)
-        instrument.rate(15)
+        assertThrows<IllegalArgumentException> {
+            val instrument = RateInstrument(10)
+            instrument.rate(15)
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun `test out of range too small`() {
-        val instrument = RateInstrument(10)
-        instrument.rate(0)
+        assertThrows<IllegalArgumentException> {
+            val instrument = RateInstrument(10)
+            instrument.rate(0)
+        }
     }
 
 

@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.kafka.asString
 import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.*
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class AclLinkResolverTest {
 

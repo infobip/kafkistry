@@ -7,7 +7,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.RuleViolation
 import com.infobip.kafkistry.service.topic.configForCluster
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class MinInSyncReplicasTooBigRuleTest {
 

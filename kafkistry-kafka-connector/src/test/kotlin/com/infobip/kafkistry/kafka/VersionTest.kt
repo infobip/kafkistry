@@ -2,7 +2,7 @@ package com.infobip.kafkistry.kafka
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class VersionTest {
 

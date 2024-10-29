@@ -7,7 +7,7 @@ import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.generator.OverridesMinimizer
 import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.topic.propertiesForCluster
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.stream.Collectors
 

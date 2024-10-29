@@ -2,7 +2,7 @@ package com.infobip.kafkistry.recordstructure
 
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.model.RecordFieldType
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class AnalyzeFilterTest {
 

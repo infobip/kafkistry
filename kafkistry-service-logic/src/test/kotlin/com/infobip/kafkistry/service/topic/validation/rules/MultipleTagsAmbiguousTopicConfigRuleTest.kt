@@ -7,7 +7,7 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.Tag
 import com.infobip.kafkistry.service.RuleViolation
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class MultipleTagsAmbiguousTopicConfigRuleTest {
 

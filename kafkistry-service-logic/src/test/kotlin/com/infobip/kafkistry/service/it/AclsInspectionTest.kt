@@ -1,22 +1,12 @@
 package com.infobip.kafkistry.service.it
 
-import com.nhaarman.mockitokotlin2.whenever
-import org.assertj.core.api.Assertions.assertThat
+import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.kafka.KafkaAclRule
+import com.infobip.kafkistry.kafka.parseAcl
+import com.infobip.kafkistry.kafkastate.*
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.model.PresenceType.EXCLUDED_CLUSTERS
 import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.acl.AvailableAclOperation.*
-import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.topic.TopicsRegistryService
-import com.infobip.kafkistry.service.UpdateContext
-import com.infobip.kafkistry.TestDirsPathInitializer
-import com.infobip.kafkistry.kafka.ConsumerGroup
-import com.infobip.kafkistry.kafka.parseAcl
-import com.infobip.kafkistry.kafkastate.*
-import com.infobip.kafkistry.model.KafkaCluster
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.service.acl.*
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
@@ -28,21 +18,23 @@ import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.SECURITY_DISABLED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNEXPECTED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.UNKNOWN
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import com.infobip.kafkistry.service.acl.AvailableAclOperation.*
+import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.service.topic.TopicsRegistryService
+import com.nhaarman.mockitokotlin2.whenever
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
-import kotlin.test.assertFailsWith
 
 @Suppress("PrivatePropertyName", "LocalVariableName")
-@RunWith(SpringRunner::class)
 @SpringBootTest
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
 @ActiveProfiles("it", "dir")
@@ -72,7 +64,7 @@ class AclsInspectionTest {
     @Autowired
     private lateinit var topics: TopicsRegistryService
 
-    @Before
+    @BeforeEach
     fun before() {
         Mockito.reset(stateProvider, groupsStateProvider)
         topics.deleteAll(UpdateContext("test msg"))
@@ -81,7 +73,7 @@ class AclsInspectionTest {
         aclLinkResolver.invalidateCache()
     }
 
-    @After
+    @AfterEach
     fun after() {
         clusters.removeAll()
     }
@@ -478,14 +470,14 @@ class AclsInspectionTest {
         //test the suggestion operations
 
         //P1
-        assertFailsWith<KafkistryIllegalStateException> {
+        assertThrows<KafkistryIllegalStateException> {
             suggestion.suggestPrincipalAclsImport("User:P1")
         }
         //ignore result, no automatic conflict rsulotion suggestions
         suggestion.suggestPrincipalAclsUpdate("User:P1")
 
         //P2
-        assertFailsWith<KafkistryIllegalStateException> {
+        assertThrows<KafkistryIllegalStateException> {
             suggestion.suggestPrincipalAclsImport("User:P2")
         }
         val suggested_P2_acls = suggestion.suggestPrincipalAclsUpdate("User:P2")
@@ -498,11 +490,11 @@ class AclsInspectionTest {
                         rule_p2_r1.toAclRule(presenceAll),
                         rule_p2_r2.toAclRule(presence("c_1"))
                 )
-        )
+            )
         )
 
         //P3
-        assertFailsWith<KafkistryIllegalStateException> {
+        assertThrows<KafkistryIllegalStateException> {
             suggestion.suggestPrincipalAclsImport("User:P3")
         }
         val suggested_P3_acls = suggestion.suggestPrincipalAclsUpdate("User:P3")
@@ -516,7 +508,7 @@ class AclsInspectionTest {
                         rule_p3_r2.toAclRule(presenceAll),
                         rule_p3_r3.toAclRule(presenceAll)
                 )
-        )
+            )
         )
 
         //P4
@@ -530,9 +522,9 @@ class AclsInspectionTest {
                         rule_p4_r1.toAclRule(Presence(EXCLUDED_CLUSTERS, listOf("c_3"))),
                         rule_p4_r2.toAclRule(Presence(EXCLUDED_CLUSTERS, listOf("c_3")))
                 )
+            )
         )
-        )
-        assertFailsWith<KafkistryIllegalStateException> {
+        assertThrows<KafkistryIllegalStateException> {
             suggestion.suggestPrincipalAclsUpdate("User:P4")
         }
 

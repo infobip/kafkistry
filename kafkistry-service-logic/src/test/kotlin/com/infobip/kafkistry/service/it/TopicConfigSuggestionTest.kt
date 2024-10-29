@@ -16,19 +16,16 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.service.topic.OperationSuggestionService
 import com.infobip.kafkistry.TestDirsPathInitializer
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 
-@RunWith(SpringRunner::class)
 @SpringBootTest
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
 @ActiveProfiles("it", "dir")
@@ -45,14 +42,14 @@ class TopicConfigSuggestionTest {
     @Autowired
     private lateinit var topics: TopicsRegistryService
 
-    @Before
+    @BeforeEach
     fun before() {
         reset(stateProvider)
         topics.deleteAll(UpdateContext("test msg"))
         clusters.removeAll()
     }
 
-    @After
+    @AfterEach
     fun after() {
         clusters.removeAll()
     }

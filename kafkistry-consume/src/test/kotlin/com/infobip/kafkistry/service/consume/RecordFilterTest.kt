@@ -10,7 +10,7 @@ import com.infobip.kafkistry.service.consume.FieldRuleType.*
 import com.infobip.kafkistry.service.consume.filter.JsonPathParser
 import com.infobip.kafkistry.service.consume.filter.MatcherFactory
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 
 class RecordFilterTest {

@@ -1,35 +1,36 @@
 package com.infobip.kafkistry.service.consume
 
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.serialization.ByteArraySerializer
-import org.apache.kafka.common.serialization.StringSerializer
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.groups.Tuple
+import com.infobip.kafkistry.kafka.ClientFactory
+import com.infobip.kafkistry.kafka.Partition
+import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
+import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
+import com.infobip.kafkistry.model.ClusterRef
+import com.infobip.kafkistry.model.KafkaCluster
+import com.infobip.kafkistry.service.KafkistryConsumeException
 import com.infobip.kafkistry.service.consume.config.ConsumeProperties
 import com.infobip.kafkistry.service.consume.filter.JsonPathParser
 import com.infobip.kafkistry.service.consume.filter.MatcherFactory
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
-import com.infobip.kafkistry.kafka.ClientFactory
-import com.infobip.kafkistry.kafka.Partition
-import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
-import com.infobip.kafkistry.model.KafkaCluster
-import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
-import com.infobip.kafkistry.model.ClusterRef
-import com.infobip.kafkistry.service.KafkistryConsumeException
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.record.TimestampType
-import org.junit.After
-import org.junit.Before
-import org.junit.ClassRule
-import org.junit.Test
+import org.apache.kafka.common.serialization.ByteArraySerializer
+import org.apache.kafka.common.serialization.StringSerializer
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.groups.Tuple
+import org.awaitility.Awaitility
+import org.awaitility.Awaitility.await
+import org.junit.jupiter.api.*
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.kafka.test.EmbeddedKafkaZKBroker
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+@Suppress("ConstPropertyName")
 class KafkaTopicReaderTest {
 
     companion object {
@@ -43,25 +44,43 @@ class KafkaTopicReaderTest {
         const val topic7 = "test-consume7"
         const val topic8 = "test-consume8"
 
-        @ClassRule
-        @JvmField
-        val kafka = EmbeddedKafkaRule(
-            3, false,
+        private val kafka = EmbeddedKafkaKraftBroker(
+            3, 2,
             topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8,
         )
+
+        @BeforeAll
+        @JvmStatic
+        fun startKafka() = kafka.afterPropertiesSet().also {
+            kafka.doWithAdmin { admin ->
+                await("for all topics to get created")
+                    .atMost(Duration.ofSeconds(10))
+                    .untilAsserted {
+                        val topics = admin.listTopics().names().get()
+                        assertThat(topics).contains(topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8)
+                        assertThat(admin.describeTopics(topics).allTopicNames().get()).containsKeys(
+                            topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8
+                        )
+                    }
+            }
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun stopKafka() = kafka.destroy()
     }
 
     private val producer: KafkaProducer<String, ByteArray> = KafkaProducer(
-            Properties().also { props ->
-                props["bootstrap.servers"] = kafka.embeddedKafka.brokersAsString
-                props["acks"] = "all"
-                props["retries"] = 0
-                props["batch.size"] = 16384
-                props["linger.ms"] = 1
-                props["buffer.memory"] = 33554432
-            },
-            StringSerializer(),
-            ByteArraySerializer()
+        Properties().also { props ->
+            props["bootstrap.servers"] = kafka.brokersAsString
+            props["acks"] = "all"
+            props["retries"] = 0
+            props["batch.size"] = 16384
+            props["linger.ms"] = 1
+            props["buffer.memory"] = 33554432
+        },
+        StringSerializer(),
+        ByteArraySerializer(),
     )
 
     private val consumerService = KafkaTopicReader(
@@ -91,19 +110,19 @@ class KafkaTopicReaderTest {
         }
     }
 
-    @Before
+    @BeforeEach
     fun init() {
         kafkaCluster = KafkaCluster(
                 identifier = "test",
-                connectionString = kafka.embeddedKafka.brokersAsString,
-                clusterId = kafka.embeddedKafka.clusterId(),
+                connectionString = kafka.brokersAsString,
+                clusterId = kafka.clusterId(),
                 sslEnabled = false,
                 saslEnabled = false,
                 tags = emptyList(),
         )
     }
 
-    @After
+    @AfterEach
     fun tearDown() = producer.close()
 
     private fun sendMessage(topic: String, msg: String, key: String? = null) {
@@ -163,14 +182,14 @@ class KafkaTopicReaderTest {
         assertThat(recordsResult.records).hasSize(6)
     }
 
-    @Test(expected = KafkistryConsumeException::class)
+    @Test
     fun `consume too big offset`() {
-        consumerService.readTopicRecords(
-                topic1,
-                kafkaCluster,
-                "foo",
+        assertThatThrownBy {
+            consumerService.readTopicRecords(
+                topic1, kafkaCluster, "foo",
                 readConfig(fromOffset = Offset(OffsetType.EXPLICIT, 1000)),
-        )
+            )
+        }.isInstanceOf(KafkistryConsumeException::class.java)
     }
 
     @Test
@@ -191,17 +210,18 @@ class KafkaTopicReaderTest {
                 .containsOnly(topic3 to "Test")
     }
 
-    @Test(expected = KafkistryConsumeException::class)
+    @Test
     fun `try consuming topics from future`() {
-        sendMessage(topic4, "Test")
-        sendMessage(topic4, "Test")
-        sendMessage(topic4, "Test")
-        consumerService.readTopicRecords(
-                topic4,
-                kafkaCluster,
-                "foo",
+        assertThatThrownBy {
+
+            sendMessage(topic4, "Test")
+            sendMessage(topic4, "Test")
+            sendMessage(topic4, "Test")
+            consumerService.readTopicRecords(
+                topic4, kafkaCluster, "foo",
                 readConfig(fromOffset = Offset(OffsetType.TIMESTAMP, System.currentTimeMillis() + 1_000_000_000)),
-        )
+            )
+        }.isInstanceOf(KafkistryConsumeException::class.java)
     }
 
     @Test
@@ -269,7 +289,7 @@ class KafkaTopicReaderTest {
                 ),
         )
         val partitionEarliest = result.records.groupBy { it.partition }.mapValues { (_, records) ->
-            records.map { it.offset }.minOrNull()
+            records.minOfOrNull { it.offset }
         }
         assertThat(partitionEarliest)
             .containsEntry(0, 11)

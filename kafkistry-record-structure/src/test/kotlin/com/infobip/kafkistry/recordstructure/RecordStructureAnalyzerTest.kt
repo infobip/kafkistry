@@ -8,7 +8,7 @@ import org.apache.kafka.common.record.TimestampType
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.utils.test.newTestFolder
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Function

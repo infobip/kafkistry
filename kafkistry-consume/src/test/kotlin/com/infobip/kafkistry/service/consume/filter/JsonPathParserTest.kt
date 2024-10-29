@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.service.consume.filter
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class JsonPathParserTest {
 

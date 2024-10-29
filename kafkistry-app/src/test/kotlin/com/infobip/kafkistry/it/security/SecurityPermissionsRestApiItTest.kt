@@ -1,42 +1,39 @@
 package com.infobip.kafkistry.it.security
 
+import com.infobip.kafkistry.Kafkistry
+import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.it.ui.ApiClient
+import com.infobip.kafkistry.kafka.parseAcl
+import com.infobip.kafkistry.model.*
+import com.infobip.kafkistry.service.*
+import com.infobip.kafkistry.service.acl.AclsRegistryService
+import com.infobip.kafkistry.service.acl.toAclRule
+import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.webapp.security.User
+import com.infobip.kafkistry.webapp.security.UserRole
+import com.infobip.kafkistry.webapp.security.auth.owners.UserOwnerVerifier
+import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
+import jakarta.annotation.PostConstruct
+import jakarta.servlet.http.HttpServletRequest
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
 import org.assertj.core.api.Assertions.assertThat
-import com.infobip.kafkistry.Kafkistry
-import com.infobip.kafkistry.it.ui.ApiClient
-import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.*
-import com.infobip.kafkistry.service.acl.AclsRegistryService
-import com.infobip.kafkistry.service.cluster.ClustersRegistryService
-import com.infobip.kafkistry.service.UpdateContext
-import com.infobip.kafkistry.TestDirsPathInitializer
-import com.infobip.kafkistry.kafka.parseAcl
-import com.infobip.kafkistry.service.acl.toAclRule
-import com.infobip.kafkistry.webapp.security.User
-import com.infobip.kafkistry.webapp.security.UserRole
-import com.infobip.kafkistry.webapp.security.auth.owners.UserOwnerVerifier
-import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpStatus
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule
+import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.web.client.RestClientResponseException
 import java.util.*
-import jakarta.annotation.PostConstruct
-import jakarta.servlet.http.HttpServletRequest
 
-@RunWith(SpringRunner::class)
 @SpringBootTest(
         classes = [Kafkistry::class, SecurityPermissionsRestApiItTest.MockSecurityConfig::class],
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -63,11 +60,17 @@ class SecurityPermissionsRestApiItTest {
     lateinit var aclsRegistry: AclsRegistryService
 
     companion object {
-        @ClassRule
-        @JvmField
-        val kafka = EmbeddedKafkaRule(3, true, "consumers-topic")
 
+        private val kafka = EmbeddedKafkaKraftBroker(3, 2, "consumers-topic")
         private var clusterInitialized = false
+
+        @BeforeAll
+        @JvmStatic
+        fun startKafka() = kafka.afterPropertiesSet()
+
+        @AfterAll
+        @JvmStatic
+        fun stopKafka() = kafka.destroy()
     }
 
     class MockSecurityConfig {
@@ -100,7 +103,7 @@ class SecurityPermissionsRestApiItTest {
             //this initialization needs to run only once after context is started
             //but junit tests create new instance of "this" class for each test
             clusterInitialized = true
-            val clusterInfo = apiAdmin.testClusterConnection(kafka.embeddedKafka.brokersAsString)
+            val clusterInfo = apiAdmin.testClusterConnection(kafka.brokersAsString)
             val cluster = clusterInfo.toKafkaCluster().copy(identifier = "test-cluster")
             apiAdmin.addCluster(cluster)
             apiAdmin.refreshClusters()
@@ -109,7 +112,7 @@ class SecurityPermissionsRestApiItTest {
             aclsRegistry.create(principalAcls("owner-empty", "consumer-empty"), UpdateContext("test"))
             aclsRegistry.create(principalAcls("owner-unauthenticated", "consumer-unauthenticated"), UpdateContext("test"))
             AdminClient.create(mapOf(
-                AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.embeddedKafka.brokersAsString
+                AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.brokersAsString
             )).use {
                 val offsets = mapOf(TopicPartition("consumers-topic", 0) to OffsetAndMetadata(10L))
                 val adminFuture = it.alterConsumerGroupOffsets("consumer-admin", offsets).all()
