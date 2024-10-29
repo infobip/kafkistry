@@ -1,6 +1,5 @@
 package com.infobip.kafkistry.kafkastate.brokerdisk
 
-import okhttp3.OkHttpClient
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.ClusterNode
 import com.infobip.kafkistry.kafka.NodeId
@@ -11,10 +10,11 @@ import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.ClientHttpResponse
-import org.springframework.http.client.OkHttp3ClientHttpRequestFactory
+import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestClientResponseException
+import java.net.http.HttpClient
 import java.util.function.Supplier
 
 @Component
@@ -34,7 +34,7 @@ class PrometheusBrokerDiskMetricsProperties {
 @Component
 @ConditionalOnProperty("app.kafka.metrics.prometheus.enabled")
 class PrometheusNodeDiskMetricsProvider(
-    private val properties: PrometheusBrokerDiskMetricsProperties
+    private val properties: PrometheusBrokerDiskMetricsProperties,
 ) : NodeDiskMetricsProvider {
 
     private val promUrl = "${properties.prometheusBaseUrl}/api/v1/query?query={query}&time={time}"
@@ -49,9 +49,7 @@ class PrometheusNodeDiskMetricsProvider(
             execution.execute(request, body)
         })
         .requestFactory(Supplier {
-            OkHttp3ClientHttpRequestFactory(
-                OkHttpClient.Builder().followRedirects(false).build()
-            )
+            JdkClientHttpRequestFactory(HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build())
         })
         .errorHandler(object : ResponseErrorHandler {
             override fun hasError(response: ClientHttpResponse): Boolean = response.statusCode != HttpStatus.OK
@@ -80,7 +78,7 @@ class PrometheusNodeDiskMetricsProvider(
 
     override fun nodesDisk(
         clusterIdentifier: KafkaClusterIdentifier,
-        nodes: List<ClusterNode>
+        nodes: List<ClusterNode>,
     ): Map<NodeId, NodeDiskMetric> {
         return if (properties.bulk) {
             val totalDisk = properties.totalPromQuery?.let { getBulkBrokersValues(it, nodes) }
@@ -148,7 +146,7 @@ class PrometheusNodeDiskMetricsProvider(
     )
 
     private data class PrometheusData(
-        val result: List<PrometheusMetric>
+        val result: List<PrometheusMetric>,
     )
 
     private data class PrometheusMetric(
