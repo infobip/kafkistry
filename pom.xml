@@ -73,7 +73,7 @@
         <!-- PLUGIN -->
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <dokka-maven-plugin.version>1.6.21</dokka-maven-plugin.version>
-        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+        <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <gpg-sign-skip>false</gpg-sign-skip>
         <enforcerSkip>true</enforcerSkip>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
