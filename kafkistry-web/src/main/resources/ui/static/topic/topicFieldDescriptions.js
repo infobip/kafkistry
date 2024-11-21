@@ -14,6 +14,9 @@ let topicStructureValueFieldFullNames = [];
 let fetchedRecordsStructureTopic = null;
 
 function fetchRecordsStructure() {
+    if (typeof extractTopicName !== "function") {
+        return;
+    }
     let topic = extractTopicName();
     let url = "api/records-structure/topic?topicName=" + encodeURI(topic);
     $.get(url)
