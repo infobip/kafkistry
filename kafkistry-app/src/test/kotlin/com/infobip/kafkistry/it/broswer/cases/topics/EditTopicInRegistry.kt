@@ -157,13 +157,21 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
                 selectByVisibleText("retention.ms")
             }
 
+        //field descriptions
+        browser.findElementWithText("Add field description").scrollIntoView().click()
+        browser.findElementByCssSelector(".field-descriptions input[name=field-selector]").clearAndSendKeys("fieldName")
+        browser.findElementByCssSelector(".field-descriptions .add-field-classification-btn").click()
+        browser.findElementByCssSelector(".field-descriptions input[name=field-classification]").clearAndSendKeys("CLS")
+        browser.findElementByCssSelector(".field-descriptions textarea[name=field-description]").clearAndSendKeys("documentation of fieldName being CLS")
+
         browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
         await {
             assertThat(browser.findElementById("dry-run-inspect-status").text).contains(
-                "my-cluster", "WRONG_CONFIG", "WRONG_PARTITION_COUNT", "WRONG_REPLICATION_FACTOR"
+                "my-cluster", "UPDATE_CONFIG", "CHANGE_PARTITION_COUNT", "CHANGE_REPLICATION_FACTOR"
             )
         }
 
+        browser.findElementWithText("Allow saving ignoring blockers").scrollIntoView().click()
         browser.findElementById("edit-btn").scrollIntoView().click()
         await("to save edit and redirect to topic page") {
             assertThat(browser.currentUrl).contains("/topics/inspect")
@@ -212,7 +220,14 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
                         partitionCount = true, replicationFactor = false,
                         configProperties = listOf("retention.bytes", "retention.ms"),
                     )
-                )
+                ),
+                fieldDescriptions = listOf(
+                    FieldDescription(
+                        selector = "fieldName",
+                        classifications = listOf("CLS"),
+                        description = "documentation of fieldName being CLS",
+                    ),
+                ),
         )
         assertThat(topicsApi.getTopic("my-edit-1")).isEqualTo(expectedTopicDescription)
         assertThat(browser.findElementById("topic-yaml").text).isEqualTo(YamlMapper().serialize(expectedTopicDescription).trim())

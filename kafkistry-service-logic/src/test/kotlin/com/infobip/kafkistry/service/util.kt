@@ -38,6 +38,7 @@ fun newTopic(
     perTagProperties: Map<Tag, TopicProperties> = emptyMap(),
     perTagConfigOverrides: Map<Tag, TopicConfigMap> = emptyMap(),
     freezeDirectives: List<FreezeDirective> = emptyList(),
+    fieldDescriptions: List<FieldDescription> = emptyList(),
 ) = TopicDescription(
         name,
         owner,
@@ -53,6 +54,7 @@ fun newTopic(
         perTagProperties,
         perTagConfigOverrides,
         freezeDirectives,
+        fieldDescriptions,
 )
 
 fun TopicDescription.withEmptyOwnerDescriptionProducer() = copy(

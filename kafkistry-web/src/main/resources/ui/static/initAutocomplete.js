@@ -4,6 +4,7 @@ $(document).ready(function () {
     allExistingTopics = existingValuesOf("#existing_topics .existing-element");
     allExistingProducers = existingValuesOf("#existing_producers .existing-element");
     allExistingConsumerGroups = existingValuesOf("#existing_consumer_groups .existing-element");
+    allExistingFieldClassifications = existingValuesOf("#existing_topic_field_classifications .existing-element");
 });
 
 let allExistingOwners = [];
@@ -11,6 +12,7 @@ let allExistingUsers = [];
 let allExistingTopics = [];
 let allExistingProducers = [];
 let allExistingConsumerGroups = [];
+let allExistingFieldClassifications = [];
 
 function existingValuesOf(sourceSelector) {
     let elements = [];

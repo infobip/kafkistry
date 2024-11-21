@@ -23,6 +23,7 @@
 
 <head>
     <#include "../commonResources.ftl"/>
+    <script src="static/recordsStructure-js/model.js?ver=${lastCommit}"></script>
     <script src="static/consume/consume.js?ver=${lastCommit}"></script>
     <script src="static/consume/consumeFilter.js?ver=${lastCommit}"></script>
     <script src="static/consume/consumeKeyPartition.js?ver=${lastCommit}"></script>

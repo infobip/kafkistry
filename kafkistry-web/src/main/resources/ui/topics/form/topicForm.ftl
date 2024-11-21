@@ -154,6 +154,17 @@
 
 <#import "topicFormConfigComponents.ftl" as components>
 
+
+<div class="card">
+    <div class="card-header h3">Field descriptions</div>
+    <div class="card-body m-0">
+        <#assign fieldDescriptions = topic.fieldDescriptions>
+        <#include "topicFieldDescriptionsForm.ftl">
+    </div>
+</div>
+<br/>
+
+
 <div style="display: none;">
     <#assign configEntryTemplate>
         <@components.configEntry key="%key-PH%" value="%value-PH%" doc="%doc-PH%"/>

@@ -91,11 +91,17 @@ function setupFilterFieldsAutocomplete() {
     }
 }
 
+/**
+ * @param inputs
+ * @param {RecordStructureField[]} fieldNames
+ */
 function enableAutocomplete(inputs, fieldNames) {
     inputs.forEach(function (input) {
             let autocomplete = input
                 .autocomplete({
-                    source: fieldNames,
+                    source: fieldNames.map((field) => {
+                        return {value: field.fullName, field: field};
+                    }),
                     minLength: 0,
                     classes: {
                         "ui-autocomplete": "text-monospace, small"
@@ -105,7 +111,7 @@ function enableAutocomplete(inputs, fieldNames) {
                     $(this).data("uiAutocomplete").search($(this).val());
                 });
             autocomplete.data("uiAutocomplete")._renderItem = function (ul, item) {
-                let itemHtml = fieldAutocompleteHtml(item);
+                let itemHtml = fieldAutocompleteHtml(item.field);
                 return $("<li>")
                     .data("item.autocomplete", item)
                     .append(itemHtml)
@@ -116,6 +122,10 @@ function enableAutocomplete(inputs, fieldNames) {
     );
 }
 
+/**
+ * @param {RecordStructureField} item
+ * @return {string}
+ */
 function fieldAutocompleteHtml(item) {
     let itemHtml = "<span class='badge badge-secondary' style='width: 60px;'>"+item.type+"</span>";
     itemHtml += " <code>"+item.fullName+"</code>";
@@ -134,34 +144,6 @@ function disableAutocomplete(inputs) {
             input.autocomplete("disable");
         }
     });
-}
-
-function extractFieldsNames(fields) {
-    let result = [];
-    fields.forEach(function (field) {
-        Array.prototype.push.apply(result, extractFieldNames(field));
-    });
-    return result;
-}
-
-function extractFieldNames(field) {
-    let result = [];
-    if (field.fullName) {
-        result.push({
-            value: field.fullName,
-            fullName: field.fullName,
-            type: field.type,
-            nullable: field.nullable,
-            highCardinality: (field.value ? field.value.highCardinality : null),
-            tooBig: (field.value ? field.value.tooBig : null),
-            enumerated: (field.value ? !field.value.highCardinality && !field.value.tooBig : false),
-            valueSet: (field.value ? field.value.valueSet : null),
-        });
-    }
-    if (field.children) {
-        Array.prototype.push.apply(result, extractFieldsNames(field.children));
-    }
-    return result;
 }
 
 function setupFilterValueAutocomplete() {

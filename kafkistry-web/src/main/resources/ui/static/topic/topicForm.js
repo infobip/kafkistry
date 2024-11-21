@@ -40,10 +40,13 @@ $(document).ready(function () {
 
 let topicDescriptionDryRunInspected = null;
 
-function extractTopicDescription() {
+function extractTopicName() {
     let fixedTopicName = $("#yaml-source-metadata").attr("data-id");
     let editableTopicName = $("input[name='topicName']").val();
-    let topicName = (editableTopicName ? editableTopicName.trim() : fixedTopicName);
+    return (editableTopicName ? editableTopicName.trim() : fixedTopicName);
+}
+
+function extractTopicDescription() {
     let owner = $("input[name='owner']").val().trim();
     let description = $("textarea[name='description']").val();
     let producer = $("input[name='producer']").val().trim();
@@ -87,7 +90,7 @@ function extractTopicDescription() {
         }
     });
     return {
-        name: topicName,
+        name: extractTopicName(),
         owner: owner,
         description: description,
         labels: extractTopicLabels(),
@@ -104,6 +107,7 @@ function extractTopicDescription() {
         perTagProperties: perTagProperties,
         perTagConfigOverrides: perTagConfig,
         freezeDirectives: extractFreezeDirectives(),
+        fieldDescriptions: extractTopicFieldDescriptions(),
     };
 }
 

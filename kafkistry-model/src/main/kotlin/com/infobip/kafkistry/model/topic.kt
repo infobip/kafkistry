@@ -21,6 +21,7 @@ data class TopicDescription(
     val perTagProperties: Map<Tag, TopicProperties> = emptyMap(),
     val perTagConfigOverrides: Map<Tag, TopicConfigMap> = emptyMap(),
     val freezeDirectives: List<FreezeDirective> = emptyList(),
+    val fieldDescriptions: List<FieldDescription> = emptyList(),
 ) : Serializable
 
 data class TopicProperties(
@@ -96,4 +97,12 @@ data class FreezeDirective(
     val partitionCount: Boolean = false,
     val replicationFactor: Boolean = false,
     val configProperties: List<TopicConfigKey> = emptyList(),
+) : Serializable
+
+typealias FieldClassification = String
+
+data class FieldDescription(
+    val selector: String,
+    val classifications: List<FieldClassification> = emptyList(),
+    val description: String = "",
 ) : Serializable

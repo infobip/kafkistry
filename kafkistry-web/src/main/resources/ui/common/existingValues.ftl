@@ -26,4 +26,9 @@
             <span class="existing-element">${consumerGroup}</span>
         </#list>
     </div>
+    <div id="existing_topic_field_classifications">
+        <#list existingValues.fieldClassifications as fieldClassification>
+            <span class="existing-element">${fieldClassification}</span>
+        </#list>
+    </div>
 </div>

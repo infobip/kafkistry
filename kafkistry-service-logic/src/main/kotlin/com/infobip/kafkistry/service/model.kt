@@ -87,6 +87,7 @@ data class ExistingValues(
     val topicLabels: List<Label>,
     val consumerGroups: List<ConsumerGroupId>,
     val users: List<KafkaUser>,
+    val fieldClassifications: List<FieldClassification>,
 )
 
 data class RuleViolation(

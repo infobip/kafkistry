@@ -119,6 +119,13 @@ class ExistingValuesService(
         }.distinct().sortedBy { it.toString() }.toList()
     }
 
+    private fun allFieldClassifications(topics: List<TopicDescription>): List<FieldClassification> {
+        return sequence {
+            topics.forEach { topic -> topic.fieldDescriptions.forEach { yieldAll(it.classifications) } }
+            suppliers().forEach { yieldAll(it.fieldClassifications()) }
+        }.distinctSortedList()
+    }
+
     fun allExistingValues(): ExistingValues {
         val kafkaProfiles = managementClientProperties.profiles.keys.toList()
         val clusterStates = kafkaClustersStateProvider.listAllLatestClusterStates()
@@ -143,6 +150,7 @@ class ExistingValuesService(
             topicLabels = allLabels(topics),
             consumerGroups = allConsumerGroups(consumersGroupsStates),
             users = allUsers(aclPrincipals, entityQuotas),
+            fieldClassifications = allFieldClassifications(topics),
         )
     }
 

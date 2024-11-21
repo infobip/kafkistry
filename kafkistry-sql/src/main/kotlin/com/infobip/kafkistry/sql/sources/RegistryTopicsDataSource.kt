@@ -63,6 +63,13 @@ class RegistryTopicsDataSource(
                     }
                 }
             }
+            fieldDescriptions = topicDescription.fieldDescriptions.map {
+                FieldDoc().apply {
+                    selector = it.selector
+                    classifications = it.classifications.joinToString(",")
+                    description = it.description
+                }
+            }
         }
     }
 
@@ -96,6 +103,10 @@ class RegistryTopic {
     @JoinTable(name = "RegistryTopics_FrozenProperties")
     lateinit var frozenProperties: List<FrozenProperty>
 
+    @ElementCollection
+    @JoinTable(name = "RegistryTopics_FieldDescriptions")
+    lateinit var fieldDescriptions: List<FieldDoc>
+
 }
 
 @Embeddable
@@ -109,6 +120,15 @@ class FrozenProperty {
     lateinit var name: String
     lateinit var reason: String
 }
+
+@Embeddable
+class FieldDoc {
+    lateinit var selector: String
+    lateinit var classifications: String
+    lateinit var description: String
+}
+
+
 
 
 

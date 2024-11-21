@@ -10,6 +10,8 @@
     <script src="static/topic/createTopicWizard.js?ver=${lastCommit}"></script>
     <script src="static/presenceForm.js?ver=${lastCommit}"></script>
     <script src="static/topic/topicLabels.js?ver=${lastCommit}"></script>
+    <script src="static/recordsStructure-js/model.js?ver=${lastCommit}"></script>
+    <script src="static/topic/topicFieldDescriptions.js?ver=${lastCommit}"></script>
     <script src="static/topic/topicResourceRequirements.js?ver=${lastCommit}"></script>
     <script src="static/topic/${topicNameProperties.jsName}.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Create new topic from wizard</title>
