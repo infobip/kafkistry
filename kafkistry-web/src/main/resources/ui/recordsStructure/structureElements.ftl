@@ -186,12 +186,12 @@
         <#if (structure.jsonFields)??>
             <div>
                 <label class="btn btn-sm btn-outline-secondary">
-                    Tree view
-                    <input type="radio" name="fields-display-view-type" value="tree" checked>
+                    List view
+                    <input type="radio" name="fields-display-view-type" value="list" checked>
                 </label>
                 <label class="btn btn-sm btn-outline-secondary">
-                    List view
-                    <input type="radio" name="fields-display-view-type" value="list">
+                    Tree view
+                    <input type="radio" name="fields-display-view-type" value="tree">
                 </label>
                 <label class="btn btn-sm btn-outline-secondary">
                     Raw view
