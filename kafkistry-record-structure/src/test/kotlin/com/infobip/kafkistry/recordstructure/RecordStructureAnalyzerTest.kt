@@ -38,11 +38,13 @@ class RecordStructureAnalyzerTest {
         valSamplingMaxCardinality: Int = 10,
         valueSampleIncludedTopics: String? = null,
         valueSampleExcludedTopics: String? = null,
+        cardinalityRequiringCommonFields: Boolean = false,
     ): RecordStructureAnalyzer {
         val properties = RecordAnalyzerProperties().apply {
             this.storageDir = storageDir
             this.timeWindow = timeWindow
             this.cardinalityMagnitudeFactorThreshold = cardinalityMagnitudeFactorThreshold
+            this.cardinalityRequiringCommonFields = cardinalityRequiringCommonFields
             this.valueSampling.apply {
                 enabled = valueSamplingEnabled
                 maxCardinality = valSamplingMaxCardinality
@@ -791,7 +793,8 @@ class RecordStructureAnalyzerTest {
             ),
             size = recordSizeOfValues(json1.length, json2.length, json3.length),
         )
-        assertJsonStructure(expectedStructure, json1, json2, json3)
+        newAnalyzer(cardinalityRequiringCommonFields = true)
+            .assertJsonStructure(expectedStructure, json1, json2, json3)
     }
 
     @Test
@@ -862,7 +865,7 @@ class RecordStructureAnalyzerTest {
     }
 
     @Test
-    fun `test json with different fields with different type`() {
+    fun `test json with different fields with different type - require common fields`() {
         val json1 = """ {"f1": "val1" }"""
         val json2 = """ {"f2": 123456 }"""
         val expectedStructure = RecordsStructure(
@@ -878,18 +881,56 @@ class RecordStructureAnalyzerTest {
                             name = null,
                             fullName = "*",
                             type = RecordFieldType.STRING,
+                            nullable = false,
                         ),
                         RecordField(
                             name = null,
                             fullName = "*",
                             type = RecordFieldType.INTEGER,
+                            nullable = false,
                         ),
                     )
                 )
             ),
             size = recordSizeOfValues(json1.length, json2.length),
         )
-        assertJsonStructure(expectedStructure, json1, json2)
+        newAnalyzer(cardinalityRequiringCommonFields = true)
+            .assertJsonStructure(expectedStructure, json1, json2)
+    }
+
+
+    @Test
+    fun `test json with different fields with different type - no common fields required`() {
+        val json1 = """ {"f1": "val1" }"""
+        val json2 = """ {"f2": 123456 }"""
+        val expectedStructure = RecordsStructure(
+            payloadType = PayloadType.JSON,
+            headerFields = emptyHeaders,
+            jsonFields = listOf(
+                RecordField(
+                    name = null,
+                    fullName = null,
+                    type = RecordFieldType.OBJECT,
+                    children = listOf(
+                        RecordField(
+                            name = "f1",
+                            fullName = "f1",
+                            type = RecordFieldType.STRING,
+                            nullable = true,
+                        ),
+                        RecordField(
+                            name = "f2",
+                            fullName = "f2",
+                            type = RecordFieldType.INTEGER,
+                            nullable = true
+                        ),
+                    )
+                )
+            ),
+            size = recordSizeOfValues(json1.length, json2.length),
+        )
+        newAnalyzer(cardinalityRequiringCommonFields = false)
+            .assertJsonStructure(expectedStructure, json1, json2)
     }
 
     @Test
@@ -1181,8 +1222,8 @@ class RecordStructureAnalyzerTest {
 
 
     @Test
-    fun `squash dynamic keys - diversity`() {
-        with(newAnalyzer()) {
+    fun `squash dynamic keys - diversity - require common fields`() {
+        with(newAnalyzer(cardinalityRequiringCommonFields = true)) {
             acceptRecord("""{"a":1}""")
             acceptRecord("""{"b":2}""")
             acceptRecord("""{"c":3}""")
@@ -1205,6 +1246,38 @@ class RecordStructureAnalyzerTest {
                         )
                     ),
                     size = recordSizeOfValues(7, 7, 7),
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `squash dynamic keys - diversity`() {
+        with(newAnalyzer()) {
+            repeat(100) {
+                val round = it.toString().padStart(3, '0')
+                acceptRecord("""{"f$round":${it+100}}""")
+            }
+            structure().assertEqualsTo(
+                RecordsStructure(
+                    PayloadType.JSON,
+                    headerFields = emptyHeaders,
+                    jsonFields = listOf(
+                        RecordField(
+                            name = null,
+                            fullName = null,
+                            RecordFieldType.OBJECT,
+                            children = listOf(
+                                RecordField(
+                                    name = null,
+                                    fullName = "*",
+                                    type = RecordFieldType.INTEGER,
+                                    nullable = true,
+                                ),
+                            )
+                        )
+                    ),
+                    size = recordSizeOfValues(*IntArray(100) { 12 }),
                 )
             )
         }
@@ -1294,6 +1367,52 @@ class RecordStructureAnalyzerTest {
                         )
                     ),
                     size = recordSizeOfValues(9, 9),
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `don't squash dynamic keys - for several distinct record types with no common fields`() {
+        with(newAnalyzer()) {
+            acceptRecord("""{"foo":1,"bar":2}""")
+            acceptRecord("""{"x":"forward","y":"right","z":"up"}""")
+            acceptRecord("""{"type":"FOO"}""")
+            acceptRecord("""{"foo":2,"bar":4}""")
+            acceptRecord("""{"x":"backward","y":"left","z":"down"}""")
+            acceptRecord("""{"type":"BAR"}""")
+            structure().assertEqualsTo(
+                RecordsStructure(
+                    PayloadType.JSON,
+                    headerFields = emptyHeaders,
+                    jsonFields = listOf(
+                        RecordField(
+                            name = null,
+                            fullName = null,
+                            RecordFieldType.OBJECT,
+                            children = listOf(
+                                RecordField(
+                                    name = "foo", fullName = "foo", type = RecordFieldType.INTEGER, nullable = true,
+                                ),
+                                RecordField(
+                                    name = "bar", fullName = "bar", type = RecordFieldType.INTEGER, nullable = true,
+                                ),
+                                RecordField(
+                                    name = "x", fullName = "x", type = RecordFieldType.STRING, nullable = true,
+                                ),
+                                RecordField(
+                                    name = "y", fullName = "y", type = RecordFieldType.STRING, nullable = true,
+                                ),
+                                RecordField(
+                                    name = "z", fullName = "z", type = RecordFieldType.STRING, nullable = true,
+                                ),
+                                RecordField(
+                                    name = "type", fullName = "type", type = RecordFieldType.STRING, nullable = true,
+                                ),
+                            )
+                        )
+                    ),
+                    size = recordSizeOfValues(17, 36, 14, 17, 38, 14),
                 )
             )
         }

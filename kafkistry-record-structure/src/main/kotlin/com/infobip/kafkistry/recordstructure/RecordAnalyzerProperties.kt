@@ -17,6 +17,7 @@ class RecordAnalyzerProperties {
     var timeWindow: Long = TimeUnit.DAYS.toMillis(1)
     var cardinalityDiffThreshold = 5
     var cardinalityMagnitudeFactorThreshold = 10
+    var cardinalityRequiringCommonFields = false
 
     @NestedConfigurationProperty
     var enabledOn = ClusterTopicFilterProperties()

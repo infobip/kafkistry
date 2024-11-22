@@ -130,7 +130,7 @@ open class MergingContext(
         fun commonNames() = thisNames.intersect(otherNames)
         fun namesCountDiffTooMuch() = thisNames.size.differentMagnitude(otherNames.size)
         fun isDynamic() = thisNames.hasDynamicFieldNames() || otherNames.hasDynamicFieldNames() ||
-                namesCountDiffTooMuch() || commonNames().isEmpty()
+                namesCountDiffTooMuch() || (properties.cardinalityRequiringCommonFields && commonNames().isEmpty())
 
         return when (isDynamic()) {
             true -> (this + other)
