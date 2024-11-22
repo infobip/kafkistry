@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.recordstructure
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.header.internals.RecordHeader
 import org.apache.kafka.common.header.internals.RecordHeaders
@@ -8,6 +9,7 @@ import org.apache.kafka.common.record.TimestampType
 import org.assertj.core.api.Assertions.assertThat
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.utils.test.newTestFolder
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -1254,9 +1256,9 @@ class RecordStructureAnalyzerTest {
     @Test
     fun `squash dynamic keys - diversity`() {
         with(newAnalyzer()) {
-            repeat(100) {
-                val round = it.toString().padStart(3, '0')
-                acceptRecord("""{"f$round":${it+100}}""")
+            repeat(100) {index ->
+                val round = index.toString().padStart(3, '0')
+                acceptRecord("""{"f$round":${index + 100}}""")
             }
             structure().assertEqualsTo(
                 RecordsStructure(
@@ -1280,6 +1282,33 @@ class RecordStructureAnalyzerTest {
                     size = recordSizeOfValues(*IntArray(100) { 12 }),
                 )
             )
+        }
+    }
+
+    @Test
+    @Disabled("Intended for manual running and experimenting with parameters")
+    fun `squash experimenting`() {
+        val mapper = jacksonObjectMapper()
+        val numFieldsTrials = listOf(1, 2, 5, 10, 20)
+        val numRecords = 50
+        numFieldsTrials.forEach { numFields ->
+            with(newAnalyzer()) {
+                println("------------------------------------")
+                println("START Trial run for numFields = $numFields")
+                repeat(numRecords) { index ->
+                    val fKey = index % 20
+                    val recordMap = (1..numFields).associate { fi ->
+                        "${'a' + fi}_$fKey" to index
+                    }
+                    acceptRecord(mapper.writeValueAsString(recordMap))
+                    val fieldNames = structure()?.jsonFields.orEmpty().flatMap { f ->
+                        f.children.orEmpty().map { it.fullName }
+                    }
+                    println("round $index: $fieldNames")
+                }
+                println("END Trial run for numFields = $numFields")
+                println("------------------------------------")
+            }
         }
     }
 
