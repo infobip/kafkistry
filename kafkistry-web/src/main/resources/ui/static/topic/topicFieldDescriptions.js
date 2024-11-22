@@ -4,6 +4,8 @@ $(document).ready(function () {
     descriptions.on("click", ".remove-field-description-btn", null, removeFieldDescription);
     descriptions.on("click", ".remove-field-classification-btn", null, removeFieldClassification);
     descriptions.on("click", ".add-field-classification-btn", null, addFieldClassification);
+    descriptions.on("click", ".move-up-btn", null, moveFieldDescriptionUp);
+    descriptions.on("click", ".move-down-btn", null, moveFieldDescriptionDown);
     initFieldsDescriptions();
     fetchRecordsStructure();
 });
@@ -65,8 +67,30 @@ function addFieldClassification() {
     classifications.append(template);
     let fieldClassificationForm = classifications.find(".field-classification:last");
     initFieldClassificationForm(fieldClassificationForm);
+    fieldClassificationForm.find("input[name=field-classification]").focus();
     maybeRefreshYaml();
 }
+
+function moveFieldDescriptionUp() {
+    let fieldDescription = $(this).closest(".topic-field-description");
+    let previous = fieldDescription.prev();
+    if (previous.length === 0) {
+        return;
+    }
+    fieldDescription.insertBefore(previous);
+    maybeRefreshYaml();
+}
+
+function moveFieldDescriptionDown() {
+    let fieldDescription = $(this).closest(".topic-field-description");
+    let next = fieldDescription.next();
+    if (next.length === 0) {
+        return;
+    }
+    next.insertBefore(fieldDescription);
+    maybeRefreshYaml();
+}
+
 
 function initFieldClassificationForm(fieldClassificationForm) {
     let input = fieldClassificationForm.find("input[name=field-classification]");
