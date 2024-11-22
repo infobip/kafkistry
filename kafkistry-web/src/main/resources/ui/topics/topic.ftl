@@ -258,7 +258,55 @@
     </div>
     </div>
 
+
     <#if existInRegistry>
+        <br/>
+        <div class="card">
+            <div class="card-header">
+                <h4>Field descriptions</h4>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm m-0">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>Field name/selector</th>
+                        <th>Classifications</th>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <#if topic.topicDescription.fieldDescriptions?size != 0>
+                        <#list topic.topicDescription.fieldDescriptions as fieldDescription>
+                            <tr>
+                                <td><code>${fieldDescription.selector}</code></td>
+                                <td>
+                                    <#if fieldDescription.classifications?size == 0>
+                                        <i>(none)</i>
+                                    <#else>
+                                        <#list fieldDescription.classifications as classification>
+                                            <span class="badge badge-dark">${classification}</span>
+                                        </#list>
+                                    </#if>
+                                </td>
+                                <td class="text-links small">
+                                    <#if fieldDescription.description?trim?length == 0>
+                                        -----
+                                    <#else>
+                                        ${fieldDescription.description}
+                                    </#if>
+                                </td>
+                            </tr>
+                        </#list>
+                    <#else>
+                        <tr>
+                            <td colspan="100">
+                                <i>(no defined field descriptions)</i>
+                            </td>
+                        </tr>
+                    </#if>
+                </table>
+            </div>
+        </div>
+
         <#if gitStorageEnabled>
             <br/>
             <#assign historyUrl = appUrl.topics().showTopicHistory(topicName)>
