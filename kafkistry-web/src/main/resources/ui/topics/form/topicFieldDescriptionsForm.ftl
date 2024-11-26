@@ -1,8 +1,10 @@
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="fieldDescriptions" type="java.util.List<com.infobip.kafkistry.model.FieldDescription>" -->
 
+<#import "../../common/infoIcon.ftl" as icon>
+
 <#macro fieldClassification classification>
-    <div class="field-classification input-group input-group-sm">
+    <div class="field-classification input-group input-group-sm" >
         <input class="form-control" name="field-classification" placeholder="Classification..."
                title="Field classification" value="${classification}">
         <div class="input-group-append">
@@ -47,6 +49,20 @@
     </div>
 </#macro>
 
+<div class="selector-help-container mx-5 mb-2">
+    <#assign helpDoc>
+        <span>Selector examples:</span>
+        <ul class='mb-0'>
+            <li><code>myKey</code> field in object</li>
+            <li><code>myKey.subKey</code> field in object within an object</li>
+            <li><code>*.subKey</code> specific field within any root field</li>
+            <li><code>myList[3]</code> 4-th element in a list of root field</li>
+            <li><code>myList[*]</code> any element in a list</li>
+            <li><code>com\.foo\.Bar</code> escaping dots in single key name</li>
+        </ul>
+    </#assign>
+    Selector help: <@icon.icon tooltip=helpDoc/>
+</div>
 
 <div class="field-descriptions">
     <#list fieldDescriptions as fieldDescription>

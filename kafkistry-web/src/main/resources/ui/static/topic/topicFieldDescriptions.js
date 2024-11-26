@@ -37,6 +37,7 @@ function initFieldsDescriptions() {
     descriptions.find(".topic-field-description").each(function () {
         initFieldDescriptionForm($(this));
     });
+    adjustSelectorHelpVisibility();
 }
 
 function initFieldDescriptionForm(fieldDescriptionForm) {
@@ -53,11 +54,13 @@ function addTopicFieldDescription() {
     descriptions.append(template);
     let fieldDescriptionForm = descriptions.find(".topic-field-description:last");
     initFieldDescriptionForm(fieldDescriptionForm);
+    adjustSelectorHelpVisibility();
     maybeRefreshYaml();
 }
 
 function removeFieldDescription() {
     $(this).closest(".topic-field-description").remove();
+    adjustSelectorHelpVisibility();
     maybeRefreshYaml();
 }
 
@@ -100,6 +103,15 @@ function initFieldClassificationForm(fieldClassificationForm) {
 function removeFieldClassification() {
     $(this).closest(".field-classification").remove();
     maybeRefreshYaml();
+}
+
+function adjustSelectorHelpVisibility() {
+    let hasDescriptions = extractTopicFieldDescriptions().length > 0;
+    if (hasDescriptions) {
+        $(".selector-help-container").show();
+    } else {
+        $(".selector-help-container").hide();
+    }
 }
 
 function extractTopicFieldDescriptions() {
