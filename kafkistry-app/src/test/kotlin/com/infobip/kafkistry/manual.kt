@@ -531,7 +531,9 @@ class DataStateInitializer(
             log.info("Consuming from topic {}", name)
             KafkaConsumer(consumerConfig, StringDeserializer(), StringDeserializer()).use { consumer ->
                 consumer.subscribe(listOf(name))
-                consumer.poll(Duration.ofSeconds(1))
+                while (consumer.assignment().isEmpty()) {
+                    consumer.poll(Duration.ofSeconds(1))
+                }
                 consumer.commitSync()
                 consumerGroupsProvider.refreshClusterState(clusterIdentifier)
             }
