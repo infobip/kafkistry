@@ -155,21 +155,21 @@
                                     <td class="text-right">
                                         <#assign partitionLagTooltip>
                                             <table class='table table-sm m-0'>
-                                                <thead class='thead-light'>
                                                 <tr>
                                                     <th>Begin</th>
-                                                    <th>Consumer</th>
-                                                    <th>End</th>
-                                                </tr>
-                                                </thead>
-                                                <tr>
-                                                    <td>
+                                                    <td class='text-right text-monospace small'>
                                                         ${(topicsOffsets[topic].partitionsOffsets?api.get(partition.partition).begin)!"N/A"}
                                                     </td>
-                                                    <td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Consumer</th>
+                                                    <td class='text-right text-monospace small'>
                                                         ${(partition.offset)!"N/A"}
                                                     </td>
-                                                    <td>
+                                                </tr>
+                                                <tr>
+                                                    <th>End</th>
+                                                    <td class='text-right text-monospace small'>
                                                         ${(topicsOffsets[topic].partitionsOffsets?api.get(partition.partition).end)!"N/A"}
                                                     </td>
                                                 </tr>
