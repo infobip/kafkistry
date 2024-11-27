@@ -3,9 +3,11 @@
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="consumerGroupId" type="java.lang.String" -->
 <#-- @ftlvariable name="consumerGroup" type="com.infobip.kafkistry.service.consumers.KafkaConsumerGroup" -->
+<#-- @ftlvariable name="topicsOffsets" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.topic.offsets.TopicOffsets>" -->
 <#-- @ftlvariable name="kafkaStreamsApp" type="com.infobip.kafkistry.service.kafkastreams.KafkaStreamsApp" -->
 <#-- @ftlvariable name="shownTopic" type="java.lang.String" -->
 <#-- @ftlvariable name="consumerGroupIds" type="java.util.List<java.lang.String>" -->
+
 
 <html lang="en">
 
@@ -99,15 +101,16 @@
                 <#assign shown = (topicMember.topicName == shownTopic)>
                 <#assign collapsedClass = shown?then("", "collapsed")>
                 <#assign showClass = shown?then("show", "")>
+                <#assign topic = topicMember.topicName>
                 <div class="card">
                     <div class="card-header ${collapsedClass}" data-target="#topic-${topicMember?index}"
                          data-toggle="collapse">
                         <div class="float-left">
                             <span class="if-collapsed">▼</span>
                             <span class="if-not-collapsed">△</span>
-                            <span>${topicMember.topicName}</span>
+                            <span>${topic}</span>
                             <span>
-                                <a href="${appUrl.topics().showInspectTopicOnCluster(topicMember.topicName, clusterIdentifier)}">
+                                <a href="${appUrl.topics().showInspectTopicOnCluster(topic, clusterIdentifier)}">
                                     <button class="btn btn-sm btn-outline-secondary">Inspect 🔍</button>
                                 </a>
                             </span>
@@ -143,13 +146,37 @@
                             </tr>
                             </thead>
                             <#list topicMember.partitionMembers as partition>
+
                                 <tr>
                                     <td>${partition.partition}</td>
                                     <td>
                                         <@util.namedTypeStatusAlert type=partition.lag.status small=true/>
                                     </td>
                                     <td class="text-right">
+                                        <#assign partitionLagTooltip>
+                                            <table class='table table-sm m-0'>
+                                                <thead class='thead-light'>
+                                                <tr>
+                                                    <th>Begin</th>
+                                                    <th>Consumer</th>
+                                                    <th>End</th>
+                                                </tr>
+                                                </thead>
+                                                <tr>
+                                                    <td>
+                                                        ${(topicsOffsets[topic].partitionsOffsets?api.get(partition.partition).begin)!"N/A"}
+                                                    </td>
+                                                    <td>
+                                                        ${(partition.offset)!"N/A"}
+                                                    </td>
+                                                    <td>
+                                                        ${(topicsOffsets[topic].partitionsOffsets?api.get(partition.partition).end)!"N/A"}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </#assign>
                                         ${partition.lag.amount!'N/A'}
+                                        <@info.icon tooltip=partitionLagTooltip/>
                                     </td>
                                     <td class="text-right">
                                         <#if partition.lag.percentage??>
@@ -163,7 +190,9 @@
                                         </#if>
                                     </td>
                                     <#if (partition.member)??>
-                                        <td title="MemberID: ${partition.member.memberId}">${partition.member.clientId}</td>
+                                        <td class="small" title="MemberID: ${partition.member.memberId}">
+                                            ${partition.member.clientId}
+                                        </td>
                                         <td>${partition.member.host}</td>
                                     <#else>
                                         <td><i>(unassigned)</i></td>

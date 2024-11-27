@@ -63,6 +63,9 @@ class ConsumerGroupsController(
     ): ModelAndView {
         val consumerGroupIds = consumersApi.listClusterConsumerGroupIds(clusterIdentifier)
         val consumerGroup = consumersApi.clusterConsumerGroup(clusterIdentifier, consumerGroupId)
+        val topicsOffsets = consumerGroup?.topicMembers?.associate {
+            it.topicName to topicOffsetsApi.getTopicOffsets(it.topicName, clusterIdentifier)
+        } ?: emptyMap()
         val kafkaStreamsApp = kStreamAppsApi.consumerGroupKStreamApps(consumerGroupId, clusterIdentifier)
         val groupOwned = ownershipClassifier.isOwnerOfConsumerGroup(consumerGroupId)
         return ModelAndView("consumers/consumerGroup", mapOf(
@@ -73,6 +76,7 @@ class ConsumerGroupsController(
             "kafkaStreamsApp" to kafkaStreamsApp,
             "shownTopic" to shownTopic,
             "consumerGroupIds" to consumerGroupIds,
+            "topicsOffsets" to topicsOffsets,
         ))
     }
 
