@@ -29,7 +29,7 @@ class TransactionStateDeserializer(
         record.transactionStateKey()?.let { key ->
             val asJson = mapper.writeValueAsString(key)
             val asValue = mapper.readValue(asJson, Any::class.java)
-            DeserializedValue(typeName(), key, asValue, asJson)
+            DeserializedValue(typeName(), key, asValue, asJson, isTransformed = true)
         }
     }
 
@@ -40,7 +40,7 @@ class TransactionStateDeserializer(
         record.transactionStateValue()?.let { transactionState ->
             val asJson = mapper.writeValueAsString(transactionState)
             val asValue = mapper.readValue(asJson, Any::class.java)
-            DeserializedValue(typeName(), transactionState, asValue, asJson)
+            DeserializedValue(typeName(), transactionState, asValue, asJson, isTransformed = true)
         }
     }
 }

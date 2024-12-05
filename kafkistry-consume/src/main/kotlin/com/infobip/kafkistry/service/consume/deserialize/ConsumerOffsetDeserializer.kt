@@ -29,7 +29,7 @@ class ConsumerOffsetDeserializer(
         record.consumerOffsetKey()?.let { key ->
             val asJson = mapper.writeValueAsString(key)
             val asValue = mapper.readValue(asJson, Any::class.java)
-            DeserializedValue(typeName(), key, asValue, asJson)
+            DeserializedValue(typeName(), key, asValue, asJson, isTransformed = true)
         }
     }
 
@@ -40,7 +40,7 @@ class ConsumerOffsetDeserializer(
         record.consumerOffsetValue()?.let { consumerOffsetMeta ->
             val asJson = mapper.writeValueAsString(consumerOffsetMeta)
             val asValue = mapper.readValue(asJson, Any::class.java)
-            DeserializedValue(typeName(), consumerOffsetMeta, asValue, asJson)
+            DeserializedValue(typeName(), consumerOffsetMeta, asValue, asJson, isTransformed = true)
         }
     }
 }

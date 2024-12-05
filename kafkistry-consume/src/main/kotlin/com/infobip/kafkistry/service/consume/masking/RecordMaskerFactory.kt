@@ -38,7 +38,7 @@ class RecordMaskerImpl(
 
     override fun masksKey(): Boolean = keyTrees != null
     override fun masksValue(): Boolean = valueTrees != null
-    override fun masksHeader(): Boolean = headersTrees.isNotEmpty()
+    override fun masksHeader(name: String): Boolean = headersTrees[name] != null
 
     override fun maskKey(key: Any?): Any? = key.maskWith(keyTrees)
     override fun maskValue(value: Any?): Any? = value.maskWith(valueTrees)

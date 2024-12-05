@@ -224,7 +224,7 @@
                                     <tr class="record-header">
                                         <td class="form-row pl-0">
                                             <div class="col">
-                                                <div class="record-value renderjson" data-type="key">
+                                                <div class="record-value header-name renderjson" data-type="key">
                                                     <span class="key">${header.key}</span>
                                                 </div>
                                             </div>

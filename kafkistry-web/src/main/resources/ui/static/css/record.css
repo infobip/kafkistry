@@ -6,6 +6,10 @@
     word-wrap: break-word;
 }
 
+.record-header .header-name {
+    font-size: 0.9em;
+}
+
 .type-tag {
     border-radius: 5px;
     background-color: gray;

@@ -42,7 +42,7 @@ class RecordMaskerTest {
         val masker = maskerFor(maskSpec())
         assertThat(masker.masksValue()).isFalse
         assertThat(masker.masksKey()).isFalse
-        assertThat(masker.masksHeader()).isFalse
+        assertThat(masker.masksHeader("h")).isFalse
     }
 
     @Test
@@ -50,7 +50,7 @@ class RecordMaskerTest {
         val masker = maskerFor(maskSpec(keyPathDefs = setOf("k")))
         assertThat(masker.masksValue()).isFalse
         assertThat(masker.masksKey()).isTrue
-        assertThat(masker.masksHeader()).isFalse
+        assertThat(masker.masksHeader("h")).isFalse
     }
 
     @Test
@@ -58,7 +58,7 @@ class RecordMaskerTest {
         val masker = maskerFor(maskSpec(valuePathDefs = setOf("v")))
         assertThat(masker.masksValue()).isTrue
         assertThat(masker.masksKey()).isFalse
-        assertThat(masker.masksHeader()).isFalse
+        assertThat(masker.masksHeader("h")).isFalse
     }
 
     @Test
@@ -66,7 +66,8 @@ class RecordMaskerTest {
         val masker = maskerFor(maskSpec(headerPathDefs = mapOf("h" to setOf("h"))))
         assertThat(masker.masksValue()).isFalse
         assertThat(masker.masksKey()).isFalse
-        assertThat(masker.masksHeader()).isTrue
+        assertThat(masker.masksHeader("h")).isTrue
+        assertThat(masker.masksHeader("o")).isFalse
     }
 
     @Test

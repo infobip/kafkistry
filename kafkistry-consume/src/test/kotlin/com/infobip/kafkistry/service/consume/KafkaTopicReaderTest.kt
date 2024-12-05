@@ -8,6 +8,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.service.KafkistryConsumeException
 import com.infobip.kafkistry.service.consume.config.ConsumeProperties
+import com.infobip.kafkistry.service.consume.deserialize.DeserializerType
 import com.infobip.kafkistry.service.consume.filter.JsonPathParser
 import com.infobip.kafkistry.service.consume.filter.MatcherFactory
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
@@ -43,10 +44,11 @@ class KafkaTopicReaderTest {
         const val topic6 = "test-consume6"
         const val topic7 = "test-consume7"
         const val topic8 = "test-consume8"
+        const val topic9 = "test-consume9"
 
         private val kafka = EmbeddedKafkaKraftBroker(
             3, 2,
-            topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8,
+            topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8, topic9,
         )
 
         @BeforeAll
@@ -57,9 +59,9 @@ class KafkaTopicReaderTest {
                     .atMost(Duration.ofSeconds(10))
                     .untilAsserted {
                         val topics = admin.listTopics().names().get()
-                        assertThat(topics).contains(topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8)
+                        assertThat(topics).contains(topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8, topic9)
                         assertThat(admin.describeTopics(topics).allTopicNames().get()).containsKeys(
-                            topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8
+                            topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8, topic9,
                         )
                     }
             }
@@ -294,6 +296,38 @@ class KafkaTopicReaderTest {
         assertThat(partitionEarliest)
             .containsEntry(0, 11)
             .containsEntry(1, 22)
+    }
+
+    @Test
+    fun `value json deserialization`() {
+        val json = """{"point":{"x":1,"y":2},"arr":[true, false]}"""
+        sendMessage(topic9, json)
+        val recordsResult = consumerService.readTopicRecords(
+            topic9, kafkaCluster, "test", readConfig(),
+        )
+        assertThat(recordsResult.records)
+            .hasSize(1)
+            .first()
+            .extracting { it.value }
+            .isEqualTo(KafkaValue(
+                rawBase64Bytes = Base64.getEncoder().encodeToString(json.toByteArray()),
+                deserializations = mapOf(
+                    "STRING" to DeserializedValue(
+                        typeTag = "STRING",
+                        value = json,
+                        asFilterable = json,
+                        asJson = "\"${json.replace("\"", "\\\"")}\"",
+                        isSuppressed = true,
+                    ),
+                    "JSON" to DeserializedValue(
+                        typeTag = "JSON",
+                        value = mapOf("point" to mapOf("x" to 1, "y" to 2), "arr" to listOf(true, false)),
+                        asFilterable = mapOf("point" to mapOf("x" to 1, "y" to 2), "arr" to listOf(true, false)),
+                        asJson = json,
+                        isSuppressed = false,
+                    ),
+                ),
+            ))
     }
 
 }

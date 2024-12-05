@@ -95,6 +95,8 @@ data class DeserializedValue(
     val asFilterable: Any,
     val asJson: String,
     val isMasked: Boolean = false,
+    val isTransformed: Boolean = false,
+    val isSuppressed: Boolean = false,
 )
 
 data class KafkaRecord(

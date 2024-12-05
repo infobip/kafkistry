@@ -16,6 +16,8 @@ import com.infobip.kafkistry.service.consume.masking.TopicMaskingSpec
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.whenever
 import io.kotlintest.mock.mock
+import org.assertj.core.groups.Tuple
+import org.assertj.core.groups.Tuple.tuple
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -29,16 +31,20 @@ class RecordFactoryTest {
             whenever(it.maskingSpecFor(any(), any())).thenReturn(emptyList())
         }
         val factory = RecordFactory(
-            availableDeserializers = listOf(
-                IntKafkaDeserializer(),
-                LongKafkaDeserializer(),
-                FloatKafkaDeserializer(),
-                DoubleKafkaDeserializer(),
-                ShortKafkaDeserializer(),
-                StringKafkaDeserializer(),
-                JsonKafkaDeserializer(),
-                ConsumerOffsetDeserializer(InternalTopicsValueReader()),
-                TransactionStateDeserializer(InternalTopicsValueReader()),
+            DeserializeResolver(
+                availableDeserializers = listOf(
+                    IntKafkaDeserializer(),
+                    LongKafkaDeserializer(),
+                    FloatKafkaDeserializer(),
+                    DoubleKafkaDeserializer(),
+                    ShortKafkaDeserializer(),
+                    StringKafkaDeserializer(),
+                    JsonKafkaDeserializer(),
+                    ConsumerOffsetDeserializer(InternalTopicsValueReader()),
+                    TransactionStateDeserializer(InternalTopicsValueReader()),
+                    CsvTestDeserializer(),
+                ),
+                selectors = listOf(),
             ),
             recordMaskerFactory = RecordMaskerFactory(listOf(maskingProvider), JsonPathParser()),
         )
@@ -93,8 +99,12 @@ class RecordFactoryTest {
     @Test
     fun `test suppress more generic deserization JSON vs STRING`() {
         val record = creator.create(record(value = """{"k":"v"}"""))
-        assertThat(record.value.deserializations)
-            .containsOnlyKeys("JSON")
+        assertThat(record.value.deserializations.values)
+            .extracting({ it.typeTag }, { it.isSuppressed })
+            .containsExactlyInAnyOrder(
+                tuple("JSON", false),
+                tuple("STRING", true),
+            )
     }
 
     @Test
@@ -160,6 +170,21 @@ class RecordFactoryTest {
             assertThrows<KafkistryPermissionException> {
                 maskingCreator(stringDsr).create(record(value = "this is not a json"))
             }
+        }
+
+    }
+
+    @Nested
+    inner class TransformedValueTests {
+
+        @Test
+        fun `transforming csv value`() {
+            val record = creator.create(record(value = "foo,bar,baz", topic = CsvTestDeserializer.TOPIC_NAME))
+            assertThat(record.value.deserializations["CSV"]?.asJson).isEqualTo("""["foo","bar","baz"]""")
+            assertThat(record.value.deserializations["CSV"]?.asFilterable).isEqualTo(
+                listOf("foo", "bar", "baz")
+            )
+            assertThat(record.value.deserializations["STRING"]?.isSuppressed).isTrue()
         }
 
     }

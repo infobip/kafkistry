@@ -1,5 +1,5 @@
 <#-- @ftlvariable name="kafkaValue" type="com.infobip.kafkistry.service.consume.KafkaValue" -->
-<div class="form-row kafka-value-container"
+<div class="form-row kafka-value-container text-break"
      <#if kafkaValue.rawBase64Bytes??>data-base64='${kafkaValue.rawBase64Bytes}'</#if>>
     <#if kafkaValue.isNull()>
         <div class="col">
@@ -17,7 +17,9 @@
         <#list kafkaValue.deserializations as typeTag, deserialization>
             <#assign tagSuffix = deserialization.masked?then(" (MASKED)", "")>
             <#assign typeGutter = "${typeTag}${tagSuffix}">
-            <div class="col">
+            <div class="col <#if deserialization.suppressed>suppresed</#if> <#if deserialization.masked>masked</#if> <#if deserialization.transformed>transformed</#if>"
+                 <#if deserialization.suppressed>style="display: none;" </#if>
+            >
                 <#assign copyValue = "">
                 <#switch typeTag>
                     <#case "BYTES">
@@ -36,10 +38,17 @@
                         <#assign copyValue = deserialization.asJson>
                 </#switch>
                 <div class="kafka-value-gutter">
-                    <span>${typeTag}${tagSuffix}</span>
+                    <div class="d-inline-block align-top">
+                        <span>${typeTag}${tagSuffix}</span>
+                    </div>
                     <div class="btn btn-xsmall btn-secondary kafka-value-copy-btn" title="Copy to clipboard">
                         &nbsp;⧉&nbsp;
                     </div>
+                    <#if deserialization.isTransformed()>
+                        <div class="btn btn-xsmall btn-secondary kafka-value-toggle-suppressed-btn" title="Show/hide original value">
+                            &nbsp;↩&nbsp;
+                        </div>
+                    </#if>
                     <input name="kafkaCopyValue" type="text" value="${copyValue}" style="display: none;" title="copy input">
                 </div>
             </div>

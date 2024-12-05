@@ -3,9 +3,10 @@ package com.infobip.kafkistry.service.consume
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.service.KafkistryPermissionException
+import com.infobip.kafkistry.service.consume.deserialize.DeserializeResolver
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.service.consume.deserialize.DeserializerType
+import com.infobip.kafkistry.service.consume.deserialize.Deserializers
 import com.infobip.kafkistry.service.consume.deserialize.KafkaDeserializer
 import com.infobip.kafkistry.service.consume.masking.RecordMasker
 import com.infobip.kafkistry.service.consume.masking.RecordMaskerFactory
@@ -16,12 +17,11 @@ import java.util.*
 @Component
 @ConditionalOnProperty("app.consume.enabled", matchIfMissing = true)
 class RecordFactory(
-    availableDeserializers: List<KafkaDeserializer>,
+    private val deserializeResolver: DeserializeResolver,
     private val recordMaskerFactory: RecordMaskerFactory,
 ) {
 
     private val jsonSerializer = jacksonObjectMapper()
-    private val allDeserializers = availableDeserializers.associateBy { it.typeName() }
 
     interface Creator {
         fun create(consumerRecord: ConsumerRecord<ByteArray, ByteArray>): KafkaRecord
@@ -33,15 +33,13 @@ class RecordFactory(
         recordDeserialization: RecordDeserialization,
     ): Creator {
         val masker = recordMaskerFactory.createMaskerFor(topicName, clusterRef)
-        val keyDeserializers = selectDeserializers(recordDeserialization.keyType, masker.masksKey())
-        val valueDeserializers = selectDeserializers(recordDeserialization.valueType, masker.masksValue())
-        val headersDeserializers = selectDeserializers(recordDeserialization.headersType, masker.masksHeader())
+        val deserializeHolder = deserializeResolver.getDeserializersHolder(recordDeserialization, masker)
         return object : Creator {
             override fun create(consumerRecord: ConsumerRecord<ByteArray, ByteArray>): KafkaRecord {
                 return with(consumerRecord) {
-                    val key = deserializeKey(keyDeserializers, masker)
-                    val value = deserializeValue(valueDeserializers, masker)
-                    val headers = deserializeHeaders(headersDeserializers, masker)
+                    val key = deserializeKey(deserializeHolder, masker)
+                    val value = deserializeValue(deserializeHolder, masker)
+                    val headers = deserializeHeaders(deserializeHolder, masker)
                     KafkaRecord(
                         topic = topic(),
                         key = key,
@@ -61,42 +59,9 @@ class RecordFactory(
         }
     }
 
-    private fun selectDeserializers(typeName: DeserializerType?, needMasking: Boolean): Deserializers {
-        return if (typeName == null) {
-            val suppressibleByAnything = allDeserializers.filterValues { it.suppressibleByAnything() }.keys
-            Deserializers(
-                suppressions = allDeserializers.mapValues { (typeName, deserializer) ->
-                    (deserializer.suppresses() + suppressibleByAnything.takeIf { typeName !in it }.orEmpty()).distinct()
-                },
-                kafkaDeserializers = allDeserializers.values.filter { !needMasking || it.isResultMaskable() },
-                failoverDeserializers = allDeserializers.values.filter { needMasking && !it.isResultMaskable() },
-            )
-        } else {
-            val deserializer = allDeserializers[typeName]
-                ?: throw IllegalArgumentException("Unknown deserializer with name '$typeName'")
-            if (needMasking && !deserializer.isResultMaskable()) {
-                throw KafkistryPermissionException(
-                    "Not allowed to use deserializer with name '$typeName' which deserialization type is not maskable. " +
-                            "Reason is that record value must be masked because this topic contains sensitive data."
-                )
-            }
-            Deserializers(
-                suppressions = emptyMap(),
-                kafkaDeserializers = listOf(deserializer),
-                failoverDeserializers = listOfNotNull(allDeserializers["STRING"], allDeserializers["BYTES"]),
-            )
-        }
-    }
-
-    private data class Deserializers(
-        val suppressions: Map<DeserializerType, List<DeserializerType>>,
-        val kafkaDeserializers: List<KafkaDeserializer>,
-        val failoverDeserializers: List<KafkaDeserializer>,
-    )
-
-    private fun ConsumerRecord<ByteArray, ByteArray>.deserializeKey(deserializers: Deserializers, masker: RecordMasker): KafkaValue {
+    private fun ConsumerRecord<ByteArray, ByteArray>.deserializeKey(deserializers: DeserializeResolver.Holder, masker: RecordMasker): KafkaValue {
         return key().doDeserialize(
-            deserializers = deserializers,
+            deserializers = deserializers.keyDeserializers(this),
             deserializeOp = { deserializeKey(it, this@deserializeKey) },
             deserializerSupports = { supportsKey(topic()) },
             maskerMasks = masker.masksKey(),
@@ -104,9 +69,9 @@ class RecordFactory(
         )
     }
 
-    private fun ConsumerRecord<ByteArray, ByteArray>.deserializeValue(deserializers: Deserializers, masker: RecordMasker): KafkaValue {
+    private fun ConsumerRecord<ByteArray, ByteArray>.deserializeValue(deserializers: DeserializeResolver.Holder, masker: RecordMasker): KafkaValue {
         return value().doDeserialize(
-            deserializers = deserializers,
+            deserializers = deserializers.valueDeserializers(this),
             deserializeOp = { deserializeValue(it, this@deserializeValue) },
             deserializerSupports = { supportsValue(topic()) },
             maskerMasks = masker.masksValue(),
@@ -114,15 +79,15 @@ class RecordFactory(
         )
     }
 
-    private fun ConsumerRecord<ByteArray, ByteArray>.deserializeHeaders(deserializers: Deserializers, masker: RecordMasker): List<RecordHeader> {
+    private fun ConsumerRecord<ByteArray, ByteArray>.deserializeHeaders(deserializers: DeserializeResolver.Holder, masker: RecordMasker): List<RecordHeader> {
         return headers().map { header ->
             RecordHeader(
                 key = header.key(),
                 value = header.value().doDeserialize(
-                    deserializers = deserializers,
+                    deserializers = deserializers.headerDeserializers(this, header.key()),
                     deserializeOp = { deserializeHeader(it, header.key(),this@deserializeHeaders) },
                     deserializerSupports = { supportsHeader(topic(), header.key()) },
-                    maskerMasks = masker.masksHeader(),
+                    maskerMasks = masker.masksHeader(header.key()),
                     maskOp = { masker.maskHeader(header.key(), it) },
                 ),
             )
@@ -163,7 +128,7 @@ class RecordFactory(
         deserializers: Deserializers
     ): Map<DeserializerType, DeserializedValue> {
         return if (deserializers.kafkaDeserializers.size > 1) {
-            filter { allDeserializers[it.key]!!.isSolidCandidate(it.value.value) }.doSuppress(deserializers)
+            filter { deserializeResolver.isSolidCandidate(it.value) }.doSuppress(deserializers)
         } else {
             doSuppress(deserializers)
         }
@@ -175,7 +140,13 @@ class RecordFactory(
         if (deserializers.suppressions.isEmpty()) return this
         val suppressedTypes = keys.flatMap { deserializers.suppressions[it].orEmpty() }.toSet()
         if (suppressedTypes.isEmpty()) return this
-        return filterKeys { it !in suppressedTypes }
+        return mapValues {
+            if (it.key in suppressedTypes) {
+                it.value.copy(isSuppressed = true)
+            } else {
+                it.value
+            }
+        }
     }
 
     private inline fun List<DeserializedValue>.maybeMask(masks: Boolean, maskOp: (Any?) -> Any?): List<DeserializedValue> {

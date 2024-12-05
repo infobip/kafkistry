@@ -44,10 +44,12 @@ $(document).ready(function () {
     updatePickedTimeIndicator();
     setupInspectTopicButton();
     $(document).on("click", ".kafka-value-copy-btn", null, copyKafkaValueToClipboard);
+    $(document).on("click", ".kafka-value-toggle-suppressed-btn", null, toggleSuppressedKafkaValues);
 });
 
 let allClusterTopics = {};
 let prevOffsetVal = null;
+let preferExpandAll = true;
 
 function setupInspectTopicButton() {
     let formData = readFormData();
@@ -242,6 +244,11 @@ function doConsume(formData, continuationCtx) {
             consumeResultContainer.show();
             formatTimestamp();
             renderValues();
+            if (preferExpandAll) {
+                expandAll();
+            } else {
+                collapseAll();
+            }
             maybeAutoContinue(continuationCtx);
         })
         .fail(function (error) {
@@ -368,6 +375,7 @@ function generateNewUrl(formData) {
 }
 
 function expandAll() {
+    preferExpandAll = true;
     expandAllIn($(document));
 }
 
@@ -387,6 +395,7 @@ function expandAllIn(container) {
 }
 
 function collapseAll() {
+    preferExpandAll = false;
     collapseAllIn($(document));
 }
 
@@ -650,6 +659,12 @@ function copyKafkaValueToClipboard() {
         copyInput.hide();
         showCopiedTooltip(copyBtn, copyInput);
     }
+}
+
+function toggleSuppressedKafkaValues() {
+    let showBtn = $(this);
+    let valueContainer = showBtn.closest(".kafka-value-container");
+    valueContainer.find(".suppresed").toggle();
 }
 
 function showCopiedTooltip(copyBtn, copyInput) {
