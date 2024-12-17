@@ -15,6 +15,8 @@ import com.infobip.kafkistry.service.topic.validation.NamingValidator
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.Tag
+import com.infobip.kafkistry.service.tags.ClusterTagClassifier
+import com.infobip.kafkistry.service.tags.ClusterTagClassifierProperties
 import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -23,7 +25,7 @@ class TopicWizardConfigGeneratorTest {
 
     private val generator = TopicWizardConfigGenerator(
             Optional.empty(),
-            OverridesMinimizer(),
+            OverridesMinimizer(ClusterTagClassifier(ClusterTagClassifierProperties())),
             NamingValidator(),
             RequiredResourcesInspector(),
             TopicWizardProperties().apply {

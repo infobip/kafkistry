@@ -109,10 +109,10 @@
     </div>
     <div class="form-row pt-1 selected-tag" <#if presenceType != 'TAGGED_CLUSTERS'>style="display: none;"</#if>>
         <#assign selectedTag = (presence.tag)!''>
-        <#assign noTags = existingValues.tagClusters?size == 0>
+        <#assign noTags = existingValues.presenceTagClusters?size == 0>
         <select name="selectedTag" title="Select tag..." class="form-control"
                 data-live-search="true" data-size="8">
-            <#list existingValues.tagClusters as tag, clusters>
+            <#list existingValues.presenceTagClusters as tag, clusters>
                 <#assign tooltip>
                     <strong>Clusters</strong> <i>(count=${clusters?size})</i>: <br/>
                     ${clusters?join(",")}
@@ -127,7 +127,7 @@
             </#list>
         </select>
         <#if noTags>
-            <small><i>(no tags exist on cluster(s))</i></small>
+            <small><i>(no presence tags exist on cluster(s))</i></small>
         </#if>
     </div>
 </div>

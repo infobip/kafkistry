@@ -15,6 +15,7 @@ import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.KafkaUser
 import com.infobip.kafkistry.model.PrincipalAclRules
 import com.infobip.kafkistry.model.QuotaDescription
+import com.infobip.kafkistry.service.tags.ClusterTagClassifier
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -27,6 +28,7 @@ class ExistingValuesService(
     private val quotasRegistry: QuotasRegistryService,
     private val kafkaClustersStateProvider: KafkaClustersStateProvider,
     private val consumersGroupsProvider: KafkaConsumerGroupsProvider,
+    private val clusterTagClassifier: ClusterTagClassifier,
     private val existingValuesSuppliers: Optional<List<ExistingValuesSupplier>>
 ) {
 
@@ -134,6 +136,9 @@ class ExistingValuesService(
         val entityQuotas = quotasRegistry.listAllQuotas()
         val consumersGroupsStates = consumersGroupsProvider.listAllLatestStates()
         val clusterRefs = clustersRegistry.listClustersRefs()
+        val allTagClusters = clusterRefs
+            .flatMap { ref -> ref.tags.map { it to ref.identifier } }
+            .groupBy({ it.first }, { it.second })
         return ExistingValues(
             kafkaProfiles = kafkaProfiles,
             commonTopicConfig = clusterStates.generateMostCommonConfig(),
@@ -143,9 +148,9 @@ class ExistingValuesService(
             producers = allProducers(topics),
             clusterIdentifiers = clusterRefs.map { it.identifier },
             clusterRefs = clusterRefs,
-            tagClusters = clusterRefs
-                .flatMap { ref -> ref.tags.map { it to ref.identifier } }
-                .groupBy({ it.first }, { it.second }),
+            tagClusters = allTagClusters,
+            presenceTagClusters = allTagClusters.filterKeys { clusterTagClassifier.isPresence(it) },
+            overrideTagClusters = allTagClusters.filterKeys { clusterTagClassifier.isOverride(it) },
             topics = allTopics(topics, clusterStates),
             topicLabels = allLabels(topics),
             consumerGroups = allConsumerGroups(consumersGroupsStates),

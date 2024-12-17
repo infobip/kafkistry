@@ -5,6 +5,8 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicDescription
 import com.infobip.kafkistry.model.TopicProperties
 import com.infobip.kafkistry.service.generator.OverridesMinimizer
+import com.infobip.kafkistry.service.tags.ClusterTagClassifier
+import com.infobip.kafkistry.service.tags.ClusterTagClassifierProperties
 import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import org.junit.jupiter.api.Test
@@ -13,7 +15,11 @@ import java.util.stream.Collectors
 
 class OverridesMinimizerTest {
 
-    private val minimizer = OverridesMinimizer()
+    private val minimizer = OverridesMinimizer(ClusterTagClassifier(
+        properties = ClusterTagClassifierProperties().apply {
+            overrideTagNamePattern = Regex("small|large|foo|bar").pattern
+        }
+    ))
     private val clustersABCD = clustersOf("a", "b", "c", "d")
     private val clustersAB = clustersOf("a", "b")
     private val noClusters = listOf<ClusterRef>()

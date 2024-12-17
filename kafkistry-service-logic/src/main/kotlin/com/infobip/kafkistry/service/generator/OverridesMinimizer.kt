@@ -1,7 +1,6 @@
 package com.infobip.kafkistry.service.generator
 
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.service.clustersTags
 import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.topic.propertiesForCluster
 import com.infobip.kafkistry.service.quotas.quotaForCluster
@@ -9,6 +8,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.QuotaDescription
 import com.infobip.kafkistry.model.Tag
+import com.infobip.kafkistry.service.tags.ClusterTagClassifier
 import org.springframework.stereotype.Component
 
 /**
@@ -17,7 +17,9 @@ import org.springframework.stereotype.Component
  * global section.
  */
 @Component
-class OverridesMinimizer {
+class OverridesMinimizer(
+    private val clusterTagClassifier: ClusterTagClassifier,
+) {
 
     fun minimizeOverrides(topic: TopicDescription, allClusterRefs: List<ClusterRef>): TopicDescription {
         val minimizedProperties = minimizeProperties(allClusterRefs, topic.properties) {
@@ -180,6 +182,15 @@ class OverridesMinimizer {
                 .filterValues { it.isNotEmpty() },
             tagOverrides = tagOverrides mergeWith partialTagConfigs,
         )
+    }
+
+    private fun List<ClusterRef>.clustersTags(): Map<Set<KafkaClusterIdentifier>, List<Tag>> {
+        val allOverrideTags = flatMap { it.tags }
+            .distinct()
+            .filter { clusterTagClassifier.isOverride(it) }
+        return allOverrideTags.groupBy { tag ->
+            filter { tag in it.tags }.map { it.identifier }.toSet()
+        }
     }
 
     private infix fun Map<Tag, TopicConfigMap>.mergeWith(other: Map<Tag, TopicConfigMap>): Map<Tag, TopicConfigMap> {

@@ -9,13 +9,6 @@ fun <T, R : Any> Iterable<T>.mostFrequentElement(extractor: (T) -> R?): R? =
                 .maxByOrNull { it.value }
                 ?.key
 
-fun List<ClusterRef>.clustersTags(): Map<Set<KafkaClusterIdentifier>, List<Tag>> {
-    val allTags = flatMap { it.tags }.distinct()
-    return allTags.groupBy { tag ->
-        filter { tag in it.tags }.map { it.identifier }.toSet()
-    }
-}
-
 fun List<ClusterRef>.computePresence(
     presentOnClusters: List<KafkaClusterIdentifier>,
     disabledClusters: List<KafkaClusterIdentifier> = emptyList()

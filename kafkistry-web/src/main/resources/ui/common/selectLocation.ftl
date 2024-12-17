@@ -7,7 +7,7 @@
                 <#if multi>multiple="multiple"</#if>>
             <#if !multi><option disabled selected hidden>Select where...</option></#if>
             <optgroup label="Clusters with tag">
-                <#list existingValues.tagClusters as tag, clusters>
+                <#list existingValues.overrideTagClusters as tag, clusters>
                     <#assign tooltip>
                         <strong>Clusters</strong> <i>(count=${clusters?size})</i>: <br/>
                         ${clusters?join(",")}

@@ -78,6 +78,8 @@ data class ExistingValues(
     val clusterIdentifiers: List<KafkaClusterIdentifier>,
     val clusterRefs: List<ClusterRef>,
     val tagClusters: Map<Tag, List<KafkaClusterIdentifier>>,
+    val presenceTagClusters: Map<Tag, List<KafkaClusterIdentifier>>,
+    val overrideTagClusters: Map<Tag, List<KafkaClusterIdentifier>>,
     val commonTopicConfig: ExistingConfig,
     val topicConfigDoc: Map<String, String>,
     val brokerConfigDoc: Map<String, String>,

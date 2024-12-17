@@ -11,6 +11,8 @@ import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.replicadirs.ReplicaDirsService
 import com.infobip.kafkistry.service.resources.RequiredResourcesInspector
+import com.infobip.kafkistry.service.tags.ClusterTagClassifier
+import com.infobip.kafkistry.service.tags.ClusterTagClassifierProperties
 import com.infobip.kafkistry.service.topic.validation.NamingValidator
 import com.infobip.kafkistry.service.topic.validation.TopicConfigurationValidator
 import com.infobip.kafkistry.service.topic.wizard.TopicWizardConfigGenerator
@@ -172,12 +174,12 @@ internal class OperationSuggestionServiceTest {
         },
         rulesValidator: TopicConfigurationValidator = mock(),
         configValueInspector: ConfigValueInspector = mock(),
-        overridesMinimizer: OverridesMinimizer = OverridesMinimizer(),
+        overridesMinimizer: OverridesMinimizer = OverridesMinimizer(ClusterTagClassifier(ClusterTagClassifierProperties())),
         partitionsAssignor: PartitionsReplicasAssignor = PartitionsReplicasAssignor(),
         resourcesInspector: RequiredResourcesInspector = RequiredResourcesInspector(),
         topicWizardConfigGenerator: TopicWizardConfigGenerator = TopicWizardConfigGenerator(
             topicNameGenerator = Optional.empty(),
-            minimizer = OverridesMinimizer(),
+            minimizer = overridesMinimizer,
             namingValidator = NamingValidator(),
             requiredResourcesInspector = RequiredResourcesInspector(),
             properties = TopicWizardProperties(),
