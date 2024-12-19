@@ -263,27 +263,29 @@ class GitRepository(
 
     @Throws(GitAPIException::class)
     private fun cloneOrInitNewRepo() {
-        if (noRemote) {
-            log.info("Going to GIT INIT empty repository in directory $dir")
-            Git.init()
+        exclusive(refreshing = true) {
+            if (noRemote) {
+                log.info("Going to GIT INIT empty repository in directory $dir")
+                Git.init()
                     .setDirectory(dir)
                     .call()
-            makeEmptyCommit()
-            log.info("Successful GIT INIT empty repository in directory $dir")
-        } else {
-            log.info("Going to GIT CLONE $gitRemoteUri into directory $dir")
-            Git.cloneRepository()
+                makeEmptyCommit()
+                log.info("Successful GIT INIT empty repository in directory $dir")
+            } else {
+                log.info("Going to GIT CLONE $gitRemoteUri into directory $dir")
+                Git.cloneRepository()
                     .setURI(gitRemoteUri)
                     .setDirectory(dir)
                     .setBranch(mainBranch.toFullBranchName())
                     .setCloneAllBranches(true)
                     .setTransportConfigCallback(transportCallback)
                     .call()
-            repository.config.apply {
-                setString("remote", "origin", "prune", "true")
+                repository.config.apply {
+                    setString("remote", "origin", "prune", "true")
+                }
+                log.info("Successful GIT CLONE $gitRemoteUri into directory $dir")
+                ensureHasCommit()
             }
-            log.info("Successful GIT CLONE $gitRemoteUri into directory $dir")
-            ensureHasCommit()
         }
     }
 
@@ -370,8 +372,8 @@ class GitRepository(
         if (noRemote) {
             return
         }
-        fetch()
         exclusive(refreshing = true) {
+            fetch()
             try {
                 gitHardPull()
             } catch (jGitException: JGitInternalException) {
@@ -473,7 +475,7 @@ class GitRepository(
         exclusiveOnMainBranch {
             with(writeContext) {
                 doInUserBranch(user, files.map { it.name }, "KR write autocommit: $message", targetBranch) {
-                    log.info("User {} writing to file {}/{} and adding it to git to track",
+                    log.info("User {} writing to files {}/{} and adding it to git to track",
                         user.fullName, subDir, files.map { it.name }
                     )
                     files.forEach { it.writeToDisk(subDir) }
@@ -602,10 +604,12 @@ class GitRepository(
             throw KafkistryGitException("Can't delete repository if no remote to re-clone from")
         }
         log.info("Going to completely delete local git dir $dir and re-clone it")
-        FileUtils.deleteDirectory(dir)
-        cloneOrInitNewRepo()
-        fetch()
-        gitHardPull()
+        exclusive(refreshing = true) {
+            FileUtils.deleteDirectory(dir)
+            cloneOrInitNewRepo()
+            fetch()
+            gitHardPull()
+        }
         log.info("Local repository successfully re-cloned and pulled: {}", dir)
     }
 
@@ -785,13 +789,13 @@ class GitRepository(
     private fun fetch() {
         val firstRemote = git.remoteList().call().first()
         val refSpecs = firstRemote.fetchRefSpecs
-        log.debug("Fetching all branches $refSpecs, timeout: $gitTimeoutSeconds sec")
+        log.debug("Fetching all branches {}, timeout: {} sec", refSpecs, gitTimeoutSeconds)
         val fetchResult = git.fetch()
                 .setTransportConfigCallback(transportCallback)
                 .setTimeout(gitTimeoutSeconds)
                 .setRefSpecs(refSpecs)
                 .call()
-        log.debug("Fetch successful for $refSpecs")
+        log.debug("Fetch successful for {}", refSpecs)
         fetchResult.messages.forEach { log.debug("Fetch msg: {}", it) }
     }
 
