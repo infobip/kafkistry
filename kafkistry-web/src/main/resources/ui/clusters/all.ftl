@@ -75,9 +75,17 @@
                 </td>
                 <td>
                     <#if cluster.tags?size gt 0>
-                        <#list cluster.tags as tag>
-                            <span class="mb-1 badge badge-secondary">${tag}</span>
-                        </#list>
+                        <div class="alert alert-dark alert-sm mb-1 collapsed" data-toggle="collapsing"
+                             data-target="#cluster-tags-${clusterIdentifier}">
+                            <span class="when-collapsed" title="expand...">▼</span>
+                            <span class="when-not-collapsed" title="collapse...">△</span>
+                            ${cluster.tags?size} tag(s)
+                        </div>
+                        <div id="cluster-tags-${clusterIdentifier}" class="collapseable">
+                            <#list cluster.tags as tag>
+                                <span class="mb-1 badge badge-secondary">${tag}</span>
+                            </#list>
+                        </div>
                     <#else>
                         ---
                     </#if>
