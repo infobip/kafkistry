@@ -488,7 +488,9 @@ fun stateRandom(
 
     fun Random.partitions(): Int = partitions[nextInt(partitions.size)]
     fun Random.replication(): Int = replication[nextInt(replication.size)]
-    val brokerPartitions = brokerIds.associateWith { BrokerLoad(0, 0) }.toMutableMap()
+    val brokerPartitions = brokerIds.associateWith {
+        BrokerLoad(0, 0, 0L)
+    }.toMutableMap()
     fun Random.createAssignments(topic: Int): TopicAssignments {
         val numberOfNewPartitions = partitions()
         return TopicAssignments(
@@ -503,7 +505,7 @@ fun stateRandom(
             ).newAssignments
         ).also { assignments ->
             assignments.partitionAssignments.forEach { (_, brokers) ->
-                brokers.forEach { brokerPartitions.merge(it, BrokerLoad(1, 0), BrokerLoad::plus) }
+                brokers.forEach { brokerPartitions.merge(it, BrokerLoad(1, 0, 0L), BrokerLoad::plus) }
             }
         }
     }
@@ -519,4 +521,8 @@ fun stateRandom(
     return GlobalState(allBrokers, loads.associateBy { it.topic }, assignments.associateBy { it.topic })
 }
 
-private operator fun BrokerLoad.plus(other: BrokerLoad) = BrokerLoad(numReplicas + other.numReplicas, diskBytes + other.diskBytes)
+private operator fun BrokerLoad.plus(other: BrokerLoad) = BrokerLoad(
+    numReplicas + other.numReplicas,
+    numPreferredLeaders + other.numPreferredLeaders,
+    diskBytes + other.diskBytes,
+)

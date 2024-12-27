@@ -36,24 +36,24 @@
             <#assign clusterIdentifier = clusterInfo.identifier>
             Re-balance mode:
             <button data-href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterIdentifier, "REPLICAS")}"
-                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode.name() == "REPLICAS">active</#if>">
+                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode == "REPLICAS">active</#if>">
                 Only replicas
             </button>
             <button data-href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterIdentifier, "LEADERS")}"
-                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode.name() == "LEADERS">active</#if>">
+                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode == "LEADERS">active</#if>">
                 Only leaders
             </button>
             <button data-href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterIdentifier, "REPLICAS_THEN_LEADERS")}"
-                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode.name() == "REPLICAS_THEN_LEADERS">active</#if>">
+                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode == "REPLICAS_THEN_LEADERS">active</#if>">
                 Replicas then leaders
             </button>
-            <button data-href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterIdentifier, "LEADERS_THEN_REPLICAS")}"
-                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode.name() == "LEADERS_THEN_REPLICAS">active</#if>">
-                Leaders then replicas
-            </button>
             <button data-href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterIdentifier, "ROUND_ROBIN")}"
-                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode.name() == "ROUND_ROBIN">active</#if>">
+                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode == "ROUND_ROBIN">active</#if>">
                 Round robin
+            </button>
+            <button data-href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterIdentifier, "CLUSTER_LOAD")}"
+                    class="rebalance-nav-item btn btn-outline-primary <#if reBalanceMode == "CLUSTER_LOAD">active</#if>">
+                Cluster load
             </button>
         </p>
     </div>

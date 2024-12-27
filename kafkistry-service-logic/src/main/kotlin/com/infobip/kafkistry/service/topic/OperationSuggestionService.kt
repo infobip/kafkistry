@@ -143,28 +143,29 @@ class OperationSuggestionService(
         topicName: TopicName,
         clusterIdentifier: KafkaClusterIdentifier,
         reBalanceMode: ReBalanceMode,
+        brokersLoads: Map<BrokerId, BrokerLoad> = brokersLoad(clusterIdentifier),
         excludedBrokerIds: List<BrokerId> = emptyList(),
     ): ReBalanceSuggestion {
-        return reAssignTopicSuggestion(topicName, clusterIdentifier) {
+        return reAssignTopicSuggestion(topicName, clusterIdentifier, brokersLoads) {
             if (excludedBrokerIds.isNotEmpty() && reBalanceMode != ROUND_ROBIN) {
                 partitionsAssignor.reAssignWithoutBrokers(
-                    existingAssignments, allClusterBrokers, excludedBrokerIds, partitionLoads
+                    existingAssignments, allClusterBrokers, excludedBrokerIds, partitionLoads, brokerLoads,
                 )
             } else when (reBalanceMode) {
                 REPLICAS -> partitionsAssignor.reBalanceReplicasAssignments(
-                    existingAssignments, allClusterBrokers, partitionLoads
+                    existingAssignments, allClusterBrokers, partitionLoads, brokersLoads,
                 )
                 LEADERS -> partitionsAssignor.reBalancePreferredLeaders(
-                    existingAssignments, allClusterBrokers
+                    existingAssignments, allClusterBrokers, brokersLoads,
                 )
                 REPLICAS_THEN_LEADERS -> partitionsAssignor.reBalanceReplicasThenLeaders(
-                    existingAssignments, allClusterBrokers, partitionLoads
-                )
-                LEADERS_THEN_REPLICAS -> partitionsAssignor.reBalanceLeadersThenReplicas(
-                    existingAssignments, allClusterBrokers, partitionLoads
+                    existingAssignments, allClusterBrokers, partitionLoads, brokersLoads
                 )
                 ROUND_ROBIN -> partitionsAssignor.reBalanceRoundRobin(
-                    existingAssignments, allClusterBrokers.filter { it.id !in excludedBrokerIds }
+                    existingAssignments, allClusterBrokers.filter { it.id !in excludedBrokerIds },
+                )
+                CLUSTER_LOAD -> partitionsAssignor.reBalanceBrokersLoads(
+                    existingAssignments, allClusterBrokers, partitionLoads, brokerLoads,
                 )
             }
         }
@@ -194,6 +195,7 @@ class OperationSuggestionService(
     private fun reAssignTopicSuggestion(
         topicName: TopicName,
         clusterIdentifier: KafkaClusterIdentifier,
+        brokersLoads: Map<BrokerId, BrokerLoad> = brokersLoad(clusterIdentifier),
         newAssignmentGenerator: ReAssignContext.() -> AssignmentsChange
     ): ReBalanceSuggestion {
         val topicOnCluster = inspectionService.inspectTopicOnCluster(topicName, clusterIdentifier)
@@ -206,7 +208,7 @@ class OperationSuggestionService(
         val allClusterBrokers = clusterStateProvider.getLatestClusterStateValue(clusterIdentifier).clusterInfo
             .assignableBrokers()
         val assignmentsChange = newAssignmentGenerator(
-            ReAssignContext(topicName, existingAssignments, partitionLoads, allClusterBrokers)
+            ReAssignContext(topicName, existingAssignments, partitionLoads, allClusterBrokers, brokersLoads)
         )
         return ReBalanceSuggestion(
             existingTopicInfo = existingTopicInfo,
@@ -244,6 +246,7 @@ class OperationSuggestionService(
                     "Can't show topics which need re-balance because cluster status is: $clusterState"
                 )
             }
+        val brokersLoad = brokersLoad(clusterIdentifier)
 
         val filterStages = mutableListOf<TopicSuggestStage>()
         val qualifyStages = mutableListOf<TopicSuggestStage>()
@@ -323,6 +326,10 @@ class OperationSuggestionService(
                     BALANCE_RACKS -> disbalance { hasRacksDisbalance() }.explained(
                         "has racks disbalance", "not having racks disbalance",
                     )
+                    BALANCE_CLUSTER -> topicClusterStatus.existingTopicInfo?.properties?.partitionCount.let {
+                        if (it == null) false
+                        else it % clusterInfo.brokerIds.size != 0
+                    }.explained("uneven impact on cluster", "even distribution on cluster")
                     AVOID_SINGLE_RACKS -> disbalance { hasSingleRackPartitions() }.explained(
                         "has single rack partitions", "not having single rack partitions",
                     )
@@ -331,12 +338,19 @@ class OperationSuggestionService(
             return objectiveMatches.matchAny(topicName, "not having objectives")
         }
 
+        fun Map<Partition, List<BrokerId>>.replicasPerBroker(): Map<BrokerId, Int> = values.flatten().groupingBy { it }.eachCount()
+        fun Map<Partition, List<BrokerId>>.leadersPerBroker(): Map<BrokerId, Int> = values.map { it.first() }.groupingBy { it }.eachCount()
+
         fun ReBalanceSuggestion.objectiveImproved(): TopicSuggestStage {
             if (!assignmentsChange.hasChange) {
                 return TopicSuggestStage(existingTopicInfo.name, false, listOf("no change in assignments"))
             }
             val oldRacksStatus = oldDisbalance.partitionsPerRackDisbalance
             val newRacksStatus = newDisbalance.partitionsPerRackDisbalance
+            val oldReplicasPerBroker = assignmentsChange.oldAssignments.replicasPerBroker()
+            val newReplicasPerBroker = assignmentsChange.newAssignments.replicasPerBroker()
+            val oldLeadersPerBroker = assignmentsChange.oldAssignments.leadersPerBroker()
+            val newLeadersPerBroker = assignmentsChange.newAssignments.leadersPerBroker()
             val objectiveMatches = options.objectives.map { objective ->
                 when (objective) {
                     EXCLUDE_BROKERS -> assignmentsChange.newAssignments.usesExcludedBroker().not().explained(
@@ -353,6 +367,10 @@ class OperationSuggestionService(
                     BALANCE_RACKS -> (newRacksStatus.totalDisbalance < oldRacksStatus.totalDisbalance).explained(
                         "new racks disbalance ${newRacksStatus.totalDisbalance} better than old ${oldRacksStatus.totalDisbalance}",
                         "new racks disbalance ${newRacksStatus.totalDisbalance} not improved to old ${oldRacksStatus.totalDisbalance}",
+                    )
+                    BALANCE_CLUSTER -> (newLeadersPerBroker != oldLeadersPerBroker || newReplicasPerBroker != oldReplicasPerBroker).explained(
+                        "number of leaders or replicas per each broker changed with new assignment",
+                        "number of leaders and replicas per each broker remained the same",
                     )
                     AVOID_SINGLE_RACKS -> (newRacksStatus.singleRackPartitions.size < oldRacksStatus.singleRackPartitions.size).explained(
                         "new number of single rack partitions ${newRacksStatus.singleRackPartitions.size} better than old ${oldRacksStatus.singleRackPartitions.size}",
@@ -393,7 +411,7 @@ class OperationSuggestionService(
             .mapNotNull { status ->
                 try {
                     status.topicName to reBalanceTopicAssignments(
-                        status.topicName, clusterIdentifier, options.reBalanceMode, options.excludedBrokerIds
+                        status.topicName, clusterIdentifier, options.reBalanceMode, brokersLoad, options.excludedBrokerIds,
                     )
                 } catch (ex: KafkistryValidationException) {
                     qualifyStages.apply { removeIf {it.topic == status.topicName } }.add(
@@ -450,11 +468,17 @@ class OperationSuggestionService(
         )
     }
 
+    private fun brokersLoad(clusterIdentifier: KafkaClusterIdentifier): Map<BrokerId, BrokerLoad> {
+        val clusterData = clusterStateProvider.getLatestClusterStateValue(clusterIdentifier)
+        return inspectionService.inspectClusterBrokersLoad(clusterData)
+    }
+
     private data class ReAssignContext(
         val topicName: TopicName,
         val existingAssignments: Map<Partition, List<BrokerId>>,
         val partitionLoads: Map<Partition, PartitionLoad>,
         val allClusterBrokers: List<Broker>,
+        val brokerLoads: Map<BrokerId, BrokerLoad>,
     )
 
 

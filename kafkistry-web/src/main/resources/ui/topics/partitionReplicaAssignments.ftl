@@ -43,7 +43,12 @@
                 <div class="p-2">
                     <#if assignmentsDisbalance.replicasDisbalance == 0 && assignmentsDisbalance.leadersDisbalance == 0
                         && assignmentsDisbalance.partitionsPerRackDisbalance.totalDisbalance == 0>
-                        <div class="alert alert-success">Partition and leader assignments over brokers is optimal</div>
+                        <div class="alert alert-success">
+                            Partition and leader assignments over brokers is optimal
+                            <a href="${appUrl.topicsManagement().showTopicReBalance(topicName, clusterInfo.identifier, "REPLICAS_THEN_LEADERS")}">
+                                <button class="btn btn-info btn-sm mb-1">Re-balance...</button>
+                            </a>
+                        </div>
                     <#else>
                         <div class="row m-0">
                             <div class="col p-1">

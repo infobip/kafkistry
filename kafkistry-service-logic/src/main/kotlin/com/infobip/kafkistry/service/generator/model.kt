@@ -72,11 +72,34 @@ fun List<Broker>.ids() = map { it.id }
 
 data class BrokerLoad(
     val numReplicas: Int,
+    val numPreferredLeaders: Int,
     val diskBytes: Long,
-)
+) {
+    companion object {
+        val ZERO = BrokerLoad(0, 0, 0L)
+    }
+}
 
 data class PartitionLoad(
     val diskSize: Long,
+)
+
+fun PartitionLoad.toBrokerLoad(isLeader: Boolean) = BrokerLoad(
+    numReplicas = 1,
+    numPreferredLeaders = if (isLeader) 1 else 0,
+    diskBytes = diskSize,
+)
+
+operator fun BrokerLoad.plus(other: BrokerLoad) = BrokerLoad(
+    numReplicas = numReplicas + other.numReplicas,
+    numPreferredLeaders = numPreferredLeaders + other.numPreferredLeaders,
+    diskBytes = diskBytes + other.diskBytes,
+)
+
+operator fun BrokerLoad.minus(other: BrokerLoad) = BrokerLoad(
+    numReplicas = numReplicas - other.numReplicas,
+    numPreferredLeaders = numPreferredLeaders - other.numPreferredLeaders,
+    diskBytes = diskBytes - other.diskBytes,
 )
 
 fun Map<Partition, List<BrokerId>>.prettyString(allBrokers: List<BrokerId>): String {

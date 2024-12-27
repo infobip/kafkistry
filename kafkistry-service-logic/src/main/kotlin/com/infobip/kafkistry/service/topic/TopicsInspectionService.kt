@@ -309,11 +309,13 @@ class TopicsInspectionService(
     }
 
     fun inspectClusterBrokersLoad(clusterData: KafkaClusterState): Map<BrokerId, BrokerLoad> {
-        val brokerPartitionCounts = clusterData.topics.asSequence()
+        fun countPerBroker(filter: (ReplicaAssignment) -> Boolean = { true}): Map<BrokerId, Int> = clusterData.topics.asSequence()
             .flatMap { it.partitionsAssignments.asSequence() }
-            .flatMap { it.replicasAssignments.asSequence().map { replica -> replica.brokerId } }
+            .flatMap { it.replicasAssignments.asSequence().filter(filter).map { replica -> replica.brokerId } }
             .groupingBy { it }
             .eachCount()
+        val brokerPartitionCounts = countPerBroker()
+        val brokerLeadersCounts = countPerBroker { it.leader }
         val brokerUsedDiskSizes = replicaDirsService.clusterTopicReplicaInfos(clusterData.clusterInfo.identifier)
             .values
             .flatMap { it.partitionBrokerReplicas.values }
@@ -324,8 +326,9 @@ class TopicsInspectionService(
             .distinct()
             .associateWith { broker ->
                 BrokerLoad(
-            brokerPartitionCounts[broker] ?: 0,
-            brokerUsedDiskSizes[broker] ?: 0L
+                    brokerPartitionCounts[broker] ?: 0,
+                    brokerLeadersCounts[broker] ?: 0,
+                    brokerUsedDiskSizes[broker] ?: 0L,
                 )
             }
     }

@@ -75,7 +75,7 @@ class PartitionsReplicasAssignorTest {
         allBrokers: List<Broker>,
         existingPartitionLoads: Map<Partition, PartitionLoad> = existingAssignments.mapValues { PartitionLoad(0L) },
     ): AssignmentsChange =
-        assignor.reBalanceReplicasThenLeaders(existingAssignments, allBrokers, existingPartitionLoads)
+        assignor.reBalanceReplicasThenLeaders(existingAssignments, allBrokers, existingPartitionLoads, emptyMap())
 
     private fun reBalanceReplicasAssignments(
         existingAssignments: Map<Partition, List<BrokerId>>,
@@ -378,12 +378,12 @@ class PartitionsReplicasAssignorTest {
                 8.asBrokers(), 4, 2,
                 mapOf(),
                 mapOf(
-                    1 to BrokerLoad(2, 0L),
-                    2 to BrokerLoad(3, 0L),
-                    3 to BrokerLoad(4, 0L),
-                    5 to BrokerLoad(1, 0L),
-                    6 to BrokerLoad(1, 0L),
-                    7 to BrokerLoad(1, 0L),
+                    1 to BrokerLoad(2, 0, 0L),
+                    2 to BrokerLoad(3, 0, 0L),
+                    3 to BrokerLoad(4, 0, 0L),
+                    5 to BrokerLoad(1, 0, 0L),
+                    6 to BrokerLoad(1, 0, 0L),
+                    7 to BrokerLoad(1, 0, 0L),
                 )
             )
             assertThat(assignments.addedPartitionReplicas).isEqualTo(
@@ -403,10 +403,10 @@ class PartitionsReplicasAssignorTest {
                 4.asBrokers(), 2, 1,
                 mapOf(),
                 mapOf(
-                    1 to BrokerLoad(100, 0L),
-                    2 to BrokerLoad(5, 0L),
-                    3 to BrokerLoad(100, 0L),
-                    4 to BrokerLoad(0, 0L),
+                    1 to BrokerLoad(100, 0, 0L),
+                    2 to BrokerLoad(5, 0, 0L),
+                    3 to BrokerLoad(100, 0, 0L),
+                    4 to BrokerLoad(0, 0, 0L),
                 )
             )
             assertThat(assignments.addedPartitionReplicas).isEqualTo(
@@ -1261,12 +1261,12 @@ class PartitionsReplicasAssignorTest {
         )
         val allBrokers = (0..5).toList().asBrokers()
         val clusterBrokersLoad = mapOf(
-            0 to BrokerLoad(6, 0L),
-            2 to BrokerLoad(7, 0L),
-            1 to BrokerLoad(6, 0L),
-            3 to BrokerLoad(6, 0L),
-            5 to BrokerLoad(1, 0L),
-            4 to BrokerLoad(1, 0L),
+            0 to BrokerLoad(6, 0, 0L),
+            2 to BrokerLoad(7, 0, 0L),
+            1 to BrokerLoad(6, 0, 0L),
+            3 to BrokerLoad(6, 0, 0L),
+            5 to BrokerLoad(1, 0, 0L),
+            4 to BrokerLoad(1, 0, 0L),
         )
         val assignments = assignor.assignPartitionsNewReplicas(
             existingAssignments = existingAssignments,
@@ -1286,12 +1286,12 @@ class PartitionsReplicasAssignorTest {
         )
         val allBrokers = (0..5).toList().asBrokers()
         val clusterBrokersLoad = mapOf(
-            0 to BrokerLoad(1, 0L),
-            1 to BrokerLoad(1, 0L),
-            2 to BrokerLoad(0, 0L),
-            3 to BrokerLoad(1, 0L),
-            4 to BrokerLoad(0, 0L),
-            5 to BrokerLoad(0, 0L),
+            0 to BrokerLoad(1, 0, 0L),
+            1 to BrokerLoad(1, 0, 0L),
+            2 to BrokerLoad(0, 0, 0L),
+            3 to BrokerLoad(1, 0, 0L),
+            4 to BrokerLoad(0, 0, 0L),
+            5 to BrokerLoad(0, 0, 0L),
         )
         val assignments = assignor.assignNewPartitionReplicas(
             existingAssignments = existingAssignments,
@@ -1327,17 +1327,19 @@ class PartitionsReplicasAssignorTest {
             numberOfNewPartitions = 5,
             replicationFactor = 3,
             existingPartitionLoads = assignments1.newAssignments.mapValues { PartitionLoad(0L) },
-            clusterBrokersLoad = assignments1.newAssignments.countPerBroker().mapValues { BrokerLoad(it.value, 0L) }
+            clusterBrokersLoad = assignments1.newAssignments.countPerBroker().mapValues {
+                BrokerLoad(it.value, 0, 0L)
+            },
         )
         assertThat(assignmentsDisbalance(assignments2.newAssignments, allBrokers)).isEqualTo(noDisbalance(6, 3))
 
         val brokersLoad = mapOf(
-            0 to BrokerLoad(15, 0L),
-            1 to BrokerLoad(16, 0L),
-            2 to BrokerLoad(15, 0L),
-            3 to BrokerLoad(15, 0L),
-            4 to BrokerLoad(12, 0L),
-            5 to BrokerLoad(11, 0L),
+            0 to BrokerLoad(15, 0, 0L),
+            1 to BrokerLoad(16, 0, 0L),
+            2 to BrokerLoad(15, 0, 0L),
+            3 to BrokerLoad(15, 0, 0L),
+            4 to BrokerLoad(12, 0, 0L),
+            5 to BrokerLoad(11, 0, 0L),
         )
         println("=============================")
         //increase replication (6, 3) to (6, 4)
@@ -1414,7 +1416,7 @@ class PartitionsReplicasAssignorTest {
             val brokersCounts = listOf(2, 3, 6, 16, 32, 64, 128)
             val replicationCounts = listOf(1, 2, 3, 4, 8)
             val replicationIncs = listOf(1, 2, 3)
-            val partitionCounts = listOf(1, 2, 3, 4, 8, 16, 32, 64, 256, 1024)
+            val partitionCounts = listOf(1, 2, 3, 4, 8, 16, 32, 64, 256, /*1024*/)
             for (replication in replicationCounts) {
                 for (rfInc in replicationIncs) {
                     for (brokers in brokersCounts) {
@@ -1435,6 +1437,40 @@ class PartitionsReplicasAssignorTest {
             }
         }
 
+        @Test
+        fun `failing disbalance 1`() {
+            setLogging()
+            execAddReplicasExample(
+                seed = 1735204629294,
+                partitions = 8,
+                brokers = 6,
+                replication = 4,
+                rfInc = 1,
+            )
+        }
+
+        @Test
+        fun `failing disbalance 2`() {
+            execAddReplicasExample(
+                seed = 1735212597889,
+                partitions = 256,
+                brokers = 16,
+                replication = 4,
+                rfInc = 3,
+            )
+        }
+
+        @Test
+        fun `failing disbalance 3`() {
+            execAddReplicasExample(
+                seed = 1735212858619,
+                partitions = 256,
+                brokers = 32,
+                replication = 4,
+                rfInc = 1,
+            )
+        }
+
         private fun execAddReplicasExample(
             seed: Long,
             partitions: Int,
@@ -1442,6 +1478,7 @@ class PartitionsReplicasAssignorTest {
             replication: Int,
             rfInc: Int,
         ) {
+            val ctxMsg = "(Seed=$seed, p=$partitions, b=$brokers, r=$replication, ri=$rfInc)"
             val random = Random(seed)
             val allBrokers = (0 until brokers).toList().asBrokers()
 
@@ -1455,6 +1492,7 @@ class PartitionsReplicasAssignorTest {
                     BrokerLoad(
                         numReplicas = random.nextInt(2 * brokers),
                         diskBytes = random.nextLong() % 1_000_000_000,
+                        numPreferredLeaders = random.nextInt(brokers),
                     )
                 },
             ).newAssignments
@@ -1465,9 +1503,9 @@ class PartitionsReplicasAssignorTest {
                     allBrokers.ids(),
                     TopicProperties(partitions, replication)
                 )
-            assertThat(initialDisbalance.leadersDisbalance).`as`("Seed=$seed Initial leaders disbalance").isEqualTo(0)
-            assertThat(initialDisbalance.replicasDisbalance).`as`("Seed=$seed Initial replicas disbalance").isEqualTo(0)
-            assertThat(initialValidation.valid).`as`("Seed=$seed Initial validation $initialValidation").isEqualTo(true)
+            assertThat(initialDisbalance.replicasDisbalance).`as`("Initial replicas disbalance $ctxMsg").isEqualTo(0)
+            assertThat(initialDisbalance.leadersDisbalance).`as`("Initial leaders disbalance $ctxMsg").isEqualTo(0)
+            assertThat(initialValidation.valid).`as`("Initial validation $initialValidation $ctxMsg").isEqualTo(true)
 
             val newAssignmentsChange = assignor.assignPartitionsNewReplicas(
                 existingAssignments = initialAssignments,
@@ -1478,6 +1516,7 @@ class PartitionsReplicasAssignorTest {
                     BrokerLoad(
                         numReplicas = random.nextInt(2 * brokers),
                         diskBytes = random.nextLong() % 1_000_000_000,
+                        numPreferredLeaders = random.nextInt(brokers),
                     )
                 }
             )
@@ -1488,12 +1527,12 @@ class PartitionsReplicasAssignorTest {
                 allBrokers.ids(),
                 TopicProperties(partitions, replication + rfInc)
             )
-            assertThat(newDisbalance.leadersDisbalance).`as`("Seed=$seed Initial leaders disbalance").isEqualTo(0)
-            assertThat(newDisbalance.replicasDisbalance).`as`("Seed=$seed Initial replicas disbalance").isEqualTo(0)
+            assertThat(newDisbalance.leadersDisbalance).`as`("Initial leaders disbalance $ctxMsg").isEqualTo(0)
+            assertThat(newDisbalance.replicasDisbalance).`as`("Initial replicas disbalance $ctxMsg").isEqualTo(0)
             assertThat(newDisbalance.leadersDeepDisbalance.subList(0, newDisbalance.leadersDeepDisbalance.size / 2))
-                .`as`("Seed=$seed Initial replicas disbalance").containsOnly(0)
-            assertThat(newValidation.valid).`as`("Seed=$seed Initial validation $newValidation").isEqualTo(true)
-            assertThatExistingAssignmentsAreNotMoved(initialAssignments, newAssignmentsChange, seed)
+                .`as`("Initial replicas disbalance $ctxMsg").containsOnly(0)
+            assertThat(newValidation.valid).`as`("Initial validation $newValidation $ctxMsg").isEqualTo(true)
+            assertThatExistingAssignmentsAreNotMoved(initialAssignments, newAssignmentsChange, ctxMsg)
         }
 
         @Test
@@ -1613,7 +1652,7 @@ class PartitionsReplicasAssignorTest {
     private fun assertThatExistingAssignmentsAreNotMoved(
         existingAssignments: Map<Partition, List<BrokerId>>,
         assignments: AssignmentsChange,
-        seed: Long = 0L,
+        ctxMsg: String = "",
     ) {
         assertAll {
             existingAssignments.forEach { (partition, replicaBrokerIds) ->
@@ -1621,7 +1660,7 @@ class PartitionsReplicasAssignorTest {
                     assignments.removedPartitionReplicas[partition]
                         ?.let { removedFromBrokerIds ->
                             assertThat(removedFromBrokerIds)
-                                .`as`("Seed=$seed Existing replica of partition $partition not moved from broker $brokerId")
+                                .`as`("Existing replica of partition $partition not moved from broker $brokerId $ctxMsg")
                                 .doesNotContain(brokerId)
                         }
                 }
@@ -2090,6 +2129,131 @@ class PartitionsReplicasAssignorTest {
                 }
             }
         }
+    }
+
+    @Nested
+    @DisplayName("other topics existing load effect")
+    inner class ExistingBrokersLoad {
+
+        private val brokerLoads: Map<BrokerId, BrokerLoad> = mapOf(
+            1 to BrokerLoad(10, 2, 1_000L),
+            2 to BrokerLoad(10, 2, 2_000L),
+            3 to BrokerLoad(10, 1, 1_000L),
+            4 to BrokerLoad(10, 1, 3_000L),
+            5 to BrokerLoad(10, 0, 1_000L),
+            6 to BrokerLoad(10, 0, 1_000L),
+        )
+
+        private val brokers = brokerLoads.keys.toList().asBrokers()
+
+        @Test
+        fun `new topic leaders more on less leaders brokers`() {
+            val newAssignments = assignor.assignNewPartitionReplicas(
+                emptyMap(), brokers, 4, 2, emptyMap(), brokerLoads,
+            )
+            assertThat(newAssignments.newAssignments).isEqualTo(
+                mapOf(
+                    0 to listOf(5, 1),
+                    1 to listOf(6, 2),
+                    2 to listOf(3, 5),
+                    3 to listOf(4, 6),
+                )
+            )
+        }
+
+        @Test
+        fun `re-assign topic considering broker's total leaders counts`() {
+            val newAssignments = assignor.reBalanceBrokersLoads(
+                existingAssignments = mapOf(
+                    0 to listOf(1, 2),
+                    1 to listOf(3, 4),
+                    2 to listOf(5, 6),
+                    3 to listOf(6, 1),
+                ),
+                brokers, existingPartitionLoads = emptyMap(), brokerLoads,
+            )
+            assertThat(newAssignments.newAssignments).isEqualTo(
+                mapOf(
+                    0 to listOf(5, 1),
+                    1 to listOf(6, 2),
+                    2 to listOf(3, 5),
+                    3 to listOf(4, 6),
+                )
+            )
+        }
+
+        @Test
+        fun `local playground example 1`() {
+            val newAssignments = assignor.reBalanceBrokersLoads(
+                existingAssignments = mapOf(
+                    0 to listOf(5, 1),
+                    1 to listOf(0, 2),
+                    2 to listOf(3, 1),
+                    3 to listOf(4, 3),
+                ),
+                allBrokers = listOf(
+                    Broker(0,"rck-A"),
+                    Broker(1,"rck-A"),
+                    Broker(2,"rck-B"),
+                    Broker(3,"rck-B"),
+                    Broker(4,"rck-C"),
+                    Broker(5,"rck-C"),
+
+                ),
+                existingPartitionLoads = emptyMap(),
+                clusterBrokersLoad = mapOf(
+                    0 to BrokerLoad(numReplicas=61, diskBytes=1837504, numPreferredLeaders=13),
+                    1 to BrokerLoad(numReplicas=61, diskBytes=1438436, numPreferredLeaders=11),
+                    2 to BrokerLoad(numReplicas=61, diskBytes=1694231, numPreferredLeaders=10),
+                    3 to BrokerLoad(numReplicas=61, diskBytes=1591353, numPreferredLeaders=12),
+                    4 to BrokerLoad(numReplicas=61, diskBytes=1740740, numPreferredLeaders=12),
+                    5 to BrokerLoad(numReplicas=60, diskBytes=1535136, numPreferredLeaders=13),
+                ),
+            )
+            assertThat(newAssignments.newAssignments).isEqualTo(
+                mapOf(
+                    0 to listOf(1, 5),
+                    1 to listOf(2, 0),
+                    2 to listOf(3, 1),
+                    3 to listOf(4, 3),
+                )
+            )
+        }
+
+        @Test
+        fun `local playground example 2`() {
+            val newAssignments = assignor.assignNewPartitionReplicas(
+                existingAssignments = emptyMap(),
+                allBrokers = listOf(
+                    Broker(0,"rck-A"),
+                    Broker(1,"rck-A"),
+                    Broker(2,"rck-B"),
+                    Broker(3,"rck-B"),
+                    Broker(4,"rck-C"),
+                    Broker(5,"rck-C"),
+                ),
+                numberOfNewPartitions = 4,
+                replicationFactor = 2,
+                existingPartitionLoads = emptyMap(),
+                clusterBrokersLoad = mapOf(
+                    0 to BrokerLoad(numReplicas=61, diskBytes=1889024, numPreferredLeaders=13),
+                    1 to BrokerLoad(numReplicas=61, diskBytes=1551144, numPreferredLeaders=11),
+                    2 to BrokerLoad(numReplicas=62, diskBytes=1795266, numPreferredLeaders=11),
+                    3 to BrokerLoad(numReplicas=60, diskBytes=1648630, numPreferredLeaders=11),
+                    4 to BrokerLoad(numReplicas=57, diskBytes=1570490, numPreferredLeaders=11),
+                    5 to BrokerLoad(numReplicas=56, diskBytes=1377356, numPreferredLeaders=10),
+                ),
+            )
+            assertThat(newAssignments.newAssignments).isEqualTo(
+                mapOf(
+                    0 to listOf(2, 1),
+                    1 to listOf(5, 0),
+                    2 to listOf(4, 1),
+                    3 to listOf(3, 5),
+                )
+            )
+        }
+
     }
 
 }

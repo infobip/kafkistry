@@ -648,8 +648,8 @@ enum class ReBalanceMode {
     REPLICAS,
     LEADERS,
     REPLICAS_THEN_LEADERS,
-    LEADERS_THEN_REPLICAS,
     ROUND_ROBIN,
+    CLUSTER_LOAD,
 }
 
 data class ThrottleBrokerTopicPartitions(
@@ -690,6 +690,7 @@ data class BulkReAssignmentOptions(
         BALANCE_REPLICAS,
         BALANCE_LEADERS,
         BALANCE_RACKS,
+        BALANCE_CLUSTER,
         AVOID_SINGLE_RACKS,
         EXCLUDE_BROKERS,
     }
