@@ -7,7 +7,7 @@ import kotlin.math.abs
 @Component
 @ConfigurationProperties("app.resources.thresholds")
 class UsageLevelThresholds {
-    var low = 65.0
+    var low = 75.0
     var medium = 90.0
 }
 

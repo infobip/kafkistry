@@ -1315,7 +1315,7 @@ where value is list of fully qualified class names to disable/exclude from evalu
    -
      | Property                          | Default      | Description                                                                      |
      |-----------------------------------|--------------|----------------------------------------------------------------------------------|
-     | `app.resources.thresholds.low`    | `65.0` (_%_) | Upper bound for usage percentage to be classified as *low*.                      |
+     | `app.resources.thresholds.low`    | `75.0` (_%_) | Upper bound for usage percentage to be classified as *low*.                      |
      | `app.resources.thresholds.medium` | `90.0` (_%_) | Upper bound for usage percentage to be classified as *medium*. (above is *high*) |
  - [ClusterBrokerRackChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterBrokerRackChecker.kt)
    - It reports issues when there is un-even number of brokers having same `broker-rack` defined. This check is there to ensure that brokers are evenly spread onto different racks/availability-zones.
