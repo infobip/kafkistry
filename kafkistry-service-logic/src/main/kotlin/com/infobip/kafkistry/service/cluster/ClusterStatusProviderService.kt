@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.service.cluster
 
+import com.infobip.kafkistry.kafka.ClusterInfo
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.background.BackgroundJob
@@ -16,6 +17,11 @@ data class ClusterStatusIssues(
     val issues: List<ClusterInspectIssue>,
 )
 
+data class ClusterStatusInfo(
+    val clusterRef: ClusterRef,
+    val statusInfo: ClusterInfo?,
+)
+
 @Service
 class ClusterStatusProviderService(
     private val clusterStatusService: ClusterStatusService,
@@ -23,7 +29,8 @@ class ClusterStatusProviderService(
     private val backgroundJobIssuesRegistry: BackgroundJobIssuesRegistry,
 ) {
 
-    private val precomputed = AtomicReference<List<ClusterStatusIssues>>(emptyList())
+    private val precomputedIssues = AtomicReference<List<ClusterStatusIssues>>(emptyList())
+    private val precomputedInfos = AtomicReference<List<ClusterStatusInfo>>(emptyList())
     private val backgroundJob = BackgroundJob.of(
         category = "status", description = "Re-compute cluster statuses and issues",
     )
@@ -35,31 +42,43 @@ class ClusterStatusProviderService(
     @Scheduled(fixedRateString = "#{poolingProperties.intervalMs()}")
     fun refresh() = doRefreshIssues()
 
-    fun statuses(): List<ClusterStatusIssues> = precomputed.get()
+    fun statusIssues(): List<ClusterStatusIssues> = precomputedIssues.get()
+    fun statusInfos(): List<ClusterStatusInfo> = precomputedInfos.get()
 
     private fun doRefreshIssues() {
         backgroundJobIssuesRegistry.doCapturingException(backgroundJob) {
-            precomputed.set(computeStatuses())
+            val clustersState = clusterStatusService.clustersState()
+            precomputedIssues.set(clustersState.issues())
+            precomputedInfos.set(clustersState.infos())
         }
     }
 
-    private fun computeStatuses(): List<ClusterStatusIssues> {
-        return clusterStatusService.clustersState()
-            .map { state ->
-                val clusterIssues = if (state.clusterState == StateType.VISIBLE) {
-                    try {
-                        clusterIssuesInspectorService.inspectClusterIssues(state.cluster.identifier)
-                    } catch (ex: Exception) {
-                        emptyList()
-                    }
-                } else {
+    private fun List<ClusterStatus>.issues(): List<ClusterStatusIssues> {
+        return map { state ->
+            val clusterIssues = if (state.clusterState == StateType.VISIBLE) {
+                try {
+                    clusterIssuesInspectorService.inspectClusterIssues(state.cluster.identifier)
+                } catch (ex: Exception) {
                     emptyList()
                 }
-                ClusterStatusIssues(
-                    clusterRef = state.cluster.ref(),
-                    stateType = state.clusterState,
-                    issues = clusterIssues,
-                )
+            } else {
+                emptyList()
             }
+            ClusterStatusIssues(
+                clusterRef = state.cluster.ref(),
+                stateType = state.clusterState,
+                issues = clusterIssues,
+            )
+        }
     }
+
+    private fun List<ClusterStatus>.infos(): List<ClusterStatusInfo> {
+        return map {
+            ClusterStatusInfo(
+                clusterRef = it.cluster.ref(),
+                statusInfo = it.clusterInfo,
+            )
+        }
+    }
+
 }

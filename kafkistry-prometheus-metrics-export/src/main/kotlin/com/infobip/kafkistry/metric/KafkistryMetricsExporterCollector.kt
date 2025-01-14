@@ -62,7 +62,8 @@ class KafkistryMetricsExporterCollector(
     private fun doCollect(): List<MetricFamilySamples> {
         val context = MetricsDataContext(
             clusters = clustersRegistryService.listClustersRefs().associateBy { it.identifier },
-            clusterStatuses = clusterStatusProviderService.statuses(),
+            clusterInfos = clusterStatusProviderService.statusInfos(),
+            clusterStatuses = clusterStatusProviderService.statusIssues(),
             topicInspections = inspectionService.inspectAllTopics() + inspectionService.inspectUnknownTopics(),
             clustersGroups = consumersService.allConsumersData().clustersGroups,
             allClustersTopicsOffsets = topicOffsetsService.allClustersTopicsOffsets(),

@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.client.Collector
+import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.hotspot.DefaultExports
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -22,6 +23,8 @@ class PrometheusConfigs(
     companion object {
         private var initialized = AtomicBoolean(false)
 
+        private val collectorRegistry = CollectorRegistry.defaultRegistry
+
         //static instance which is re-used when separate ApplicationContext-s spin up within same JVM
         // to avoid duplicate meters registrations into same prometheus CollectorRegistry.defaultRegistry
         private val prometheusRegistry = PrometheusMeterRegistry(
@@ -35,12 +38,15 @@ class PrometheusConfigs(
                 DefaultExports.initialize()
             }
             collectorBeans.ifPresent { collectors ->
-                collectors.forEach { it.register<Collector>() }
+                collectors.forEach { it.register<Collector>(collectorRegistry) }
             }
         }
     }
 
     @Bean
     fun prometheusRegistry(): PrometheusMeterRegistry = prometheusRegistry
+
+    @Bean
+    fun collectorRegistry(): CollectorRegistry = collectorRegistry
 
 }
