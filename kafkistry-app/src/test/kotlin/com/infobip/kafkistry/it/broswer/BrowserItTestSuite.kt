@@ -139,6 +139,7 @@ class BrowserItTestSuite {
         )
         deleteAll()
         browser.get("$baseUrl/home")
+        println("Manually open UI here: http://localhost:$port${httpProperties.rootPath}")
     }
 
     @AfterEach

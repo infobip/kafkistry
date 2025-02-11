@@ -9,6 +9,7 @@ import com.infobip.kafkistry.service.newTopic
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.openqa.selenium.By
 
 abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCase(contextSupplier) {
 
@@ -68,7 +69,7 @@ abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCas
         browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
         await {
             assertThat(browser.findElementById("dry-run-inspect-status").text).contains(
-                    "my-cluster", "MISSING"
+                    "my-cluster", "TO_CREATE"
             )
         }
 
@@ -175,8 +176,13 @@ abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCas
         }
         browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
         await {
-            browser.assertPageText().contains("MISSING")
+            browser.assertPageText().contains("TO_CREATE")
         }
+        assertThat(browser.findElements(By.cssSelector(".blocker-issue-item")).map { it.text })
+            .containsOnly(
+                "'CONFIG_RULE_VIOLATIONS' for cluster 'my-cluster'",
+            )
+        browser.findElementByCssSelector("input[name=blockers-consent]").scrollIntoView().click()
 
         browser.findElementById("create-btn").scrollIntoView().click()
         await("to create new topic and redirect to all topics page") {
