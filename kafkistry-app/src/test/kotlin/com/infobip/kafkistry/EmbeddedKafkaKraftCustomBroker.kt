@@ -139,10 +139,10 @@ class EmbeddedKafkaKraftCustomBroker(
     override fun getTopics(): MutableSet<String> = error("Unsupported")
     override fun brokerProperties(properties: MutableMap<String, String>?): EmbeddedKafkaBroker = error("Unsupported")
     override fun brokerListProperty(brokerListProperty: String?): EmbeddedKafkaBroker = error("Unsupported")
-	override fun addTopics(vararg topicsToAdd: String?)  = error("Unsupported")
+    override fun addTopics(vararg topicsToAdd: String?)  = error("Unsupported")
     override fun addTopics(vararg topicsToAdd: NewTopic?)  = error("Unsupported")
-	override fun adminTimeout(adminTimeout: Int): EmbeddedKafkaBroker = error("Unsupported")
-	override fun addTopicsWithResults(vararg topicsToAdd: NewTopic?): MutableMap<String, java.lang.Exception>  = error("Unsupported")
+    override fun adminTimeout(adminTimeout: Int): EmbeddedKafkaBroker = error("Unsupported")
+    override fun addTopicsWithResults(vararg topicsToAdd: NewTopic?): MutableMap<String, java.lang.Exception>  = error("Unsupported")
     override fun addTopicsWithResults(vararg topicsToAdd: String?): MutableMap<String, java.lang.Exception>  = error("Unsupported")
     override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>?, seekToEnd: Boolean, vararg topicsToConsume: String?, )  = error("Unsupported")
     override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>?, vararg topicsToConsume: String?)  = error("Unsupported")
@@ -151,5 +151,4 @@ class EmbeddedKafkaKraftCustomBroker(
     override fun consumeFromAllEmbeddedTopics(consumer: Consumer<*, *>?, seekToEnd: Boolean)  = error("Unsupported")
     override fun consumeFromAllEmbeddedTopics(consumer: Consumer<*, *>?)  = error("Unsupported")
     override fun getPartitionsPerTopic(): Int  = error("Unsupported")
-
 }
