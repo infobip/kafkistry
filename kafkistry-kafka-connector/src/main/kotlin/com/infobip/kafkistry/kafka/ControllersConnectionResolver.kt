@@ -8,7 +8,7 @@ interface ControllersConnectionResolver {
 
     companion object {
 
-        private val nodeRegex = Regex("(?<nodeId>\\d+)@(?<host>.*):(?<port>\\d+)}")
+        private val nodeRegex = Regex("(?<nodeId>\\d+)@(?<host>.*?):(?<port>\\d+)")
 
         fun extractHostsPorts(quorumControllersConnection: String): String {
             return nodeRegex.findAll(quorumControllersConnection)
