@@ -157,6 +157,9 @@ class DataStateInitializer(
         log.info("EmbeddedKafka started: {}", brokersAsString)
         if (this is EmbeddedKafkaKraftCustomBroker) {
             StaticMockedControllerConnectionResolver.kraftControllers.set(controllersAsString())
+            StaticMockedControllerConnectionResolver.forQuorumControllers.set(
+                "${START_COMBINED_ID}@0.0.0.0:0,${START_COMBINED_ID + 1}@0.0.0.0:0"
+            )
         }
     }
 
@@ -617,10 +620,13 @@ class StaticMockedControllerConnectionResolver : ControllersConnectionResolver {
 
     companion object {
         val kraftControllers = AtomicReference<String?>(null)
+        val forQuorumControllers = AtomicReference<String?>(null)
     }
 
     override fun resolveQuorumControllersConnection(quorumControllersConnection: String): String {
-        return kraftControllers.get() ?: hostsPorts(quorumControllersConnection)
+        return kraftControllers.get()
+            .takeIf { quorumControllersConnection == forQuorumControllers.get() } //use only for embedded kafka
+            ?: hostsPorts(quorumControllersConnection)
     }
 
 }
