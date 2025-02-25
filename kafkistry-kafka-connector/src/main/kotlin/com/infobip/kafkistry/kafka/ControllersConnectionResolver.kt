@@ -12,8 +12,9 @@ interface ControllersConnectionResolver {
 
         fun extractHostsPorts(quorumControllersConnection: String): String {
             return nodeRegex.findAll(quorumControllersConnection)
-                .map { it.groups["host"]?.value + ":" + it.groups["port"]?.value }
-                .joinToString(",")
+                .map { it.groups["host"]?.value to it.groups["port"]?.value }
+                .filter { (host, _) -> host != "0.0.0.0" }
+                .joinToString(",") { (host, port) -> "$host:$port"}
         }
 
         val DEFAULT: ControllersConnectionResolver = object : ControllersConnectionResolver {
