@@ -366,6 +366,23 @@
         <div id="cluster-metadata-info-card-body" class="card-body collapseable p-0">
             <#if clusterStatus.clusterInfo??>
                 <#assign clusterInfo = clusterStatus.clusterInfo>
+                <div>
+                    <table class="table table-sm">
+                        <tr class="thead-dark"><th colspan="100">Cluster features</th></tr>
+                        <tr>
+                            <th>Finalized Features Epoch</th>
+                            <td>${clusterInfo.features.finalizedFeaturesEpoch}</td>
+                        </tr>
+                        <tr class="thead-dark"><th>Finalized Feature</th><th>Versions range</th></tr>
+                        <#list clusterInfo.features.finalizedFeatures as feature, versions>
+                            <tr><th>${feature}</th><td>[${versions.minVersion}..${versions.maxVersion}]</td></tr>
+                        </#list>
+                        <tr class="thead-dark"><th>Supported Feature</th><th>Versions range</th></tr>
+                        <#list clusterInfo.features.supportedFeatures as feature, versions>
+                            <tr><th>${feature}</th><td>[${versions.minVersion}..${versions.maxVersion}]</td></tr>
+                        </#list>
+                    </table>
+                </div>
                 <table class="table table-sm">
                     <tr>
                         <th>Select node config</th>
