@@ -14,6 +14,8 @@ import org.springframework.web.servlet.ModelAndView
 import jakarta.servlet.RequestDispatcher
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.web.servlet.error.DefaultErrorAttributes
+import org.springframework.web.servlet.DispatcherServlet
 
 @Controller
 abstract class BaseController {
@@ -39,12 +41,13 @@ abstract class BaseController {
         val httpStatus = HttpStatus.resolve(response.status)
             .takeIf { it != HttpStatus.OK }
             ?: HttpStatus.INTERNAL_SERVER_ERROR
-        val servletException = request.getAttribute("jakarta.servlet.error.exception") as? Exception
+        val servletException = (request.getAttribute(RequestDispatcher.ERROR_EXCEPTION) as? Exception)
+            ?: (request.getAttribute(DispatcherServlet.EXCEPTION_ATTRIBUTE) as? Exception)
+            ?: (request.getAttribute(DefaultErrorAttributes::class.simpleName + ".ERROR") as? Exception)
         val error = exception.takeUnless {
             it.javaClass == java.lang.Exception::class.java && it.cause == null && it.message == null
         } ?: servletException ?: exception
         val exceptionMessage = when (httpStatus) {
-            HttpStatus.NOT_FOUND -> "Invalid url path: '" + request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) + "'"
             HttpStatus.FORBIDDEN -> "Access denied for '" + request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) + "'"
             else -> error.deepToString()
         }

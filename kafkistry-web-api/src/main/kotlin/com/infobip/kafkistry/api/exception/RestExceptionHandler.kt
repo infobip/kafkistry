@@ -14,8 +14,8 @@ import org.springframework.http.HttpStatusCode
 import org.springframework.web.context.request.ServletWebRequest
 import org.springframework.web.context.request.WebRequest
 
-@ControllerAdvice
-class RestExceptionHandler : ResponseEntityExceptionHandler() {
+@ControllerAdvice("com.infobip.kafkistry.api")
+open class RestExceptionHandler : ResponseEntityExceptionHandler() {
 
     private val log = LoggerFactory.getLogger(RestExceptionHandler::class.java)
 

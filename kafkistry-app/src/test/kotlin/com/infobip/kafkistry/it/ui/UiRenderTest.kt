@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.it.ui
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafka.KafkaTopicConfiguration
@@ -29,24 +30,23 @@ import org.apache.kafka.common.errors.UnknownTopicOrPartitionException
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.AbstractListAssert
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.tuple
+import org.assertj.core.api.Assertions.*
 import org.assertj.core.api.ObjectAssert
 import org.assertj.core.groups.Tuple
 import org.awaitility.Awaitility
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.*
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.http.HttpStatus
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.web.client.HttpClientErrorException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
@@ -542,6 +542,22 @@ class UiRenderTest {
         )
         assertThat(page.text()).startsWith("Read status: Got 6 record(s)")
         assertThat(page.select(".record")).hasSize(6)
+    }
+
+    @Test
+    fun `UI page not found error`() {
+        val page = api.getPageError("/page-that/does-not-exist")
+        assertThat(page.text())
+            .contains("Kafkistry error", "Not Found", "404", "/page-that/does-not-exist")
+    }
+
+    @Test
+    fun `rest endpoint error response`() {
+        val response = api.getApiPageError("/api/clusters/single") //missing clusterIdentifier param
+        assertAll(
+            { assertThat(response.status).isEqualTo(HttpStatus.BAD_REQUEST) },
+            { assertThat(response.message).contains("clusterIdentifier") }
+        )
     }
 
 }

@@ -1,10 +1,13 @@
 package com.infobip.kafkistry.it.ui
 
+import com.infobip.kafkistry.api.exception.ApiError
 import io.kotlintest.matchers.fail
 import com.infobip.kafkistry.kafka.ClusterInfo
 import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.topic.TopicStatuses
 import com.infobip.kafkistry.service.consumers.ClusterConsumerGroups
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.springframework.http.HttpRequest
@@ -12,6 +15,8 @@ import org.springframework.http.client.ClientHttpRequestExecution
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 import java.net.HttpURLConnection
 
@@ -40,6 +45,31 @@ class ApiClient(
 
     fun getPage(path: String): Document {
         return getPageOrNull(path) ?: fail("Expected to successfully download $path")
+    }
+
+    fun getPageError(path: String): Document {
+        return try {
+            val response = getPage(path)
+            fail("Expected to fail on '$path', but got response: $response")
+        } catch (ex: Exception) {
+            assertThat(ex).isInstanceOf(RestClientResponseException::class.java)
+            val error = ex as RestClientResponseException
+            val body = error.getResponseBodyAs(String::class.java)
+                ?: fail("Got null body from '$path' having error $ex")
+            Jsoup.parse(body, path)
+        }
+    }
+
+    fun getApiPageError(path: String): ApiError {
+        return try {
+            val response = getPage(path)
+            fail("Expected to fail on '$path', but got response: $response")
+        } catch (ex: Exception) {
+            assertThat(ex).isInstanceOf(RestClientResponseException::class.java)
+            val error = ex as RestClientResponseException
+            error.getResponseBodyAs(ApiError::class.java)
+                ?: fail("Got null body from '$path' having error $ex")
+        }
     }
 
     fun postPage(path: String, body: Any?): Document {
