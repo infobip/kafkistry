@@ -35,11 +35,20 @@ object StaticUsersParser {
         return StaticUsers.StaticUser(
             user = User(username, name, surname, email, role),
             token = token.takeIf { it.isNotBlank() },
-            password = plainPassword.takeIf { it.isNotBlank() }?.let {
-                BCrypt.hashpw(plainPassword, BCrypt.gensalt())
-            },
+            password = plainPassword.parsePassword(),
             passwordEncrypted = true,
         )
+    }
+
+    private fun String.parsePassword(): String? {
+        if (this.isBlank()) return null
+        try {
+            BCrypt.checkpw("irrelevant", this)
+            return this //this is already valid hashed password
+        } catch (_: Exception) {
+            //this is not valid hashed password, hash it
+            return BCrypt.hashpw(this, BCrypt.gensalt())
+        }
     }
 
     /**
