@@ -28,6 +28,7 @@ class PrometheusBrokerDiskMetricsProperties {
     var freePromQuery: String? = null
     lateinit var brokerLabelName: String
     var brokerLabelHostExtractPattern = "(.*)"
+    var brokerHostLabelExtractPattern = "(.*)"
     var httpHeaders = mutableMapOf<String, String>()
 }
 
@@ -67,12 +68,14 @@ class PrometheusNodeDiskMetricsProvider(
         })
         .build()
 
-    private lateinit var brokerPattern: Regex
+    private lateinit var brokerLabelToHostPattern: Regex
+    private lateinit var brokerHostToLabelPattern: Regex
 
     init {
         if (properties.bulk) {
             properties.brokerLabelName.length
-            brokerPattern = Regex(properties.brokerLabelHostExtractPattern)
+            brokerLabelToHostPattern = Regex(properties.brokerLabelHostExtractPattern)
+            brokerHostToLabelPattern = Regex(properties.brokerHostLabelExtractPattern)
         }
     }
 
@@ -109,22 +112,24 @@ class PrometheusNodeDiskMetricsProvider(
         }
     }
 
-    private fun String.applyBrokerPattern(): String? = brokerPattern.find(this)
-        ?.let { if (it.groups.size >= 2) it.groupValues[1] else it.groupValues[0] }
+    private fun String.applyBrokerLabelToHostPattern(): String = applyPattern(brokerLabelToHostPattern)
+    private fun String.applyBrokerHostToLabelPattern(): String = applyPattern(brokerHostToLabelPattern)
 
+    private fun String.applyPattern(regex: Regex): String = regex.find(this)
+        ?.let { if (it.groups.size >= 2) it.groupValues[1] else it.groupValues[0] } ?: this
 
     private fun getBulkBrokersValues(queryTemplate: String, brokers: List<ClusterNode>): Map<BrokerId, Long> {
         val promQuery = queryTemplate
-            .replace("{nodeHosts}", brokers.joinToString(separator = "|") { it.host })
+            .replace("{nodeHosts}", brokers.joinToString(separator = "|") { it.host.applyBrokerHostToLabelPattern() })
             .replace("{nodeIds}", brokers.joinToString(separator = "|") { it.nodeId.toString() })
-            .replace("{brokerHosts}", brokers.joinToString(separator = "|") { it.host })
+            .replace("{brokerHosts}", brokers.joinToString(separator = "|") { it.host.applyBrokerHostToLabelPattern() })
             .replace("{brokerIds}", brokers.joinToString(separator = "|") { it.nodeId.toString() })
         val promResult = restTemplate.getForObject(
             promUrl, PrometheusResponse::class.java, mapOf("query" to promQuery, "time" to time())
         )
         return promResult?.data?.result.orEmpty().mapNotNull { promMetric ->
             val brokerLabel = promMetric.metric[properties.brokerLabelName] ?: return@mapNotNull null
-            val brokerFromLabel = brokerLabel.applyBrokerPattern() ?: return@mapNotNull null
+            val brokerFromLabel = brokerLabel.applyBrokerLabelToHostPattern()
             val broker = brokers
                 .find {
                     brokerFromLabel.equals(
@@ -132,7 +137,7 @@ class PrometheusNodeDiskMetricsProvider(
                         ignoreCase = true
                     ) || brokerFromLabel == it.nodeId.toString()
                 }
-                ?: brokers.find { it.host.applyBrokerPattern()?.equals(brokerFromLabel, ignoreCase = true) ?: false }
+                ?: brokers.find { it.host.applyBrokerHostToLabelPattern().equals(brokerFromLabel, ignoreCase = true) }
                 ?: return@mapNotNull null
             val value = promMetric.value[1].toString().toLongOrNull() ?: return@mapNotNull null
             broker.nodeId to value
