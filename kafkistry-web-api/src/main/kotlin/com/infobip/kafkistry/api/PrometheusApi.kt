@@ -21,13 +21,14 @@ class PrometheusApi(
 
     @GetMapping("\${app.metrics.http-path}")
     fun scrape(httpResponse: HttpServletResponse) {
+        httpResponse.status = 200
         val writer = OutputStreamWriter(httpResponse.outputStream)
         TextFormat.write004(
             writer,
             collectorRegistry.filteredMetricFamilySamples { true },
         )
-        writer.write('\n'.code)
+        writer.flush()
         httpResponse.outputStream.use { meterRegistry.scrape(it) }
-        httpResponse.status = 200
+        writer.flush()
     }
 }
