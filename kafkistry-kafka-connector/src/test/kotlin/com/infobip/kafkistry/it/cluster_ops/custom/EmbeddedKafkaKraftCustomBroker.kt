@@ -1,6 +1,7 @@
-package com.infobip.kafkistry
+package com.infobip.kafkistry.it.cluster_ops.custom
 
 import com.infobip.kafkistry.kafka.BrokerId
+import com.infobip.kafkistry.kafka.NodeId
 import com.infobip.kafkistry.utils.getFieldReflective
 import kafka.server.KafkaConfig
 import kafka.testkit.*
@@ -57,6 +58,32 @@ class EmbeddedKafkaKraftCustomBroker(
     }
 
 	fun controllersAsString(): String = cluster.bootstrapControllers()
+
+	fun shutdownBroker(id: BrokerId) {
+		with(cluster.brokers().getValue(id)) {
+			shutdown()
+			awaitShutdown()
+		}
+	}
+
+	fun startBroker(id: BrokerId) {
+		with(cluster.brokers().getValue(id)) {
+			startup()
+		}
+	}
+
+	fun shutdownController(id: NodeId) {
+		with(cluster.controllers().getValue(id)) {
+			shutdown()
+			awaitShutdown()
+		}
+	}
+
+	fun startController(id: NodeId) {
+		with(cluster.controllers().getValue(id)) {
+			startup()
+		}
+	}
 
     private fun start() {
 		try {

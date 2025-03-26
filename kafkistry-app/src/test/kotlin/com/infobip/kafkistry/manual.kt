@@ -1,7 +1,8 @@
 package com.infobip.kafkistry
 
-import com.infobip.kafkistry.EmbeddedKafkaKraftCustomBroker.Companion.START_BROKER_ID
-import com.infobip.kafkistry.EmbeddedKafkaKraftCustomBroker.Companion.START_COMBINED_ID
+import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker
+import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_BROKER_ID
+import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_COMBINED_ID
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
@@ -34,6 +35,7 @@ import org.assertj.core.util.Files
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.ConfigurableApplicationContext
@@ -115,6 +117,7 @@ abstract class OrderedApplicationRunner(private val order: Int = 0) : Applicatio
 @Configuration
 @Order(0)
 @Profile("manual")
+@ConditionalOnProperty("app.manual.data.state.initializer.enabled", matchIfMissing = true)
 class DataStateInitializer(
     private val ctx: ConfigurableApplicationContext,
     private val kafkaClientProvider: KafkaClientProvider,

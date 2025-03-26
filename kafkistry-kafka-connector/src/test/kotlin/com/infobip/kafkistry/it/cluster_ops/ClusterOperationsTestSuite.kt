@@ -38,6 +38,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     abstract val expectedClusterVersion: Version
     abstract val expectedKraftEnabled: Boolean
+    open val expectedNumNodes = 3
 
     private fun entry(key: String, value: String): MutableEntry<String, ConfigValue> = object : MutableEntry<String, ConfigValue> {
         override val key: String
@@ -432,12 +433,12 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
     fun `test cluster info`() {
         val clusterInfo = doOnKafka { it.clusterInfo("test-id").get() }
         assertThat(clusterInfo.clusterVersion).isEqualTo(expectedClusterVersion)
-        assertThat(clusterInfo.nodeIds).hasSize(3)
+        assertThat(clusterInfo.nodeIds).hasSize(expectedNumNodes)
         assertThat(clusterInfo.brokerIds).hasSize(3)
         assertThat(clusterInfo.kraftEnabled).`as`("kraft enabled").isEqualTo(expectedKraftEnabled)
         if (expectedKraftEnabled) {
             assertThat(clusterInfo.quorumInfo.voters).hasSize(3)
-            assertThat(clusterInfo.quorumInfo.observers).hasSize(0)
+            assertThat(clusterInfo.quorumInfo.observers).hasSize(expectedNumNodes - 3)
         } else {
             assertThat(clusterInfo.quorumInfo).isEqualTo(ClusterQuorumInfo.EMPTY)
         }
@@ -924,9 +925,10 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         val leaderThrottleRates1 = clusterInfo1.perBrokerConfig.mapValues {
             it.value["leader.replication.throttled.rate"]?.value
         }
-        assertThat(leaderThrottleRates1).isEqualTo(mapOf(
-                0 to null, 1 to null, 2 to null
-        ))
+        assertThat(leaderThrottleRates1)
+            .containsEntry(0, null)
+            .containsEntry(1, null)
+            .containsEntry(2, null)
 
         doOnKafka { it.setBrokerConfig(0, mapOf("leader.replication.throttled.rate" to "123456")).get() }
 
@@ -937,9 +939,10 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                     val leaderThrottleRates = clusterInfo.perBrokerConfig.mapValues {
                         it.value["leader.replication.throttled.rate"]?.value
                     }
-                    assertThat(leaderThrottleRates).isEqualTo(mapOf(
-                            0 to "123456", 1 to null, 2 to null
-                    ))
+                    assertThat(leaderThrottleRates)
+                        .containsEntry(0, "123456")
+                        .containsEntry(1, null)
+                        .containsEntry(2, null)
                 }
 
         doOnKafka { it.unsetBrokerConfig(0, setOf("leader.replication.throttled.rate")).get() }
@@ -951,9 +954,10 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                     val leaderThrottleRates = clusterInfo.perBrokerConfig.mapValues {
                         it.value["leader.replication.throttled.rate"]?.value
                     }
-                    assertThat(leaderThrottleRates).isEqualTo(mapOf(
-                            0 to null, 1 to null, 2 to null
-                    ))
+                    assertThat(leaderThrottleRates)
+                        .containsEntry(0, null)
+                        .containsEntry(1, null)
+                        .containsEntry(2, null)
                 }
     }
 
@@ -1260,13 +1264,13 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
     private fun verifyReAssignment(topicName: TopicName, assignments: Map<Partition, List<BrokerId>>) {
         doOnKafka {
             Awaitility.await("re-assignment of $topicName to complete and verify succeeds")
-                    .timeout(20L, TimeUnit.SECONDS)
-                    .pollInterval(1L, TimeUnit.SECONDS)
-                    .until {
-                        val result = it.verifyReAssignPartitions(topicName, assignments)
-                        log.info("Verify attempt output:\n{}", result)
-                        "Throttle was removed" in result
-                    }
+                .timeout(20L, TimeUnit.SECONDS)
+                .pollInterval(1L, TimeUnit.SECONDS)
+                .untilAsserted {
+                    val result = it.verifyReAssignPartitions(topicName, assignments)
+                    log.info("Verify attempt output:\n{}", result)
+                    assertThat(result).contains("Throttle was removed")
+                }
         }
     }
 

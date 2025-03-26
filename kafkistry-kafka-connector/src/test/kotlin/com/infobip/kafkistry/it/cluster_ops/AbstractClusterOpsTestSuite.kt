@@ -67,7 +67,7 @@ abstract class AbstractClusterOpsTestSuite {
             clusterBrokerIds = clusterInfo.brokerIds
             clusterNodeIds = clusterInfo.nodeIds
         }
-        assertThat(clusterNodeIds).`as`("Node IDs of cluster")
+        assertThat(clusterBrokerIds).`as`("Broker IDs of cluster")
             .containsExactlyInAnyOrder(0, 1, 2)
             .hasSize(3)
     }

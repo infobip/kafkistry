@@ -86,11 +86,12 @@ class ClusterOps(
                 CompletableFuture
                     .allOf(brokerConfigsFuture, controllerConfigsFuture)
                     .thenApply {
+                        fun ConfigResource.nodeId(): NodeId = this.name().toInt()
                         val brokerConfigs = brokerConfigsFuture.get()
-                            .mapKeys { it.key.name().toInt() }
+                            .mapKeys { it.key.nodeId() }
                             .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
                         val controllersConfigs = controllerConfigsFuture.get()
-                            .mapKeys { it.key.name().toInt() }
+                            .mapKeys { it.key.nodeId() }
                             .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
                         val nodesConfigs = controllersConfigs + brokerConfigs
                         val controllerConfig = nodesConfigs[controllerNode.id()]
@@ -180,7 +181,7 @@ class ClusterOps(
         lastCaughtUpTimestamp = lastCaughtUpTimestamp().let { if (it.isPresent) it.asLong else null },
     )
 
-    private fun resolveBrokerConfig(config: Config, brokerId: Int): Map<String, ConfigValue> {
+    private fun resolveBrokerConfig(config: Config, brokerId: Int): ExistingConfig {
         val hasFalselyNullEntries = config.entries().any {
             it.source() == ConfigEntry.ConfigSource.DYNAMIC_BROKER_CONFIG && it.value() == null
         }

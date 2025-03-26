@@ -207,7 +207,7 @@ class TopicAssignmentsOps (
             resultMsg.append("Topic: Throttle was removed.\n")
         }
         if (currentReAssignments.isEmpty()) {
-            clusterOps.clusterInfo("").get().nodeIds
+            clusterOps.clusterInfo("").get().brokerIds
                 .map { configOps.updateThrottleRate(it, ThrottleRate.NO_THROTTLE) }
                 .forEach { it.get() }
             resultMsg.append("Brokers: Throttle was removed.\n")

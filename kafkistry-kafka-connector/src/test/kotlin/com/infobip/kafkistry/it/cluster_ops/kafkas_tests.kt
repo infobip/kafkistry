@@ -2,6 +2,7 @@
 
 package com.infobip.kafkistry.it.cluster_ops
 
+import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker
 import kafka.security.authorizer.AclAuthorizer
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
 import com.infobip.kafkistry.it.cluster_ops.testsupport.asTestKafkaLifecycle
@@ -26,6 +27,27 @@ class ClusterOpsKafkaZkEmbeddedTest : ClusterNoAclOperationsTestSuite() {
     override val expectedKraftEnabled: Boolean = false
 }
 
+class ClusterOpsKafkaKraftEmbeddedCustomTest : ClusterNoAclOperationsTestSuite() {
+
+    companion object {
+        @JvmField
+        val kafka = EmbeddedKafkaKraftCustomBroker(0, 3, 3).apply {
+            brokerProperty("auto.leader.rebalance.enable", "false")
+        }.asTestKafkaLifecycle()
+    }
+
+    override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
+    override val controllersConnection: String get() = kafka.kafkaCluster.getFieldReflective<KafkaClusterTestKit>("cluster").bootstrapControllers()
+    override val expectedClusterVersion = Version.of("3.7")
+    override val expectedKraftEnabled: Boolean = true
+    override val expectedNumNodes: Int get() = 6
+}
+
+@EnabledIfSystemProperty(
+    named = "enabledIntegrationTests",
+    matches = "all|.*(all-kafka|embedded-combined).*",
+    disabledReason = "These tests are too slow to run each time",
+)
 class ClusterOpsKafkaKraftEmbeddedTest : ClusterNoAclOperationsTestSuite() {
 
     companion object {
