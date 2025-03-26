@@ -71,15 +71,25 @@ class ClusterOps(
                 val controllerNodeConfigResources = controllerNodes.map { node ->
                     ConfigResource(ConfigResource.Type.BROKER, node.id().toString())
                 }
+                fun DescribeConfigsResult.asFutureOfSuccessfulOrEmpty(ofWhat: String): CompletableFuture<Map<ConfigResource, Config?>> {
+                    return this.values()
+                        .mapValues { (node, future) ->
+                            future.asCompletableFuture("describe cluster $ofWhat configs for $node")
+                                .exceptionally { null } //ignore failure
+                        }
+                        .let { futuresMap ->
+                            CompletableFuture.allOf(*futuresMap.values.toTypedArray()).thenApply {
+                                futuresMap.mapValues { it.value.get() }
+                            }
+                        }
+                }
                 val brokerConfigsFuture = adminClient
                     .describeConfigs(brokerNodeConfigResources, DescribeConfigsOptions().withReadTimeout())
-                    .all()
-                    .asCompletableFuture("describe cluster brokers configs")
+                    .asFutureOfSuccessfulOrEmpty("brokers")
                 val controllerConfigsFuture = if (controllerNodes.isNotEmpty()) {
                     controllersAdminClient
                         .describeConfigs(controllerNodeConfigResources, DescribeConfigsOptions().withReadTimeout())
-                        .all()
-                        .asCompletableFuture("describe cluster controllers configs")
+                        .asFutureOfSuccessfulOrEmpty("controllers")
                 } else {
                     CompletableFuture.completedFuture(emptyMap())
                 }
@@ -88,9 +98,11 @@ class ClusterOps(
                     .thenApply {
                         fun ConfigResource.nodeId(): NodeId = this.name().toInt()
                         val brokerConfigs = brokerConfigsFuture.get()
+                            .withoutNullValues()
                             .mapKeys { it.key.nodeId() }
                             .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
                         val controllersConfigs = controllerConfigsFuture.get()
+                            .withoutNullValues()
                             .mapKeys { it.key.nodeId() }
                             .mapValues { (brokerId, config) -> resolveBrokerConfig(config, brokerId) }
                         val nodesConfigs = controllersConfigs + brokerConfigs
@@ -104,8 +116,8 @@ class ClusterOps(
                         val kraftEnabled = (controllerConfig["process.roles"]?.value?.isNotEmpty() == true).also {
                             kraftEnabledRef.set(it)
                         }
-                        val allNodes = (brokerNodes + controllerNodes)
-                        val onlineNodeIds = allNodes.map { it.id() }.sorted()
+                        val allNodes = (brokerNodes + controllerNodes).distinctBy { it.id() }
+                        val onlineNodeIds = allNodes.map { it.id() }.sorted().filter { it in nodesConfigs }
                         val allKnownNodeIds = onlineNodeIds
                             .plus(topicAssignmentsUsedBrokerIdsRef.get() ?: emptySet())
                             .distinct()
@@ -119,7 +131,8 @@ class ClusterOps(
                             val (isBroker, isController) = if (!kraftEnabled) {
                                 true to (controllerNode.id() == nodeId)
                             } else {
-                                val rolesStr = nodesConfigs[nodeId]?.get("process.roles")?.value.orEmpty().lowercase()
+                                val rolesStr = nodesConfigs[nodeId]?.get("process.roles")?.value?.lowercase()
+                                    ?: return knownNodes[nodeId]?.roles ?: ROLES_NONE
                                 ("broker" in rolesStr) to ("controller" in rolesStr)
                             }
                             return when {
@@ -223,6 +236,10 @@ class ClusterOps(
             alterDirIoRate = get(dynamicConf.ReplicaAlterLogDirsIoMaxBytesPerSecondProp())?.value?.toLongOrNull(),
         )
     }
+
+    private fun <K, V> Map<K, V?>.withoutNullValues(): Map<K, V> = entries.mapNotNull { (k, v) ->
+        v?.let { k to it }
+    }.toMap()
 
     companion object {
         private val ROLES_BROKER_CONTROLLER = listOf(ClusterNodeRole.BROKER, ClusterNodeRole.CONTROLLER)

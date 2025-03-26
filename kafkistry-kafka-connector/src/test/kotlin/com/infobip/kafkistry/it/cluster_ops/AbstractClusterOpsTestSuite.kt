@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.it.cluster_ops
 
 
+import com.infobip.kafkistry.it.cluster_ops.testsupport.KafkaClusterLifecycle
 import com.infobip.kafkistry.it.cluster_ops.testsupport.TestKafkaLifecycleExtension
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
@@ -58,6 +59,17 @@ abstract class AbstractClusterOpsTestSuite {
 
     protected var clusterBrokerIds: List<BrokerId> = emptyList()
     protected var clusterNodeIds: List<BrokerId> = emptyList()
+
+    abstract val testKafkaLifecycle: KafkaClusterLifecycle<*>
+    fun supportsStartStop(): Boolean = testKafkaLifecycle.supportsNodeStartStop()
+
+    protected open fun stopNode(id: NodeId) {
+        testKafkaLifecycle.stopNode(id)
+    }
+
+    protected open fun startNode(id: NodeId) {
+        testKafkaLifecycle.startNode(id)
+    }
 
     @BeforeEach
     fun setup() {

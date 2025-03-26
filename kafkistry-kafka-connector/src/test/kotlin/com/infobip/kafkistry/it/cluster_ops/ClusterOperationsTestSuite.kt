@@ -1261,6 +1261,47 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         }.assertAll()
     }
 
+    @Test
+    fun `one broker down`() {
+        if (!supportsStartStop()) {
+            log.info("Cluster $expectedClusterVersion does not support node start/stop")
+            assertThatThrownBy {
+                stopNode(1)
+                startNode(1)
+            }.isInstanceOf(UnsupportedOperationException::class.java)
+            return
+        }
+
+        fun clusterInfo() = doOnKafka { it.clusterInfo("test-id").get() }
+
+        doOnKafka {
+            it.createTopic(KafkaTopicConfiguration(
+                name = "topic-that-uses-all-brokers",
+                partitionsReplicas = createAssignments(1, 3),
+                config = emptyMap(),
+            )).get()
+            it.awaitTopicCreated("topic-that-uses-all-brokers")
+        }
+
+        val ci1 = clusterInfo()
+        assertThat(ci1.brokerIds).containsExactly(0, 1, 2)
+        assertThat(ci1.onlineNodeIds).contains(0, 1, 2)
+
+        stopNode(0)
+        val ci2 = clusterInfo()
+        assertThat(ci2.brokerIds).containsExactly(0, 1, 2)
+        assertThat(ci2.onlineNodeIds).doesNotContain(0).contains(1, 2)
+
+        startNode(0)
+        Awaitility.await("for broker=0 to come back online")
+            .timeout(10L, TimeUnit.SECONDS)
+            .untilAsserted {
+                val ci3 = clusterInfo()
+                assertThat(ci3.brokerIds).containsExactly(0, 1, 2)
+                assertThat(ci3.onlineNodeIds).contains(0, 1, 2)
+            }
+    }
+
     private fun verifyReAssignment(topicName: TopicName, assignments: Map<Partition, List<BrokerId>>) {
         doOnKafka {
             Awaitility.await("re-assignment of $topicName to complete and verify succeeds")

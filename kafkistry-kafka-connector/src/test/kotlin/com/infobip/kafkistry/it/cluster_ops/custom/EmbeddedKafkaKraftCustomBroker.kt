@@ -59,6 +59,9 @@ class EmbeddedKafkaKraftCustomBroker(
 
 	fun controllersAsString(): String = cluster.bootstrapControllers()
 
+	fun brokerIds(): Set<BrokerId> = cluster.brokers().map { it.key }.toSet()
+	fun controllerIds(): Set<NodeId> = cluster.controllers().map { it.key }.toSet()
+
 	fun shutdownBroker(id: BrokerId) {
 		with(cluster.brokers().getValue(id)) {
 			shutdown()

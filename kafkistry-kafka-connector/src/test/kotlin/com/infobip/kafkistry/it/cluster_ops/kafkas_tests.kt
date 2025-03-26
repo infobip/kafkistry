@@ -3,11 +3,12 @@
 package com.infobip.kafkistry.it.cluster_ops
 
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker
-import kafka.security.authorizer.AclAuthorizer
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
+import com.infobip.kafkistry.it.cluster_ops.testsupport.KafkaClusterLifecycle
 import com.infobip.kafkistry.it.cluster_ops.testsupport.asTestKafkaLifecycle
 import com.infobip.kafkistry.kafka.Version
 import com.infobip.kafkistry.utils.getFieldReflective
+import kafka.security.authorizer.AclAuthorizer
 import kafka.testkit.KafkaClusterTestKit
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
@@ -25,6 +26,7 @@ class ClusterOpsKafkaZkEmbeddedTest : ClusterNoAclOperationsTestSuite() {
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
     override val expectedClusterVersion = Version.of("3.7")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 class ClusterOpsKafkaKraftEmbeddedCustomTest : ClusterNoAclOperationsTestSuite() {
@@ -41,6 +43,7 @@ class ClusterOpsKafkaKraftEmbeddedCustomTest : ClusterNoAclOperationsTestSuite()
     override val expectedClusterVersion = Version.of("3.7")
     override val expectedKraftEnabled: Boolean = true
     override val expectedNumNodes: Int get() = 6
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 @EnabledIfSystemProperty(
@@ -61,6 +64,7 @@ class ClusterOpsKafkaKraftEmbeddedTest : ClusterNoAclOperationsTestSuite() {
     override val controllersConnection: String get() = kafka.kafkaCluster.getFieldReflective<KafkaClusterTestKit>("cluster").bootstrapControllers()
     override val expectedClusterVersion = Version.of("3.7")
     override val expectedKraftEnabled: Boolean = true
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 class ClusterAclOpsKafkaEmbeddedTest : ClusterAclOperationsTestSuite() {
@@ -74,6 +78,7 @@ class ClusterAclOpsKafkaEmbeddedTest : ClusterAclOperationsTestSuite() {
     }
 
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 @EnabledIfSystemProperty(
@@ -93,6 +98,7 @@ class ClusterOpsKafkaDockerCompose_V_2_1_1_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.1")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 @EnabledIfSystemProperty(
@@ -112,6 +118,7 @@ class ClusterOpsKafkaDockerCompose_V_2_3_1_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.3")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 @EnabledIfSystemProperty(
@@ -131,6 +138,7 @@ class ClusterOpsKafkaDockerCompose_V_2_5_0_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.5")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 
@@ -151,6 +159,7 @@ class ClusterOpsKafkaDockerCompose_V_2_8_0_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("2.8")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 @EnabledIfSystemProperty(
@@ -170,6 +179,7 @@ class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.1")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 @EnabledIfSystemProperty(
@@ -189,6 +199,7 @@ class ClusterOpsKafkaDockerCompose_V_3_3_2_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.3")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 
@@ -210,6 +221,7 @@ class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.4")
     override val expectedKraftEnabled: Boolean = false
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 @EnabledIfSystemProperty(
@@ -231,6 +243,7 @@ class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuit
     override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
     override val expectedClusterVersion = Version.of("3.6")
     override val expectedKraftEnabled: Boolean = true
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
 
