@@ -55,6 +55,11 @@ class ClusterOps(
         val controllerNodesFuture = if (kraftEnabledRef.get() != false && clientCtx.controllerConnectionRef.get() != null) {
             controllersAdminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
                 .nodes().asCompletableFuture("describe cluster controller nodes")
+                .whenComplete { _, ex ->
+                    if (ex is UnsupportedVersionException && "Direct-to-controller" in ex.message.orEmpty()) {
+                        controllersAdminClient.close()
+                    }
+                }
         } else {
             CompletableFuture.completedFuture(emptyList())
         }
@@ -116,17 +121,18 @@ class ClusterOps(
                         val kraftEnabled = (controllerConfig["process.roles"]?.value?.isNotEmpty() == true).also {
                             kraftEnabledRef.set(it)
                         }
+                        val features = featuresFuture.get()
+                        val quorum = quorumFuture.get()
                         val allNodes = (brokerNodes + controllerNodes).distinctBy { it.id() }
                         val onlineNodeIds = allNodes.map { it.id() }.sorted().filter { it in nodesConfigs }
                         val allKnownNodeIds = onlineNodeIds
                             .plus(topicAssignmentsUsedBrokerIdsRef.get() ?: emptySet())
+                            .plus(quorum?.voters()?.map { it.replicaId() }.orEmpty())
                             .distinct()
                             .sorted()
                         if (onlineNodeIds.toSet() == allKnownNodeIds.toSet()) {
                             knownNodes.keys.retainAll(onlineNodeIds.toSet())
                         }
-                        val features = featuresFuture.get()
-                        val quorum = quorumFuture.get()
                         fun nodeRoles(nodeId: NodeId): List<ClusterNodeRole> {
                             val (isBroker, isController) = if (!kraftEnabled) {
                                 true to (controllerNode.id() == nodeId)
