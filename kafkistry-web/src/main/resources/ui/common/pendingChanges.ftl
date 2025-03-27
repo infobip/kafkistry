@@ -12,7 +12,7 @@
     <div class="row">
         <#if pendingRequests?? && pendingRequests?size != 0>
             <#list pendingRequests as request>
-                <#assign branchName = "refs/heads/" + request.branch>
+                <#assign branchName = request.branch>
                 <div class="col-sm p-0">
                     <#if request.errorMsg??>
                         <div role="alert" class="alert alert-danger mb-0" title="${request.errorMsg}">
