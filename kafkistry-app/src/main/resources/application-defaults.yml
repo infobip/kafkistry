@@ -125,7 +125,8 @@ app.repository:
     ssh-private-key: ${SSH_PRIVATE_KEY:}
     ssh-key-path: ${SSH_PRIVATE_KEY_PATH:}
     ssh-key-passphrase: ${SSH_PRIVATE_KEY_PASS:}
-    password: ${GIT_SSH_PASSWORD:}
+    username: ${GIT_USERNAME:}
+    password: ${GIT_PASSWORD:${GIT_SSH_PASSWORD:}}
     remote-timeout-seconds: ${GIT_TIMEOUT_SEC:30}
     refresh-interval-seconds: ${GIT_REFRESH_INTERVAL_SEC:30}
     browse:
@@ -136,6 +137,7 @@ app.repository:
       new-branch-each-write: false
       branch-per-user: false
       branch-per-entity: true
+    https-ssl-verify: ${GIT_HTTPS_SSL_VERIFY:true}
 
 app.kafka:
   enabled:

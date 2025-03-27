@@ -31,14 +31,15 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser
 import org.eclipse.jgit.treewalk.EmptyTreeIterator
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.util.FS
+import org.eclipse.jgit.util.SystemReader
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
-import java.nio.file.NoSuchFileException
 import java.io.IOException
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.NoSuchFileException
 import java.util.concurrent.atomic.AtomicReference
 
 private val gitExclusiveLockLatenciesHolder = MetricHolder { prefix ->
@@ -61,6 +62,7 @@ class GitRepository(
     private val mainBranch: Branch = "master",
     private val gitTimeoutSeconds: Int = 30,
     private val strictSshHostKeyChecking: Boolean = false,
+    private val httpsSslVerify: Boolean = true,
     private val dropLocalBranchesMissingOnRemote: Boolean = false,
     private val hardResetLocalBranchCheckoutConflicts: Boolean = false,
     promProperties: PrometheusMetricsProperties,
@@ -91,6 +93,9 @@ class GitRepository(
         transportCallback = createTransportSecurityCallback()
         repository = FileRepository(dir.child("/.git"))
         git = Git(repository)
+        if (!httpsSslVerify && gitRemoteUri != null) {
+            disableSSLVerify(URI(gitRemoteUri))
+        }
         refreshRepository()
     }
 
@@ -105,11 +110,13 @@ class GitRepository(
         log.info("No remote: {}", noRemote)
         log.info("Git remote uri: {}", gitRemoteUri)
         log.info("Git timeout secs: {}", gitTimeoutSeconds)
+        log.info("auth.username: {}", auth.username)
         log.info("auth.password: {}", auth.password?.let { "******" })
         log.info("auth.sshKeyPassphrase: {}", auth.sshKeyPassphrase?.let { "******" })
         log.info("auth.sshKeyPath: {}", auth.sshKeyPath)
         log.info("auth.sshPrivateKey: {}", auth.sshPrivateKey?.takeIf { it.length > 100 }?.let { it.substring(0, 80) + "...********" })
         log.info("Strict ssh host key checking: {}", strictSshHostKeyChecking)
+        log.info("Https sslVerify: {}", httpsSslVerify)
     }
 
     private fun createLocalDirIfMissing() {
@@ -122,6 +129,20 @@ class GitRepository(
                 }
             }
             log.info("Created missing directory for git storage: '{}'", dir.absolutePath)
+        }
+    }
+
+    private fun disableSSLVerify(gitServer: URI) {
+        if (gitServer.scheme == "https") {
+            SystemReader.getInstance().openUserConfig(null, FS.DETECTED).apply {
+                load()
+                setBoolean(
+                    "http",
+                    "https://" + gitServer.host + ':' + (if (gitServer.port == -1) 443 else gitServer.port),
+                    "sslVerify", false
+                )
+                save()
+            }
         }
     }
 
@@ -183,14 +204,20 @@ class GitRepository(
 
     private fun sshUsernamePasswordTransportSecurityCallback(): TransportConfigCallback {
         val credentialsProvider = run {
-            val user = URI.create(gitRemoteUri.orEmpty()).userInfo
+            val user = auth.username ?: URI.create(gitRemoteUri.orEmpty()).userInfo
             log.info("Username to SSH login is '$user'")
             UsernamePasswordCredentialsProvider(user, auth.password)
         }
         return TransportConfigCallback { transport ->
-            val sshTransport = transport as SshTransport
-            sshTransport.credentialsProvider = credentialsProvider
-            sshTransport.sshSessionFactory = GitSshdSessionFactory()
+            when (transport) {
+                is SshTransport -> {
+                    transport.credentialsProvider = credentialsProvider
+                    transport.sshSessionFactory = GitSshdSessionFactory()
+                }
+                is TransportHttp -> {
+                    transport.credentialsProvider = credentialsProvider
+                }
+            }
         }
     }
 
@@ -979,6 +1006,7 @@ class GitRepository(
             val sshKeyPath: String? = null,
             val sshPrivateKey: String? = null,
             val sshKeyPassphrase: String? = null,
+            val username: String? = null,
             val password: String? = null
     ) {
         companion object {

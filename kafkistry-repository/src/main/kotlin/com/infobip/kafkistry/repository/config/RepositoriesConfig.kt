@@ -32,11 +32,13 @@ class GitRepositoriesProperties {
     var sshKeyPath: String? = null
     var sshPrivateKey: String? = null
     var sshKeyPassphrase: String? = null
+    var username: String? = null
     var password: String? = null
     var mainBranch: Branch = "master"
     var remoteTimeoutSeconds: Int = 30
     var refreshIntervalSeconds: Int = 30
     var strictSshHostKeyChecking: Boolean = false
+    var httpsSslVerify: Boolean = true
     var dropLocalBranchesMissingOnRemote: Boolean = false
     var hardResetLocalBranchCheckoutConflicts: Boolean = false
 
@@ -101,15 +103,17 @@ class GitRepositoriesConfig(
             dirPath = properties.localDir,
             gitRemoteUri = properties.remoteSshUri.takeIf { it.isNotBlank() },
             auth = GitRepository.Auth(
-                sshKeyPath = properties.sshKeyPath,
-                sshPrivateKey = properties.sshPrivateKey,
-                sshKeyPassphrase = properties.sshKeyPassphrase,
-                password = properties.password
+                sshKeyPath = properties.sshKeyPath?.takeIf { it.isNotBlank() },
+                sshPrivateKey = properties.sshPrivateKey?.takeIf { it.isNotBlank() },
+                sshKeyPassphrase = properties.sshKeyPassphrase?.takeIf { it.isNotBlank() },
+                username = properties.username?.takeIf { it.isNotBlank() },
+                password = properties.password?.takeIf { it.isNotBlank() },
             ),
             writeBranchSelector = writeBranchSelector,
             mainBranch = properties.mainBranch,
             gitTimeoutSeconds = properties.remoteTimeoutSeconds,
             strictSshHostKeyChecking = properties.strictSshHostKeyChecking,
+            httpsSslVerify = properties.httpsSslVerify,
             dropLocalBranchesMissingOnRemote = properties.dropLocalBranchesMissingOnRemote,
             hardResetLocalBranchCheckoutConflicts = properties.hardResetLocalBranchCheckoutConflicts,
             promProperties = promProperties,
