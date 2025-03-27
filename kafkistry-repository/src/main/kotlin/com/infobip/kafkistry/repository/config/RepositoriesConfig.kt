@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component
 class GitRepositoriesProperties {
     var enabled = true
     var localDir: String = "kafkistry/git-repository"
-    var remoteSshUri: String = ""
+    var remoteUri: String = ""
     var sshKeyPath: String? = null
     var sshPrivateKey: String? = null
     var sshKeyPassphrase: String? = null
@@ -101,7 +101,7 @@ class GitRepositoriesConfig(
     ): GitRepository {
         return GitRepository(
             dirPath = properties.localDir,
-            gitRemoteUri = properties.remoteSshUri.takeIf { it.isNotBlank() },
+            gitRemoteUri = properties.remoteUri.takeIf { it.isNotBlank() },
             auth = GitRepository.Auth(
                 sshKeyPath = properties.sshKeyPath?.takeIf { it.isNotBlank() },
                 sshPrivateKey = properties.sshPrivateKey?.takeIf { it.isNotBlank() },

@@ -121,7 +121,7 @@ app.repository:
     enabled: true
     local-dir: ${LOCAL_GIT_DIR:kafkistry/git-repository}
     main-branch: ${GIT_MAIN_BRANCH:master}
-    remote-ssh-uri: ${GIT_REMOTE_SSH_URI:}
+    remote-uri: ${GIT_REMOTE_URI:${GIT_REMOTE_SSH_URI:}}
     ssh-private-key: ${SSH_PRIVATE_KEY:}
     ssh-key-path: ${SSH_PRIVATE_KEY_PATH:}
     ssh-key-passphrase: ${SSH_PRIVATE_KEY_PASS:}
