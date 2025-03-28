@@ -106,6 +106,7 @@
         <testcontainers-gitserver.version>0.5.0</testcontainers-gitserver.version>
         <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
+        <spring-security-crypto.version>6.4.4</spring-security-crypto.version>
 
     </properties>
 
@@ -121,6 +122,12 @@
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
                 <!-- override synk vulnerability in 2.11.0: CWE-300 | CVE-2024-47553 | CVSS 6.9 | SNYK-JAVA-COMMONSIO-8161190 -->
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-crypto</artifactId>
+                <version>${spring-security-crypto.version}</version>
+                <!-- override synk vulnerability in 6.4.2: CWE-305 | CVE-2025-22228 | CVSS 9.0 | SNYK-JAVA-ORGSPRINGFRAMEWORKSECURITY-9486467 -->
             </dependency>
         </dependencies>
     </dependencyManagement>
