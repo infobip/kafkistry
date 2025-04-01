@@ -20,6 +20,7 @@ import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole
 import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
 import jakarta.servlet.http.HttpServletRequest
+import kafka.security.authorizer.AclAuthorizer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -31,6 +32,7 @@ import org.apache.kafka.common.header.internals.RecordHeaders
 import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.apache.kafka.metadata.authorizer.StandardAuthorizer
 import org.assertj.core.util.Files
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
@@ -45,6 +47,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.core.env.get
+import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 import org.springframework.stereotype.Component
 import java.io.File
@@ -129,11 +132,11 @@ class DataStateInitializer(
     private lateinit var api: ApiClient
     private val kraft = true
 
-    private val kafka = if (kraft) {
+    private val kafka: EmbeddedKafkaBroker = if (kraft) {
         EmbeddedKafkaKraftCustomBroker(2, 4, 0).apply {
             brokerProperty("log.retention.bytes", "123456789")
             brokerProperty("log.segment.bytes", "12345678")
-            brokerProperty("authorizer.class.name", org.apache.kafka.metadata.authorizer.StandardAuthorizer::class.java.name)
+            brokerProperty("authorizer.class.name", StandardAuthorizer::class.java.name)
             brokerProperty("super.users", "User:ANONYMOUS")
             val brokerRack = mapOf(
                 START_BROKER_ID to "rck-A",
@@ -151,7 +154,7 @@ class DataStateInitializer(
         EmbeddedKafkaZKBroker(6).apply {
             brokerProperty("log.retention.bytes", "123456789")
             brokerProperty("log.segment.bytes", "12345678")
-            brokerProperty("authorizer.class.name", kafka.security.authorizer.AclAuthorizer::class.java.name)
+            brokerProperty("authorizer.class.name", AclAuthorizer::class.java.name)
             brokerProperty("super.users", "User:ANONYMOUS")
         }
     }.apply {
