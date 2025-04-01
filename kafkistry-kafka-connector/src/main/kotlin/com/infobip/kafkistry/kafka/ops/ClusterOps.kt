@@ -6,6 +6,7 @@ import kafka.server.DynamicConfig
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.errors.UnsupportedVersionException
+import org.apache.kafka.server.config.QuotaConfigs
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
@@ -235,11 +236,10 @@ class ClusterOps(
     }
 
     private fun ExistingConfig.extractThrottleRate(): ThrottleRate {
-        val dynamicConf = DynamicConfig.`Broker$`.`MODULE$`
         return ThrottleRate(
-            leaderRate = get(dynamicConf.LeaderReplicationThrottledRateProp())?.value?.toLongOrNull(),
-            followerRate = get(dynamicConf.FollowerReplicationThrottledRateProp())?.value?.toLongOrNull(),
-            alterDirIoRate = get(dynamicConf.ReplicaAlterLogDirsIoMaxBytesPerSecondProp())?.value?.toLongOrNull(),
+            leaderRate = get(QuotaConfigs.LEADER_REPLICATION_THROTTLED_RATE_CONFIG)?.value?.toLongOrNull(),
+            followerRate = get(QuotaConfigs.FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG)?.value?.toLongOrNull(),
+            alterDirIoRate = get(QuotaConfigs.REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG)?.value?.toLongOrNull(),
         )
     }
 

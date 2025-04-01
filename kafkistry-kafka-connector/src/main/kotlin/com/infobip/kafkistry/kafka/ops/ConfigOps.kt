@@ -6,9 +6,9 @@ import com.infobip.kafkistry.kafka.ThrottleRate
 import com.infobip.kafkistry.model.TopicConfigMap
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
-import kafka.server.DynamicConfig
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.config.ConfigResource
+import org.apache.kafka.server.config.QuotaConfigs
 import java.util.concurrent.CompletableFuture
 
 class ConfigOps(
@@ -135,14 +135,11 @@ class ConfigOps(
     }
 
     fun updateThrottleRate(brokerId: BrokerId, throttleRate: ThrottleRate): CompletableFuture<Unit> {
-        val dynamicConf = DynamicConfig.`Broker$`.`MODULE$`
-        val configs = with(dynamicConf) {
-            mapOf(
-                LeaderReplicationThrottledRateProp() to throttleRate.leaderRate?.takeIf { it > 0 }?.toString(),
-                FollowerReplicationThrottledRateProp() to throttleRate.followerRate?.takeIf { it > 0 }?.toString(),
-                ReplicaAlterLogDirsIoMaxBytesPerSecondProp() to throttleRate.alterDirIoRate?.takeIf { it > 0 }?.toString(),
-            )
-        }
+        val configs = mapOf(
+            QuotaConfigs.LEADER_REPLICATION_THROTTLED_RATE_CONFIG to throttleRate.leaderRate?.takeIf { it > 0 }?.toString(),
+            QuotaConfigs.FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG to throttleRate.followerRate?.takeIf { it > 0 }?.toString(),
+            QuotaConfigs.REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG to throttleRate.alterDirIoRate?.takeIf { it > 0 }?.toString(),
+        )
         return updateConfig(ConfigResource(ConfigResource.Type.BROKER, brokerId.toString()),
             alterConfigs = { Config(configs.map { ConfigEntry(it.key, it.value) }) },
             alterConfigOps = {

@@ -7,6 +7,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.ClientHttpResponse
@@ -14,6 +15,7 @@ import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestClientResponseException
+import java.net.URI
 import java.net.http.HttpClient
 import java.util.function.Supplier
 
@@ -55,12 +57,12 @@ class PrometheusNodeDiskMetricsProvider(
         .errorHandler(object : ResponseErrorHandler {
             override fun hasError(response: ClientHttpResponse): Boolean = response.statusCode != HttpStatus.OK
 
-            override fun handleError(response: ClientHttpResponse) {
+            override fun handleError(url: URI, method: HttpMethod, response: ClientHttpResponse) {
                 val responseBody = response.body.readAllBytes()
                 with(response) {
                     throw RestClientResponseException(
                         "Prometheus API call failed: Http:${statusCode.value()} $statusText; " +
-                                "Headers:$headers; Body:${responseBody.decodeToString()}",
+                            "Headers:$headers; Body:${responseBody.decodeToString()}",
                         statusCode.value(), statusText, headers, responseBody, null
                     )
                 }

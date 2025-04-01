@@ -2,14 +2,22 @@ package com.infobip.kafkistry.it.cluster_ops.custom
 
 import com.infobip.kafkistry.kafka.BrokerId
 import com.infobip.kafkistry.kafka.NodeId
-import com.infobip.kafkistry.utils.getFieldReflective
-import kafka.server.KafkaConfig
-import kafka.testkit.*
+import kafka.testkit.BrokerNode
+import kafka.testkit.ControllerNode
+import kafka.testkit.KafkaClusterTestKit
+import kafka.testkit.TestKitNodes
 import kafka.utils.Exit
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.Consumer
+import org.apache.kafka.common.Uuid
 import org.apache.kafka.common.utils.Utils
+import org.apache.kafka.coordinator.group.GroupCoordinatorConfig.GROUP_INITIAL_REBALANCE_DELAY_MS_CONFIG
+import org.apache.kafka.coordinator.group.GroupCoordinatorConfig.OFFSETS_TOPIC_REPLICATION_FACTOR_CONFIG
+import org.apache.kafka.metadata.bootstrap.BootstrapMetadata
+import org.apache.kafka.server.common.MetadataVersion
+import org.apache.kafka.server.config.ServerConfigs.DELETE_TOPIC_ENABLE_CONFIG
+import org.apache.kafka.test.TestUtils
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import java.util.*
@@ -29,7 +37,7 @@ class EmbeddedKafkaKraftCustomBroker(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val brokerProperties = Properties()
+    private val brokerProperties = mutableMapOf<String, String>()
 	private var brokerOverridePropertiesSupplier: (BrokerId) -> Map<String, String> = { emptyMap() }
 
     private lateinit var cluster: KafkaClusterTestKit
@@ -45,9 +53,9 @@ class EmbeddedKafkaKraftCustomBroker(
 
 	override fun destroy() {
 		val shutdownFailure = AtomicReference<Throwable>()
-		Utils.closeQuietly(cluster, "embedded Kafka cluster", shutdownFailure);
+		Utils.closeQuietly(cluster, "embedded Kafka cluster", shutdownFailure)
 		if (shutdownFailure.get() != null) {
-			throw IllegalStateException("Failed to shut down embedded Kafka cluster", shutdownFailure.get());
+			throw IllegalStateException("Failed to shut down embedded Kafka cluster", shutdownFailure.get())
 		}
 	}
 
@@ -88,47 +96,92 @@ class EmbeddedKafkaKraftCustomBroker(
 		}
 	}
 
+	private fun configForNode(nodeId: NodeId): Map<String, String> {
+		return brokerProperties + brokerOverridePropertiesSupplier(nodeId);
+	}
+
     private fun start() {
 		try {
-			val nodes = TestKitNodes.Builder().apply {
+			val clusterId = Uuid.randomUuid().toString()
+			val baseDirectory = TestUtils.tempDirectory().absolutePath
+			val nodes = run {
 				var nextBrokerId = START_BROKER_ID
 				var nextControllerId = START_CONTROLLER_ID
 				var nextCombinedId = START_COMBINED_ID
+				val brokerNodes = TreeMap<BrokerId, BrokerNode>()
+				val controllerNodes = TreeMap<BrokerId, ControllerNode>()
+				fun Map<String, String?>.logAll(id: BrokerId, builder: Any) = apply {
+					if (log.isDebugEnabled) {
+						val pairs = entries.sortedBy { it.key }.joinToString("\n") { "${it.key} => ${it.value}" }
+						log.debug("Config of ${builder.javaClass} id=$id\n${pairs.replaceIndent("    ")}")
+					}
+				}
+				fun addNode(node: ControllerNode.Builder) {
+					controllerNodes[node.id()] = node
+						.setBaseDirectory(baseDirectory)
+						.setClusterId(clusterId)
+						.setPropertyOverrides(configForNode(node.id()).logAll(node.id(), node))
+						.build()
+				}
+				fun addNode(node: BrokerNode.Builder) {
+					brokerNodes[node.id()] = node
+						.setBaseDirectory(baseDirectory)
+						.setClusterId(clusterId)
+						.setPropertyOverrides(configForNode(node.id()).logAll(node.id(), node))
+						.build()
+				}
 				repeat(combinedBrokerControllers) {
 					val nodeId = nextCombinedId++
-					addNode(BrokerNode.Builder().setId(nodeId))
-					addNode(ControllerNode.Builder().setId(nodeId))
+					addNode(ControllerNode.builder().setId(nodeId).setCombined(true))
+					addNode(BrokerNode.builder().setId(nodeId).setCombined(true))
 				}
 				repeat(justBrokers) {
-					addNode(BrokerNode.Builder().setId(nextBrokerId++))
+					addNode(BrokerNode.builder().setId(nextBrokerId++).setCombined(false))
 				}
 				repeat(justControllers) {
-					addNode(ControllerNode.Builder().setId(nextControllerId++))
+					addNode(ControllerNode.builder().setId(nextControllerId++).setCombined(false))
 				}
-			}.build()
+				// This reflective call on private constructor could break in future kafka releases (works for 3.8.1).
+				// Reason for this is that we want to manually build and configure ControllerNode-s and BrokerNode-s
+				// Problem is that built in builders have hardcoded CONTROLLER and EXTERNAL listener names and we need
+				// to be able to configure multiple of them.
+				// Alternative approach would be to completely re-implement (copy/paste) whole KafkaClusterTestKit, but then
+				// we risk even more that setup requirements might change in the future, and it will get harder to troubleshoot.
+				// With this reflective call it will be exactly obvious when/where breaking issue happened.
+				val testKitNodesConstructor = TestKitNodes::class.java.getDeclaredConstructor(
+					//expected constructor signature:
+					// String baseDirectory, String clusterId, BootstrapMetadata bootstrapMetadata, SortedMap<Integer, ControllerNode> controllerNodes, SortedMap<Integer, BrokerNode> brokerNodes
+					String::class.java, String::class.java, BootstrapMetadata::class.java, SortedMap::class.java, SortedMap::class.java
+				).apply { isAccessible = true }
+				testKitNodesConstructor.newInstance(
+					baseDirectory, clusterId,
+					BootstrapMetadata.fromVersion(MetadataVersion.latestTesting(), "testkit"),
+					controllerNodes, brokerNodes,
+				)
+			}
 			val clusterBuilder = KafkaClusterTestKit.Builder(nodes)
-			brokerProperties.forEach { (k, v) -> clusterBuilder.setConfigProp(k as String, v as String) }
 			cluster = clusterBuilder.build()
 		} catch (ex: Exception) {
-			throw IllegalStateException("Failed to create embedded cluster", ex);
+			throw IllegalStateException("Failed to create embedded cluster", ex)
 		}
+
 		try {
-			cluster.format();
-			cluster.startup();
-			cluster.waitForReadyBrokers();
+			cluster.format()
+			cluster.startup()
+			cluster.waitForReadyBrokers()
 			log.info("bootstrap.controllers: {}", controllersAsString())
 		} catch (ex: Exception) {
-			throw IllegalStateException("Failed to start test Kafka cluster", ex);
+			throw IllegalStateException("Failed to start test Kafka cluster", ex)
 		}
 	}
 
     private fun overrideExitMethods() {
-		val exitMsg = "Exit.%s(%d, %s) called";
+		val exitMsg = "Exit.%s(%d, %s) called"
         Exit.setExitProcedure { statusCode, message ->
 			if (log.isDebugEnabled) {
 				log.debug(String.format(exitMsg, "exit", statusCode, message), RuntimeException())
 			} else {
-				log.warn(String.format(exitMsg, "exit", statusCode, message));
+				log.warn(String.format(exitMsg, "exit", statusCode, message))
 			}
 			null
 		}
@@ -136,29 +189,16 @@ class EmbeddedKafkaKraftCustomBroker(
 			if (log.isDebugEnabled) {
 				log.debug(String.format(exitMsg, "halt", statusCode, message), RuntimeException())
 			} else {
-				log.warn(String.format(exitMsg, "halt", statusCode, message));
+				log.warn(String.format(exitMsg, "halt", statusCode, message))
 			}
 			null
 		}
 	}
 
-	private fun TestKitNodes.Builder.addNode(node: ControllerNode.Builder) {
-		addNode(node.id(), node, "controllerNodeBuilders")
-	}
-	private fun TestKitNodes.Builder.addNode(node: BrokerNode.Builder) {
-		val overrides = brokerOverridePropertiesSupplier(node.id())
-		node.getFieldReflective<MutableMap<String, String>>("propertyOverrides").putAll(overrides)
-		addNode(node.id(), node, "brokerNodeBuilders")
-	}
-	private fun <NODE> TestKitNodes.Builder.addNode(nodeId: Int, node: NODE, mapFieldName: String ) {
-		val map = getFieldReflective<MutableMap<Int, NODE>>(mapFieldName)
-		map[nodeId] = node
-	}
-
     private fun addDefaultBrokerPropsIfAbsent() {
-		brokerProperties.putIfAbsent(KafkaConfig.DeleteTopicEnableProp(), "true")
-		brokerProperties.putIfAbsent(KafkaConfig.GroupInitialRebalanceDelayMsProp(), "0")
-		brokerProperties.putIfAbsent(KafkaConfig.OffsetsTopicReplicationFactorProp(), "" + (combinedBrokerControllers + justBrokers))
+		brokerProperties.putIfAbsent(DELETE_TOPIC_ENABLE_CONFIG, "true")
+		brokerProperties.putIfAbsent(GROUP_INITIAL_REBALANCE_DELAY_MS_CONFIG, "0")
+		brokerProperties.putIfAbsent(OFFSETS_TOPIC_REPLICATION_FACTOR_CONFIG, "" + (combinedBrokerControllers + justBrokers))
 	}
 
     override fun getBrokersAsString(): String {
@@ -174,7 +214,7 @@ class EmbeddedKafkaKraftCustomBroker(
     override fun adminTimeout(adminTimeout: Int): EmbeddedKafkaBroker = error("Unsupported")
     override fun addTopicsWithResults(vararg topicsToAdd: NewTopic?): MutableMap<String, java.lang.Exception>  = error("Unsupported")
     override fun addTopicsWithResults(vararg topicsToAdd: String?): MutableMap<String, java.lang.Exception>  = error("Unsupported")
-    override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>?, seekToEnd: Boolean, vararg topicsToConsume: String?, )  = error("Unsupported")
+    override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>?, seekToEnd: Boolean, vararg topicsToConsume: String?)  = error("Unsupported")
     override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>?, vararg topicsToConsume: String?)  = error("Unsupported")
     override fun consumeFromAnEmbeddedTopic(consumer: Consumer<*, *>?, seekToEnd: Boolean, topic: String?)  = error("Unsupported")
     override fun consumeFromAnEmbeddedTopic(consumer: Consumer<*, *>?, topic: String?)  = error("Unsupported")

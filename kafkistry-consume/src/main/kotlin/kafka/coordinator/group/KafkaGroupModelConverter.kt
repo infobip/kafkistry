@@ -4,12 +4,12 @@ import com.infobip.kafkistry.kafka.toJavaList
 import com.infobip.kafkistry.service.consume.interntopics.ConsumerOffsetMetadata.*
 import kafka.common.OffsetAndMetadata
 import kafka.coordinator.tryParseOrNull
-import org.apache.kafka.common.utils.SystemTime
+import org.apache.kafka.common.utils.Time
 import java.nio.ByteBuffer
 
 object KafkaGroupModelConverter {
 
-    private val time = SystemTime()
+    private val time = Time.SYSTEM
 
     fun convert(key: OffsetKey): ConsumerGroupRecordKey {
         return ConsumerGroupRecordKey(

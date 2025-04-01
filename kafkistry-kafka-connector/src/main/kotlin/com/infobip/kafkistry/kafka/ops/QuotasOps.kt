@@ -4,17 +4,16 @@ import com.infobip.kafkistry.kafka.ClientQuota
 import com.infobip.kafkistry.kafka.toJavaMap
 import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.QuotaProperties
-import kafka.server.ConfigType
 import kafka.zk.AdminZkClient
 import org.apache.kafka.clients.admin.AlterClientQuotasOptions
 import org.apache.kafka.clients.admin.DescribeClientQuotasOptions
-import org.apache.kafka.common.config.internals.QuotaConfigs
-import org.apache.kafka.common.config.internals.QuotaConfigs.*
 import org.apache.kafka.common.quota.ClientQuotaAlteration
 import org.apache.kafka.common.quota.ClientQuotaAlteration.Op
 import org.apache.kafka.common.quota.ClientQuotaEntity
 import org.apache.kafka.common.quota.ClientQuotaFilter
 import org.apache.kafka.common.utils.Sanitizer
+import org.apache.kafka.server.config.ConfigType
+import org.apache.kafka.server.config.QuotaConfigs.*
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -46,7 +45,7 @@ class QuotasOps(
         val adminZkClient = newZKAdminClient()
         fun Properties.toQuotaValues(): Map<String, Double> = this
             .mapKeys { it.key.toString() }
-            .filterKeys { QuotaConfigs.isClientOrUserConfig(it) }
+            .filterKeys { isClientOrUserQuotaConfig(it) }
             .mapValues { it.value.toString().toDouble() }
 
         fun String.deSanitize(): String = when (this) {
@@ -54,12 +53,12 @@ class QuotasOps(
             else -> Sanitizer.desanitize(this)
         }
 
-        val userConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.User()).toJavaMap()
+        val userConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.USER).toJavaMap()
             .mapKeys { QuotaEntity(user = it.key.deSanitize()) }
-        val clientConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.Client()).toJavaMap()
+        val clientConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.CLIENT).toJavaMap()
             .mapKeys { QuotaEntity(clientId = it.key.deSanitize()) }
         val userClientConfig = adminZkClient
-            .fetchAllChildEntityConfigs(ConfigType.User(), ConfigType.Client()).toJavaMap()
+            .fetchAllChildEntityConfigs(ConfigType.USER, ConfigType.CLIENT).toJavaMap()
             .mapKeys {
                 val (user, _, client) = it.key.split("/")
                 QuotaEntity(user = user.deSanitize(), clientId = client.deSanitize())
@@ -108,9 +107,9 @@ class QuotasOps(
         val user = sanitizedEntityProps[ClientQuotaEntity.USER]
         val clientId = sanitizedEntityProps[ClientQuotaEntity.CLIENT_ID]
         val (path, configType) = when {
-            user != null && clientId != null -> "$user/clients/$clientId" to ConfigType.User()
-            user != null && clientId == null -> user to ConfigType.User()
-            user == null && clientId != null -> clientId to ConfigType.Client()
+            user != null && clientId != null -> "$user/clients/$clientId" to ConfigType.USER
+            user != null && clientId == null -> user to ConfigType.USER
+            user == null && clientId != null -> clientId to ConfigType.CLIENT
             else -> throw IllegalArgumentException("Both user and clientId are null")
         }
         val props = adminZkClient.fetchEntityConfig(configType, path)

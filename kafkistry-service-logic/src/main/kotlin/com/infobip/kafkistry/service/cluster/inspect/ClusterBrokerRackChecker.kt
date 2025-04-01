@@ -5,7 +5,7 @@ import com.infobip.kafkistry.kafkastate.KafkaClustersStateProvider
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.Placeholder
 import com.infobip.kafkistry.service.RuleViolation
-import kafka.server.KafkaConfig
+import org.apache.kafka.server.config.ServerConfigs
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 
@@ -51,7 +51,7 @@ class ClusterBrokerRackChecker(
             return emptyList()  //no point in checking rack if having only one node
         }
         val nodesRackNullable = nodeIds.associateWith { perNodeConfig[it] }.mapValues { (_, configs) ->
-            configs?.get(KafkaConfig.RackProp())?.value?.takeIf { it != properties.undefinedRackValue }
+            configs?.get(ServerConfigs.BROKER_RACK_CONFIG)?.value?.takeIf { it != properties.undefinedRackValue }
         }
         val allUndefined = nodesRackNullable.values.all { it == null }
         if (allUndefined) {
@@ -68,7 +68,7 @@ class ClusterBrokerRackChecker(
                             message = "All %NUM_NODES% %NODE_ROLE%(s) do not have %RACK_PROPERTY% defined",
                             placeholders = mapOf(
                                 "NUM_NODES" to Placeholder("num.nodes", nodeIds.size),
-                                "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
+                                "RACK_PROPERTY" to Placeholder("property.name", ServerConfigs.BROKER_RACK_CONFIG),
                                 "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                             )
                         )
@@ -91,7 +91,7 @@ class ClusterBrokerRackChecker(
                         placeholders = mapOf(
                             "NUM_NODES" to Placeholder("num.nodes", nodeIds.size),
                             "NODE_IDS" to Placeholder("node.ids", undefinedRackNodeIds),
-                            "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
+                            "RACK_PROPERTY" to Placeholder("property.name", ServerConfigs.BROKER_RACK_CONFIG),
                             "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                         )
                     )
@@ -117,8 +117,8 @@ class ClusterBrokerRackChecker(
                             message = "All %NUM_NODES% %NODE_ROLE%(s) have same %RACK_PROPERTY%=%RACK_ID%",
                             placeholders = mapOf(
                                 "NUM_NODES" to Placeholder("num.nodes", nodeIds.size),
-                                "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
-                                "RACK_ID" to Placeholder(KafkaConfig.RackProp(), nodesRack.values.first()),
+                                "RACK_PROPERTY" to Placeholder("property.name", ServerConfigs.BROKER_RACK_CONFIG),
+                                "RACK_ID" to Placeholder(ServerConfigs.BROKER_RACK_CONFIG, nodesRack.values.first()),
                                 "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                             )
                         )
@@ -149,9 +149,9 @@ class ClusterBrokerRackChecker(
                             "NUM_NODES_MAX" to Placeholder("num.nodes", maxRackNodeIds.value.size),
                             "NODE_IDS_MIN" to Placeholder("nodes.ids", minRackNodeIds.value.sorted()),
                             "NODE_IDS_MAX" to Placeholder("nodes.ids", maxRackNodeIds.value.sorted()),
-                            "RACK_ID_MIN" to Placeholder(KafkaConfig.RackProp(), minRackNodeIds.key),
-                            "RACK_ID_MAX" to Placeholder(KafkaConfig.RackProp(), maxRackNodeIds.key),
-                            "RACK_PROPERTY" to Placeholder("property.name", KafkaConfig.RackProp()),
+                            "RACK_ID_MIN" to Placeholder(ServerConfigs.BROKER_RACK_CONFIG, minRackNodeIds.key),
+                            "RACK_ID_MAX" to Placeholder(ServerConfigs.BROKER_RACK_CONFIG, maxRackNodeIds.key),
+                            "RACK_PROPERTY" to Placeholder("property.name", ServerConfigs.BROKER_RACK_CONFIG),
                             "NODE_ROLE" to Placeholder("process.roles", processRole.name),
                         )
                     )
