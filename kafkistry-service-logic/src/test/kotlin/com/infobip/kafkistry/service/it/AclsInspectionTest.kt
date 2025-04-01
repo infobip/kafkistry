@@ -30,9 +30,9 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @Suppress("PrivatePropertyName", "LocalVariableName")
 @SpringBootTest
@@ -49,10 +49,10 @@ class AclsInspectionTest {
     @Autowired
     private lateinit var aclLinkResolver: AclLinkResolver
 
-    @MockBean
+    @MockitoBean
     private lateinit var stateProvider: KafkaClustersStateProvider
 
-    @MockBean
+    @MockitoBean
     private lateinit var groupsStateProvider: KafkaConsumerGroupsProvider
 
     @Autowired

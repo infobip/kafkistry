@@ -66,7 +66,7 @@ abstract class UITestCase(
         aclsApi = context.aclsApi
         inspectApi = context.inspectApi
         await {
-            browser.currentUrl.endsWith("/home")
+            assertThat(browser.currentUrl).endsWith("/home")
             browser.assertPageText().contains("Status counts")
         }
     }

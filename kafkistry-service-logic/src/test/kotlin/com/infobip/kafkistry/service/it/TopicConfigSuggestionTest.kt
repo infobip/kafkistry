@@ -22,9 +22,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest
 @ContextConfiguration(initializers = [TestDirsPathInitializer::class])
@@ -35,7 +35,7 @@ class TopicConfigSuggestionTest {
     private lateinit var suggestionService: OperationSuggestionService
     @Autowired
     private lateinit var existingValuesService: ExistingValuesService
-    @MockBean
+    @MockitoBean
     private lateinit var stateProvider: KafkaClustersStateProvider
     @Autowired
     private lateinit var clusters: ClustersRegistryService

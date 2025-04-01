@@ -35,9 +35,9 @@ import org.junit.jupiter.api.*
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.util.function.Function
 
 @SpringBootTest(
@@ -52,7 +52,7 @@ class InspectionTest {
     @Autowired
     private lateinit var inspection: TopicsInspectionService
 
-    @MockBean
+    @MockitoBean
     private lateinit var stateProvider: KafkaClustersStateProvider
 
     @Autowired

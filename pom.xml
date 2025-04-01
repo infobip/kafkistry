@@ -244,6 +244,9 @@
                         <plugin>spring</plugin>
                     </compilerPlugins>
                     <jvmTarget>${kotlin.jvm.target}</jvmTarget>
+                    <args>
+                        <arg>-Werror</arg>
+                    </args>
                 </configuration>
                 <dependencies>
                     <dependency>

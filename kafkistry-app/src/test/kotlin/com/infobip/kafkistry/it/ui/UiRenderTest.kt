@@ -1,6 +1,5 @@
 package com.infobip.kafkistry.it.ui
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.TestDirsPathInitializer
 import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafka.KafkaTopicConfiguration
@@ -34,19 +33,17 @@ import org.assertj.core.api.Assertions.*
 import org.assertj.core.api.ObjectAssert
 import org.assertj.core.groups.Tuple
 import org.awaitility.Awaitility
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.junit.jupiter.api.*
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.web.client.HttpClientErrorException
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
@@ -66,7 +63,7 @@ class UiRenderTest {
     var port = 0
     @Autowired
     lateinit var kafkaClientsProvider: KafkaClientProvider
-    @SpyBean
+    @MockitoSpyBean
     lateinit var topicsRepository: KafkaTopicsRepository
 
     companion object {
