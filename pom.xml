@@ -66,8 +66,9 @@
         <jdk.version>21</jdk.version>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <kotlin.jvm.target>17</kotlin.jvm.target>
+        <maven.compiler.target>21</maven.compiler.target>
+        <kotlin.version>2.1.20</kotlin.version>
+        <kotlin.jvm.target>21</kotlin.jvm.target>
         <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
 
         <!-- PLUGIN -->
@@ -135,6 +136,7 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-common</artifactId>
             <version>${kotlin.version}</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
@@ -225,7 +227,6 @@
                         <id>compile</id>
                         <phase>compile</phase>
                         <goals>
-                            <goal>kapt</goal>
                             <goal>compile</goal>
                         </goals>
                     </execution>
@@ -233,7 +234,6 @@
                         <id>test-compile</id>
                         <phase>test-compile</phase>
                         <goals>
-                            <goal>test-kapt</goal>
                             <goal>test-compile</goal>
                         </goals>
                     </execution>
