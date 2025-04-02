@@ -60,7 +60,14 @@ abstract class BaseController {
             }
         } else {
             emptyMap()
-        }
+        }.plus(
+            mapOf(
+                "remoteHost" to request.remoteHost,
+                "remoteAddr" to request.remoteAddr,
+                "remotePort" to request.remotePort,
+                "remoteUser" to request.remoteUser,
+            )
+        )
         return ModelAndView(
             if (ajaxRequest) "registryExceptionAlert" else "registryException",
             mutableMapOf(

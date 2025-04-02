@@ -12,7 +12,7 @@
         <h6>Request attributes dump:</h6>
         <ul>
             <#list attrsDump as attrName, attrVal>
-                <li><code>${attrName}</code> - ${attrVal}</li>
+                <li><code>${attrName}</code> - <#if attrVal??>${attrVal}<#else><code>null</code></#if></li>
             </#list>
         </ul>
     </#if>
