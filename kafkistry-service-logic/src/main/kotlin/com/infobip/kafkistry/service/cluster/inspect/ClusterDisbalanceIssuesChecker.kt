@@ -71,7 +71,7 @@ class ClusterDisbalanceIssuesChecker(
                 }
             }
             with(properties.replicaCount) {
-                if (enabled && loadDiffPortion.replicas > maxAcceptablePercent) {
+                if (enabled && loadDiffPortion.replicas > maxAcceptablePercent && brokersLoadDiff.replicas > 1) {
                     disbalanceIssue(
                         name = "REPLICAS_COUNT_DISBALANCE",
                         resourceName = "Replica count",
@@ -83,7 +83,7 @@ class ClusterDisbalanceIssuesChecker(
                 }
             }
             with(properties.leadersCount) {
-                if (enabled && loadDiffPortion.leaders > maxAcceptablePercent) {
+                if (enabled && loadDiffPortion.leaders > maxAcceptablePercent && brokersLoadDiff.leaders > 1) {
                     disbalanceIssue(
                         name = "LEADERS_COUNT_DISBALANCE",
                         resourceName = "Leaders count",
