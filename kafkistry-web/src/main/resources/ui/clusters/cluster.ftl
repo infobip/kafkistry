@@ -411,7 +411,7 @@
                 </div>
                 <table class="table table-sm">
                     <tr>
-                        <th>Select node config</th>
+                        <th>Select node config / Api keys</th>
                         <td>
                             <ul class="nav">
                                 <#list clusterInfo.nodeIds as nodeId>
@@ -431,6 +431,80 @@
                     <#list clusterInfo.nodeIds as nodeId>
                         <#assign active = (nodeId == clusterInfo.controllerId)?then("active", "")>
                         <div id="node-${nodeId?c}-config" class="tab-pane ${active}">
+                            <#if clusterInfo.apiKeys?api.containsKey(nodeId)>
+                                <#assign nodeApiKeys = clusterInfo.apiKeys?api.get(nodeId)>
+                                <p>
+                                    ZK migration:
+                                    <#if nodeApiKeys.zkMigrationEnabled>
+                                        <span class="badge badge-success">ENABLED</span>
+                                    <#else>
+                                        <span class="badge badge-secondary">NOT ENABLED</span>
+                                    </#if>
+                                </p>
+                                <table class="table table-sm">
+                                    <thead class="thead-dark">
+                                    <tr>
+                                        <th>Api Id</th>
+                                        <th>Api name</th>
+                                        <th>Cluster action</th>
+                                        <th>Forwardable</th>
+                                        <th>Delayed allocation</th>
+                                        <th>Min broker magic</th>
+                                        <th>Min version</th>
+                                        <th>Max version</th>
+                                        <th>Latest usable version / unusable reason</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <#list nodeApiKeys.apiKeys as apiKey>
+                                        <tr>
+                                            <td><code>${apiKey.id}</code></td>
+                                            <#if apiKey.metadata??>
+                                                <td><span class="badge badge-dark">${apiKey.metadata.name}</span></td>
+                                                <td>
+                                                    <#if apiKey.metadata.clusterAction>
+                                                        <span class="badge badge-primary">YES</span>
+                                                    <#else>
+                                                        <span class="badge badge-secondary">NO</span>
+                                                    </#if>
+                                                </td>
+                                                <td>
+                                                    <#if apiKey.metadata.forwardable>
+                                                        <span class="badge badge-primary">YES</span>
+                                                    <#else>
+                                                        <span class="badge badge-secondary">NO</span>
+                                                    </#if>
+                                                </td>
+                                                <td>
+                                                    <#if apiKey.metadata.requiresDelayedAllocation>
+                                                        <span class="badge badge-primary">REQUIRED</span>
+                                                    <#else>
+                                                        <span class="badge badge-secondary">NOT REQUIRED</span>
+                                                    </#if>
+                                                </td>
+                                                <td><code>${apiKey.metadata.minRequiredInterBrokerMagic}</code></td>
+                                            <#else>
+                                                <td><span class="badge badge-warning">UNKNOWN</span></td>
+                                                <td colspan="4">---</td>
+                                            </#if>
+                                            <td>${apiKey.minVersion!'---'}</td>
+                                            <td>${apiKey.maxVersion!'---'}</td>
+                                            <td>
+                                                <#if apiKey.latestUsableVersion??>
+                                                    ${apiKey.latestUsableVersion}
+                                                <#elseif apiKey.unusableReason??>
+                                                    <span class="text-danger">${apiKey.unusableReason}</span>
+                                                <#else>
+                                                    ---
+                                                </#if>
+                                            </td>
+                                        </tr>
+                                    </#list>
+                                    </tbody>
+                                </table>
+                            <#else>
+                                ---
+                            </#if>
                             <#if clusterInfo.perBrokerConfig?api.containsKey(nodeId)>
                                 <#assign config = clusterInfo.perBrokerConfig?api.get(nodeId)>
                                 <#include "../common/existingConfig.ftl">

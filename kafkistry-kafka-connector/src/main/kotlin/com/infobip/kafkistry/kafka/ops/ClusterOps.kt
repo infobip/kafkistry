@@ -3,9 +3,14 @@ package com.infobip.kafkistry.kafka.ops
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import kafka.server.DynamicConfig
+import org.apache.kafka.clients.ApiVersions
+import org.apache.kafka.clients.NetworkClient
+import org.apache.kafka.clients.NodeApiVersions
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.errors.UnsupportedVersionException
+import org.apache.kafka.common.message.ApiVersionsResponseData
+import org.apache.kafka.common.protocol.ApiKeys
 import org.apache.kafka.server.common.MetadataVersion
 import org.apache.kafka.server.config.QuotaConfigs
 import org.slf4j.LoggerFactory
@@ -16,6 +21,8 @@ import java.util.concurrent.atomic.AtomicReference
 class ClusterOps(
     private val clientCtx: ClientCtx,
 ): BaseOps(clientCtx) {
+
+    private val log = LoggerFactory.getLogger(ClientOps::class.java)
 
     private val currentClusterVersionRef = clientCtx.currentClusterVersionRef
 
@@ -196,6 +203,13 @@ class ClusterOps(
                                     observers = quorum.observers().map { it.toReplicaState() },
                                 )
                             } ?: ClusterQuorumInfo.EMPTY,
+                            apiKeys = run {
+                                if (kraftEnabled && controllerNodes.isNotEmpty()) {
+                                    controllersAdminClient.nodesKeyVersions()
+                                } else {
+                                    emptyMap()
+                                } + adminClient.nodesKeyVersions()
+                            }.filterKeys { it in allKnownNodeIds },
                         )
                     }
             }
@@ -264,6 +278,83 @@ class ClusterOps(
     private fun <K, V> Map<K, V?>.withoutNullValues(): Map<K, V> = entries.mapNotNull { (k, v) ->
         v?.let { k to it }
     }.toMap()
+
+    private fun AdminClient.nodesKeyVersions(): Map<NodeId, ClusterApiKeys> {
+        val nodesApiKeyVersions = tryResolveApiKeyVersions()
+        return nodesApiKeyVersions.orEmpty()
+            .mapKeys { it.key.toInt() }
+            .mapValues { it.value.toNodeApiKeys() }
+    }
+
+    private fun NodeApiVersions.toNodeApiKeys(): ClusterApiKeys {
+        fun ApiKeys.toMetadata() = ClusterApiKeyMetadata(
+            id = id.toInt(),
+            name = name,
+            isClusterAction = clusterAction,
+            isForwardable = forwardable,
+            minRequiredInterBrokerMagic = minRequiredInterBrokerMagic.toInt(),
+            requiresDelayedAllocation = requiresDelayedAllocation,
+        )
+        val supported = allSupportedApiVersions().map { (apiKey, versions) ->
+            ClusterApiKey(
+                id = apiKey.id.toInt(),
+                metadata = apiKey.toMetadata(),
+                minVersion = versions.minVersion().toInt(),
+                maxVersion = versions.maxVersion().toInt(),
+                latestUsableVersion = if (apiKey.latestVersion() in versions.minVersion()..versions.maxVersion()) {
+                    minOf(apiKey.latestVersion(), versions.maxVersion()).toInt()
+                } else null,
+                unusableReason = when {
+                    apiKey.latestVersion() < versions.minVersion() -> "Node too new"
+                    versions.maxVersion() < apiKey.oldestVersion() -> "Node too old"
+                    else -> null
+                },
+            )
+        }
+        val unknownApis = this.tryGetFieldReflective<List<ApiVersionsResponseData.ApiVersion>>("unknownApis").orEmpty()
+        val unknown = unknownApis.map { versions ->
+            ClusterApiKey(
+                id = versions.apiKey().toInt(),
+                minVersion = versions.minVersion().toInt(),
+                maxVersion = versions.maxVersion().toInt(),
+                unusableReason = "Unknown API",
+            )
+        }
+        val unsupported = ApiKeys.clientApis()
+            .filter { apiKey ->
+                val id = apiKey.id.toInt()
+                unknown.none { it.id == id} && supported.none { it.id == id }
+            }
+            .map { apiKey ->
+            ClusterApiKey(
+                id = apiKey.id.toInt(),
+                metadata = apiKey.toMetadata(),
+                unusableReason = "Node does not support",
+            )
+        }
+        return ClusterApiKeys(
+            zkMigrationEnabled = this.zkMigrationEnabled(),
+            apiKeys = (supported + unknown + unsupported).sortedBy { it.id },
+        )
+    }
+
+    private fun AdminClient.tryResolveApiKeyVersions(): Map<String, NodeApiVersions>? {
+        return this
+            .tryGetFieldReflective<NetworkClient>("client")
+            ?.tryGetFieldReflective<ApiVersions>("apiVersions")
+            ?.tryGetFieldReflective<Map<String, NodeApiVersions>>("nodeApiVersions")
+    }
+
+    private inline fun <reified T> Any.tryGetFieldReflective(fieldName: String): T? {
+        try {
+            val field = javaClass.getDeclaredField(fieldName)
+            field.isAccessible = true
+            return field.get(this) as T
+        } catch (ex: Exception) {
+            log.warn("Unable to obtain instance of ${T::class.java} from $this by reflective looking into field '$fieldName'", ex)
+            return null
+        }
+    }
 
     companion object {
         private val ROLES_BROKER_CONTROLLER = listOf(ClusterNodeRole.BROKER, ClusterNodeRole.CONTROLLER)

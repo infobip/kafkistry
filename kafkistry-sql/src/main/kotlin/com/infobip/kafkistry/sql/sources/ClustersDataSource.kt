@@ -3,7 +3,6 @@
 package com.infobip.kafkistry.sql.sources
 
 import com.infobip.kafkistry.kafka.BrokerRack
-import com.infobip.kafkistry.kafka.ClusterNodeRole
 import com.infobip.kafkistry.kafka.NodeId
 import com.infobip.kafkistry.kafka.QuorumReplicaState
 import com.infobip.kafkistry.kafkastate.*
@@ -86,6 +85,29 @@ class ClustersDataSource(
                             BrokerConfigEntry().apply {
                                 brokerId = broker
                                 existingEntry = it.toExistingKafkaConfigEntry()
+                            }
+                        }
+                    }
+                    nodeApiKeysZkMigration = it.apiKeys.map { (nodeId, apiKeys) ->
+                        ClusterNodeApiZkMigration().apply {
+                            this.nodeId = nodeId
+                            zkMigrationEnabled = apiKeys.zkMigrationEnabled
+                        }
+                    }
+                    nodeApiKeys = it.apiKeys.flatMap { (nodeId, apiKeys) ->
+                        apiKeys.apiKeys.map { apiKey ->
+                            ClusterNodeApiKeyInfo().apply {
+                                this.nodeId = nodeId
+                                apiKeyId = apiKey.id
+                                apiKeyName = apiKey.metadata?.name
+                                clusterAction = apiKey.metadata?.isClusterAction
+                                forwardable = apiKey.metadata?.isForwardable
+                                requiresDelayedAllocation = apiKey.metadata?.requiresDelayedAllocation
+                                minRequiredInterBrokerMagic = apiKey.metadata?.minRequiredInterBrokerMagic
+                                minVersion = apiKey.minVersion
+                                maxVersion = apiKey.maxVersion
+                                latestUsableVersion = apiKey.latestUsableVersion
+                                unusableReason = apiKey.unusableReason
                             }
                         }
                     }
@@ -206,6 +228,15 @@ class ClusterMetadata {
     @ElementCollection
     @JoinTable(name = "Clusters_BrokerConfigs")
     lateinit var brokerConfigs: List<BrokerConfigEntry>
+
+    @ElementCollection
+    @JoinTable(name = "Clusters_NodeApiKeys")
+    lateinit var nodeApiKeys: List<ClusterNodeApiKeyInfo>
+
+    @ElementCollection
+    @JoinTable(name = "Clusters_NodeApiKeysZkMigration")
+    lateinit var nodeApiKeysZkMigration: List<ClusterNodeApiZkMigration>
+
 }
 
 @Embeddable
@@ -282,6 +313,37 @@ class ClusterQuorumReplicaState {
     var logEndOffset: Long = 0
     var lastFetchTimestamp: Instant? = null
     var lastCaughtUpTimestamp: Instant? = null
+}
+
+@Embeddable
+class ClusterNodeApiZkMigration {
+
+    @Column(nullable = false)
+    var nodeId: NodeId? = null
+
+    var zkMigrationEnabled: Boolean? = null
+}
+
+@Embeddable
+class ClusterNodeApiKeyInfo {
+
+    @Column(nullable = false)
+    var nodeId: NodeId? = null
+
+    @Column(nullable = false)
+    var apiKeyId: Int? = null
+
+    var apiKeyName: String? = null
+    var clusterAction: Boolean? = null
+    var forwardable: Boolean? = null
+    var requiresDelayedAllocation: Boolean? = null
+    var minRequiredInterBrokerMagic: Int? = null
+
+    var minVersion: Int? = null
+    var maxVersion: Int? = null
+    var latestUsableVersion: Int? = null
+    var unusableReason: String? = null
+
 }
 
 

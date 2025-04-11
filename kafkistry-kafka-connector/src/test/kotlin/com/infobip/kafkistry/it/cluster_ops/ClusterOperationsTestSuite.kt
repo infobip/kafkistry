@@ -452,6 +452,15 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         } else {
             assertThat(clusterInfo.quorumInfo).isEqualTo(ClusterQuorumInfo.EMPTY)
         }
+        assertThat(clusterInfo.apiKeys)
+            .containsOnlyKeys(clusterInfo.nodeIds)
+        assertThat(clusterInfo.apiKeys[clusterInfo.brokerIds.first()]?.apiKeys?.associateBy { it.metadata?.name })
+            .hasEntrySatisfying("Produce") {
+                assertThat(it.latestUsableVersion).isNotNull()
+            }
+            .hasEntrySatisfying("Fetch") {
+                assertThat(it.latestUsableVersion).isNotNull()
+            }
     }
 
     @Test

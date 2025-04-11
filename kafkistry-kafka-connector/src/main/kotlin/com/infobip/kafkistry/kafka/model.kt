@@ -85,6 +85,7 @@ data class ClusterInfo(
     val kraftEnabled: Boolean,
     val features: ClusterFeatures,
     val quorumInfo: ClusterQuorumInfo,
+    val apiKeys: Map<NodeId, ClusterApiKeys>,
 ) {
 
     val brokerIds: List<BrokerId> = brokers().map { it.nodeId }
@@ -320,5 +321,28 @@ data class QuorumReplicaState(
     val logEndOffset: Long,
     val lastFetchTimestamp: Long?,
     val lastCaughtUpTimestamp: Long?,
+)
+
+data class ClusterApiKeys(
+    val apiKeys: List<ClusterApiKey>,
+    val zkMigrationEnabled: Boolean,
+)
+
+data class ClusterApiKey(
+    val id: Int,
+    val metadata: ClusterApiKeyMetadata? = null,
+    val minVersion: Int? = null,
+    val maxVersion: Int? = null,
+    val latestUsableVersion: Int? = null,
+    val unusableReason: String? = null,
+)
+
+data class ClusterApiKeyMetadata(
+    val id: Int,
+    val name: String,
+    val isClusterAction: Boolean,
+    val isForwardable: Boolean,
+    val requiresDelayedAllocation: Boolean,
+    val minRequiredInterBrokerMagic: Int,
 )
 

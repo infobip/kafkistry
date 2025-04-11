@@ -155,6 +155,7 @@ fun newClusterInfo(
     kraftEnabled = kraftEnabled,
     features = ClusterFeatures.EMPTY,
     quorumInfo = ClusterQuorumInfo.EMPTY,
+    apiKeys = emptyMap(),
 )
 
 fun TopicDescription.newExistingKafkaTopic(
