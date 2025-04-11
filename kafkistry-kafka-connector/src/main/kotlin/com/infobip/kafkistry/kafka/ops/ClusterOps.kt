@@ -6,13 +6,15 @@ import kafka.server.DynamicConfig
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.errors.UnsupportedVersionException
+import org.apache.kafka.server.common.MetadataVersion
 import org.apache.kafka.server.config.QuotaConfigs
+import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 class ClusterOps(
-    private val clientCtx: ClientCtx
+    private val clientCtx: ClientCtx,
 ): BaseOps(clientCtx) {
 
     private val currentClusterVersionRef = clientCtx.currentClusterVersionRef
@@ -114,15 +116,15 @@ class ClusterOps(
                         val nodesConfigs = controllersConfigs + brokerConfigs
                         val controllerConfig = nodesConfigs[controllerNode.id()]
                             ?: nodesConfigs.values.first()
+                        val features = featuresFuture.get()
                         val zookeeperConnection = controllerConfig["zookeeper.connect"]?.value ?: ""
-                        val majorVersion = controllerConfig["inter.broker.protocol.version"]?.value
-                        val clusterVersion = majorVersion?.let { Version.parse(it) }
+                        val interBrokerVersion = controllerConfig["inter.broker.protocol.version"]?.value
+                        val clusterVersion = resolveClusterVersion(interBrokerVersion, features)
                             ?.also(currentClusterVersionRef::set)
                         val securityEnabled = controllerConfig["authorizer.class.name"]?.value?.isNotEmpty() == true
                         val kraftEnabled = (controllerConfig["process.roles"]?.value?.isNotEmpty() == true).also {
                             kraftEnabledRef.set(it)
                         }
-                        val features = featuresFuture.get()
                         val quorum = quorumFuture.get()
                         val allNodes = (brokerNodes + controllerNodes).distinctBy { it.id() }
                         val onlineNodeIds = allNodes.map { it.id() }.sorted().filter { it in nodesConfigs }
@@ -172,11 +174,11 @@ class ClusterOps(
                             securityEnabled = securityEnabled,
                             kraftEnabled = kraftEnabled,
                             features = ClusterFeatures(
-                                finalizedFeatures = features.finalizedFeatures().mapValues { (_, versions) ->
-                                    VersionsRange(versions.minVersionLevel().toInt(), versions.maxVersionLevel().toInt())
+                                finalizedFeatures = features.finalizedFeatures().mapValues { (feature, versions) ->
+                                    VersionsRange(featureLevelVersion(feature, versions.minVersionLevel()), featureLevelVersion(feature, versions.maxVersionLevel()))
                                 },
-                                supportedFeatures = features.supportedFeatures().mapValues { (_, versions) ->
-                                    VersionsRange(versions.minVersion().toInt(), versions.maxVersion().toInt())
+                                supportedFeatures = features.supportedFeatures().mapValues { (feature, versions) ->
+                                    VersionsRange(featureLevelVersion(feature, versions.minVersion()), featureLevelVersion(feature, versions.maxVersion()))
                                 },
                                 finalizedFeaturesEpoch = features.finalizedFeaturesEpoch().orElse(null),
                             ),
@@ -243,6 +245,17 @@ class ClusterOps(
         )
     }
 
+    private fun featureLevelVersion(feature: String, level: Short): String {
+        if (feature == MetadataVersion.FEATURE_NAME) {
+            return try {
+                MetadataVersion.fromFeatureLevel(level).version()
+            } catch (e: Throwable) {
+                "UNKNOWN $level"
+            }
+        }
+        return level.toInt().toString()
+    }
+
     private fun <K, V> Map<K, V?>.withoutNullValues(): Map<K, V> = entries.mapNotNull { (k, v) ->
         v?.let { k to it }
     }.toMap()
@@ -252,6 +265,27 @@ class ClusterOps(
         private val ROLES_BROKER = listOf(ClusterNodeRole.BROKER)
         private val ROLES_CONTROLLER = listOf(ClusterNodeRole.CONTROLLER)
         private val ROLES_NONE = emptyList<ClusterNodeRole>()
+
+        fun resolveClusterVersion(interBrokerVersion: String?, featureMetadata: FeatureMetadata?): Version? {
+            return interBrokerVersion
+                ?.let { Version.parse(it) }
+                ?: featureMetadata
+                    ?.finalizedFeatures()
+                    ?.get(MetadataVersion.FEATURE_NAME)
+                    ?.maxVersionLevel()
+                    ?.let { level ->
+                        try {
+                            MetadataVersion.fromFeatureLevel(level).version()
+                        } catch (ex: Exception) {
+                            if (level > MetadataVersion.latestTesting().featureLevel()) {
+                                //dealing with newer version than out client
+                                MetadataVersion.latestTesting().version()
+                            } else {
+                                null
+                            }
+                        }?.let { Version.parse(it) }
+                    }
+        }
     }
 
 }

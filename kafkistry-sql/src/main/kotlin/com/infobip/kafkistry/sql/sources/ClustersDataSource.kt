@@ -112,8 +112,8 @@ class ClustersDataSource(
                     features = (info.features.finalizedFeatures.keys + info.features.supportedFeatures.keys).map {
                         ClusterFeature().apply {
                             name = it
-                            finalizedMinVersionLevel = info.features.finalizedFeatures[it]?.minVersion
-                            finalizedMaxVersionLevel = info.features.finalizedFeatures[it]?.maxVersion
+                            finalizedMinVersion = info.features.finalizedFeatures[it]?.minVersion
+                            finalizedMaxVersion = info.features.finalizedFeatures[it]?.maxVersion
                             supportedMinVersion = info.features.supportedFeatures[it]?.minVersion
                             supportedMaxVersion = info.features.supportedFeatures[it]?.maxVersion
                         }
@@ -253,11 +253,11 @@ class ClusterFeaturesMetadata {
 class ClusterFeature {
     lateinit var name: String
 
-    var finalizedMinVersionLevel: Int? = null
-    var finalizedMaxVersionLevel: Int? = null
+    var finalizedMinVersion: String? = null
+    var finalizedMaxVersion: String? = null
 
-    var supportedMinVersion: Int? = null
-    var supportedMaxVersion: Int? = null
+    var supportedMinVersion: String? = null
+    var supportedMaxVersion: String? = null
 }
 
 @Embeddable

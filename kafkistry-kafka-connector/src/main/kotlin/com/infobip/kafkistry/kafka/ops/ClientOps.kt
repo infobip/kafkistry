@@ -1,13 +1,14 @@
 package com.infobip.kafkistry.kafka.ops
 
 import com.infobip.kafkistry.kafka.ControllersConnectionResolver
-import com.infobip.kafkistry.kafka.Version
 import com.infobip.kafkistry.kafka.ZookeeperConnectionResolver
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSampler
 import org.apache.kafka.clients.admin.DescribeClusterOptions
 import org.apache.kafka.clients.admin.DescribeConfigsOptions
+import org.apache.kafka.clients.admin.DescribeFeaturesOptions
 import org.apache.kafka.clients.admin.ListTopicsOptions
 import org.apache.kafka.common.config.ConfigResource
+import java.util.concurrent.CompletableFuture
 
 class ClientOps(
     private val clientCtx: ClientCtx,
@@ -17,6 +18,12 @@ class ClientOps(
 ) : BaseOps(clientCtx) {
 
     fun bootstrapClusterVersionAndZkConnection() {
+        fun <T> CompletableFuture<T>.closeWhenExceptionallyCompleted(): CompletableFuture<T> {
+            return this.whenComplete { _, ex ->
+                // need to close everything before exception propagates out of KafkaManagementClientImpl-s constructor
+                if (ex != null) close()
+            }
+        }
         val controllerConfig = adminClient.describeCluster(DescribeClusterOptions().withReadTimeout())
             .controller()
             .asCompletableFuture("initial describe cluster")
@@ -32,16 +39,22 @@ class ClientOps(
             .thenApply { configs ->
                 configs.values.first().entries().associate { it.name() to it.toTopicConfigValue() }
             }
-            .whenComplete { _, ex ->
-                // need to close everything before exception propagates out of KafkaManagementClientImpl-s constructor
-                if (ex != null) close()
-            }
+            .closeWhenExceptionallyCompleted()
             .get()
         val zookeeperConnection = controllerConfig["zookeeper.connect"]?.value ?: ""
-        val majorVersion = controllerConfig["inter.broker.protocol.version"]?.value
-        majorVersion?.let { Version.parse(it) }?.also {
-            clientCtx.currentClusterVersionRef.set(it)
-        }
+        val interBrokerVersion = controllerConfig["inter.broker.protocol.version"]?.value
+        interBrokerVersion
+            ?.let { ClusterOps.resolveClusterVersion(it, null) }
+            ?.also { clientCtx.currentClusterVersionRef.set(it) }
+            ?: run {
+                adminClient.describeFeatures(DescribeFeaturesOptions().withReadTimeout())
+                    .featureMetadata()
+                    .asCompletableFuture("bootstrap describe features")
+                    .closeWhenExceptionallyCompleted()
+                    .get()
+                    ?.let { ClusterOps.resolveClusterVersion(null, it) }
+                    ?.also { clientCtx.currentClusterVersionRef.set(it) }
+            }
         zookeeperConnectionResolver.resolveZkConnection(zookeeperConnection).also {
             clientCtx.zkConnectionRef.set(it)
         }

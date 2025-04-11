@@ -181,6 +181,16 @@
                 <td><code>${clusterInfo.clusterId}</code></td>
             </tr>
             <tr>
+                <th>Cluster version</th>
+                <td>
+                    <#if clusterInfo.clusterVersion??>
+                        <code>${clusterInfo.clusterVersion.toString()}</code>
+                    <#else>
+                        <i>(n/a)</i>
+                    </#if>
+                </td>
+            </tr>
+            <tr>
                 <th>Consensus type</th>
                 <td>
                     <#assign clusterConsensusType = clusterInfo.kraftEnabled?then("KRaft", "Zookeper")>
@@ -373,14 +383,30 @@
                             <th>Finalized Features Epoch</th>
                             <td>${clusterInfo.features.finalizedFeaturesEpoch}</td>
                         </tr>
-                        <tr class="thead-dark"><th>Finalized Feature</th><th>Versions range</th></tr>
+                        <tr class="thead-dark"><th>Finalized Feature</th><th>Versions range (min..max)</th></tr>
                         <#list clusterInfo.features.finalizedFeatures as feature, versions>
-                            <tr><th>${feature}</th><td>[${versions.minVersion}..${versions.maxVersion}]</td></tr>
+                            <tr>
+                                <th>${feature}</th>
+                                <td>
+                                    [<code>${versions.minVersion}</code>..<code>${versions.maxVersion}</code>]
+                                </td>
+                            </tr>
                         </#list>
-                        <tr class="thead-dark"><th>Supported Feature</th><th>Versions range</th></tr>
+                        <#if clusterInfo.features.finalizedFeatures?size == 0>
+                            <tr><td colspan="100" class="text-center"><i>(empty)</i></td></tr>
+                        </#if>
+                        <tr class="thead-dark"><th>Supported Feature</th><th>Versions range  (min..max)</th></tr>
                         <#list clusterInfo.features.supportedFeatures as feature, versions>
-                            <tr><th>${feature}</th><td>[${versions.minVersion}..${versions.maxVersion}]</td></tr>
+                            <tr>
+                                <th>${feature}</th>
+                                <td>
+                                    [<code>${versions.minVersion}</code>..<code>${versions.maxVersion}</code>]
+                                </td>
+                            </tr>
                         </#list>
+                        <#if clusterInfo.features.supportedFeatures?size == 0>
+                            <tr><td colspan="100" class="text-center"><i>(empty)</i></td></tr>
+                        </#if>
                     </table>
                 </div>
                 <table class="table table-sm">

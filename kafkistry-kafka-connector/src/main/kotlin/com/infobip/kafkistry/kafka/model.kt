@@ -299,8 +299,8 @@ data class ClusterFeatures(
 }
 
 data class VersionsRange(
-    val minVersion: Int,
-    val maxVersion: Int,
+    val minVersion: String,
+    val maxVersion: String,
 )
 
 data class ClusterQuorumInfo(
