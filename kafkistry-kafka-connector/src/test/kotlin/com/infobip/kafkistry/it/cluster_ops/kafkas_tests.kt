@@ -246,5 +246,48 @@ class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuit
     override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
 }
 
+@EnabledIfSystemProperty(
+    named = "enabledIntegrationTests",
+    matches = "all|.*(all-kafka|kafka-3\\.7).*",
+    disabledReason = "These tests are too slow to run each time",
+)
+class ClusterOpsKafkaDockerCompose_V_3_7_0_Test : ClusterNoAclOperationsTestSuite() {
+
+    companion object {
+        @JvmField
+        val kafka = KafkaClusterContainer(
+            kafkaImage = "bitnami/kafka:3.7.0",
+            logContainersOutput = false,
+            kraft = true,
+        ).asTestKafkaLifecycle()
+    }
+
+    override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
+    override val expectedClusterVersion = Version.of("3.7")
+    override val expectedKraftEnabled: Boolean = true
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
+}
+
+@EnabledIfSystemProperty(
+    named = "enabledIntegrationTests",
+    matches = "all|.*(all-kafka|kafka-3\\.9).*",
+    disabledReason = "These tests are too slow to run each time",
+)
+class ClusterOpsKafkaDockerCompose_V_3_9_0_Test : ClusterNoAclOperationsTestSuite() {
+
+    companion object {
+        @JvmField
+        val kafka = KafkaClusterContainer(
+            kafkaImage = "bitnami/kafka:3.9.0",
+            logContainersOutput = false,
+            kraft = true,
+        ).asTestKafkaLifecycle()
+    }
+
+    override val clusterConnection: String get() = kafka.kafkaCluster.getBrokersUrl()
+    override val expectedClusterVersion = Version.of("3.9")
+    override val expectedKraftEnabled: Boolean = true
+    override val testKafkaLifecycle: KafkaClusterLifecycle<*> get() = kafka
+}
 
 

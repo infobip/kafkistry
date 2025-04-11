@@ -50,6 +50,9 @@ class KafkaClusterContainer private constructor(
         brokersConfigs.hostsPorts.forEachIndexed { index, hostPort ->
             val serviceName = "kafka_${index}_1"
             withExposedService(serviceName, hostPort.port, startupWait)
+            if (brokersConfigs.kraft) {
+                withExposedService(serviceName, brokersConfigs.controllerHostsPorts[index].port, startupWait)
+            }
             if (logContainersOutput) {
                 withLogConsumer(serviceName) {
                     log.info("{} - {}: {}", serviceName.uppercase(), it.type, it.utf8String.removeSuffix("\n"))
@@ -82,9 +85,9 @@ version: '2'
 services:
 """ +
     (if (configs.kraft) "" else createZKFileContent(configs.zkImage, configs.zkHostPort)) +
-    configs.hostsPorts.mapIndexed { brokerIndex, hostPort ->
-        createBrokerFileContent(brokerIndex, hostPort, configs)
-    }.joinToString("\n")
+    configs.hostsPorts.indices.joinToString("\n") { brokerIndex ->
+        createBrokerFileContent(brokerIndex, configs)
+    }
 
 private fun createZKFileContent(zkImage: String, zkHostPort: HostPort): String = """
   zookeeper:
@@ -100,8 +103,9 @@ private fun createZKFileContent(zkImage: String, zkHostPort: HostPort): String =
 
 private fun createBrokerFileContent(
     brokerIndex: Int,
-    hostPort: HostPort,
-    brokersConfigs: BrokersConfigs
+    brokersConfigs: BrokersConfigs,
+    hostPort: HostPort = brokersConfigs.hostsPorts[brokerIndex],
+    controllerHostPort: HostPort = brokersConfigs.controllerHostsPorts[brokerIndex],
 ) = """
   kafka_$brokerIndex:
     image: ${brokersConfigs.kafkaImage}
@@ -109,7 +113,9 @@ private fun createBrokerFileContent(
     ports:
       - "${hostPort.port}:${hostPort.port}"   # kafka port
 """ +
-    (if (brokersConfigs.kraft) "" else """
+    (if (brokersConfigs.kraft) """
+      - "${controllerHostPort.port}:${controllerHostPort.port}"   # controller port 
+    """ else """
     depends_on:
       - zookeeper
 """) +
@@ -122,18 +128,18 @@ private fun createBrokerFileContent(
 ${brokersConfigs.toYamlEnvironment()}
 """ + if (brokersConfigs.kraft)
     """
-      - KAFKA_LISTENERS=INSIDE://:9094,OUTSIDE://:${hostPort.port},CONTROLLER://kafka_$brokerIndex:9095
+      - KAFKA_LISTENERS=INSIDE://:9094,OUTSIDE://:${hostPort.port},CONTROLLER://:${controllerHostPort.port}
       - KAFKA_KRAFT_CLUSTER_ID=${Uuid(123456L, 123456L)}
       - KAFKA_CFG_NODE_ID=$brokerIndex
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${brokersConfigs.hostsPorts.indices.joinToString(",") { "$it@kafka_$it:9095" }}
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${brokersConfigs.controllerHostsPorts.withIndex().joinToString(",") { (id, hp) -> "$id@kafka_$id:${hp.port}" }}
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     """
 else
     """
       - KAFKA_BROKER_ID=$brokerIndex
       - KAFKA_LISTENERS=INSIDE://:9094,OUTSIDE://:${hostPort.port}
-      - KAFKA_ZOOKEEPER_CONNECT=${brokersConfigs.zkHostPort.host}:${brokersConfigs.zkHostPort.port}
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:${brokersConfigs.zkHostPort.port}
       - KAFKA_ENABLE_KRAFT=no      
     """
 
@@ -150,6 +156,7 @@ private fun createBrokersConfigs(
         zkImage = zkImage,
         zkHostPort = HostPort.newLocalAvailable(),
         hostsPorts = (1..numHosts).map { HostPort.newLocalAvailable() },
+        controllerHostsPorts = (1..numHosts).map { HostPort.newLocalAvailable() },
         customConfig = customConfig
     )
 }
@@ -160,6 +167,7 @@ class BrokersConfigs(
     val zkImage: String,
     val zkHostPort: HostPort,
     val hostsPorts: List<HostPort>,
+    val controllerHostsPorts: List<HostPort>,
     val customConfig: Map<String, String> = emptyMap()
 ) {
 
