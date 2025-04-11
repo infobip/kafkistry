@@ -277,7 +277,7 @@
                     <excludes>
                         <exclude>**/it/**</exclude>
                     </excludes>
-                    <argLine>${test-open-modules-args}</argLine>
+                    <argLine>-Djava.net.preferIPv4Stack=true ${test-open-modules-args}</argLine>
                 </configuration>
             </plugin>
 
@@ -306,7 +306,7 @@
                     <excludes>
                         <exclude />  <!-- inner classes were excluded by default -->
                     </excludes>
-                    <argLine>${test-open-modules-args}</argLine>
+                    <argLine>-Djava.net.preferIPv4Stack=true ${test-open-modules-args}</argLine>
                 </configuration>
             </plugin>
             <plugin>

@@ -74,7 +74,6 @@ abstract class AbstractClusterOpsTestSuite {
     @BeforeEach
     fun setup() {
         doOnKafka { client ->
-            client.deleteAllOnCluster()
             val clusterInfo = client.clusterInfo("").get()
             clusterBrokerIds = clusterInfo.brokerIds
             clusterNodeIds = clusterInfo.nodeIds

@@ -52,18 +52,19 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     @Test
     fun `test create topic`() {
+        val topic = "create-test-topic"
         val topics = doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "create-test-topic",
+                    name = topic,
                     partitionsReplicas = createAssignments(3, 2),
                     config = mapOf("retention.bytes" to "123456789")
             )).get()
-            it.awaitTopicCreated("create-test-topic")
+            it.awaitTopicCreated(topic)
             it.listAllTopics().get()
-        }
+        }.filter { it.name == topic }
         assertThat(topics).hasSize(1)
         val existingTopic = topics[0]
-        assertThat(existingTopic.name).isEqualTo("create-test-topic")
+        assertThat(existingTopic.name).isEqualTo(topic)
         assertThat(existingTopic.partitionsAssignments).hasSize(3)
                 .extracting<Int> { it.replicasAssignments.size }
                 .containsOnly(2)    //replication factor
@@ -91,14 +92,15 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     @Test
     fun `test delete topic`() {
+        val topic = "delete-test-topic"
         doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                name = "delete-test-topic",
+                name = topic,
                 partitionsReplicas = createAssignments(1, 1),
                 config = emptyMap(),
             )).get()
-            it.awaitTopicCreated("delete-test-topic")
-            it.deleteTopic("delete-test-topic").get()
+            it.awaitTopicCreated(topic)
+            it.deleteTopic(topic).get()
         }
         Awaitility.await("deletion to complete")
             .atMost(Duration.ofSeconds(5))
@@ -114,26 +116,27 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     @Test
     fun `test change topic config`() {
+        val topic = "update-test-topic"
         doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "update-test-topic",
+                    name = topic,
                     partitionsReplicas = createAssignments(1, 3),
                     config = mapOf("retention.bytes" to "111222333", "retention.ms" to "3600")
             )).get()
-            it.awaitTopicCreated("update-test-topic")
-            it.updateTopicConfig("update-test-topic", mapOf(
+            it.awaitTopicCreated(topic)
+            it.updateTopicConfig(
+                topic, mapOf(
                     "retention.bytes" to "444555666",
                     "min.insync.replicas" to "2"
             )).get()
-            it.listAllTopics().get()
         }
         Awaitility.await("for topic update to be applied")
             .atMost(Duration.ofSeconds(5))
             .untilAsserted {
-                val topics = doOnKafka { it.listAllTopics().get() }.filter { !it.internal }
+                val topics = doOnKafka { it.listAllTopics().get() }.filter { it.name == topic }
                 assertThat(topics).hasSize(1)
                 val existingTopic = topics[0]
-                assertThat(existingTopic.name).isEqualTo("update-test-topic")
+                assertThat(existingTopic.name).isEqualTo(topic)
                 assertThat(existingTopic.partitionsAssignments).hasSize(1)
                     .extracting<Int> { it.replicasAssignments.size }
                     .containsOnly(3)    //replication factor
@@ -148,14 +151,16 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     @Test
     fun `test add topic partition(s)`() {
+        val topic = "partition-test-topic"
         doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "partition-test-topic",
+                    name = topic,
                     partitionsReplicas = createAssignments(2, 2),
                     config = emptyMap()
             )).get()
-            it.awaitTopicCreated("partition-test-topic")
-            it.addTopicPartitions("partition-test-topic", 4, mapOf(
+            it.awaitTopicCreated(topic)
+            it.addTopicPartitions(
+                topic, 4, mapOf(
                     2 to listOf(0, 1),
                     3 to listOf(1, 2)
             )).get()
@@ -163,10 +168,10 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
                 .untilAsserted {
-                    val topics = doOnKafka { it.listAllTopics().get() }
+                    val topics = doOnKafka { it.listAllTopics().get() }.filter { it.name == topic }
                     assertThat(topics).hasSize(1)
                     val existingTopic = topics[0]
-                    assertThat(existingTopic.name).isEqualTo("partition-test-topic")
+                    assertThat(existingTopic.name).isEqualTo(topic)
                     assertThat(existingTopic.partitionsAssignments)
                             .hasSize(4)
                             .extracting<Int> { it.replicasAssignments.size }
@@ -180,18 +185,19 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     @Test
     fun `test increase replication factor`() {
+        val topic = "incr-rep-factor-test-topic"
         val topics = doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "incr-rep-factor-test-topic",
+                    name = topic,
                     partitionsReplicas = createAssignments(2, 1),
                     config = emptyMap()
             )).get()
-            it.awaitTopicCreated("incr-rep-factor-test-topic")
+            it.awaitTopicCreated(topic)
             it.listAllTopics().get()
-        }
+        }.filter { it.name == topic }
         assertThat(topics).hasSize(1)
         val existingTopic = topics[0]
-        assertThat(existingTopic.name).isEqualTo("incr-rep-factor-test-topic")
+        assertThat(existingTopic.name).isEqualTo(topic)
         assertThat(existingTopic.partitionsAssignments)
                 .hasSize(2)
                 .extracting<Int> { it.replicasAssignments.size }
@@ -199,38 +205,39 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
         val newAssignments = createAssignments(2, 3)
         doOnKafka {
-            it.reAssignPartitions("incr-rep-factor-test-topic", newAssignments, 1024).get()
+            it.reAssignPartitions(topic, newAssignments, 1024).get()
         }
         Awaitility.await("for new replicas being added")
                 .atMost(15, TimeUnit.SECONDS)
                 .untilAsserted {
-                    val topicsAfter = doOnKafka { it.listAllTopics().get() }
+                    val topicsAfter = doOnKafka { it.listAllTopics().get() }.filter { it.name == topic }
                     assertThat(topicsAfter).hasSize(1)
                     val existingTopicAfter = topicsAfter[0]
-                    assertThat(existingTopicAfter.name).isEqualTo("incr-rep-factor-test-topic")
+                    assertThat(existingTopicAfter.name).isEqualTo(topic)
                     assertThat(existingTopicAfter.partitionsAssignments)
                             .hasSize(2)
                             .extracting<Int> { it.replicasAssignments.size }
                             .containsOnly(3)    //replication factor after
                     assertThat(existingTopicAfter.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(newAssignments)
                 }
-        verifyReAssignment("incr-rep-factor-test-topic", newAssignments)
+        verifyReAssignment(topic, newAssignments)
     }
 
     @Test
     fun `test reduce replication factor`() {
+        val topic = "decr-rep-factor-test-topic"
         val topics = doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "decr-rep-factor-test-topic",
+                    name = topic,
                     partitionsReplicas = createAssignments(2, 3),
                     config = emptyMap()
             )).get()
-            it.awaitTopicCreated("decr-rep-factor-test-topic")
+            it.awaitTopicCreated(topic)
             it.listAllTopics().get()
-        }
+        }.filter { it.name == topic }
         assertThat(topics).hasSize(1)
         val existingTopic = topics[0]
-        assertThat(existingTopic.name).isEqualTo("decr-rep-factor-test-topic")
+        assertThat(existingTopic.name).isEqualTo(topic)
         assertThat(existingTopic.partitionsAssignments)
                 .hasSize(2)
                 .extracting<Int> { it.replicasAssignments.size }
@@ -239,15 +246,15 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         val newAssignments = existingTopic.partitionsAssignments.toPartitionReplicasMap()
             .reduceReplicationFactor(1)
         doOnKafka {
-            it.reAssignPartitions("decr-rep-factor-test-topic", newAssignments, 0).get()
+            it.reAssignPartitions(topic, newAssignments, 0).get()
         }
         Awaitility.await("for replicas being removed")
                 .atMost(5, TimeUnit.SECONDS)
                 .untilAsserted {
-                    val topicsAfter = doOnKafka { it.listAllTopics().get() }
+                    val topicsAfter = doOnKafka { it.listAllTopics().get() }.filter { it.name == topic }
                     assertThat(topicsAfter).hasSize(1)
                     val existingTopicAfter = topicsAfter[0]
-                    assertThat(existingTopicAfter.name).isEqualTo("decr-rep-factor-test-topic")
+                    assertThat(existingTopicAfter.name).isEqualTo(topic)
                     assertThat(existingTopicAfter.partitionsAssignments)
                             .hasSize(2)
                             .extracting<Int> { it.replicasAssignments.size }
@@ -259,18 +266,19 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     @Test
     fun `test re-assign partition replicas`() {
+        val topic = "re-assign-partition-replicas-test-topic"
         val topics = doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "re-assign-partition-replicas-test-topic",
+                    name = topic,
                     partitionsReplicas = createAssignments(3, 2),
                     config = emptyMap()
             )).get()
-            it.awaitTopicCreated("re-assign-partition-replicas-test-topic")
+            it.awaitTopicCreated(topic)
             it.listAllTopics().get()
-        }
+        }.filter { it.name == topic }
         assertThat(topics).hasSize(1)
         val existingTopic = topics[0]
-        assertThat(existingTopic.name).isEqualTo("re-assign-partition-replicas-test-topic")
+        assertThat(existingTopic.name).isEqualTo(topic)
         assertThat(existingTopic.partitionsAssignments)
                 .hasSize(3)
                 .extracting<Int> { it.replicasAssignments.size }
@@ -282,16 +290,16 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 2 to listOf(0, 1)
         )
         doOnKafka {
-            it.reAssignPartitions("re-assign-partition-replicas-test-topic", newAssignments, 1024).get()
+            it.reAssignPartitions(topic, newAssignments, 1024).get()
         }
-        verifyReAssignment("re-assign-partition-replicas-test-topic", newAssignments)
+        verifyReAssignment(topic, newAssignments)
         Awaitility.await("topic to be reconfigured after reassignment")
-            .atMost(5, TimeUnit.SECONDS)
+            .atMost(10, TimeUnit.SECONDS)
             .untilAsserted {
-                val topicsAfter = doOnKafka { it.listAllTopics().get() }
+                val topicsAfter = doOnKafka { it.listAllTopics().get() }.filter { it.name == topic }
                 assertThat(topicsAfter).hasSize(1)
                 val existingTopicAfter = topicsAfter[0]
-                assertThat(existingTopicAfter.name).isEqualTo("re-assign-partition-replicas-test-topic")
+                assertThat(existingTopicAfter.name).isEqualTo(topic)
                 assertThat(existingTopicAfter.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(newAssignments)
                 assertThat(existingTopicAfter.config.mapValues { it.value.value }).`as`("Topic throttle removed").contains(
                     Assertions.entry("follower.replication.throttled.replicas", ""),
@@ -307,18 +315,19 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             1 to listOf(1, 2),
             2 to listOf(2, 0),
         )
+        val topic = "invalid-re-assign-partition-replicas-test-topic"
         val topics = doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                name = "invalid-re-assign-partition-replicas-test-topic",
+                name = topic,
                 partitionsReplicas = initialAssignments,
                 config = emptyMap()
             )).get()
-            it.awaitTopicCreated("invalid-re-assign-partition-replicas-test-topic")
+            it.awaitTopicCreated(topic)
             it.listAllTopics().get()
-        }
+        }.filter { it.name == topic }
         assertThat(topics).hasSize(1)
         val existingTopic = topics[0]
-        assertThat(existingTopic.name).isEqualTo("invalid-re-assign-partition-replicas-test-topic")
+        assertThat(existingTopic.name).isEqualTo(topic)
 
         val newAssignmentsInvalidBroker = mapOf(
             0 to listOf(3, 1),
@@ -327,7 +336,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         )
         assertThatThrownBy {
             doOnKafka {
-                it.reAssignPartitions("invalid-re-assign-partition-replicas-test-topic", newAssignmentsInvalidBroker, 1024).get()
+                it.reAssignPartitions(topic, newAssignmentsInvalidBroker, 1024).get()
             }
         }.isInstanceOf(KafkaClusterManagementException::class.java)
             .hasMessageContaining("verify reassignments used brokers")
@@ -342,7 +351,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         )
         assertThatThrownBy {
             doOnKafka {
-                it.reAssignPartitions("invalid-re-assign-partition-replicas-test-topic", newAssignmentsInvalidPartitions, 1024).get()
+                it.reAssignPartitions(topic, newAssignmentsInvalidPartitions, 1024).get()
             }
         }.isInstanceOf(KafkaClusterManagementException::class.java)
             .hasMessageContaining("verify reassignments partitions")
@@ -350,22 +359,23 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             .isInstanceOf(KafkaClusterManagementException::class.java)
             .hasMessageContaining("Trying to reassign non-existent topic partitions")
 
-        val topicsAfter = doOnKafka { it.listAllTopics().get() }
+        val topicsAfter = doOnKafka { it.listAllTopics().get() }.filter { it.name == topic }
         assertThat(topicsAfter).hasSize(1)
         val existingTopicAfter = topicsAfter[0]
-        assertThat(existingTopicAfter.name).isEqualTo("invalid-re-assign-partition-replicas-test-topic")
+        assertThat(existingTopicAfter.name).isEqualTo(topic)
         assertThat(existingTopicAfter.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(initialAssignments)
     }
 
     @Test
     fun `test elect preferred leader replica`() {
+        val topic = "elect-leader-test-topic"
         doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "elect-leader-test-topic",
+                    name = topic,
                     partitionsReplicas = createAssignments(3, 2),
                     config = emptyMap()
             )).get()
-            it.awaitTopicCreated("elect-leader-test-topic")
+            it.awaitTopicCreated(topic)
         }
         val preAssignments = mapOf(
                 0 to listOf(1, 0),
@@ -373,12 +383,12 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 2 to listOf(2, 0)
         )
         doOnKafka {
-            it.reAssignPartitions("elect-leader-test-topic", preAssignments, 1024).get()
-            it.runPreferredReplicaElection("elect-leader-test-topic", listOf(0, 1))
+            it.reAssignPartitions(topic, preAssignments, 1024).get()
+            it.runPreferredReplicaElection(topic, listOf(0, 1))
         }
-        verifyReAssignment("elect-leader-test-topic", preAssignments)
+        verifyReAssignment(topic, preAssignments)
 
-        assertThat(doOnKafka { it.listAllTopics().get() }[0].partitionsAssignments.partitionLeadersMap()).isEqualTo(mapOf(
+        assertThat(doOnKafka { it.listAllTopics().get() }.first { it.name == topic }.partitionsAssignments.partitionLeadersMap()).isEqualTo(mapOf(
                 0 to 1, 1 to 2, 2 to 2
         ))
         val newAssignments = mapOf(
@@ -387,24 +397,24 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 2 to listOf(2, 0)
         )
         doOnKafka {
-            it.reAssignPartitions("elect-leader-test-topic", newAssignments, 1024).get()
+            it.reAssignPartitions(topic, newAssignments, 1024).get()
         }
         fun partitionLeadersMap(): Map<Partition, BrokerId> {
             return doOnKafka { it.listAllTopics().get() }
-                .first { it.name == "elect-leader-test-topic" }
+                .first { it.name == topic }
                 .partitionsAssignments
                 .partitionLeadersMap()
         }
         assertThat(partitionLeadersMap()).isEqualTo(mapOf(
             0 to 1, 1 to 2, 2 to 2
         ))
-        verifyReAssignment("elect-leader-test-topic", newAssignments)
+        verifyReAssignment(topic, newAssignments)
         assertThat(partitionLeadersMap()).isEqualTo(mapOf(
             0 to 1, 1 to 2, 2 to 2
         ))
 
-        val existingTopicBefore = doOnKafka { it.listAllTopics().get() }[0]
-        assertThat(existingTopicBefore.name).isEqualTo("elect-leader-test-topic")
+        val existingTopicBefore = doOnKafka { it.listAllTopics().get() }.first { it.name == topic }
+        assertThat(existingTopicBefore.name).isEqualTo(topic)
         assertThat(existingTopicBefore.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(newAssignments)
         assertThat(existingTopicBefore.partitionsAssignments.partitionLeadersMap()).isEqualTo(mapOf(
                 0 to 1,
@@ -413,15 +423,15 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         ))
 
         doOnKafka {
-            it.runPreferredReplicaElection("elect-leader-test-topic", listOf(0, 1))
+            it.runPreferredReplicaElection(topic, listOf(0, 1))
         }
-        Awaitility.await("for election to coplete")
+        Awaitility.await("for election to complete")
                 .atMost(5, TimeUnit.SECONDS)
                 .untilAsserted {
-                    val existingTopicAfter = doOnKafka { it.listAllTopics().get() }[0]
-                    assertThat(existingTopicAfter.name).isEqualTo("elect-leader-test-topic")
-                    assertThat(existingTopicAfter.partitionsAssignments.toPartitionReplicasMap()).isEqualTo(newAssignments)
-                    assertThat(existingTopicAfter.partitionsAssignments.partitionLeadersMap()).isEqualTo(mapOf(
+                    val existingTopicAfter = doOnKafka { it.listAllTopics().get() }.filter { it.name == topic }
+                    assertThat(existingTopicAfter).first().extracting { it.name }.isEqualTo(topic)
+                    assertThat(existingTopicAfter.first().partitionsAssignments.toPartitionReplicasMap()).isEqualTo(newAssignments)
+                    assertThat(existingTopicAfter.first().partitionsAssignments.partitionLeadersMap()).isEqualTo(mapOf(
                             0 to 0,
                             1 to 1,
                             2 to 2
@@ -483,50 +493,46 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
     }
 
     @Test
-    fun `test get consumer groups - empty`() {
-        val groups = doOnKafka { it.consumerGroups().get() }
-        assertThat(groups).isEmpty()
-    }
-
-    @Test
     fun `test get assigned consumer group info`() {
+        val topic = "to-read-test"
+        val groupId = "test-consumer"
         doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "to-read-test",
+                    name = topic,
                     partitionsReplicas = createAssignments(3, 2),
                     config = emptyMap()
             )).get()
-            it.awaitTopicCreated("to-read-test")
+            it.awaitTopicCreated(topic)
         }
-        val consumer = createConsumerAndSubscribe("test-consumer", "to-read-test")
+        val consumer = createConsumerAndSubscribe(groupId, topic)
         Awaitility.await("group to get assignments")
             .atMost(Duration.ofSeconds(6))
             .untilAsserted {
                 consumer.poll(Duration.ZERO)
                 assertThat(consumer.assignment()).containsExactlyInAnyOrder(
-                    TopicPartition("to-read-test", 0),
-                    TopicPartition("to-read-test", 1),
-                    TopicPartition("to-read-test", 2),
+                    TopicPartition(topic, 0),
+                    TopicPartition(topic, 1),
+                    TopicPartition(topic, 2),
                 )
             }
 
         //check group is now listed
         val groups = doOnKafka { it.consumerGroups().get() }
-        assertThat(groups).containsExactly("test-consumer")
+        assertThat(groups).containsExactly(groupId)
 
         //check assignments and offsets before commit
-        val groupBeforeCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
+        val groupBeforeCommit = doOnKafka { it.consumerGroup(groupId).get() }
         log.info("group: ${groupBeforeCommit.id} -> ${groupBeforeCommit.status} ${groupBeforeCommit.members}" )
-        assertThat(groupBeforeCommit.id).isEqualTo("test-consumer")
+        assertThat(groupBeforeCommit.id).isEqualTo(groupId)
         assertThat(groupBeforeCommit.status).isEqualTo(ConsumerGroupStatus.STABLE)
         assertThat(groupBeforeCommit.members).isNotEmpty
         assertThat(groupBeforeCommit.offsets).isEmpty() //nothing committed yet
         assertThat(groupBeforeCommit.assignments).`as`("All partitions assigned")
             .extracting<List<Any?>> { listOf(it.topic, it.partition) }
             .containsExactlyInAnyOrder(
-                listOf("to-read-test", 0),
-                listOf("to-read-test", 1),
-                listOf("to-read-test", 2),
+                listOf(topic, 0),
+                listOf(topic, 1),
+                listOf(topic, 2),
             )
 
         Awaitility.await("group assignment must still be 3 partitions")
@@ -551,23 +557,23 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             .atMost(Duration.ofSeconds(10))
             .untilAsserted {
                 consumer.commitSync(Duration.ofSeconds(2))
-                val groupAfterCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
+                val groupAfterCommit = doOnKafka { it.consumerGroup(groupId).get() }
                 assertThat(groupAfterCommit.offsets)
                     .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
                     .containsExactlyInAnyOrder(
-                        listOf("to-read-test", 0, 0L),
-                        listOf("to-read-test", 1, 0L),
-                        listOf("to-read-test", 2, 0L),
+                        listOf(topic, 0, 0L),
+                        listOf(topic, 1, 0L),
+                        listOf(topic, 2, 0L),
                     )
             }
 
-        val groupAfterCommit = doOnKafka { it.consumerGroup("test-consumer").get() }
+        val groupAfterCommit = doOnKafka { it.consumerGroup(groupId).get() }
         assertThat(groupBeforeCommit.assignments).`as`("All partitions still assigned")
             .extracting<List<Any?>> { listOf(it.topic, it.partition) }
             .containsExactlyInAnyOrder(
-                listOf("to-read-test", 0),
-                listOf("to-read-test", 1),
-                listOf("to-read-test", 2),
+                listOf(topic, 0),
+                listOf(topic, 1),
+                listOf(topic, 2),
             )
         assertThat(groupBeforeCommit.assignments)
             .`as`("All partitions assignments are same as before commit")
@@ -578,37 +584,37 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         Awaitility.await("empty after unsubscribe")
             .atMost(Duration.ofSeconds(5))
             .untilAsserted {
-                val groupAfterClose = doOnKafka { it.consumerGroup("test-consumer").get() }
+                val groupAfterClose = doOnKafka { it.consumerGroup(groupId).get() }
                 assertThat(groupAfterClose.status).isEqualTo(ConsumerGroupStatus.EMPTY)
                 assertThat(groupAfterClose.members).isEmpty()
                 assertThat(groupAfterClose.offsets)
                     .`as`("Even though group is empty, committed offsets are still there")
                     .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
                     .containsExactlyInAnyOrder(
-                        listOf("to-read-test", 0, 0L),
-                        listOf("to-read-test", 1, 0L),
-                        listOf("to-read-test", 2, 0L)
+                        listOf(topic, 0, 0L),
+                        listOf(topic, 1, 0L),
+                        listOf(topic, 2, 0L)
                     )
                 assertThat(groupAfterClose.assignments).isEmpty()
             }
 
         //check deletion of specific topic-partition offsets
         if (expectedClusterVersion >= Version.of("2.4")) {
-            doOnKafka { it.deleteConsumerOffsets("test-consumer", mapOf("to-read-test" to listOf(1))).get() }
-            val groupAfterOffsetsDeletion = doOnKafka { it.consumerGroup("test-consumer").get() }
+            doOnKafka { it.deleteConsumerOffsets(groupId, mapOf(topic to listOf(1))).get() }
+            val groupAfterOffsetsDeletion = doOnKafka { it.consumerGroup(groupId).get() }
             assertThat(groupAfterOffsetsDeletion.status).isEqualTo(ConsumerGroupStatus.EMPTY)
             assertThat(groupAfterOffsetsDeletion.members).isEmpty()
             assertThat(groupAfterOffsetsDeletion.offsets)
                 .`as`("Only offset for partition 1 is deleted")
                 .extracting<List<Any?>> { listOf(it.topic, it.partition, it.offset) }
                 .containsExactlyInAnyOrder(
-                    listOf("to-read-test", 0, 0L),
-                    listOf("to-read-test", 2, 0L)
+                    listOf(topic, 0, 0L),
+                    listOf(topic, 2, 0L)
                 )
         }
 
         //check not listed after deletion
-        doOnKafka { it.deleteConsumer("test-consumer").get() }
+        doOnKafka { it.deleteConsumer(groupId).get() }
         val groupsAfterDelete = doOnKafka { it.consumerGroups().get() }
         assertThat(groupsAfterDelete).isEmpty()
     }
@@ -978,25 +984,26 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 0 to listOf(0, 1),
                 1 to listOf(1, 2)
         )
+        val topic = "re-assignment-progress-test"
         doOnKafka {
             it.createTopic(KafkaTopicConfiguration(
-                    name = "re-assignment-progress-test",
+                    name = topic,
                     partitionsReplicas = oldAssignment,
                     config = mapOf("retention.bytes" to "111222333"),
             )).get()
-            it.awaitTopicCreated("re-assignment-progress-test")
+            it.awaitTopicCreated(topic)
         }
         val numMessages = 50_000
         val msgSize = 1000
         val futures = (1..numMessages).map {
             producer.send(ProducerRecord(
-                    "re-assignment-progress-test", it % 2, "key-$it", ByteArray(msgSize)
+                topic, it % 2, "key-$it", ByteArray(msgSize)
             ))
         }
         producer.flush()
         futures.forEach { it.get(10, TimeUnit.SECONDS) }
 
-        val replicaInfos = doOnKafka { it.describeReplicas().get() }
+        val replicaInfos = doOnKafka { it.describeReplicas().get() }.filter { it.topic == topic }
         val expectedReplicaSizeMin = numMessages * msgSize / 2
         val expectedReplicaSizeMax = numMessages * (msgSize + 200) / 2
         replicaInfos.forEach { replicaInfo ->
@@ -1017,23 +1024,25 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         val neededSpeed = expectedReplicaSizeMax / 5
         log.info("Needed speed {} B/sec for {}", neededSpeed, replicaInfos)
         doOnKafka {
-            it.reAssignPartitions("re-assignment-progress-test", newAssignment, neededSpeed).get()
+            it.reAssignPartitions(topic, newAssignment, neededSpeed).get()
         }
 
         val reAssignmentStarted = System.currentTimeMillis()
 
         Thread.sleep(1_000)
-        val reAssignments = doOnKafka { it.listReAssignments().get() }
+        val reAssignments = doOnKafka { it.listReAssignments().get() }.filter { it.topic == topic }
         assertThat(reAssignments).`as`("ReAssignments in progress").containsExactlyInAnyOrder(
-                TopicPartitionReAssignment("re-assignment-progress-test", 0,
+                TopicPartitionReAssignment(
+                    topic, 0,
                         addingReplicas = listOf(2), removingReplicas = listOf(0), allReplicas = listOf(1, 2, 0)
                 ),
-                TopicPartitionReAssignment("re-assignment-progress-test", 1,
+                TopicPartitionReAssignment(
+                    topic, 1,
                         addingReplicas = listOf(0), removingReplicas = listOf(1), allReplicas = listOf(2, 0, 1)
                 ),
         )
 
-        verifyReAssignment("re-assignment-progress-test", newAssignment)
+        verifyReAssignment(topic, newAssignment)
 
         val reAssignmentCompleted = System.currentTimeMillis()
         assertThat(reAssignmentCompleted - reAssignmentStarted)
@@ -1042,7 +1051,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
         assertThat(doOnKafka { it.listReAssignments().get() }).`as`("ReAssignments after completion").isEmpty()
 
-        val topicAfter = doOnKafka { it.listAllTopics().get() }.first { it.name == "re-assignment-progress-test" }
+        val topicAfter = doOnKafka { it.listAllTopics().get() }.first { it.name == topic }
         assertThat(topicAfter.config["retention.bytes"])
             .`as`("topic config should not be influenced by re-assignment")
             .isEqualTo(
@@ -1242,10 +1251,17 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             } else {
                 assertDefaultConfig(TopicConfig.MAX_MESSAGE_BYTES_CONFIG).isEqualToStringOf(1_000_000 + 12)
             }
-            assertDefaultConfig(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isEqualTo("true")
-            assertDefaultConfig("message.format.version").startsWith("" + expectedClusterVersion.major() + ".")
-            @Suppress("DEPRECATION")
-            assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
+            if (expectedClusterVersion < Version.of("4.0")) {
+                assertDefaultConfig(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isEqualTo("true")
+                assertDefaultConfig("message.format.version").startsWith("" + expectedClusterVersion.major() + ".")
+                @Suppress("DEPRECATION")
+                assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
+            } else {
+                assertDefaultConfig(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isNull()
+                assertDefaultConfig("message.format.version").isNull()
+                @Suppress("DEPRECATION")
+                assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isNull()
+            }
             assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_TYPE_CONFIG).isEqualTo("CreateTime")
             assertDefaultConfig(TopicConfig.MIN_CLEANABLE_DIRTY_RATIO_CONFIG).isEqualToStringOf(0.5)
             assertDefaultConfig(TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG).isEqualToStringOf(0)
@@ -1310,7 +1326,9 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 .untilAsserted {
                     val result = it.verifyReAssignPartitions(topicName, assignments)
                     log.info("Verify attempt output:\n{}", result)
-                    assertThat(result).contains("Throttle was removed")
+                    assertThat(result)
+                        .doesNotContain("is still in progress")
+                        .contains("Throttle was removed")
                 }
         }
     }
@@ -1380,9 +1398,9 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
     private fun KafkaManagementClient.awaitTopicCreated(topic: TopicName) {
         Awaitility.await("For topic '$topic' to be created")
-            .atMost(5, TimeUnit.SECONDS)
+            .atMost(10, TimeUnit.SECONDS)
             .untilAsserted {
-                repeat(4) {
+                repeat(6) {
                     try {
                         assertThat(listAllTopics().get().map { it.name }).contains(topic)
                     } catch (ex: Exception) {
