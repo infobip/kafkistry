@@ -152,7 +152,12 @@ class ClusterOps(
                             }
                         }
                         val allKnownNodes = allNodes.asSequence()
-                            .map { ClusterNode(it.id(), it.host(), it.port(), nodeRoles(it.id()), it.rack()) }
+                            .map {
+                                ClusterNode(
+                                    nodeId = it.id(), host = it.host(), port = it.port(), roles = nodeRoles(it.id()),
+                                    rack = it.rack() ?: nodesConfigs[it.id()]?.get("broker.rack")?.value,
+                                )
+                            }
                             .onEach { knownNodes[it.nodeId] = it }
                             .plus(knownNodes.values)
                             .distinctBy { it.nodeId }

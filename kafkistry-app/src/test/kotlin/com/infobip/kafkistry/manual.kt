@@ -3,6 +3,7 @@ package com.infobip.kafkistry
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_BROKER_ID
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_COMBINED_ID
+import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_CONTROLLER_ID
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
@@ -133,7 +134,7 @@ class DataStateInitializer(
     private val kraft = true
 
     private val kafka: EmbeddedKafkaBroker = if (kraft) {
-        EmbeddedKafkaKraftCustomBroker(2, 4, 0).apply {
+        EmbeddedKafkaKraftCustomBroker(2, 4, 1).apply {
             brokerProperty("log.retention.bytes", "123456789")
             brokerProperty("log.segment.bytes", "12345678")
             brokerProperty("authorizer.class.name", StandardAuthorizer::class.java.name)
@@ -145,6 +146,7 @@ class DataStateInitializer(
                 START_BROKER_ID + 3 to "rck-B",
                 START_COMBINED_ID to "rck-C",
                 START_COMBINED_ID + 1 to "rck-C",
+                START_CONTROLLER_ID to "rck-X",
             )
             brokerPropertyOverride { brokerId ->
                 brokerRack[brokerId]?.let { mapOf("broker.rack" to it) }.orEmpty()
@@ -164,7 +166,7 @@ class DataStateInitializer(
         if (this is EmbeddedKafkaKraftCustomBroker) {
             StaticMockedControllerConnectionResolver.kraftControllers.set(controllersAsString())
             StaticMockedControllerConnectionResolver.forQuorumControllers.set(
-                "${START_COMBINED_ID}@0.0.0.0:0,${START_COMBINED_ID + 1}@0.0.0.0:0"
+                "${START_CONTROLLER_ID}@0.0.0.0:0,${START_COMBINED_ID}@0.0.0.0:0,${START_COMBINED_ID + 1}@0.0.0.0:0"
             )
         }
     }
