@@ -31,6 +31,7 @@ class RollingSQLRepository(
 
     override val tableColumns: List<TableInfo> = primary.tableColumns
     override val queryExamples: List<QueryExample> = primary.queryExamples
+    override val tableStats: List<TableStats> get() = current().tableStats
 
     override fun updateAllLists(objectLists: List<List<Any>>) {
         next().updateAllLists(objectLists)

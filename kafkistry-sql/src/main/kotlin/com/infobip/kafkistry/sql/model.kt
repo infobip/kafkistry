@@ -59,7 +59,7 @@ data class LinkedResource(
 // Utility
 ////////////////////////////////
 
-data class  TableInfo(
+data class TableInfo(
         val name: String,
         val joinTable: Boolean,
         val columns: List<ColumnInfo>
@@ -76,4 +76,9 @@ data class ColumnInfo(
 data class QueryExample(
         val title: String,
         val sql: String
+)
+
+data class TableStats(
+    val name: String,
+    val count: Int,
 )

@@ -24,6 +24,9 @@ class SqlSearchApi(
     @RequestMapping("/table-columns")
     fun tableColumns(): List<TableInfo> = sqlRepository.tableColumns
 
+    @RequestMapping("/table-stats")
+    fun tableStats(): List<TableStats> = sqlRepository.tableStats
+
     @RequestMapping("/query-examples")
     fun queryExamples(): List<QueryExample> = sqlRepository.queryExamples
 

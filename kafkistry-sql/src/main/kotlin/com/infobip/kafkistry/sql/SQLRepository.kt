@@ -6,6 +6,8 @@ interface SQLRepository : AutoCloseable {
 
     val queryExamples: List<QueryExample>
 
+    val tableStats: List<TableStats>
+
     fun updateAllLists(objectLists: List<List<Any>>)
 
     fun query(sql: String): QueryResult

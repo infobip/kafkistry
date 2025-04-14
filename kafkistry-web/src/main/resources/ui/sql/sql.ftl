@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="query" type="java.lang.String" -->
 <#-- @ftlvariable name="tables" type="java.util.List<com.infobip.kafkistry.sql.TableInfo>" -->
+<#-- @ftlvariable name="tableStats" type="java.util.List<com.infobip.kafkistry.sql.TableStats>" -->
 <#-- @ftlvariable name="queryExamples" type="java.util.List<com.infobip.kafkistry.sql.QueryExample>" -->
 
 <html lang="en">
@@ -20,6 +21,11 @@
 <body>
 
 <#include "../commonMenu.ftl">
+
+<#assign tableCounts = {}>
+<#list tableStats as ts>
+    <#assign tableCounts = tableCounts + {ts.name: ts.count}>
+</#list>
 
 <div id="table-columns" style="display: none;">
     <#list tables as table>
@@ -63,12 +69,21 @@
         <table class="table table-sm mt-2">
             <thead class="thead-light h5">
             <tr>
+                <th><span>#</span></th>
                 <th><span>Table name</span></th>
                 <th><span>Column names</span></th>
             </tr>
             </thead>
             <#list tables as table>
                 <tr class="no-hover">
+                    <td class="text-right">
+                        <#if tableCounts[table.name]??>
+                            <#assign allCount = tableCounts[table.name]>
+                            <small title="Number of rows in table: ${allCount?c}">${_util.prettyNumber(allCount)}</small>
+                        <#else>
+                            <small title="Unknown number of rows in table">n/a</small>
+                        </#if>
+                    </td>
                     <#if !table.joinTable>
                         <#assign tableTdClass = "">
                         <#assign tableNameClass = "alert-primary">

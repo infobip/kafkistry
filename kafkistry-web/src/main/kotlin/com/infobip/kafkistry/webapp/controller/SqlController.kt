@@ -30,9 +30,11 @@ class SqlController(
     ): ModelAndView {
         val sqlSearchApi = sqlSearchApi() ?: return disabled()
         val tableColumns = sqlSearchApi.tableColumns()
+        val tableStats = sqlSearchApi.tableStats()
         val queryExamples = sqlSearchApi.queryExamples()
         return ModelAndView("sql/sql", mapOf(
                 "tables" to tableColumns,
+                "tableStats" to tableStats,
                 "queryExamples" to queryExamples,
                 "query" to query
         ))

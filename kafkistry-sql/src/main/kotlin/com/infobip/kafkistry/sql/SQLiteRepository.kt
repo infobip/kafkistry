@@ -13,6 +13,7 @@ import java.io.InputStreamReader
 import java.sql.ResultSet
 import java.sql.Types
 import java.time.ZoneId
+import java.util.concurrent.atomic.AtomicReference
 
 class SQLiteRepository(
     dbPath: String,
@@ -81,6 +82,12 @@ class SQLiteRepository(
             ?: emptyList()
     )
 
+    override val tableStats: List<TableStats> get() = currentTableStats.get()
+
+    private val currentTableStats = AtomicReference(
+        tableColumns.map { TableStats(it.name, 0) }
+    )
+
     class QueryExamples : ArrayList<QueryExample>()
 
     private fun Session.getTableNames(): List<String> =
@@ -139,6 +146,9 @@ class SQLiteRepository(
             session.deleteAllFromAllTables()
             objects.forEach { session.persist(it) }
             tx.commit()
+            currentTableStats.set(
+                tableColumns.map { session.getTableStats(it.name) }
+            )
         }
     }
 
@@ -150,6 +160,17 @@ class SQLiteRepository(
                 connection.prepareStatement("DELETE from $table").use { it.execute() }
             }
         }
+    }
+
+    private fun Session.getTableStats(tableName: String): TableStats {
+        val count = doReturningWork { connection ->
+            connection.prepareStatement("SELECT count(1) AS count FROM $tableName").use { statement ->
+                val resultSet = statement.executeQuery()
+                resultSet.next()
+                resultSet.getInt("count")
+            }
+        }
+        return TableStats(name = tableName, count = count)
     }
 
     override fun query(sql: String): QueryResult {
