@@ -465,7 +465,8 @@ function htmlDecode(input) {
 function renderValues() {
     $("div.value-json[data-json]").each(function () {
         let div = $(this);
-        let json = htmlDecode(div.attr("data-json"));
+        let dataJsonAttr = div.attr("data-json");
+        let json = decodeURIComponent(dataJsonAttr);
         let object = deserializeJson(json);
         div.append($(renderjson(object)));
         div.hide();
@@ -483,7 +484,8 @@ function renderValues() {
 
     $("div.value-string[data-string]").each(function () {
         let div = $(this);
-        let string = htmlDecode(div.attr("data-string"));
+        let dataStringAttr = div.attr("data-string");
+        let string = decodeURIComponent(dataStringAttr);
         div.append(pre(string));
     });
     $("div.value-base64[data-base64]").each(function () {
@@ -502,7 +504,7 @@ function deserializeJson(json) {
 }
 
 function pre(text) {
-    return "<pre class='renderjson'>" + text + "</pre>";
+    return "<pre class='renderjson'>" + $("<span>").text(text).html() + "</pre>";
 }
 
 function saveAsFile(text, fileName, mimeContentType) {

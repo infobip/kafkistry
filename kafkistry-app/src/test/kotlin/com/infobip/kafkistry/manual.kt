@@ -510,7 +510,7 @@ class DataStateInitializer(
                                 {
                                     "id":$it,
                                     "time":${System.currentTimeMillis()},
-                                    "msg":"Dummy message $it",
+                                    "msg":"Dummy message <strong>$it &rarr;</strong> html",
                                     "map":{"$it":$it}
                                 }
                             """.trimIndent(),

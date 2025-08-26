@@ -29,12 +29,12 @@
                         <#break>
                     <#case "STRING">
                         <div class="record-value value-string" data-type="${typeTag}${tagSuffix}"
-                             data-string='${deserialization.value}'></div>
+                             data-string='${deserialization.value?url}'></div>
                         <#assign copyValue = deserialization.value>
                         <#break>
                     <#default>
                         <div class="record-value value-json" data-type="${typeTag}${tagSuffix}"
-                             data-json='${deserialization.asJson}'></div>
+                             data-json='${deserialization.asJson?url}'></div>
                         <#assign copyValue = deserialization.asJson>
                 </#switch>
                 <div class="kafka-value-gutter">
