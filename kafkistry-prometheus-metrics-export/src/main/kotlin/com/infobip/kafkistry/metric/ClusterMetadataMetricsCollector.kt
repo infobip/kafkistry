@@ -46,10 +46,17 @@ class ClusterMetadataMetricsCollector(
         .labelNames(this.clusterLabelProvider.labelName())
         .create()
 
+    private val numBrokersGauge = Gauge.build()
+        .name(promProperties.prefix + "cluster_metadata_broker_count") //default: kafkistry_cluster_metadata_broker_count
+        .help("Number of broker nodes in cluster")
+        .labelNames(this.clusterLabelProvider.labelName())
+        .create()
+
     private fun collectAll(): List<MetricFamilySamples> {
         return buildList {
             addAll(hasMetadataGauge.collect())
             addAll(numNodesGauge.collect())
+            addAll(numBrokersGauge.collect())
         }
     }
 
@@ -67,6 +74,7 @@ class ClusterMetadataMetricsCollector(
                 if (statusInfo != null) {
                     hasMetadataGauge.labels(clusterLabel).set(1.0)
                     numNodesGauge.labels(clusterLabel).set(statusInfo.nodeIds.size.toDouble())
+                    numBrokersGauge.labels(clusterLabel).set(statusInfo.brokerIds.size.toDouble())
                 } else {
                     hasMetadataGauge.labels(clusterLabel).set(0.0)
                 }
