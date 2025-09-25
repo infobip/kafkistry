@@ -4,7 +4,7 @@
     <groupId>com.infobip.kafkistry</groupId>
     <artifactId>kafkistry-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.9.3-SNAPSHOT</version>
+    <version>0.9.3</version>
 
     <name>Kafkistry</name>
     <description>
@@ -545,7 +545,7 @@
         <url>git@github.com:infobip/kafkistry.git</url>
         <connection>scm:git:git@github.com:infobip/kafkistry.git</connection>
         <developerConnection>scm:git:git@github.com:infobip/kafkistry.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v0.9.3</tag>
     </scm>
 
     <distributionManagement>
