@@ -312,7 +312,7 @@
     <#else>
         <#assign asUser = " ">
     </#if>
-    <span class="badge badge-danger" title="You${asUser}own this ${what}">YOUR</span>
+    <span class="badge badge-primary" title="You${asUser}own this ${what}">YOUR</span>
 </#macro>
 
 
