@@ -253,7 +253,7 @@ function validateTopicDescription(topicDescription) {
     let blockers = $("#dry-run-inspect-status .blocker-issue-item").map(() => {
         return $(this).text();
     }).get();
-    let blockersIgnored = $("#dry-run-inspect-status input[name=blockers-consent").is(":checked");
+    let blockersIgnored = $("#dry-run-inspect-status input[name=blockers-consent]").is(":checked");
     if (blockers.length > 0 && !blockersIgnored) {
         errors.push(`There are ${blockers.length} issue(s) detected by 'Dry run inspect config', save is rejected`);
     }
