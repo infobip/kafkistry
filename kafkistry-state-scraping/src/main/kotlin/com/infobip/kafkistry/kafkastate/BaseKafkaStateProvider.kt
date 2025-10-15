@@ -40,7 +40,6 @@ private val clusterPoolingTypeOkGaugeHolder = MetricHolder { prefix ->
 abstract class BaseKafkaStateProvider(
     private val clustersRepository: KafkaClustersRepository,
     private val clusterFilter: ClusterEnabledFilter,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
 ) : AutoCloseable {
 
@@ -49,10 +48,17 @@ abstract class BaseKafkaStateProvider(
     private val clusterPoolingSummary = clusterPoolingSummaryHolder.metric(promProperties)
     private val clusterPoolingTypeOkGauge = clusterPoolingTypeOkGaugeHolder.metric(promProperties)
 
-    private val executor = Executors.newFixedThreadPool(
-            poolingProperties.clusterConcurrency,
-            CustomizableThreadFactory("cluster-scraper-").apply { this.isDaemon = false }
+    private val executor = ThreadPoolExecutor(
+        0,
+        1000,
+        1L, TimeUnit.HOURS,
+        SynchronousQueue(),
+        CustomizableThreadFactory("scraper-${stateTypeName()}-").apply {
+            this.isDaemon = false
+        }
     )
+
+    abstract fun stateTypeName(): String
 
     override fun close() {
         log.info("Closing {}", this)

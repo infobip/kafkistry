@@ -15,18 +15,17 @@ class KafkaTopicOffsetsProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
     issuesRegistry: BackgroundJobIssuesRegistry,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
     private val clientProvider: KafkaClientProvider
 ) : AbstractKafkaStateProvider<ClusterTopicOffsets>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
 
     companion object {
         const val TOPIC_OFFSETS = "topic_offsets"
     }
 
-    override val stateTypeName = TOPIC_OFFSETS
+    override fun stateTypeName() = TOPIC_OFFSETS
 
     override fun fetchState(kafkaCluster: KafkaCluster): ClusterTopicOffsets {
         val topicNames = clientProvider.doWithClient(kafkaCluster) { it.listAllTopicNames().get() }

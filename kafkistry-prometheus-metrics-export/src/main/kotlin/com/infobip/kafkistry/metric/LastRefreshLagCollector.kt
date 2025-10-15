@@ -24,7 +24,7 @@ class LastRefreshLagCollector(
             latestStates.map { (clusterIdentifier, state) ->
                 MetricFamilySamples.Sample(
                     metricName, labelNames,
-                    listOf(clusterIdentifier, provider.stateTypeName),
+                    listOf(clusterIdentifier, provider.stateTypeName()),
                     (now - state.lastRefreshTime).toDouble()
                 )
             }

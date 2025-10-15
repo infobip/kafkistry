@@ -19,19 +19,18 @@ import java.util.concurrent.CompletableFuture
 class KafkaClustersStateProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
     issuesRegistry: BackgroundJobIssuesRegistry,
     private val clientProvider: KafkaClientProvider
 ) : AbstractKafkaStateProvider<KafkaClusterState>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
 
     companion object {
         const val CLUSTER_STATE = "cluster_state"
     }
 
-    override val stateTypeName = CLUSTER_STATE
+    override fun stateTypeName() = CLUSTER_STATE
 
     fun getLatestClusterState(kafkaClusterIdentifier: KafkaClusterIdentifier) = getLatestState(kafkaClusterIdentifier)
     fun getLatestClusterStateValue(kafkaClusterIdentifier: KafkaClusterIdentifier) = getLatestStateValue(kafkaClusterIdentifier)

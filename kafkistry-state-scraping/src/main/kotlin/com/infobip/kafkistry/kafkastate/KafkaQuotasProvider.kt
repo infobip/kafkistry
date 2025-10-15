@@ -12,19 +12,18 @@ import org.springframework.stereotype.Component
 class KafkaQuotasProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
     issuesRegistry: BackgroundJobIssuesRegistry,
     private val clientProvider: KafkaClientProvider
 ) : AbstractKafkaStateProvider<ClusterQuotas>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
 
     companion object {
         const val CLIENT_QUOTAS = "client_quotas"
     }
 
-    override val stateTypeName = CLIENT_QUOTAS
+    override fun stateTypeName() = CLIENT_QUOTAS
 
     override fun fetchState(kafkaCluster: KafkaCluster): ClusterQuotas {
         val quotas = clientProvider.doWithClient(kafkaCluster) {

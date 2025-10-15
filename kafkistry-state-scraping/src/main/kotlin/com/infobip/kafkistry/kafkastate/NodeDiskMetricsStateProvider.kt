@@ -14,18 +14,17 @@ class NodeDiskMetricsStateProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
     issuesRegistry: BackgroundJobIssuesRegistry,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
     nodeDiskMetricsProviders: Optional<List<NodeDiskMetricsProvider>>,
     private val clustersStateProvider: KafkaClustersStateProvider,
 ) : AbstractKafkaStateProvider<ClusterNodeMetrics>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry
+    clustersRepository, clusterFilter, promProperties, issuesRegistry
 ) {
     companion object {
         const val NODES_DISK_METRICS = "nodes_disk_metrics"
     }
 
-    override val stateTypeName = NODES_DISK_METRICS
+    override fun stateTypeName() = NODES_DISK_METRICS
 
     private val brokerDiskMetricsProviders = nodeDiskMetricsProviders.orElse(emptyList())
     override fun fetchState(kafkaCluster: KafkaCluster): ClusterNodeMetrics {

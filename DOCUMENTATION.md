@@ -308,7 +308,6 @@ Scraping is broken to several **job** types, for example:
 |-----------------------------------------|-------------------------|-----------------------------------------------------------------------------------------------------------|
 | `CLUSTER_POOL_INTERVAL`                 | `10000` (ms)            | How often to scrape metadata (topics, consumer groups, ACLs, ...)                                         |
 | `CLUSTER_POOL_RECORD_SAMPLING_INTERVAL` | `120000` (ms)  _(2min)_ | How often to read oldest and/or newest messages from every topic-partition                                |
-| `CLUSTER_POOL_CONCURRENCY`              | `6`                     | Limit for one type of **job** (e.g. topic_offsets fetching) for how many clusters to process concurrently |
 | `CLUSTER_POOL_CONCURRENCY_PER_CLUSTER`  | `30`                    | How many client's (admin+consumer) to have opened toward one cluster                                      |
 
 

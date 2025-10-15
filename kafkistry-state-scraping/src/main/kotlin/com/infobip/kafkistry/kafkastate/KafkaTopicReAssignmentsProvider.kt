@@ -12,19 +12,18 @@ import org.springframework.stereotype.Component
 class KafkaTopicReAssignmentsProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
     issuesRegistry: BackgroundJobIssuesRegistry,
     private val clientProvider: KafkaClientProvider
 ) : AbstractKafkaStateProvider<TopicPartitionReAssignments>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
 
     companion object {
         const val TOPIC_RE_ASSIGNMENTS = "topic_re_assignments"
     }
 
-    override val stateTypeName = TOPIC_RE_ASSIGNMENTS
+    override fun stateTypeName() = TOPIC_RE_ASSIGNMENTS
 
     override fun fetchState(kafkaCluster: KafkaCluster): TopicPartitionReAssignments {
         val topicPartitionReAssignments = clientProvider.doWithClient(kafkaCluster) {

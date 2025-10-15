@@ -20,14 +20,14 @@ class KafkaConsumerGroupsProvider(
     promProperties: PrometheusMetricsProperties,
     private val clientProvider: KafkaClientProvider,
 ) : AbstractKafkaStateProvider<ClusterConsumerGroups>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
 
     companion object {
         const val CONSUMER_GROUPS = "consumer_groups"
     }
 
-    override val stateTypeName = CONSUMER_GROUPS
+    override fun stateTypeName() = CONSUMER_GROUPS
 
     private val ignoreConsumerGroup = poolingProperties.ignoredConsumerPattern
         .takeIf { it.isNotEmpty() }

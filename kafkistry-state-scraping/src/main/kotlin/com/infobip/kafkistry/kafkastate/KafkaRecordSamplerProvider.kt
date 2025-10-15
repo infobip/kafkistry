@@ -17,20 +17,19 @@ import java.util.*
 class KafkaRecordSamplerProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
     issuesRegistry: BackgroundJobIssuesRegistry,
     private val topicOffsetsProvider: KafkaTopicOffsetsProvider,
     private val clientProvider: KafkaClientProvider,
     private val recordSamplerListeners: Optional<List<RecordSamplingListener>>,
 ) : AbstractKafkaStateProvider<Unit>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
     companion object {
         const val RECORDS_SAMPLING = "records_sampling"
     }
 
-    override val stateTypeName = RECORDS_SAMPLING
+    override fun stateTypeName() = RECORDS_SAMPLING
 
     @Scheduled(
         fixedRateString = "#{poolingProperties.recordSamplingIntervalMs()}",

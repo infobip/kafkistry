@@ -14,19 +14,18 @@ import org.springframework.stereotype.Component
 class KafkaReplicasInfoProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
     issuesRegistry: BackgroundJobIssuesRegistry,
     private val clientProvider: KafkaClientProvider
 ) : AbstractKafkaStateProvider<ReplicaDirs>(
-    clustersRepository, clusterFilter, poolingProperties, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
 
     companion object {
         const val DIR_REPLICAS = "dir_replicas"
     }
 
-    override val stateTypeName = DIR_REPLICAS
+    override fun stateTypeName() = DIR_REPLICAS
 
     override fun fetchState(kafkaCluster: KafkaCluster): ReplicaDirs {
         val replicas = clientProvider.doWithClient(kafkaCluster) {

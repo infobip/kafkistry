@@ -49,7 +49,6 @@ app:
   pooling:
     interval-ms: ${CLUSTER_POOL_INTERVAL:10000}
     record-sampling-interval-ms:  ${CLUSTER_POOL_RECORD_SAMPLING_INTERVAL:120000}
-    cluster-concurrency: ${CLUSTER_POOL_CONCURRENCY:6}
     ignored-consumer-pattern: ${CLUSTER_POOL_IGNORED_CONSUMER:}
   oldest-record-age:
     enabled: ${OLDEST_RECORD_AGE_ENABLED:true}

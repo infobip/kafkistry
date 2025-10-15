@@ -25,11 +25,6 @@ class PoolingProperties {
 
     var recordSamplingIntervalMs: Long = 120_000
 
-    /**
-     * Limit for one type of job (e.g. topic_offsets fetching) for how many clusters to process concurrently
-     */
-    var clusterConcurrency: Int = 6
-
     var ignoredConsumerPattern: String = ""
 
     //field-like methods to allow invocation/usage in @Scheduled SpEL expressions
