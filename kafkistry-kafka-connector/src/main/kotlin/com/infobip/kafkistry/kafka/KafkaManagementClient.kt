@@ -32,6 +32,7 @@ interface KafkaManagementClient : AutoCloseable {
     fun topicsOffsets(topicNames: List<TopicName>): CompletableFuture<Map<TopicName, Map<Partition, PartitionOffsets>>>
     fun consumerGroups(): CompletableFuture<List<ConsumerGroupId>>
     fun consumerGroup(groupId: ConsumerGroupId): CompletableFuture<ConsumerGroup>
+    fun consumerGroups(groupIds: List<ConsumerGroupId>): CompletableFuture<List<ConsumerGroup>>
     fun deleteConsumer(groupId: ConsumerGroupId): CompletableFuture<Unit>
     fun deleteConsumerOffsets(groupId: ConsumerGroupId, topicPartitions: Map<TopicName, List<Partition>>): CompletableFuture<Unit>
     fun listAcls(): CompletableFuture<List<KafkaAclRule>>

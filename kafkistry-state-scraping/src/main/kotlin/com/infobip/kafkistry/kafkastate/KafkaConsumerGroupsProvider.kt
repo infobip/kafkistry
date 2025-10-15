@@ -7,7 +7,9 @@ import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.repository.KafkaClustersRepository
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import org.springframework.stereotype.Component
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
+import kotlin.math.max
 
 @Component
 class KafkaConsumerGroupsProvider(
@@ -34,24 +36,21 @@ class KafkaConsumerGroupsProvider(
     override fun fetchState(kafkaCluster: KafkaCluster): ClusterConsumerGroups {
         val consumerGroupIds = clientProvider.doWithClient(kafkaCluster) { it.consumerGroups().get() }
         val consumers = consumerGroupIds
-                .filterNot { ignoreConsumerGroup?.matches(it) ?: false }
-                .chunked(clientProvider.perClusterConcurrency())
-                .flatMap { consumersBatch ->
-                    consumersBatch
-                            .associateWith { groupId -> clientProvider.doWithClient(kafkaCluster) { it.consumerGroup(groupId) } }
-                            .map { (groupId, valueFuture) ->
-                                groupId to try {
-                                    Maybe.Result(valueFuture.get())
-                                } catch (ex: Throwable) {
-                                    val exception = (ex as? CompletionException)?.cause ?: ex
-                                    log.warn("Exception on fetching consumer '{}' on cluster '{}'",
-                                            groupId, kafkaCluster.identifier, exception
-                                    )
-                                    Maybe.Absent(ex)
-                                }
-                            }
+            .filterNot { ignoreConsumerGroup?.matches(it) ?: false }
+            .chunked(max(20, consumerGroupIds.size / clientProvider.perClusterConcurrency()))
+            .associateWith { topicsBatch -> clientProvider.doWithClient(kafkaCluster) { it.consumerGroups(topicsBatch) } }
+            .flatMap { (groupIds, batchFuture) ->
+                try {
+                    batchFuture.get().map { it.id to Maybe.Result(it) }
+                } catch (ex: Throwable) {
+                    val exception = (ex as? CompletionException)?.cause ?: ex
+                    log.warn("Exception on fetching consumers '{}' on cluster '{}'",
+                        groupIds, kafkaCluster.identifier, exception
+                    )
+                    groupIds.map { it to Maybe.Absent(ex) }
                 }
-                .toMap()
+            }
+            .associate { it }
         return ClusterConsumerGroups(
                 consumerGroups = consumers,
         )

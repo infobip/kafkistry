@@ -29,6 +29,7 @@ abstract class BaseOps(
         val VERSION_2_3 = Version.of("2.3")
         val VERSION_2_4 = Version.of("2.4")
         val VERSION_2_6 = Version.of("2.6")
+        val VERSION_3_0 = Version.of("3.0")
     }
 
     data class ClientCtx(

@@ -175,7 +175,11 @@ class KafkaManagementClientImpl(
     }
 
     override fun consumerGroup(groupId: ConsumerGroupId): CompletableFuture<ConsumerGroup> {
-        return consumerGroupOps.consumerGroup(groupId)
+        return consumerGroupOps.consumerGroups(listOf(groupId)).thenApply { it.first() }
+    }
+
+    override fun consumerGroups(groupIds: List<ConsumerGroupId>): CompletableFuture<List<ConsumerGroup>> {
+        return consumerGroupOps.consumerGroups(groupIds)
     }
 
     override fun deleteConsumer(groupId: ConsumerGroupId): CompletableFuture<Unit> {
