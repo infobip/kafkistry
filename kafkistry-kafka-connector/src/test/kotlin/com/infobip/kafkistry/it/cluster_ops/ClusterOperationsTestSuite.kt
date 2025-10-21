@@ -454,12 +454,13 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
         }
         assertThat(clusterInfo.apiKeys)
             .containsOnlyKeys(clusterInfo.nodeIds)
-        assertThat(clusterInfo.apiKeys[clusterInfo.brokerIds.first()]?.apiKeys?.associateBy { it.metadata?.name })
+        val clusterApiKeys = clusterInfo.apiKeys[clusterInfo.brokerIds.first()]
+        assertThat(clusterApiKeys?.apiKeys?.associateBy { it.metadata?.name })
             .hasEntrySatisfying("Produce") {
-                assertThat(it.latestUsableVersion).isNotNull()
+                assertThat(it.latestUsableVersion).`as`("Produce in $clusterApiKeys").isNotNull()
             }
             .hasEntrySatisfying("Fetch") {
-                assertThat(it.latestUsableVersion).isNotNull()
+                assertThat(it.latestUsableVersion).`as`("Fetch in $clusterApiKeys").isNotNull()
             }
     }
 

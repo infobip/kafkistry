@@ -35,7 +35,9 @@ abstract class AbstractClusterOpsTestSuite {
             }),
             controllersConnectionResolver = Optional.of(object : ControllersConnectionResolver {
                 override fun resolveQuorumControllersConnection(quorumControllersConnection: String): String {
-                    return controllersConnection ?: hostsPorts(quorumControllersConnection)
+                    return controllersConnection ?: hostsPorts(quorumControllersConnection).replace(
+                        Regex("kafka_\\d+"), "localhost"
+                    )
                 }
             }),
         ),

@@ -1,12 +1,14 @@
 package com.infobip.kafkistry.it.cluster_ops.testcontainer
 
+import com.infobip.kafkistry.hostname.HostnameResolver
 import java.net.InetAddress
 import javax.net.ServerSocketFactory
 
-data class HostPort(val host: String, val port: Int) {
+data class HostPort(val host: String, val ip: String, val port: Int) {
     companion object {
         fun newLocalAvailable() = HostPort(
             host = InetAddress.getLocalHost().hostName,
+            ip = InetAddress.getLocalHost().hostAddress,
             port = randomPort(),
         )
 
@@ -19,4 +21,8 @@ data class HostPort(val host: String, val port: Int) {
             }
         }
     }
+}
+
+fun main() {
+
 }

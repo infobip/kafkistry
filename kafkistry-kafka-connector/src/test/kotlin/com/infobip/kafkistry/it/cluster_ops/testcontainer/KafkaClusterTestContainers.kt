@@ -4,6 +4,7 @@ import com.google.common.io.Files
 import org.apache.kafka.common.Uuid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testcontainers.containers.ComposeContainer
 import org.testcontainers.containers.DockerComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
@@ -14,7 +15,7 @@ class KafkaClusterContainer private constructor(
     private val brokersConfigs: BrokersConfigs,
     startupTimeout: Duration,
     logContainersOutput: Boolean,
-) : DockerComposeContainer<KafkaClusterContainer>(
+) : ComposeContainer(
     "kafka",
     createDockerComposeFile(brokersConfigs)
 ) {
@@ -24,7 +25,7 @@ class KafkaClusterContainer private constructor(
 
     constructor(
         kafkaImage: String,
-        zkImage: String = "bitnami/zookeeper:3.8.3",
+        zkImage: String = "zookeeper:3.8.3",
         clusterSize: Int = 3,
         customBrokersConfig: Map<String, String> = emptyMap(),
         startupTimeout: Duration = Duration.ofSeconds(40),
@@ -48,7 +49,7 @@ class KafkaClusterContainer private constructor(
         }
         //withLocalCompose(false)
         brokersConfigs.hostsPorts.forEachIndexed { index, hostPort ->
-            val serviceName = "kafka_${index}_1"
+            val serviceName = "kafka_${index}-1"
             withExposedService(serviceName, hostPort.port, startupWait)
             if (brokersConfigs.kraft) {
                 withExposedService(serviceName, brokersConfigs.controllerHostsPorts[index].port, startupWait)
@@ -95,8 +96,9 @@ private fun createZKFileContent(zkImage: String, zkHostPort: HostPort): String =
     ports:
       - "${zkHostPort.port}:${zkHostPort.port}"
     environment:
-      - ZOO_PORT_NUMBER=${zkHostPort.port}
       - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_MY_ID=1
+      - ZOO_SERVERS=server.1=zookeeper:2888:3888;${zkHostPort.port}
     
 """
 
@@ -120,8 +122,10 @@ private fun createBrokerFileContent(
       - zookeeper
 """) +
     """
+    extra_hosts:
+      - "${hostPort.host}:${hostPort.ip}"
     environment:
-      - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9094,OUTSIDE://${hostPort.host}:${hostPort.port}
+      - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9094,OUTSIDE://${hostPort.host}:${hostPort.port}${if(brokersConfigs.kraft) ",CONTROLLER://${controllerHostPort.host}:${controllerHostPort.port}" else ""}
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT,CONTROLLER:PLAINTEXT
       - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
       - ALLOW_PLAINTEXT_LISTENER=true
@@ -130,10 +134,10 @@ ${brokersConfigs.toYamlEnvironment()}
     """
       - KAFKA_LISTENERS=INSIDE://:9094,OUTSIDE://:${hostPort.port},CONTROLLER://:${controllerHostPort.port}
       - KAFKA_KRAFT_CLUSTER_ID=${Uuid(123456L, 123456L)}
-      - KAFKA_CFG_NODE_ID=$brokerIndex
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=${brokersConfigs.controllerHostsPorts.withIndex().joinToString(",") { (id, hp) -> "$id@kafka_$id:${hp.port}" }}
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_NODE_ID=$brokerIndex
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=${brokersConfigs.controllerHostsPorts.withIndex().joinToString(",") { (id, hp) -> "$id@kafka_$id:${hp.port}" }}
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
     """
 else
     """

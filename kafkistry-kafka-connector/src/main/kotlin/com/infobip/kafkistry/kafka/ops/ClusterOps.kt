@@ -301,7 +301,7 @@ class ClusterOps(
                 metadata = apiKey.toMetadata(),
                 minVersion = versions.minVersion().toInt(),
                 maxVersion = versions.maxVersion().toInt(),
-                latestUsableVersion = if (apiKey.latestVersion() in versions.minVersion()..versions.maxVersion()) {
+                latestUsableVersion = if (apiKey.latestVersion() >= versions.minVersion() || apiKey.oldestVersion() >= versions.maxVersion()) {
                     minOf(apiKey.latestVersion(), versions.maxVersion()).toInt()
                 } else null,
                 unusableReason = when {

@@ -10,6 +10,7 @@ import com.infobip.kafkistry.kafka.Version
 import com.infobip.kafkistry.utils.getFieldReflective
 import kafka.security.authorizer.AclAuthorizer
 import kafka.testkit.KafkaClusterTestKit
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.kafka.test.EmbeddedKafkaZKBroker
@@ -111,7 +112,7 @@ class ClusterOpsKafkaDockerCompose_V_2_3_1_Test : ClusterNoAclOperationsTestSuit
     companion object {
         @JvmField
         val kafka = KafkaClusterContainer(
-            kafkaImage = "bitnami/kafka:2.3.1",
+            kafkaImage = "wurstmeister/kafka:2.12-2.3.1",
         ).asTestKafkaLifecycle()
     }
 
@@ -126,6 +127,7 @@ class ClusterOpsKafkaDockerCompose_V_2_3_1_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-2\\.5).*",
     disabledReason = "These tests are too slow to run each time",
 )
+@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
 class ClusterOpsKafkaDockerCompose_V_2_5_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -147,6 +149,7 @@ class ClusterOpsKafkaDockerCompose_V_2_5_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-2\\.8).*",
     disabledReason = "These tests are too slow to run each time",
 )
+@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
 class ClusterOpsKafkaDockerCompose_V_2_8_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -167,6 +170,7 @@ class ClusterOpsKafkaDockerCompose_V_2_8_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.1).*",
     disabledReason = "These tests are too slow to run each time",
 )
+@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
 class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -187,6 +191,7 @@ class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuit
         matches = "all|.*(all-kafka|kafka-3\\.3).*",
         disabledReason = "These tests are too slow to run each time",
 )
+@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
 class ClusterOpsKafkaDockerCompose_V_3_3_2_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -208,13 +213,13 @@ class ClusterOpsKafkaDockerCompose_V_3_3_2_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.4).*",
     disabledReason = "These tests are too slow to run each time",
 )
+@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
 class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:3.4.0",
-            kraft = false,
         ).asTestKafkaLifecycle()
     }
 
@@ -229,13 +234,13 @@ class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.6).*",
     disabledReason = "These tests are too slow to run each time",
 )
+@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
 class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
         val kafka = KafkaClusterContainer(
             kafkaImage = "bitnami/kafka:3.6.0",
-            logContainersOutput = false,
             kraft = true,
         ).asTestKafkaLifecycle()
     }
@@ -251,13 +256,12 @@ class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.7).*",
     disabledReason = "These tests are too slow to run each time",
 )
-class ClusterOpsKafkaDockerCompose_V_3_7_0_Test : ClusterNoAclOperationsTestSuite() {
+class ClusterOpsKafkaDockerCompose_V_3_7_1_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
         val kafka = KafkaClusterContainer(
-            kafkaImage = "bitnami/kafka:3.7.0",
-            logContainersOutput = false,
+            kafkaImage = "apache/kafka:3.7.1",
             kraft = true,
         ).asTestKafkaLifecycle()
     }
@@ -273,13 +277,12 @@ class ClusterOpsKafkaDockerCompose_V_3_7_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.9).*",
     disabledReason = "These tests are too slow to run each time",
 )
-class ClusterOpsKafkaDockerCompose_V_3_9_0_Test : ClusterNoAclOperationsTestSuite() {
+class ClusterOpsKafkaDockerCompose_V_3_9_1_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
         val kafka = KafkaClusterContainer(
-            kafkaImage = "bitnami/kafka:3.9.0",
-            logContainersOutput = false,
+            kafkaImage = "apache/kafka:3.9.1",
             kraft = true,
         ).asTestKafkaLifecycle()
     }
@@ -295,13 +298,12 @@ class ClusterOpsKafkaDockerCompose_V_3_9_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-4\\.0).*",
     disabledReason = "These tests are too slow to run each time",
 )
-class ClusterOpsKafkaDockerCompose_V_4_0_0_Test : ClusterNoAclOperationsTestSuite() {
+class ClusterOpsKafkaDockerCompose_V_4_0_1_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
         val kafka = KafkaClusterContainer(
-            kafkaImage = "bitnami/kafka:4.0.0",
-            logContainersOutput = false,
+            kafkaImage = "apache/kafka:4.0.1",
             kraft = true,
         ).asTestKafkaLifecycle()
     }
