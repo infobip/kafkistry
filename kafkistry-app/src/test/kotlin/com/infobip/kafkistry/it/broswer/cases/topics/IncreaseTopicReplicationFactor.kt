@@ -6,6 +6,7 @@ import com.infobip.kafkistry.it.broswer.Context
 import com.infobip.kafkistry.it.broswer.UITestCase
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.model.TopicProperties
+import com.nhaarman.mockitokotlin2.timeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -71,16 +72,21 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
             val topicStatus = appCtx.getBean(InspectApi::class.java).inspectTopicOnCluster(
                 "my-replication-1", CLUSTER_IDENTIFIER,
             )
+            assertThat(topicStatus.existingTopicInfo?.properties).`as`("assignment applied")
+                .isEqualTo(TopicProperties(6, 2))
             assertThat(topicStatus.currentReAssignments).`as`("reassignment actually completes").isEmpty()
         }
 
         browser.findElementWithText("Back").scrollIntoView().click()
         await {
-            browser.assertPageText().contains(
-                    "Topic on cluster inspection"
-            )
+            browser.assertPageText().contains("Topic on cluster inspection")
         }
-        browser.assertPageText().contains("HAS_REPLICATION_THROTTLING")
+        await {
+            browser.navigate().refresh()
+            await(timeoutSecs = 2) {
+                browser.assertPageText().contains("HAS_REPLICATION_THROTTLING")
+            }
+        }
 
         await {
             browser.findElementWithText("Execute verify re-assignments").scrollIntoView().click()
