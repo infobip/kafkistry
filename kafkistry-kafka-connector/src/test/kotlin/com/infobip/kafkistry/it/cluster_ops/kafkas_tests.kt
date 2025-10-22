@@ -127,7 +127,7 @@ class ClusterOpsKafkaDockerCompose_V_2_3_1_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-2\\.5).*",
     disabledReason = "These tests are too slow to run each time",
 )
-@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
+@Disabled("No available image for amd64 and arm64 platforms")
 class ClusterOpsKafkaDockerCompose_V_2_5_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -149,7 +149,7 @@ class ClusterOpsKafkaDockerCompose_V_2_5_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-2\\.8).*",
     disabledReason = "These tests are too slow to run each time",
 )
-@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
+@Disabled("No available image for amd64 and arm64 platforms")
 class ClusterOpsKafkaDockerCompose_V_2_8_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -170,13 +170,12 @@ class ClusterOpsKafkaDockerCompose_V_2_8_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.1).*",
     disabledReason = "These tests are too slow to run each time",
 )
-@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
 class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
         @JvmField
         val kafka = KafkaClusterContainer(
-            kafkaImage = "bitnami/kafka:3.1.0",
+            kafkaImage = "itzg/kafka:3.1.0",
         ).asTestKafkaLifecycle()
     }
 
@@ -191,7 +190,7 @@ class ClusterOpsKafkaDockerCompose_V_3_1_0_Test : ClusterNoAclOperationsTestSuit
         matches = "all|.*(all-kafka|kafka-3\\.3).*",
         disabledReason = "These tests are too slow to run each time",
 )
-@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
+@Disabled("No available image for amd64 and arm64 platforms")
 class ClusterOpsKafkaDockerCompose_V_3_3_2_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -213,7 +212,7 @@ class ClusterOpsKafkaDockerCompose_V_3_3_2_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.4).*",
     disabledReason = "These tests are too slow to run each time",
 )
-@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
+@Disabled("No available image for amd64 and arm64 platforms")
 class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -234,7 +233,7 @@ class ClusterOpsKafkaDockerCompose_V_3_4_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.6).*",
     disabledReason = "These tests are too slow to run each time",
 )
-@Disabled("No docker image: wrustmeister has only older vers; apache/kafka has only newer vers; bitnami behind paywall")
+@Disabled("No available image for amd64 and arm64 platforms")
 class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
@@ -256,6 +255,7 @@ class ClusterOpsKafkaDockerCompose_V_3_6_0_Test : ClusterNoAclOperationsTestSuit
     matches = "all|.*(all-kafka|kafka-3\\.7).*",
     disabledReason = "These tests are too slow to run each time",
 )
+@Disabled("No available image for amd64 and arm64 platforms")
 class ClusterOpsKafkaDockerCompose_V_3_7_1_Test : ClusterNoAclOperationsTestSuite() {
 
     companion object {
