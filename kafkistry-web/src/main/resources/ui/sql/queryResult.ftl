@@ -49,14 +49,20 @@
 </#macro>
 
 <div class="container">
-    <p>
-        Got result set of <code>${result.count}</code> rows<#if result.totalCount gt result.count>, total count without <strong>LIMIT</strong> would be <code>${result.totalCount}</code></#if>
-    </p>
-    <#if result.count gt 0>
-        <button id="export-csv-btn" class="btn btn-sm btn-secondary">
-            <span>📥</span> Export to CSV
-        </button>
-    </#if>
+    <div class="row">
+        <div class="col">
+            <p>
+                Got result set of <code>${result.count}</code> rows<#if result.totalCount gt result.count>, total count without <strong>LIMIT</strong> would be <code>${result.totalCount}</code></#if>
+            </p>
+        </div>
+        <div class="col-">
+            <#if result.count gt 0>
+                <button id="export-csv-btn" class="btn btn-sm btn-secondary">
+                    <span>📥</span> Export to CSV
+                </button>
+            </#if>
+        </div>
+    </div>
 </div>
 
 <div style="overflow-x: scroll;">
