@@ -87,7 +87,7 @@
         <docker.main-class>com.infobip.kafkistry.KafkistryApplication</docker.main-class>
         <jib-maven-plugin.goal>dockerBuild</jib-maven-plugin.goal>
         <docker.skip-build>true</docker.skip-build>
-        <docker.from-image>openjdk:21-jdk</docker.from-image>
+        <docker.from-image>eclipse-temurin:21-jdk</docker.from-image>
         <docker.to-image>infobip/kafkistry</docker.to-image>
 
         <!-- DEPENDENCIES -->
