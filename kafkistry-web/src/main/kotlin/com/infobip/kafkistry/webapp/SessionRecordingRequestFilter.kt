@@ -76,7 +76,7 @@ class SessionRecordingRequestFilter : GenericFilterBean() {
         if ("/static/" in request.requestURI) {
             return //skip *.js and *.css resources
         }
-        val session = request.getSession(false) ?: return
+        val session = request.getSession(true) ?: return
         val requests = session.getAttribute(LAST_REQUESTED_URLS_JSON)
             ?.let { it as? String }
             ?.let { mapper.readValue(it, SessionRecordedRequests::class.java) }

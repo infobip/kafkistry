@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.security.web.util.matcher.RequestMatcher
+import org.springframework.session.web.http.SessionRepositoryFilter
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.util.*
@@ -42,8 +43,18 @@ class ExcludeSessionRepositoryFilter(
         filterChain: FilterChain
     ) {
         if (matcher.matches(httpRequest)) {
-            httpRequest.setAttribute("org.springframework.session.web.http.SessionRepositoryFilter.FILTERED", true)
+            markAlreadyFiltered(httpRequest)
         }
         filterChain.doFilter(httpRequest, httpResponse)
+    }
+
+    companion object {
+        /**
+         * Marks [request] as already processed by [SessionRepositoryFilter] causing it not to get processed by it
+         * and thus avoiding creating session for given [request]
+         */
+        fun markAlreadyFiltered(request: HttpServletRequest) {
+            request.setAttribute(SessionRepositoryFilter::class.java.name + ALREADY_FILTERED_SUFFIX, true)
+        }
     }
 }
