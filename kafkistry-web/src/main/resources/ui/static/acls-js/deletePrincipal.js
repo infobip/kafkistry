@@ -8,12 +8,20 @@ function deletePrincipalAcls() {
 }
 
 function doDeletePrincipalAcls(principal) {
+    let targetBranchError = validateTargetBranch();
     let deleteMessage = $("#delete-message").val();
+    let errors = [];
+    if (targetBranchError) {
+        errors.push(targetBranchError);
+    }
     if (deleteMessage.trim() === "") {
-        showOpError("Please specify delete reason");
+        errors.push("Please specify delete reason");
+    }
+    if (errors.length > 0) {
+        showOpError(errors.join("\n"));
         return;
     }
-    showOpProgress("Deleting topic...");
+    showOpProgress("Deleting principal ACLs...");
     $
         .ajax("api/acls?principal=" + encodeURI(principal) + "&message=" + encodeURI(deleteMessage) + "&" + targetBranchUriParam(), {
             method: "DELETE"

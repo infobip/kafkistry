@@ -41,6 +41,7 @@ class GitRepositoriesProperties {
     var httpsSslVerify: Boolean = true
     var dropLocalBranchesMissingOnRemote: Boolean = false
     var hardResetLocalBranchCheckoutConflicts: Boolean = false
+    var branchRequiredJiraKey: Boolean = false
 
     fun refreshIntervalMs() = 1000L * refreshIntervalSeconds
 }

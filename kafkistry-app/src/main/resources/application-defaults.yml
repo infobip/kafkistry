@@ -128,6 +128,7 @@ app.repository:
     password: ${GIT_PASSWORD:${GIT_SSH_PASSWORD:}}
     remote-timeout-seconds: ${GIT_TIMEOUT_SEC:30}
     refresh-interval-seconds: ${GIT_REFRESH_INTERVAL_SEC:30}
+    branch-required-jira-key: ${GIT_BRANCH_REQUIRED_JIRA_KEY:false}
     browse:
       branch-base-url: ${GIT_BROWSE_BRANCH_BASE_URL:}
       commit-base-url: ${GIT_BROWSE_COMMIT_BASE_URL:}

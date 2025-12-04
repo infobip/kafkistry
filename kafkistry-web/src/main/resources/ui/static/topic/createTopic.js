@@ -9,6 +9,10 @@ function createTopic() {
 
 function createTopicDescription(topicDescription) {
     let validateErrors = validateTopicDescription(topicDescription);
+    let targetBranchError = validateTargetBranch();
+    if (targetBranchError) {
+        validateErrors.push(targetBranchError);
+    }
     if (validateErrors.length > 0) {
         showOpError("Failed validation", validateErrors.join("\n"));
         return;

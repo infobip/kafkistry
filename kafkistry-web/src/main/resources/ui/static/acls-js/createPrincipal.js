@@ -9,8 +9,16 @@ function createPrincipalAcls() {
 
 function doCreatePrincipalAcls(principalAcls) {
     let validateErr = validatePrincipalAcls(principalAcls);
+    let targetBranchError = validateTargetBranch();
+    let errors = [];
     if (validateErr) {
-        showOpError(validateErr);
+        errors.push(validateErr);
+    }
+    if (targetBranchError) {
+        errors.push(targetBranchError);
+    }
+    if (errors.length > 0) {
+        showOpError(errors.join("\n"));
         return;
     }
     let updateMsg = extractUpdateMessage();

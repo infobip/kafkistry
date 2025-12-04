@@ -9,13 +9,20 @@ function editPrincipalAcls() {
 
 function doEditPrincipalAcls(principalAcls) {
     let validateErr = validatePrincipalAcls(principalAcls);
-    if (validateErr) {
-        showOpError(validateErr);
-        return;
-    }
+    let targetBranchError = validateTargetBranch();
     let updateMsg = extractUpdateMessage();
+    let errors = [];
+    if (validateErr) {
+        errors.push(validateErr);
+    }
+    if (targetBranchError) {
+        errors.push(targetBranchError);
+    }
     if (updateMsg.trim() === "") {
-        showOpError("Please specify update reason");
+        errors.push("Please specify update reason");
+    }
+    if (errors.length > 0) {
+        showOpError(errors.join("\n"));
         return;
     }
     updateMsg = appendJiraIssuesIfAny(updateMsg, principalAcls.description);

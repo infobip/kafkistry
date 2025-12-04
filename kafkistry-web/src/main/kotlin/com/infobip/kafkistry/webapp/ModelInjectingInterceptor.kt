@@ -119,6 +119,8 @@ class PropertiesInjectingInterceptor(
             }
             addObject("autopilotEnabled", autopilotProperties.enabled)
             addObject("gitStorageEnabled", gitRepositoriesProperties?.enabled ?: false)
+            addObject("gitBranchRequiredJiraKey", gitRepositoriesProperties?.branchRequiredJiraKey ?: false)
+            addObject("gitMainBranch", gitRepositoriesProperties?.mainBranch ?: "master")
             addObject("securityEnabled", securityProperties.enabled)
             addObject("backgroundJobIssueGroups", issuesApi.currentGroupedIssues())
             addObject("hostname", hostnameResolver.hostname)

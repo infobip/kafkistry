@@ -19,8 +19,16 @@ $(document).ready(function () {
 function doModifyOperation(allowDefaultMessage, opName, httpMethod) {
     let entityQuotas = extractEntityQuotas();
     let validateErr = validateEntityQuotas(entityQuotas);
+    let targetBranchError = validateTargetBranch();
+    let errors = [];
     if (validateErr) {
-        showOpError(validateErr);
+        errors.push(validateErr);
+    }
+    if (targetBranchError) {
+        errors.push(targetBranchError);
+    }
+    if (errors.length > 0) {
+        showOpError(errors.join("\n"));
         return;
     }
     let quotaEntityID = entityIdOf(entityQuotas.entity);
@@ -32,14 +40,22 @@ function doModifyOperation(allowDefaultMessage, opName, httpMethod) {
 }
 
 function doApiOperation(allowDefaultMessage, opName, quotaEntityID, ajaxOptions) {
+    let targetBranchError = validateTargetBranch();
     let updateMsg = extractUpdateMessage();
+    let errors = [];
+    if (targetBranchError) {
+        errors.push(targetBranchError);
+    }
     if (updateMsg.trim() === "") {
         if (allowDefaultMessage) {
             updateMsg = "initial creation";
         } else {
-            showOpError("Please specify update message");
-            return;
+            errors.push("Please specify update message");
         }
+    }
+    if (errors.length > 0) {
+        showOpError(errors.join("\n"));
+        return;
     }
     showOpProgress(opName + " entity quotas...");
     let url = "api/quotas?message=" + encodeURI(updateMsg) + "&" + targetBranchUriParam();

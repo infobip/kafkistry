@@ -131,4 +131,65 @@ function targetBranchUriParam() {
     return "";
 }
 
+/**
+ * Validates the targetBranch field value.
+ * Returns null if valid, or an error message string if invalid.
+ *
+ * Valid values when JIRA validation is enabled:
+ * - Main branch name (from backend config, e.g., "master" or "main")
+ * - A string containing a valid JIRA key (e.g., "ABC-123", "feature/ABC-456")
+ *
+ * Valid values when JIRA validation is disabled:
+ * - Empty string (uses default branch)
+ * - Main branch name (from backend config)
+ * - Any other branch name
+ */
+function validateTargetBranch() {
+    let targetBranchInput = $("input[name=targetBranch]");
+
+    // If the input doesn't exist (git storage not enabled), validation passes
+    if (targetBranchInput.length === 0) {
+        return null;
+    }
+
+    let value = targetBranchInput.val();
+    if (value === undefined || value === null) {
+        value = "";
+    }
+
+    let targetBranch = value.trim();
+
+    // Get configuration from backend
+    let branchRequiredJiraKey = $("meta[name='git-branch-required-jira-key']").attr("content") === "yes";
+    let mainBranch = $("meta[name='git-main-branch']").attr("content") || "master";
+
+    // Check if branch is empty
+    if (targetBranch.length === 0) {
+        if (branchRequiredJiraKey) {
+            return "Target branch must be '" + mainBranch + "' or contain a valid JIRA key (e.g., ABC-123)";
+        }
+        // Empty is valid when JIRA validation is disabled (uses default branch)
+        return null;
+    }
+
+    // Main branch is always valid (case-sensitive)
+    if (targetBranch === mainBranch) {
+        return null;
+    }
+
+    if (branchRequiredJiraKey) {
+        // Check if it contains a valid JIRA key using existing JIRA_REGEX
+        let jiraMatches = targetBranch.match(JIRA_REGEX);
+        if (jiraMatches && jiraMatches.length > 0) {
+            return null;  // Contains a JIRA key, valid
+        }
+
+        // If we get here, it's invalid
+        return "Target branch must be '" + mainBranch + "' or contain a valid JIRA key (e.g., ABC-123)";
+    }
+
+    // If JIRA key validation is not required, any non-empty branch name is valid
+    return null;
+}
+
 

@@ -5,6 +5,10 @@ $(document).ready(function () {
 function editTopic() {
     let topicDescription = extractTopicDescription();
     let validateErrors = validateTopicDescription(topicDescription);
+    let targetBranchError = validateTargetBranch();
+    if (targetBranchError) {
+        validateErrors.push(targetBranchError);
+    }
     let updateMsg = extractUpdateMessage();
     if (updateMsg.trim() === "") {
         validateErrors.push("Please specify update reason");

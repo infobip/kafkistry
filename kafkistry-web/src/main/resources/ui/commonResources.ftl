@@ -5,6 +5,8 @@
 <#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitEmbeddedBrowse"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="gitBranchRequiredJiraKey"  type="java.lang.Boolean" -->
+<#-- @ftlvariable name="gitMainBranch"  type="java.lang.String" -->
 <#-- @ftlvariable name="customJsScripts"  type="java.util.List<java.lang.String>" -->
 <#-- @ftlvariable name="imageProps"  type="com.infobip.kafkistry.webapp.ImageProperties" -->
 
@@ -20,6 +22,8 @@
     <meta name="git-commit-base-url" content="${gitCommitBaseUrl}"></meta>
 </#if>
 <meta name="git-embedded-browse" content="${gitEmbeddedBrowse?then("yes", "no")}"></meta>
+<meta name="git-branch-required-jira-key" content="${gitBranchRequiredJiraKey?then("yes", "no")}"></meta>
+<meta name="git-main-branch" content="${gitMainBranch}"></meta>
 
 <#assign rootPath = appUrl.basePath()>
 
