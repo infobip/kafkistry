@@ -2,15 +2,21 @@ package com.infobip.kafkistry.webapp
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
+import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpSession
+import org.eclipse.jetty.ee10.servlet.SessionHandler
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.session.SessionRegistry
 import org.springframework.session.Session
+import org.springframework.session.SessionRepository
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.GenericFilterBean
 import java.util.concurrent.Executors
@@ -45,7 +51,11 @@ const val MAX_RECORDS_PER_SESSION = 50
 
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
-class SessionRecordingRequestFilter : GenericFilterBean() {
+class SessionRecordingRequestFilter(
+    private val currentUserResolver: CurrentRequestUserResolver,
+    private val sessionRepository: SessionRepository<Session>,
+    private val sessionRegistry: SessionRegistry,
+) : GenericFilterBean() {
 
 
     private val log = LoggerFactory.getLogger(SessionRecordingRequestFilter::class.java)
@@ -53,9 +63,7 @@ class SessionRecordingRequestFilter : GenericFilterBean() {
     private val executor = Executors.newSingleThreadExecutor(CustomizableThreadFactory("session-request-recorder"))
 
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
-        if (request is HttpServletRequest) {
-            executor.submit { tryRecord(request) }  //fire and forget
-        }
+        request.maybeRecord()
         chain.doFilter(request, response)
     }
 
@@ -64,28 +72,32 @@ class SessionRecordingRequestFilter : GenericFilterBean() {
         executor.shutdown()
     }
 
-    private fun tryRecord(request: HttpServletRequest) {
+    private fun ServletRequest.maybeRecord() {
+        if (this !is HttpServletRequest) {
+            return
+        }
+        val uri = requestURI
+        if ("/static/" in uri) {
+            return //skip *.js and *.css resources
+        }
+        val attrSession = resolveSession() ?: return
+        val requestRecord = RecordedUrlRequests(method = method, uri = uri, query = queryString)
+        executor.submit { tryRecord(requestRecord, attrSession) }  //fire and forget
+    }
+
+    private fun tryRecord(requestRecord: RecordedUrlRequests, attrSession: AttributeSession) {
         try {
-            recordRequest(request)
+            recordRequest(requestRecord, attrSession)
         } catch (ex: Exception) {
             log.error("Encountered exception during recording request into session, ignoring", ex)
         }
     }
 
-    private fun recordRequest(request: HttpServletRequest) {
-        if ("/static/" in request.requestURI) {
-            return //skip *.js and *.css resources
-        }
-        val session = request.getSession(true) ?: return
+    private fun recordRequest(requestRecord: RecordedUrlRequests, session: AttributeSession) {
         val requests = session.getAttribute(LAST_REQUESTED_URLS_JSON)
             ?.let { it as? String }
             ?.let { mapper.readValue(it, SessionRecordedRequests::class.java) }
             ?: SessionRecordedRequests()
-        val requestRecord = RecordedUrlRequests(
-            method = request.method,
-            uri = request.requestURI,
-            query = request.queryString,
-        )
         val existingRecord = requests.urlRequests.find { it matches requestRecord }
         val updatedRequestsList = if (existingRecord == null) {
             listOf(requestRecord) + requests.urlRequests.take(MAX_RECORDS_PER_SESSION - 1)
@@ -97,6 +109,44 @@ class SessionRecordingRequestFilter : GenericFilterBean() {
             urlRequests = updatedRequestsList,
         )
         session.setAttribute(LAST_REQUESTED_URLS_JSON, mapper.writeValueAsString(updatedRequests))
+    }
+
+    private fun HttpServletRequest.resolveSession(): AttributeSession? {
+        val httpSession = getSession(false)?.takeIf {
+            //don't take sessions that are not created by SessionRepositoryFilter
+            it !is SessionHandler.ServletSessionApi
+        }
+        if (httpSession != null) {
+            return AttributeSession.HttpAttrSession(httpSession)
+        }
+        val user = currentUserResolver.resolveUser() ?: return null
+        val existingSessionId = sessionRegistry.getAllSessions(user, true)
+            .maxByOrNull { it.lastRequest }?.sessionId
+        val existingSession = existingSessionId?.let { sessionRepository.findById(it) }
+        if (existingSession != null) {
+            log.info("Found existing session id=${existingSessionId} for user $user")
+            return AttributeSession.SessionAttrSession(existingSession)
+        }
+        val newSession = sessionRepository.createSession()
+        newSession.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext())
+        log.info("Created new session id=${newSession.id} for user $user")
+        return AttributeSession.SessionAttrSession(newSession)
+    }
+
+    private interface AttributeSession {
+
+        fun getAttribute(key: String): Any?
+        fun setAttribute(key: String, value: Any?)
+
+        class HttpAttrSession(val s: HttpSession) : AttributeSession {
+            override fun getAttribute(key: String): Any? = s.getAttribute(key)
+            override fun setAttribute(key: String, value: Any?) = s.setAttribute(key, value)
+        }
+
+        class SessionAttrSession(val s: Session) : AttributeSession {
+            override fun getAttribute(key: String): Any? = s.getAttribute(key)
+            override fun setAttribute(key: String, value: Any?) = s.setAttribute(key, value)
+        }
     }
 
     private infix fun RecordedUrlRequests.merge(other: RecordedUrlRequests) = RecordedUrlRequests(

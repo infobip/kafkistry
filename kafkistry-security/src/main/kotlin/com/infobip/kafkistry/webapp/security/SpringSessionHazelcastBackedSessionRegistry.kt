@@ -77,8 +77,16 @@ class SpringSessionHazelcastBackedSessionRegistry private constructor(
             if (principalSessions.get() == null) {
                 refreshCaches()
             }
-            return principalSessions.get().orEmpty()[principalName]?.sessions.orEmpty()
+            val result = getByPrincipalName(principalName)
+            if (result.isNotEmpty()) {
+                return result
+            }
+            refreshCaches()
+            return getByPrincipalName(principalName)
         }
+
+        private fun getByPrincipalName(principalName: String?): Map<String, Session> =
+            principalSessions.get().orEmpty()[principalName]?.sessions.orEmpty()
 
         fun getAllPrincipals(): List<Any> {
             refreshCaches()
