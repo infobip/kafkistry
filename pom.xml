@@ -552,10 +552,14 @@
         <repository>
             <id>ossrh</id>
             <name>SonatypeReleases</name>
+            <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
         </repository>
         <snapshotRepository>
             <id>ossrh-snapshots</id>
             <name>SonatypeSnapshots</name>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </snapshotRepository>
     </distributionManagement>
 
