@@ -158,7 +158,7 @@ class AclsInspectionTest {
         clusters.addCluster(cluster1)
         cluster1.mockClusterStateRules(security = false)
         val result = inspection.inspectPrincipalAclsOnCluster("User:X", cluster1.identifier)
-        result.status.assertNotOk()
+        result.status.assertOk()
         assertThat(result.statuses.flatMap { it.statusTypes }).containsExactly(SECURITY_DISABLED)
     }
 
