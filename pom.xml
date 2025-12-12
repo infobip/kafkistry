@@ -510,6 +510,7 @@
                     <autoPublish>true</autoPublish>
                     <waitUntil>published</waitUntil>
                     <skipPublishing>${maven-central.skip-publish}</skipPublishing>
+                    <deploymentName>Kafkistry public (${project.version})</deploymentName>
                 </configuration>
             </plugin>
 
