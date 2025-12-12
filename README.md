@@ -1,5 +1,15 @@
 ![](kafkistry-web/src/main/resources/ui/static/img/default/banner.png)
 
+
+
+[![Maven Central](https://img.shields.io/maven-central/v/com.infobip.kafkistry/kafkistry-app?logo=apache-maven&logoColor=white)](https://central.sonatype.com/artifact/com.infobip.kafkistry/kafkistry-app)
+
+---
+[![Docker Image](https://img.shields.io/badge/Docker%20Hub-infobip%2Fkafkistry-blue?logo=docker&logoColor=white)](https://hub.docker.com/r/infobip/kafkistry)
+[![Docker Image Version](https://img.shields.io/docker/v/infobip/kafkistry?sort=semver)](https://hub.docker.com/r/infobip/kafkistry)
+[![Docker Pulls](https://img.shields.io/docker/pulls/infobip/kafkistry)](https://hub.docker.com/r/infobip/kafkistry)
+[![Docker Image Size](https://img.shields.io/docker/image-size/infobip/kafkistry/latest)](https://hub.docker.com/r/infobip/kafkistry)
+
 # Kafkistry
 
 Registry service for [Apache Kafka](https://kafka.apache.org/) which keeps track of **topics**, **consumer-groups**, **acls**, **quotas** and their configuration/state/metadata across multiple **kafka-clusters**.
