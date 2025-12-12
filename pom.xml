@@ -90,6 +90,9 @@
         <docker.from-image>eclipse-temurin:21-jdk</docker.from-image>
         <docker.to-image>infobip/kafkistry</docker.to-image>
 
+        <!-- CENTRAL PUBLISH -->
+        <maven-central.skip-publish>true</maven-central.skip-publish>
+
         <!-- DEPENDENCIES -->
         <kafka.version>3.9.0</kafka.version>
         <org.eclipse.jgit.version>6.10.0.202406032230-r</org.eclipse.jgit.version>
@@ -503,10 +506,10 @@
                 <version>0.9.0</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <publishingServerId>central</publishingServerId>
+                    <publishingServerId>ossrh</publishingServerId>
                     <autoPublish>true</autoPublish>
                     <waitUntil>published</waitUntil>
-                    <skipPublishing>true</skipPublishing>
+                    <skipPublishing>${maven-central.skip-publish}</skipPublishing>
                 </configuration>
             </plugin>
 
@@ -557,21 +560,6 @@
                                     </platform>
                                 </platforms>
                             </from>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>release-to-central</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <configuration>
-                            <skipPublishing>false</skipPublishing>
                         </configuration>
                     </plugin>
                 </plugins>
