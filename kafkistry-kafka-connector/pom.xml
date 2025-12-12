@@ -7,6 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Kafkistry clusters connector</name>
     <artifactId>kafkistry-kafka-connector</artifactId>
 
     <dependencies>

@@ -7,6 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Kafkistry persistence repository</name>
     <artifactId>kafkistry-repository</artifactId>
 
     <dependencies>

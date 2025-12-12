@@ -7,6 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Kafkistry record structure analysis</name>
     <artifactId>kafkistry-record-structure</artifactId>
 
     <dependencies>

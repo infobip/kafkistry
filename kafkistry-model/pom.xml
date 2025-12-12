@@ -6,6 +6,7 @@
         <version>0.9.8-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
+    <name>Kafkistry shared data model</name>
 
     <artifactId>kafkistry-model</artifactId>
 

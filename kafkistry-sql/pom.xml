@@ -7,6 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Kafkistry SQL view</name>
     <artifactId>kafkistry-sql</artifactId>
 
     <dependencies>

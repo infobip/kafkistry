@@ -7,6 +7,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Kafkistry kafka state scraping</name>
     <artifactId>kafkistry-state-scraping</artifactId>
 
     <dependencies>
