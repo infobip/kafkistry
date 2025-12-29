@@ -45,6 +45,15 @@ app:
     max-wait-ms: ${CONSUME_MAX_WAIT_MS:120000}
     pool-batch-size: ${CONSUME_POOL_BATCH_SIZE:2000}
     pool-interval: ${CONSUME_POOL_INTERVAL:1000}
+  produce:
+    enabled: ${PRODUCE_ENABLED:true}
+    request-timeout-ms: ${PRODUCE_REQUEST_TIMEOUT_MS:30000}
+    delivery-timeout-ms: ${PRODUCE_DELIVERY_TIMEOUT_MS:120000}
+    default-key-serializer: ${PRODUCE_DEFAULT_KEY_SERIALIZER:STRING}
+    default-value-serializer: ${PRODUCE_DEFAULT_VALUE_SERIALIZER:JSON}
+    default-header-serializer: ${PRODUCE_DEFAULT_HEADER_SERIALIZER:STRING}
+    inject-username-header: ${PRODUCE_INJECT_USERNAME_HEADER:true}
+    username-header-name: ${PRODUCE_USERNAME_HEADER_NAME:KAFKISTRY_PRODUCED}
   scheduling.enabled: true
   pooling:
     interval-ms: ${CLUSTER_POOL_INTERVAL:10000}

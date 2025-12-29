@@ -45,6 +45,7 @@
         <module>kafkistry-kafka-connector</module>
         <module>kafkistry-repository</module>
         <module>kafkistry-consume</module>
+        <module>kafkistry-produce</module>
         <module>kafkistry-record-structure</module>
         <module>kafkistry-state-scraping</module>
         <module>kafkistry-events</module>

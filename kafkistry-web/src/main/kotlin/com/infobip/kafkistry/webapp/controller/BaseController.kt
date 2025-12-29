@@ -53,7 +53,7 @@ abstract class BaseController {
         }
         val attrsDump = if (webHttpProperties.dumpRequestAttributes) {
             request.attributeNames.toList().associateWith {
-                when (val attr = request.getAttribute(it) ?: null) {
+                when (val attr = request.getAttribute(it)) {
                     is Throwable -> attr.deepToString()
                     else -> attr.toString()
                 }

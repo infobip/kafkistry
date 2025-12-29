@@ -3,8 +3,10 @@ package com.infobip.kafkistry.kafka
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.security.auth.SecurityProtocol
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
+import org.apache.kafka.common.serialization.ByteArraySerializer
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
 import com.infobip.kafkistry.model.KafkaProfile
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
@@ -34,6 +36,17 @@ class ClientFactory(
                 createProperties(connectionDefinition, configurer),
                 ByteArrayDeserializer(),
                 ByteArrayDeserializer()
+        )
+    }
+
+    fun createProducer(
+            connectionDefinition: ConnectionDefinition,
+            configurer: (Properties) -> Unit = {}
+    ): KafkaProducer<ByteArray, ByteArray> {
+        return KafkaProducer(
+                createProperties(connectionDefinition, configurer),
+                ByteArraySerializer(),
+                ByteArraySerializer(),
         )
     }
 

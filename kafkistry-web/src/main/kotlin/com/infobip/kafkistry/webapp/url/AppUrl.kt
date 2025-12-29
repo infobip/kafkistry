@@ -10,6 +10,7 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.CLUSTERS
 import com.infobip.kafkistry.webapp.url.CompareUrls.Companion.COMPARE
 import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS
+import com.infobip.kafkistry.webapp.url.ProduceRecordsUrls.Companion.PRODUCE
 import com.infobip.kafkistry.webapp.url.GitUrls.Companion.GIT
 import com.infobip.kafkistry.webapp.url.HistoryUrls.Companion.HISTORY
 import com.infobip.kafkistry.webapp.url.KStreamUrls.Companion.KSTREAM_APPS
@@ -34,6 +35,7 @@ class AppUrl(
     private val clustersManagement = ClustersManagementUrls("$base$CLUSTERS_MANAGEMENT")
     private val compare = CompareUrls("$base$COMPARE")
     private val consumeRecords = ConsumeRecordsUrls("$base$CONSUME")
+    private val produceRecords = ProduceRecordsUrls("$base$PRODUCE")
     private val consumerGroups = ConsumerGroupsUrls("$base$CONSUMER_GROUPS")
     private val git = GitUrls("$base$GIT")
     private val history = HistoryUrls("$base$HISTORY")
@@ -55,6 +57,7 @@ class AppUrl(
     fun clustersManagement() = clustersManagement
     fun compare() = compare
     fun consumeRecords() = consumeRecords
+    fun produceRecords() = produceRecords
     fun consumerGroups() = consumerGroups
     fun git() = git
     fun history() = history

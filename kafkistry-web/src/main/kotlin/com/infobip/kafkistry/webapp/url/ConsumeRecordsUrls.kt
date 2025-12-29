@@ -2,6 +2,7 @@ package com.infobip.kafkistry.webapp.url
 
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.consume.OffsetType
 import org.springframework.web.bind.annotation.RequestParam
 
 class ConsumeRecordsUrls(base: String) : BaseUrls() {
@@ -14,7 +15,7 @@ class ConsumeRecordsUrls(base: String) : BaseUrls() {
 
     private val showConsume = Url(base, listOf(
         "topicName", "clusterIdentifier",
-        "numRecords", "maxWaitMs", "waitStrategy", "offsetType", "offset", "partition", "readFilterJson",
+        "numRecords", "maxWaitMs", "waitStrategy", "offsetType", "offset", "partitions", "readFilterJson",
         "readOnlyCommitted"
     ))
     private val showReadRecords = Url("$base$CONSUME_READ_TOPIC", listOf("clusterIdentifier", "topicName"))
@@ -29,6 +30,20 @@ class ConsumeRecordsUrls(base: String) : BaseUrls() {
         topicName, clusterIdentifier,
         null, null, null, null, null, null, null,
         null, null, null,
+    )
+
+    fun showConsumePageForProduced(
+        topicName: TopicName,
+        clusterIdentifier: KafkaClusterIdentifier,
+        partition: Int,
+        offset: Long,
+    ) = showConsumePage(
+        topicName, clusterIdentifier,
+        1, null, null,
+        if (offset >= 0) OffsetType.EXPLICIT.name else null,
+        offset.takeIf { it >= 0 },
+        partition.takeIf { it >= 0 },
+        null, null, null, null,
     )
 
     @SuppressWarnings("kotlin:S107")
@@ -53,7 +68,7 @@ class ConsumeRecordsUrls(base: String) : BaseUrls() {
         "waitStrategy" to waitStrategy,
         "offsetType" to offsetType,
         "offset" to offset?.toString(),
-        "partition" to partition?.toString(),
+        "partitions" to partition?.toString(),
         "readFilterJson" to readFilterJson,
         "readOnlyCommitted" to readOnlyCommitted?.toString(),
         "autoContinuation" to autoContinuation?.toString(),

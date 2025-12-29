@@ -38,6 +38,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-metadata</artifactId>
+            <version>${kafka.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.infobip.kafkistry</groupId>
             <artifactId>kafkistry-repository</artifactId>
             <version>${project.version}</version>

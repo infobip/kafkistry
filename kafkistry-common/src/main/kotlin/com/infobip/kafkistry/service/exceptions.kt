@@ -6,7 +6,7 @@ import java.lang.RuntimeException
 abstract class KafkistryException : RuntimeException {
     constructor(msg: String) : super(msg)
     constructor(cause: Throwable) : super(cause)
-    constructor(msg: String, cause: Throwable) : super(msg, cause)
+    constructor(msg: String?, cause: Throwable?) : super(msg, cause)
     open val httpStatus: Int = HttpStatus.INTERNAL_SERVER_ERROR.value()
 }
 

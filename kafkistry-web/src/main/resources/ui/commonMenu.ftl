@@ -54,6 +54,9 @@
         <a id="nav-consume" class="nav-link" href="${appUrl.consumeRecords().showConsumePage()}">Consume<span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
+        <a id="nav-produce" class="nav-link" href="${appUrl.produceRecords().showProducePage()}">Produce<span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
         <a id="nav-records-structure" class="nav-link" href="${appUrl.recordsStructure().showMenuPage()}">Records structure<span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
