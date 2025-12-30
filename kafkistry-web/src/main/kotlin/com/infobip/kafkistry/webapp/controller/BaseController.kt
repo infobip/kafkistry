@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.utils.deepToString
+import com.infobip.kafkistry.utils.sanitizeForLog
 import com.infobip.kafkistry.webapp.CompositeRequestInterceptor
 import com.infobip.kafkistry.webapp.WebHttpProperties
 import com.infobip.kafkistry.webapp.menu.MenuItemsInjector
@@ -76,7 +77,7 @@ abstract class BaseController {
                 "attrsDump" to attrsDump,
             )
         ).also {
-            log.error("Exception occurred on {} '{}'\nattrsDump={}", request.method, request.requestURI, attrsDump, exception)
+            log.error("Exception occurred on {} '{}'\nattrsDump={}", request.method.sanitizeForLog(), request.requestURI.sanitizeForLog(), attrsDump.sanitizeForLog(), exception)
             //injecting model to view because injecting interceptor is not invoked on error handling
             compositeInterceptor.injectModel(it, request)
             menuItemsInjector.injectMenuItems(it)
