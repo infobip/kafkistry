@@ -7,7 +7,6 @@ import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.sql.SqlDataSource
 import com.infobip.kafkistry.model.ClusterRef
-import com.infobip.kafkistry.model.Label
 import com.infobip.kafkistry.model.Tag
 import org.springframework.stereotype.Component
 import jakarta.persistence.*
@@ -35,6 +34,7 @@ class RegistryTopicsDataSource(
             owner = topicDescription.owner
             producer = topicDescription.producer
             description = topicDescription.description
+            allowManualProduce = topicDescription.allowManualProduce
             labels = topicDescription.labels.map {
                 TopicLabel().apply {
                     category = it.category
@@ -85,6 +85,7 @@ class RegistryTopic {
     lateinit var producer: String
     lateinit var owner: String
     lateinit var description: String
+    var allowManualProduce: Boolean? = null
 
     @ElementCollection
     @JoinTable(name = "RegistryTopics_Labels")
