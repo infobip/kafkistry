@@ -13,6 +13,7 @@ import org.apache.sshd.git.transport.GitSshdSessionFactory
 import org.eclipse.jgit.api.*
 import org.eclipse.jgit.api.errors.CheckoutConflictException
 import org.eclipse.jgit.api.errors.GitAPIException
+import org.eclipse.jgit.api.errors.InvalidRefNameException
 import org.eclipse.jgit.api.errors.JGitInternalException
 import org.eclipse.jgit.api.errors.RefNotFoundException
 import org.eclipse.jgit.internal.storage.file.FileRepository
@@ -358,6 +359,9 @@ class GitRepository(
                 } else {
                     throw e
                 }
+            } catch (e: InvalidRefNameException) {
+                log.warn("Local branch '{}' can't get checked into: {}, skipping", branchName, e.toString())
+                return@forEach
             }
             val localHeadRevision = currentHeadRevision()
             if (localHeadRevision.objectId.name != remoteBranch.objectId.name) {
