@@ -61,6 +61,14 @@
                    value="${topic.producer}" class="form-control col-sm-10">
         </div>
         <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="allow-manual-produce">Allow Manual Produce</label>
+            <select id="allow-manual-produce" name="allowManualProduce" class="form-control col-sm-10">
+                <option value="null" <#if !topic.allowManualProduce??>selected</#if>>Default (use global setting)</option>
+                <option value="true" <#if (topic.allowManualProduce!false) == true>selected</#if>>Allow</option>
+                <option value="false" <#if topic.allowManualProduce?? && !topic.allowManualProduce>selected</#if>>Deny</option>
+            </select>
+        </div>
+        <div class="form-group row">
             <label class="col-sm-2 col-form-label">Presence</label>
             <div id="presence" class="col-sm-10 p-1">
                 <#assign presence = topic.presence>

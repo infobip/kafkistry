@@ -68,6 +68,15 @@
                 <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a>
             </td>
         </tr>
+        <#if topicStatus.topicDescription??>
+            <tr>
+                <th>Allow Manual Produce</th>
+                <td>
+                    <#assign topicDescription = topicStatus.topicDescription>
+                    <#include "../common/allowManualProduce.ftl">
+                </td>
+            </tr>
+        </#if>
         <tr>
             <th>Last refresh</th>
             <td class="time" data-time="${topicStatus.lastRefreshTime?c}"></td>

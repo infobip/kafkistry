@@ -76,6 +76,8 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
         browser.findElementByCssSelector("input[name=owner]").clearAndSendKeys("new owner")
         browser.findElementByCssSelector("textarea[name=description]").clearAndSendKeys("new description")
         browser.findElementByCssSelector("input[name=producer]").clearAndSendKeys("new producer")
+        browser.findElementByCssSelector("select[name=allowManualProduce]").run { Select(this) }
+            .selectByValue("true")
         browser.findElementWithText("Add label").scrollIntoView().click()
         browser.findElementWithText("CREATE NEW").scrollIntoView().click()
         browser.findElementByCssSelector(".labels input[name=label-category]").clearAndSendKeys("my-label-category")
@@ -228,6 +230,7 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
                         description = "documentation of fieldName being CLS",
                     ),
                 ),
+                allowManualProduce = true,
         )
         assertThat(topicsApi.getTopic("my-edit-1")).isEqualTo(expectedTopicDescription)
         assertThat(browser.findElementById("topic-yaml").text).isEqualTo(YamlMapper().serialize(expectedTopicDescription).trim())

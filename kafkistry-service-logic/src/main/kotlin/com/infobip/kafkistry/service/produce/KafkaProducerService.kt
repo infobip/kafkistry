@@ -5,6 +5,7 @@ import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.service.produce.config.ProduceProperties
 import com.infobip.kafkistry.service.topic.TopicsRegistryService
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import com.infobip.kafkistry.webapp.security.User
@@ -22,6 +23,7 @@ class KafkaProducerService(
     private val userResolver: CurrentRequestUserResolver,
     private val clusterEnabledFilter: ClusterEnabledFilter,
     private val userIsOwnerVerifiers: List<UserOwnerVerifier>,
+    private val produceProperties: ProduceProperties,
 ) {
 
     fun produceRecord(
@@ -43,22 +45,39 @@ class KafkaProducerService(
     }
 
     private fun checkUserAllowedToProduce(topicName: TopicName, user: User) {
-        if (user.isAdmin()) {
-            return
-        }
         val topicDescription = topicsRepository.findTopic(topicName)
-            ?: throw KafkistryProduceException("Topic '$topicName' not found in registry")
 
-        val allowedOwners = topicDescription.owner
-            .split(",").map { it.trim() }
-            .filter { it.isNotBlank() }
-        val userIsOwner = userIsOwnerVerifiers.any { verifier ->
-            allowedOwners.any { owner -> verifier.isUserOwner(user, owner) }
+        // Allow admin to produce to topics not in registry
+        if (topicDescription == null) {
+            if (user.isAdmin() && produceProperties.allowedByDefault) {
+                return
+            }
+            throw KafkistryProduceException("Topic '$topicName' not found in registry")
         }
-        if (!userIsOwner) {
+
+        // Check if user is owner (skip for admin)
+        if (!user.isAdmin()) {
+            val allowedOwners = topicDescription.owner
+                .split(",").map { it.trim() }
+                .filter { it.isNotBlank() }
+            val userIsOwner = userIsOwnerVerifiers.any { verifier ->
+                allowedOwners.any { owner -> verifier.isUserOwner(user, owner) }
+            }
+            if (!userIsOwner) {
+                throw KafkistryProduceException(
+                    "User '${user.username}' is not authorized to produce to topic '$topicName'. " +
+                            "Topic owner is '${topicDescription.owner}' which user '${user.username}' is not member of."
+                )
+            }
+        }
+
+        // Check explicit allow/deny via allowManualProduce field, fallback to property (applies to all users including admin)
+        val allowed = topicDescription.allowManualProduce ?: produceProperties.allowedByDefault
+        if (!allowed) {
             throw KafkistryProduceException(
-                "User '${user.username}' is not authorized to produce to topic '$topicName'. " +
-                "Topic owner is '${topicDescription.owner}'"
+                "Manual produce to topic '$topicName' is not allowed, " +
+                        "global default: ${if (produceProperties.allowedByDefault) "ALLOWED" else "DENIED"}, " +
+                        "setting for topic: ${if (topicDescription.allowManualProduce != null) "DENIED" else "(use global default)"}"
             )
         }
     }

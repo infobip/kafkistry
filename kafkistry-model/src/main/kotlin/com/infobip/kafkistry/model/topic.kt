@@ -22,6 +22,7 @@ data class TopicDescription(
     val perTagConfigOverrides: Map<Tag, TopicConfigMap> = emptyMap(),
     val freezeDirectives: List<FreezeDirective> = emptyList(),
     val fieldDescriptions: List<FieldDescription> = emptyList(),
+    val allowManualProduce: Boolean? = null,
 ) : Serializable
 
 data class TopicProperties(

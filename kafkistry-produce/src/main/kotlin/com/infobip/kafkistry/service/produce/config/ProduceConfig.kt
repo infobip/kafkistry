@@ -19,6 +19,7 @@ class ProduceProperties {
     var defaultHeaderSerializer: String? = null
     var injectUsernameHeader: Boolean = true
     var usernameHeaderName: String = "KAFKISTRY_PRODUCED"
+    var allowedByDefault: Boolean = true
 
     fun requestTimeoutMs() = requestTimeoutMs ?: notInitialized("requestTimeoutMs")
     fun deliveryTimeoutMs() = deliveryTimeoutMs ?: notInitialized("deliveryTimeoutMs")

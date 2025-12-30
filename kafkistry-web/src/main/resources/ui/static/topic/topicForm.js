@@ -51,6 +51,8 @@ function extractTopicDescription() {
     let description = $("textarea[name='description']").val();
     let producer = $("input[name='producer']").val().trim();
     let presence = extractPresenceData($("#presence"));
+    let allowManualProduceValue = $("select[name='allowManualProduce']").val();
+    let allowManualProduce = allowManualProduceValue === "null" ? null : (allowManualProduceValue === "true");
     let partitionCount = $(".globalConfig input[name='partitionCount']").val();
     let replicationFactor = $(".globalConfig input[name='replicationFactor']").val();
     let config = {};
@@ -108,6 +110,7 @@ function extractTopicDescription() {
         perTagConfigOverrides: perTagConfig,
         freezeDirectives: extractFreezeDirectives(),
         fieldDescriptions: extractTopicFieldDescriptions(),
+        allowManualProduce: allowManualProduce,
     };
 }
 
@@ -122,6 +125,10 @@ function applyTopicDescription(topicDescription) {
     $("input[name='owner']").val(topicDescription.owner);
     $("textarea[name='description']").val(topicDescription.description);
     $("input[name='producer']").val(topicDescription.producer);
+    let allowManualProduceValue = topicDescription.allowManualProduce === null || topicDescription.allowManualProduce === undefined
+        ? "null"
+        : String(topicDescription.allowManualProduce);
+    $("select[name='allowManualProduce']").val(allowManualProduceValue);
 
     //TODO implement setting of topicPresence and resourceRequirements here if it will be needed
 

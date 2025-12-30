@@ -78,6 +78,13 @@
                 <td>${topic.topicDescription.producer}</td>
             </tr>
             <tr>
+                <th>Allow Manual Produce</th>
+                <td>
+                    <#assign topicDescription = topic.topicDescription>
+                    <#include "../common/allowManualProduce.ftl">
+                </td>
+            </tr>
+            <tr>
                 <th>Presence</th>
                 <td>
                     <@util.presence presence = topic.topicDescription.presence/>

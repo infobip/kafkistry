@@ -54,6 +54,7 @@ app:
     default-header-serializer: ${PRODUCE_DEFAULT_HEADER_SERIALIZER:STRING}
     inject-username-header: ${PRODUCE_INJECT_USERNAME_HEADER:true}
     username-header-name: ${PRODUCE_USERNAME_HEADER_NAME:KAFKISTRY_PRODUCED}
+    allowed-by-default: ${PRODUCE_ALLOWED_BY_DEFAULT:true}
   scheduling.enabled: true
   pooling:
     interval-ms: ${CLUSTER_POOL_INTERVAL:10000}
