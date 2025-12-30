@@ -35,6 +35,7 @@
    + [Hazelcast](#hazelcast)
  - [Customizing topic creation wizard](#customizing-topic-wizard)
  - [Reading/consuming records utility](#consumingreading-records-limits)
+ - [Producing records utility](#producing-records-utility)
  - [Oldest record age sampling](#oldest-record-age-samplinganalysis)
  - [Record structure analysis](#record-structure-analysis)
  - [Scraping broker's disk capacity](#scraping-brokers-disk-capacity)
@@ -47,6 +48,8 @@
    + [Topic rule violations](#topic-rule-violations)
  - [ACLs inspection](#acls-inspection)
  - [Cluster inspection](#cluster-inspection)
+ - [Cluster tags configuration](#cluster-tags-configuration)
+ - [Consumer lag thresholds](#consumer-lag-thresholds)
  - [SQL querying - SQLite](#sql-metadata-querying---sqlite)
    + [ClickHouseDB-like API](#clickhousedb-like-rest-api)
  - [Autopilot](#autopilot)
@@ -126,10 +129,17 @@ There are two modes/implementations of repository:
 ### Using regular `dir` repository
 
 - activate `dir` spring profile with environment variable `SPRING_PROFILES_ACTIVE=dir`
-- specify desired path with env variable `APP_REPOSITOY_DIR_PATH=/desired/path` 
+- specify desired path with env variable `APP_REPOSITOY_DIR_PATH=/desired/path`
   (default value is `CURRENT_WORK_DIR/kafkistry/repository`)
-  
+
 This implementation is basic and does not support showing history and remote persistence (in contrast to git)
+
+Properties:
+
+| Property                     | Default                       | Description                                                                     |
+|------------------------------|-------------------------------|---------------------------------------------------------------------------------|
+| `app.repository.dir.enabled` | Not set (use profile instead) | Enable directory-based repository storage (alternative to git-based repository) |
+| `app.repository.dir.path`    | `kafkistry/repository`        | Path to directory for storing repository files when using dir-based storage     |
   
 ### Using `git` backed repository
 
@@ -155,23 +165,29 @@ Example use case:
 
 Properties:
 
-| Property                                          | Description                                                                                                                                                                                                                                  |
-|---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `GIT_REMOTE_URI` or `GIT_REMOTE_SSH_URI`          | URI of remote git dir to clone/use. For example `ssh://kr-user@git-host:1234/my-kafkistry-repo.git`. It can be omitted, in this case Kafkistry will simply initialize empty repository without remote, and commits won't be pushed anywhere. |
-| `LOCAL_GIT_DIR`                                   | Path to directory where will Kafkistry clone/init git repository                                                                                                                                                                             |
-| `GIT_MAIN_BRANCH`                                 | Default value: `master`                                                                                                                                                                                                                      |
-| `GIT_USERNAME`                                    | Username to use to authenticate `kr-user` as ssh or http client. Can be omitted if private key is used.                                                                                                                                      |
-| `GIT_PASSWORD` or `GIT_SSH_PASSWORD`              | Password to use to authenticate `kr-user` as ssh or http client. Can be omitted if private key is used.                                                                                                                                      |
-| `SSH_PRIVATE_KEY`                                 | Literal value of ssh private key. Example how to generate keypair: `ssh-keygen -t rsa -C "my kafkistry key" -m PEM`, add public key to your git repo server                                                                                  |
-| `SSH_PRIVATE_KEY_PATH`                            | Path to private key file, alternative to `SSH_PRIVATE_KEY`                                                                                                                                                                                   |
-| `SSH_PRIVATE_KEY_PASS`                            | Passphrase for given private key, can be omitted if private key has a passphrase                                                                                                                                                             |
-| `GIT_TIMEOUT_SEC`                                 | Timeout for git remote calls (push/pull). Default `30` sec                                                                                                                                                                                   |
-| `GIT_REFRESH_INTERVAL_SEC`                        | Git periodic fetch polling interval. Default `30` sec                                                                                                                                                                                        |
-| `GIT_HTTPS_SSL_VERIFY`                            | Default `true`, in case of https scheme, should SSL certificate of the remote be checked.                                                                                                                                                    |
-| `app.repository.git.strict-ssh-host-key-checking` | Default `false` (ssh would fail if current host never connected to remote and having no saved fingerprint of remote host)                                                                                                                    |
-| `GIT_BROWSE_BRANCH_BASE_URL`                      | Optional. Used for UI generating links for external git repository browsing for showing branch. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/compare/commits?sourceBranch=`                                        |
-| `GIT_BROWSE_COMMIT_BASE_URL`                      | Optional. Used for UI generating links for external gir repository browsing for showing commit. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/commits/`                                                             |
-| `GIT_COMMIT_TO_MASTER_BY_DEFAULT`                 | Should Kafkistry commit directly to main/master branch. Default `false`                                                                                                                                                                      |
+| Property                                                        | Description                                                                                                                                                                                                                                  |
+|-----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `GIT_REMOTE_URI` or `GIT_REMOTE_SSH_URI`                        | URI of remote git dir to clone/use. For example `ssh://kr-user@git-host:1234/my-kafkistry-repo.git`. It can be omitted, in this case Kafkistry will simply initialize empty repository without remote, and commits won't be pushed anywhere. |
+| `LOCAL_GIT_DIR`                                                 | Path to directory where will Kafkistry clone/init git repository                                                                                                                                                                             |
+| `GIT_MAIN_BRANCH`                                               | Default value: `master`                                                                                                                                                                                                                      |
+| `GIT_USERNAME`                                                  | Username to use to authenticate `kr-user` as ssh or http client. Can be omitted if private key is used.                                                                                                                                      |
+| `GIT_PASSWORD` or `GIT_SSH_PASSWORD`                            | Password to use to authenticate `kr-user` as ssh or http client. Can be omitted if private key is used.                                                                                                                                      |
+| `SSH_PRIVATE_KEY`                                               | Literal value of ssh private key. Example how to generate keypair: `ssh-keygen -t rsa -C "my kafkistry key" -m PEM`, add public key to your git repo server                                                                                  |
+| `SSH_PRIVATE_KEY_PATH`                                          | Path to private key file, alternative to `SSH_PRIVATE_KEY`                                                                                                                                                                                   |
+| `SSH_PRIVATE_KEY_PASS`                                          | Passphrase for given private key, can be omitted if private key has a passphrase                                                                                                                                                             |
+| `GIT_TIMEOUT_SEC`                                               | Timeout for git remote calls (push/pull). Default `30` sec                                                                                                                                                                                   |
+| `GIT_REFRESH_INTERVAL_SEC`                                      | Git periodic fetch polling interval. Default `30` sec                                                                                                                                                                                        |
+| `GIT_HTTPS_SSL_VERIFY`                                          | Default `true`, in case of https scheme, should SSL certificate of the remote be checked.                                                                                                                                                    |
+| `app.repository.git.strict-ssh-host-key-checking`               | Default `false` (ssh would fail if current host never connected to remote and having no saved fingerprint of remote host)                                                                                                                    |
+| `GIT_BROWSE_BRANCH_BASE_URL`                                    | Optional. Used for UI generating links for external git repository browsing for showing branch. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/compare/commits?sourceBranch=`                                        |
+| `GIT_BROWSE_COMMIT_BASE_URL`                                    | Optional. Used for UI generating links for external gir repository browsing for showing commit. Example value: `https://my-bitbucket/projects/my-project/repos/my-repo/commits/`                                                             |
+| `GIT_COMMIT_TO_MASTER_BY_DEFAULT`                               | Should Kafkistry commit directly to main/master branch. Default `false`                                                                                                                                                                      |
+| `app.repository.git.drop-local-branches-missing-on-remote`      | Default `false`. When `true`, Kafkistry will delete local branches that no longer exist on the remote repository during fetch/refresh operations.                                                                                            |
+| `app.repository.git.hard-reset-local-branch-checkout-conflicts` | Default `false`. When `true`, performs a hard reset on local branches when checkout conflicts are detected, discarding local changes.                                                                                                        |
+| `app.repository.git.write-branch-select.branch-per-user`        | Default `false`. When `true`, creates a separate branch per user for write operations.                                                                                                                                                       |
+| `app.repository.git.write-branch-select.new-branch-each-write`  | Default `false`. When `true`, creates a new branch for each write operation.                                                                                                                                                                 |
+| `app.repository.caching.enabled`                                | Default `true`. Enable/disable caching layer for repository read operations to improve performance.                                                                                                                                          |
+| `app.repository.caching.always-refresh-after-ms`                | Default `null` (no automatic refresh). Time in milliseconds after which cached repository data will automatically be refreshed. When `null`, cache entries are not automatically refreshed based on time.                                    |
 
 
 
@@ -244,10 +260,11 @@ Kafkistry will start to periodically scrape metadata from it.
 Every interaction with kafka could be treated as _read_ or _write_ operation.
 You can define different timeout for each of those.
 
-| Property                 | Default         | How much will Kafkistry wait for AdminClient's `Future` to complete                                      |
-|--------------------------|-----------------|----------------------------------------------------------------------------------------------------------|
-| `KAFKA_READ_TIMEOUT_MS`  | `15000` (15sec) | Applies to API calls which have read semantics, i.e. don't actively change state (mostly DESCRIBE calls) | 
-| `KAFKA_WRITE_TIMEOUT_MS` | `120000` (2min) | Applies to API calls which have write semantics, i.e. CREATING/DELETING/ALTERING/... operations          | 
+| Property                                 | Default         | How much will Kafkistry wait for AdminClient's `Future` to complete                                               |
+|------------------------------------------|-----------------|-------------------------------------------------------------------------------------------------------------------|
+| `KAFKA_READ_TIMEOUT_MS`                  | `15000` (15sec) | Applies to API calls which have read semantics, i.e. don't actively change state (mostly DESCRIBE calls)          |
+| `KAFKA_WRITE_TIMEOUT_MS`                 | `120000` (2min) | Applies to API calls which have write semantics, i.e. CREATING/DELETING/ALTERING/... operations                   |
+| `app.kafka.eagerly-connect-to-zookeeper` | `false`         | When `true`, establishes ZooKeeper connections immediately for older Kafka versions that require ZooKeeper access | 
 
 ### Kafkistry's permissions on Kafka cluster
 
@@ -348,11 +365,17 @@ So, it's better to simply disable particular clusters when you know they are unr
 
 ## Customizing web app
 
-| Property                        | Default      | Description                                                                                                                                                                                       |
-|---------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `HTTP_PORT`                     | `8080`       | Which port should web server listen on. No need to change if running in docker with port mapping.                                                                                                 |
-| `HTTP_ROOT_PATH`                | `/kafkistry` | This is basically _prefix_ for all http urls paths. Useful if Kafkistry is deployed behind http proxy which will be using url path for routing. **NOTE**: must not end with `/` but can be empty. |
-| `HTTP_REQUESTS_LOGGING_ENABLED` | `true`       | Should each HTTP request to Kafkistry be logged, see [filter](kafkistry-web/src/main/kotlin/com/infobip/kafkistry/webapp/RequestLoggingFilterConfig.kt)                                           |
+| Property                                     | Default                | Description                                                                                                                                                                                                         |
+|----------------------------------------------|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `HTTP_PORT`                                  | `8080`                 | Which port should web server listen on. No need to change if running in docker with port mapping.                                                                                                                   |
+| `HTTP_ROOT_PATH`                             | `/kafkistry`           | This is basically _prefix_ for all http urls paths. Useful if Kafkistry is deployed behind http proxy which will be using url path for routing. **NOTE**: must not end with `/` but can be empty.                   |
+| `HTTP_REQUESTS_LOGGING_ENABLED`              | `true`                 | Should each HTTP request to Kafkistry be logged, see [filter](kafkistry-web/src/main/kotlin/com/infobip/kafkistry/webapp/RequestLoggingFilterConfig.kt)                                                             |
+| `app.http.dump-request-attributes`           | `false`                | Controls whether HTTP request attributes should be dumped/logged during request processing for debugging purposes.                                                                                                  |
+| `app.http-logging.include-query-string`      | `true`                 | Include query string parameters in HTTP request logging output.                                                                                                                                                     |
+| `app.http-logging.include-payload`           | `true`                 | Include request payload/body in HTTP request logging output.                                                                                                                                                        |
+| `app.http-logging.max-payload-length`        | `10000`                | Maximum length of request payload to include in logs. Payloads longer than this will be truncated.                                                                                                                  |
+| `app.http-logging.include-headers`           | `true`                 | Include HTTP request headers in logging output.                                                                                                                                                                     |
+| `app.http-logging.after-message-prefix`      | `"REQUEST DATA : "`    | Prefix string to prepend to logged HTTP request messages.                                                                                                                                                           |
 
 
 
@@ -506,10 +529,32 @@ Kafkistry exports lag as GAUGE metric named `kafkistry_consumer_lag` broken down
 
 Value of metric is `lag = end_offset - committed_offset`
 
-Example of consumer lag metric sample: 
+Example of consumer lag metric sample:
 ```bash
 kafkistry_consumer_lag{cluster="my-kafka",consumer_group="my-consumer",topic="my-topic",partition="0",consumer_host="/127.0.0.1",} 123.0
 ```
+
+#### Consumer lag additional labels
+
+In addition to standard labels, additional custom labels can be added to consumer lag metrics to enrich monitoring capabilities.
+
+| Property                                                                    | Default     | Description                                                                                                     |
+|-----------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------------|
+| `app.metrics.consumer-lag.additional-labels.enabled`                        | `false`     | Enable additional custom labels on consumer lag metrics beyond the standard labels                              |
+| `app.metrics.consumer-lag.additional-labels.service-label-name`             | `"service"` | Name of the label to use for service/principal identification in consumer lag metrics                           |
+| `app.metrics.consumer-lag.additional-labels.owner-label-name`               | `"owners"`  | Name of the label to use for owner/team identification in consumer lag metrics                                  |
+| `app.metrics.consumer-lag.additional-labels.unknown-service-literal-value`  | `"unknown"` | Literal value to use in service label when principal/service cannot be resolved for consumer group              |
+| `app.metrics.consumer-lag.additional-labels.unknown-owner-literal-value`    | `"unknown"` | Literal value to use in owner label when owner cannot be resolved for consumer group                            |
+
+#### Cluster label transforming for metrics
+
+Cluster identifiers in metric labels can be transformed using regex patterns.
+
+| Property                                             | Default     | Description                                                                                                                  |
+|------------------------------------------------------|-------------|------------------------------------------------------------------------------------------------------------------------------|
+| `app.metrics.cluster-labels.transforming.enabled`    | `false`     | Enable transformation of cluster identifiers in metric labels using regex pattern matching                                   |
+| `app.metrics.cluster-labels.transforming.label-name` | `"cluster"` | Name of the metric label to use for transformed cluster identifiers                                                          |
+| `app.metrics.cluster-labels.transforming.regex`      | `".*"`      | Regular expression pattern for extracting/transforming cluster identifier into metric label value. Uses captured groups      |
 
 ### Topic offsets metrics
 
@@ -937,10 +982,14 @@ Topic wizard proposes topic property `max.message.bytes` value based on expected
 It is possible to define thresholds for lowest possible value wizard will generate for this property, 
 as well as the highest possible value.
 
-| Property                | Default             | Description                                                                                |
-|-------------------------|---------------------|--------------------------------------------------------------------------------------------|
-| `MIN_MAX_MESSAGE_BYTES` | `0`                 | Lowest possible value wizard can suggest for this property, by default there is no limit   |
-| `MAX_MAX_MESSAGE_BYTES` | `10485760` _(10MB)_ | By default, most wizard will suggest regardless of average message size is 10 MB           |
+| Property                                                     | Default             | Description                                                                                                                                                                                       |
+|--------------------------------------------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `MIN_MAX_MESSAGE_BYTES`                                      | `0`                 | Lowest possible value wizard can suggest for this property, by default there is no limit                                                                                                          |
+| `MAX_MAX_MESSAGE_BYTES`                                      | `10485760` _(10MB)_ | By default, most wizard will suggest regardless of average message size is 10 MB                                                                                                                  |
+| `app.topic-wizard.max-message-to-avg-ratio`                  | `20.0`              | Ratio multiplier applied to average message size to determine `max.message.bytes` configuration. For example, if avg message is 1KB, max will be 20KB                                             |
+| `app.topic-wizard.segment-size.to-retention-ratio-small`     | `0.5` (50%)         | Ratio of segment size to retention bytes for topics with small retention. When `retention.bytes` < `retention-size-big-threshold`, segment size will be `retention.bytes * 0.5`                   |
+| `app.topic-wizard.segment-size.retention-size-big-threshold` | `104857600` (100MB) | Threshold in bytes above which a topic's retention size is considered "big", affecting segment size calculation strategy                                                                          |
+| `app.topic-wizard.segment-size.to-retention-ratio-big`       | `0.1` (10%)         | Ratio of segment size to retention bytes for topics with large retention. When `retention.bytes` >= `retention-size-big-threshold`, segment size will be `retention.bytes * 0.1`                  |
 
 
 
@@ -960,7 +1009,7 @@ prevent memory exhaustion.
 | `CONSUME_POOL_BATCH_SIZE` | `2000`          | Will be used for consumer `max.poll.records` property                |
 | `CONSUME_POOL_INTERVAL`   | `1000` (1sec)   | Will be used as argument for `KafkaConsumer.pool(timeout)`           |
 
-When reading from topic a new `KafkaConsumer` will be created which will consumer with randomly generated 
+When reading from topic a new `KafkaConsumer` will be created which will consumer with randomly generated
 consumer group ID, and it will not perform commits while consuming.
 
 ### Record masking
@@ -982,6 +1031,33 @@ Rules for masking can be defined via following configuration properties:
 Rules for masking can be obtained by supplying custom implementation of
 [RecordTimestampExtractor](kafkistry-consume/src/main/kotlin/com/infobip/kafkistry/service/consume/masking/RecordMaskingRuleProvider.kt)
 as spring bean.
+
+
+
+## Producing records utility
+
+Kafkistry has a utility to manually produce/write records to topics through the UI.
+This feature is mainly intended for developer testing and debugging purposes.
+
+| Property                           | Default                 | Description                                                                                                          |
+|------------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------|
+| `PRODUCE_ENABLED`                  | `true`                  | Enable/disable the manual record producing feature in Kafkistry UI                                                   |
+| `PRODUCE_REQUEST_TIMEOUT_MS`       | `30000` (30 sec)        | Timeout in milliseconds for individual produce requests to complete                                                  |
+| `PRODUCE_DELIVERY_TIMEOUT_MS`      | `120000` (2 min)        | Overall timeout in milliseconds for message delivery, including retries                                              |
+| `PRODUCE_DEFAULT_KEY_SERIALIZER`   | `STRING`                | Default serializer type for record keys when producing messages. Options: STRING, JSON, AVRO, etc.                   |
+| `PRODUCE_DEFAULT_VALUE_SERIALIZER` | `JSON`                  | Default serializer type for record values when producing messages. Options: STRING, JSON, AVRO, etc.                 |
+| `PRODUCE_DEFAULT_HEADER_SERIALIZER`| `STRING`                | Default serializer type for record headers when producing messages                                                   |
+| `PRODUCE_INJECT_USERNAME_HEADER`   | `true`                  | When `true`, automatically injects a header containing the username of the person who produced the message for audit |
+| `PRODUCE_USERNAME_HEADER_NAME`     | `KAFKISTRY_PRODUCED`    | Name of the header to use when injecting username information into produced messages                                 |
+| `PRODUCE_ALLOWED_BY_DEFAULT`       | `true`                  | When `true`, manual producing is allowed for all topics by default unless explicitly denied at topic level           |
+
+When producing to a topic, a new `KafkaProducer` will be created which will use configured serializers
+and send the message with configured timeouts. The username of the person producing will be injected
+as a header (if `PRODUCE_INJECT_USERNAME_HEADER` is enabled) for auditing purposes.
+
+**Security Note**: The ability to produce to specific topics can be controlled at the topic level
+through the `allowManualProduce` flag in topic configuration, in combination with the `PRODUCE_ALLOWED_BY_DEFAULT` setting.
+
 
 
 ## Oldest record age sampling/analysis
@@ -1037,6 +1113,9 @@ Options to configure analyzer.
 | `app.record-analyzer.value-sampling.enabled-on.topics.<...filter options...>`           | _all_                            | From which topics to sample values of topic records. See [filtering options](#filter-options)                                                                  |
 | `app.record-analyzer.value-sampling.included-fields`                                    | _none_                           | Comma-separated list of json path field, sample values only from json fields of this whitelist                                                                 |
 | `app.record-analyzer.value-sampling.excluded-fields`                                    | _none_                           | Comma-separated list of json path field, do not sample values from json fields of this blacklist                                                               |
+| `app.record-analyzer.cardinality-diff-threshold`                                        | `5`                              | Threshold for determining when difference in field cardinality is significant enough to report                                                                 |
+| `app.record-analyzer.cardinality-magnitude-factor-threshold`                            | `10`                             | Factor threshold for determining when cardinality magnitude differences should be flagged                                                                      |
+| `app.record-analyzer.cardinality-requiring-common-fields`                               | `false`                          | When `true`, requires fields to appear in all sampled records before including in cardinality analysis                                                         |
 
 
 
@@ -1202,7 +1281,27 @@ app.topic-inspection:
      | `app.topic-inspection.overprovisioned-retention.min-used-ratio-to-retention-bytes` | `0.2`               | Trigger this status when partition size is 20% or less than topic's `retention.bytes`                                                                              |
      | `app.topic-inspection.overprovisioned-retention.required-ratio-to-retention-ms`    | `0.8`               | Prevent this status from triggering unless messages are being deleted by time retention; i.e. oldest record being at old at least as 80% of topic's `retention.ms` |
      | `app.topic-inspection.overprovisioned-retention.ignore-below-retention-bytes`      | `10485760` _(10MB)_ | Don't trigger for small topics; i.e. having `retention.bytes` less than 10MB                                                                                       |
-   
+
+- [TopicUnevenPartitionProducingInspector](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/topic/inspectors/TopicUnevenPartitionProducingInspector.kt)
+   - Check if topic has uneven message produce rates across partitions, which may indicate key distribution issues
+   -
+     | Property                                                               | Default       | Description                                                                                                                |
+     |------------------------------------------------------------------------|---------------|----------------------------------------------------------------------------------------------------------------------------|
+     | `app.topic-inspection.uneven-partition-rate.ignore-internal`           | `true`        | When `true`, skips uneven partition rate inspection for internal topics (eg. `__consumer_offsets`)                         |
+     | `app.topic-inspection.uneven-partition-rate.only-15-min-window`        | `false`       | When `true`, uses only 15-minute window for rate calculation. When `false`, uses 24-hour window with fallback to 15-minute |
+     | `app.topic-inspection.uneven-partition-rate.acceptable-max-min-ratio`  | `5.0`         | Maximum acceptable ratio between highest and lowest partition produce rates. Triggers inspection issue when exceeded       |
+     | `app.topic-inspection.uneven-partition-rate.threshold-min-msg-rate`    | `50.0` (msg/s)| Minimum message rate threshold for triggering inspection. Prevents false positives on low-traffic topics                   |
+
+### Topic inspection UI extensions
+
+Custom UI extensions can be added to the topic inspection page.
+
+| Property                                    | Default | Description                                                                                                                                                                                        |
+|---------------------------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.topic-inspect.extension.template-name` | `null`  | Name of custom Freemarker template file (*.ftl) for extending topic inspection UI visualizations, **NOTE**: template file must be a class path resource located in `ui/topics`                     |
+| `app.topic-inspect.extension.js-name`       | `null`  | Name of custom JavaScript file for extending topic inspection UI functionality with custom client-side logic. , **NOTE**: template file must be a class path resource located in `ui/static/topic` |
+
+
 
 
 ### Topic rule violations
@@ -1334,6 +1433,28 @@ where value is list of fully qualified class names to disable/exclude from evalu
 
 Custom checker can be implemented via interface [ClusterIssueChecker](kafkistry-service-logic/src/main/kotlin/com/infobip/kafkistry/service/cluster/inspect/ClusterIssueChecker.kt)
 and being picked up by Spring Framework as bean. (see more on [Writing custom plugins](#writing-custom-plugins))
+
+
+## Cluster tags configuration
+
+Cluster tags can be used for organizing clusters and defining presence/override rules for topics, ACLs, and quotas.
+
+| Property                                     | Default | Description                                                                                                                                   |
+|----------------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `app.cluster-tags.presence-tag-name-pattern` | `""`    | Regular expression pattern to identify which cluster tags should be considered as "presence" tags for topic/ACL/quota presence configuration  |
+| `app.cluster-tags.override-tag-name-pattern` | `""`    | Regular expression pattern to identify which cluster tags should be considered as "override" tags for per-tag configuration overrides         |
+
+## Consumer lag thresholds
+
+Configuration for determining when consumer lag should be considered significant.
+
+| Property                                              | Default        | Description                                                                                                                |
+|-------------------------------------------------------|----------------|----------------------------------------------------------------------------------------------------------------------------|
+| `PARTITION_NO_LAG_AMOUNT_THRESHOLD`                   | `100`          | Lag amount below which partition is considered to have no significant lag                                                  |
+| `PARTITION_MINOR_LAG_AMOUNT_THRESHOLD`                | `20000`        | Lag amount below which partition is considered to have minor lag (documented in DOCUMENTATION.md)                          |
+| `PARTITION_NO_LAG_TIME_THRESHOLD`                     | `60` (1 min)   | Time-based lag below which partition is considered to have no significant lag (documented in DOCUMENTATION.md)             |
+| `PARTITION_MINOR_LAG_TIME_THRESHOLD`                  | `900` (15 min) | Time-based lag below which partition is considered to have minor lag (documented in DOCUMENTATION.md)                      |
+| `app.lag.threshold.partition-txn-lag-tolerate-amount` | Not set        | Tolerable lag amount for transactional partitions. Transactional topics may have additional lag due to transaction markers |
 
 
 ## SQL metadata querying - SQLite
