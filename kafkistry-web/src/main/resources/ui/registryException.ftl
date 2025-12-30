@@ -20,28 +20,6 @@
             <div class="error-template">
                 <h2>Kafkistry error</h2>
                 <hr>
-                <h4>
-                    <#switch httpStatus.series().value()>
-                        <#case 1>
-                            <#assign codeClass = "badge-primary">
-                            <#break>
-                        <#case 2>
-                            <#assign codeClass = "badge-success">
-                            <#break>
-                        <#case 3>
-                            <#assign codeClass = "badge-warning">
-                            <#break>
-                        <#case 4>
-                        <#case 5>
-                            <#assign codeClass = "badge-danger">
-                            <#break>
-                        <#default>
-                            <#assign codeClass = "badge-secondary">
-                    </#switch>
-                    <span class="badge ${codeClass}">${httpStatus.value()?c}</span>
-                    ${httpStatus.reasonPhrase}
-                </h4>
-                <hr>
                 <#include "registryExceptionAlert.ftl">
                 <div class="error-actions">
                     <#include  "common/backBtn.ftl">

@@ -64,7 +64,7 @@ class KafkaProducerService(
                 allowedOwners.any { owner -> verifier.isUserOwner(user, owner) }
             }
             if (!userIsOwner) {
-                throw KafkistryProduceException(
+                throw KafkistryProduceDeniedException(
                     "User '${user.username}' is not authorized to produce to topic '$topicName'. " +
                             "Topic owner is '${topicDescription.owner}' which user '${user.username}' is not member of."
                 )
@@ -74,7 +74,7 @@ class KafkaProducerService(
         // Check explicit allow/deny via allowManualProduce field, fallback to property (applies to all users including admin)
         val allowed = topicDescription.allowManualProduce ?: produceProperties.allowedByDefault
         if (!allowed) {
-            throw KafkistryProduceException(
+            throw KafkistryProduceDeniedException(
                 "Manual produce to topic '$topicName' is not allowed, " +
                         "global default: ${if (produceProperties.allowedByDefault) "ALLOWED" else "DENIED"}, " +
                         "setting for topic: ${if (topicDescription.allowManualProduce != null) "DENIED" else "(use global default)"}"

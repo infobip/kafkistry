@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.webapp.controller
 
+import com.infobip.kafkistry.service.KafkistryException
 import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.utils.sanitizeForLog
 import com.infobip.kafkistry.webapp.CompositeRequestInterceptor
@@ -41,6 +42,7 @@ abstract class BaseController {
         val ajaxRequest = request.getHeader("ajax")?.let { it == "true" } ?: false
         val httpStatus = HttpStatus.resolve(response.status)
             .takeIf { it != HttpStatus.OK }
+            ?: (exception as? KafkistryException)?.httpStatus?.let { HttpStatus.resolve(it) }
             ?: HttpStatus.INTERNAL_SERVER_ERROR
         val servletException = (request.getAttribute(RequestDispatcher.ERROR_EXCEPTION) as? Exception)
             ?: (request.getAttribute(DispatcherServlet.EXCEPTION_ATTRIBUTE) as? Exception)
@@ -48,8 +50,9 @@ abstract class BaseController {
         val error = exception.takeUnless {
             it.javaClass == java.lang.Exception::class.java && it.cause == null && it.message == null
         } ?: servletException ?: exception
-        val exceptionMessage = when (httpStatus) {
-            HttpStatus.FORBIDDEN -> "Access denied for '" + request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) + "'"
+        val exceptionMessage = when {
+            error is KafkistryException -> error.deepToString()
+            httpStatus == HttpStatus.FORBIDDEN -> "Access denied for '" + request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI) + "'"
             else -> error.deepToString()
         }
         val attrsDump = if (webHttpProperties.dumpRequestAttributes) {

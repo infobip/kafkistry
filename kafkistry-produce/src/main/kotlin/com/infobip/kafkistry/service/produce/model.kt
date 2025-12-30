@@ -3,6 +3,7 @@ package com.infobip.kafkistry.service.produce
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.service.KafkistryException
 import com.infobip.kafkistry.service.produce.serialize.SerializerType
+import org.springframework.http.HttpStatus
 
 /**
  * Request to produce a single record to Kafka
@@ -46,7 +47,14 @@ data class ProduceResult(
 /**
  * Exception thrown during produce operations
  */
-class KafkistryProduceException(
+open class KafkistryProduceException(
     message: String,
     cause: Throwable? = null
 ) : KafkistryException(message, cause)
+
+
+class KafkistryProduceDeniedException(
+    message: String,
+): KafkistryProduceException(message) {
+    override val httpStatus: Int = HttpStatus.FORBIDDEN.value()
+}

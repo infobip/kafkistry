@@ -198,6 +198,8 @@
     </div>
 </div>
 
+<#include "../common/pageBottom.ftl">
+
 <script>
     const clusterTopics = {};
     <#list clusterTopics as cluster, topics>
