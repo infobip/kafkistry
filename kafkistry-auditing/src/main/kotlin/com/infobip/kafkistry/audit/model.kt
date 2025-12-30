@@ -150,3 +150,26 @@ fun EntityQuotaManagementAuditEvent.setQuotasStatus(
     quotaBefore = before?.actualQuota
     quotaAfter = after?.actualQuota
 }
+
+
+class TopicManualProduceAuditEvent : ManagementAuditEvent() {
+    lateinit var topicName: TopicName
+    var keyContent: String? = null
+    var keySerializerType: String? = null
+    var valueContent: String? = null
+    var valueSerializerType: String? = null
+    var headers: List<ProduceHeaderInfo> = emptyList()
+    var partition: Int? = null
+    var timestamp: Long? = null
+    var produceSuccess: Boolean? = null
+    var producePartition: Int? = null
+    var produceOffset: Long? = null
+    var produceTimestamp: Long? = null
+    var errorMessage: String? = null
+}
+
+data class ProduceHeaderInfo(
+    val key: String,
+    val valueSerializerType: String?,  // null if header value is null
+    val valueContent: String?,         // null if header value is null
+)
