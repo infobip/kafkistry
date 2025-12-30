@@ -227,6 +227,7 @@ class UiRenderTest {
                 "/kafkistry/autopilot",
                 "/kafkistry/consumer-groups",
                 "/kafkistry/consume",
+                "/kafkistry/produce",
                 "/kafkistry/records-structure",
                 "/kafkistry/kstream-apps",
                 "/kafkistry/sql",
