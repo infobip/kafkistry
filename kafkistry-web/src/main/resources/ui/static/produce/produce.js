@@ -14,14 +14,14 @@ $(document).ready(function() {
     initCodeMirror();
     initTopicAutocomplete();
 
-    // Populate initial sample data if available
-    if (initialSampleData && (initialSampleData.key || initialSampleData.value || initialSampleData.headers.length > 0)) {
-        populateSampleData(initialSampleData);
-    }
+    // Fetch and populate topic metadata on page load
+    updateTopicMetadata();
+    setupInspectTopicButton();
 
     clusterSelect.on("change", function() {
         updateTopicAutocomplete();
         updateTopicMetadata();
+        setupInspectTopicButton();
     });
 
     nullKeyCheckbox.on("change", function() {
@@ -101,6 +101,8 @@ $(document).ready(function() {
                 // Update serializers and sample data when a topic is selected from autocomplete
                 setTimeout(function() {
                     updateTopicMetadata();
+                    setupInspectTopicButton();
+                    updateUrlParams();
                 }, 100);
             }
         });
@@ -111,10 +113,13 @@ $(document).ready(function() {
 
     function updateTopicAutocomplete() {
         topicInput.val("");
+        updateUrlParams();
     }
 
     topicInput.on("change", function() {
         updateTopicMetadata();
+        setupInspectTopicButton();
+        updateUrlParams();
     });
 
     function updateTopicMetadata() {
@@ -368,5 +373,45 @@ $(document).ready(function() {
             </div>
         `;
         resultContainer.html(errorHtml).show().animate({ scrollTop: resultContainer.offset().top }, 500);
+    }
+
+    function setupInspectTopicButton() {
+        const cluster = clusterSelect.val();
+        const topic = topicInput.val();
+        const inspectBtn = $("#inspect-topic-btn");
+
+        if (cluster && topic) {
+            whenUrlSchemaReady(function() {
+                const inspectUrl = urlFor("topics.showInspectTopicOnCluster", {
+                    topicName: topic,
+                    clusterIdentifier: cluster
+                });
+                inspectBtn.attr("href", inspectUrl);
+                inspectBtn.show();
+            });
+        } else {
+            inspectBtn.hide();
+        }
+    }
+
+    function updateUrlParams() {
+        const cluster = clusterSelect.val();
+        const topic = topicInput.val();
+
+        const url = new URL(window.location);
+
+        if (cluster) {
+            url.searchParams.set('clusterIdentifier', cluster);
+        } else {
+            url.searchParams.delete('clusterIdentifier');
+        }
+
+        if (topic) {
+            url.searchParams.set('topicName', topic);
+        } else {
+            url.searchParams.delete('topicName');
+        }
+
+        window.history.replaceState({}, '', url);
     }
 });

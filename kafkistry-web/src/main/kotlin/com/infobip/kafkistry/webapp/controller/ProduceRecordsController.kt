@@ -55,12 +55,6 @@ class ProduceRecordsController(
             .filter { clusterEnabledFilter.enabled(it) }
             .map { it.identifier }
 
-        // Detect default serializers from RecordStructure analysis if available
-        val (defaultKeySerializer, defaultValueSerializer) = detectDefaultSerializers(clusterIdentifier, topicName)
-
-        // Extract sample data from RecordStructure if available
-        val sampleData = sampleDataExtractor.extractSampleData(clusterIdentifier, topicName)
-
         return ModelAndView(
             "produce/produce", mapOf(
                 "clusterTopics" to clusterTopics,
@@ -68,12 +62,9 @@ class ProduceRecordsController(
                 "topicName" to topicName,
                 "clusterIdentifier" to clusterIdentifier,
                 "availableSerializerTypes" to valueSerializers.map { it.type },
-                "defaultKeySerializer" to defaultKeySerializer,
-                "defaultValueSerializer" to defaultValueSerializer,
+                "defaultKeySerializer" to produceProperties.defaultKeySerializer(),
+                "defaultValueSerializer" to produceProperties.defaultValueSerializer(),
                 "defaultHeaderSerializer" to produceProperties.defaultHeaderSerializer(),
-                "sampleKey" to sampleData.key,
-                "sampleValue" to sampleData.value,
-                "sampleHeaders" to sampleData.headers,
             )
         )
     }

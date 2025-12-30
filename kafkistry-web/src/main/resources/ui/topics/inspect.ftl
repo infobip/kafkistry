@@ -111,6 +111,8 @@
                    class="btn btn-outline-info btn-sm">Compare...</a>
                 <a href="${appUrl.consumeRecords().showConsumePage(topicName, clusterIdentifier)}"
                    class="btn btn-outline-info btn-sm">Consume...</a>
+                <a href="${appUrl.produceRecords().showProducePage(topicName, clusterIdentifier)}"
+                   class="btn btn-outline-info btn-sm">Produce...</a>
                 <a href="${appUrl.recordsStructure().showTopicStructurePage(topicName, clusterIdentifier)}"
                    class="btn btn-outline-info btn-sm">Records structure...</a>
             </td>

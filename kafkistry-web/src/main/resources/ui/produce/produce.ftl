@@ -7,9 +7,6 @@
 <#-- @ftlvariable name="defaultKeySerializer" type="java.lang.String" -->
 <#-- @ftlvariable name="defaultValueSerializer" type="java.lang.String" -->
 <#-- @ftlvariable name="defaultHeaderSerializer" type="java.lang.String" -->
-<#-- @ftlvariable name="sampleKey" type="java.lang.String" -->
-<#-- @ftlvariable name="sampleValue" type="java.lang.String" -->
-<#-- @ftlvariable name="sampleHeaders" type="java.util.List" -->
 
 <html lang="en">
 
@@ -76,6 +73,12 @@
                         <label for="topic-input">Topic:</label>
                         <input type="search" id="topic-input" placeholder="Select topic..." name="topic"
                                class="topic-input form-control" value="${topicName!""}" required>
+                    </div>
+                    <div class="col-auto">
+                        <label>&nbsp;</label>
+                        <div>
+                            <a id="inspect-topic-btn" href="#" class="btn btn-outline-secondary" style="display: none;">Inspect 🔍</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,17 +206,6 @@
         ];
     </#list>
     const defaultHeaderSerializer = "${defaultHeaderSerializer}";
-    const initialSampleData = {
-        key: ${(sampleKey???then('"' + sampleKey?js_string + '"', 'null'))},
-        value: ${(sampleValue???then('"' + sampleValue?js_string + '"', 'null'))},
-        headers: [
-            <#if sampleHeaders??>
-                <#list sampleHeaders as header>
-                    {name: "${header.name?js_string}", value: "${header.value?js_string}"}<#sep>,</#sep>
-                </#list>
-            </#if>
-        ]
-    };
 </script>
 
 </body>
