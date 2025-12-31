@@ -60,11 +60,6 @@
       <li class="nav-item">
         <a id="nav-sql" class="nav-link" href="${appUrl.sql().showSqlPage()}">SQL<span class="sr-only">(current)</span></a>
       </li>
-      <#if gitStorageEnabled>
-          <li class="nav-item">
-              <a id="nav-history" class="nav-link" href="${appUrl.history().showRecent()}">Git<span class="sr-only">(current)</span></a>
-          </li>
-      </#if>
       <#list menuItems as menuItem>
         <li class="nav-item">
           <a id="${menuItem.id}" class="nav-link" href="${appUrl.menuItem(menuItem)}">${menuItem.name} <#if menuItem.newItem><@_util.newTag/></#if><span class="sr-only">(current)</span></a>

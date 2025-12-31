@@ -9,7 +9,7 @@
 <head>
     <#include "../commonResources.ftl"/>
     <title>Commit changes</title>
-    <meta name="current-nav" content="nav-history"/>
+    <meta name="current-nav" content="nav-app-info"/>
     <script src="static/git/diffHighlight.js?ver=${lastCommit}"></script>
 </head>
 
@@ -19,6 +19,9 @@
 <#import "../common/util.ftl" as util>
 
 <div class="container">
+
+    <#assign activeNavItem = "git">
+    <#include "../about/submenu.ftl">
 
     <h3><#include "../common/backBtn.ftl"> Commit changes</h3>
 

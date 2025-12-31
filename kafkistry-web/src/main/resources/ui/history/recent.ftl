@@ -10,7 +10,7 @@
 <head>
     <#include "../commonResources.ftl"/>
     <title>Commits history</title>
-    <meta name="current-nav" content="nav-history"/>
+    <meta name="current-nav" content="nav-app-info"/>
     <script src="static/gitRefresh.js?ver=${lastCommit}"></script>
 </head>
 
@@ -20,6 +20,9 @@
 <#import "../common/util.ftl" as util>
 
 <div class="container">
+
+    <#assign activeNavItem = "git">
+    <#include "../about/submenu.ftl">
 
     <#include "gitRefresh.ftl">
 
