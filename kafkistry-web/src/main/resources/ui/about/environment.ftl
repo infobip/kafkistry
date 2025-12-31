@@ -31,6 +31,29 @@
         .tab-pane {
             padding-top: 1rem;
         }
+        .value-container {
+            position: relative;
+        }
+        .value-text.truncated {
+            display: inline;
+        }
+        .value-text.truncated .full-text {
+            display: none;
+        }
+        .value-text.expanded .truncated-text {
+            display: none;
+        }
+        .expand-toggle {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+            font-size: 0.85em;
+            margin-left: 4px;
+            white-space: nowrap;
+        }
+        .expand-toggle:hover {
+            color: #0056b3;
+        }
     </style>
 </head>
 
@@ -186,10 +209,10 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th style="width: 25%;">Property Name</th>
-                                <th style="width: 22%;">Raw Value</th>
-                                <th style="width: 22%;">Resolved Value</th>
-                                <th style="width: 10%;">Status</th>
+                                <th style="width: 24%;">Raw Value</th>
+                                <th style="width: 23%;">Resolved Value</th>
                                 <th style="width: 21%;">Source</th>
+                                <th style="width: 7%;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -218,6 +241,7 @@
                                             </#if>
                                         </#if>
                                     </td>
+                                    <td><small>${prop.origin!''}</small></td>
                                     <td>
                                         <#if prop.sensitive>
                                             <span class="badge badge-warning">Sensitive</span>
@@ -225,7 +249,6 @@
                                             <span class="badge badge-success">Visible</span>
                                         </#if>
                                     </td>
-                                    <td><small>${prop.origin!''}</small></td>
                                 </tr>
                             </#list>
                         </tbody>
@@ -247,6 +270,7 @@
         let isMasked = true;
         let allPropsTable = $('#all-props-table');
         let toggleMaskBtn = $('#toggle-mask-btn');
+        const MAX_LENGTH = 150; // Character limit before truncation
 
         // Wait for the global datatable.js to initialize the table, then get a reference to it
         function getDataTable() {
@@ -255,6 +279,133 @@
             }
             return null;
         }
+
+        // Function to process a single element for truncation
+        function processElementForTruncation($element) {
+            // Skip if already processed
+            if ($element.closest('.value-container').length > 0) {
+                return;
+            }
+
+            const text = $element.text();
+            const isLong = text.length > MAX_LENGTH;
+
+            if (isLong && text !== '***MASKED***' && !text.match(/^\(.*\)$/)) {
+                const truncatedText = text.substring(0, MAX_LENGTH) + '...';
+                const elementClasses = $element.attr('class') || '';
+                const isSensitive = $element.hasClass('sensitive-value');
+                const dataValue = $element.attr('data-value');
+
+                // Create container with truncated and full text
+                const $container = $('<div class="value-container"></div>');
+                const $valueText = $('<span class="value-text truncated"></span>');
+
+                if (isSensitive) {
+                    $valueText.html(
+                        '<span class="sensitive-value masked-value truncated-text" data-value="' +
+                        (dataValue || '') + '">' + truncatedText + '</span>' +
+                        '<span class="sensitive-value masked-value full-text" data-value="' +
+                        (dataValue || '') + '">' + text + '</span>'
+                    );
+                } else {
+                    $valueText.html(
+                        '<code class="' + elementClasses + ' truncated-text">' + truncatedText + '</code>' +
+                        '<code class="' + elementClasses + ' full-text">' + text + '</code>'
+                    );
+                }
+
+                const $toggle = $('<span class="expand-toggle">Show more</span>');
+
+                $container.append($valueText);
+                $container.append($toggle);
+
+                $element.replaceWith($container);
+
+                // Add click handler for toggle
+                $toggle.on('click', function() {
+                    const $valueTextElem = $(this).siblings('.value-text');
+                    if ($valueTextElem.hasClass('truncated')) {
+                        $valueTextElem.removeClass('truncated').addClass('expanded');
+                        $(this).text('Show less');
+                    } else {
+                        $valueTextElem.removeClass('expanded').addClass('truncated');
+                        $(this).text('Show more');
+                    }
+                });
+            }
+        }
+
+        // Function to truncate long values in DataTable
+        function truncateDataTableValues() {
+            let allPropsDt = getDataTable();
+            if (allPropsDt) {
+                try {
+                    allPropsDt.cells().every(function() {
+                        let $cell = $(this.node());
+                        // Only process property-value cells
+                        if ($cell.hasClass('property-value')) {
+                            $cell.find('code, .sensitive-value').each(function() {
+                                processElementForTruncation($(this));
+                            });
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error truncating DataTable values:', e);
+                }
+            }
+        }
+
+        // Function to truncate long values in non-DataTable elements
+        function truncateNonDataTableValues() {
+            // Process only the "By Property Source" tab
+            $('#by-source .property-value code, #by-source .property-value .sensitive-value').each(function() {
+                processElementForTruncation($(this));
+            });
+        }
+
+        // Initial truncation after a short delay to ensure DOM is ready
+        setTimeout(function() {
+            truncateNonDataTableValues();
+            truncateDataTableValues();
+        }, 100);
+
+        // Re-apply truncation when tabs are switched
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+            // Force DataTable to adjust column widths when All Properties tab is shown
+            if ($(e.target).attr('href') === '#all-props') {
+                let dt = getDataTable();
+                if (dt) {
+                    dt.columns.adjust().draw(false);
+                }
+            }
+
+            setTimeout(function() {
+                truncateNonDataTableValues();
+                truncateDataTableValues();
+            }, 100);
+        });
+
+        // Re-apply truncation when property source sections are expanded
+        $('[data-toggle="collapsing"]').on('click', function() {
+            setTimeout(function() {
+                truncateNonDataTableValues();
+            }, 300);
+        });
+
+        // Hook into DataTable draw events for pagination/filtering/sorting
+        let dtCheckInterval = setInterval(function() {
+            let dt = getDataTable();
+            if (dt) {
+                clearInterval(dtCheckInterval);
+
+                // Apply truncation on DataTable draw events
+                dt.on('draw', function() {
+                    setTimeout(function() {
+                        truncateDataTableValues();
+                    }, 50);
+                });
+            }
+        }, 100);
 
         // Toggle mask/unmask functionality
         toggleMaskBtn.click(function() {
