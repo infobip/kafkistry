@@ -94,7 +94,7 @@
                 <div class="row">
                     <div class="col-auto">
                         <label class="btn btn-outline-secondary">
-                            <input type="checkbox" id="null-key-checkbox"> Null Key
+                            <input type="checkbox" id="null-key-checkbox" checked> Null Key
                         </label>
                     </div>
                     <div class="col" id="key-section">

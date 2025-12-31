@@ -14,6 +14,11 @@ $(document).ready(function() {
     initCodeMirror();
     initTopicAutocomplete();
 
+    // Initialize key section visibility based on checkbox state
+    if (nullKeyCheckbox.is(":checked")) {
+        $("#key-section").hide();
+    }
+
     // Fetch and populate topic metadata on page load
     updateTopicMetadata();
     setupInspectTopicButton();
