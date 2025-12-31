@@ -26,6 +26,7 @@
         <li><a href="${appUrl.about().showUsersSessions()}">Users sessions</a></li>
         <li><a href="${appUrl.about().showScrapingStatuses()}">Scraping statuses</a></li>
         <li><a href="${appUrl.about().showBackgroundJobs()}">Background jobs</a></li>
+        <li><a href="${appUrl.about().showEnvironment()}">Environment & Properties</a></li>
     </ul>
 
 </div>

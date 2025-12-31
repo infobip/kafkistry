@@ -2,11 +2,13 @@ package com.infobip.kafkistry.webapp.controller
 
 import com.infobip.kafkistry.api.BackgroundIssuesApi
 import com.infobip.kafkistry.api.BuildInfoApi
+import com.infobip.kafkistry.api.EnvironmentPropertiesApi
 import com.infobip.kafkistry.api.ScrapingStatusApi
 import com.infobip.kafkistry.api.WebSessionsApi
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.ABOUT
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.BACKGROUND_JOBS
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.BUILD_INFO
+import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.ENVIRONMENT
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.SCRAPING_STATUSES
 import com.infobip.kafkistry.webapp.url.AboutUrls.Companion.USERS_SESSIONS
 import org.springframework.stereotype.Controller
@@ -21,6 +23,7 @@ class AboutController(
     private val webSessionsApi: WebSessionsApi,
     private val scrapingStatusApi: ScrapingStatusApi,
     private val backgroundIssuesApi: BackgroundIssuesApi,
+    private val environmentPropertiesApi: EnvironmentPropertiesApi,
 ) : BaseController() {
 
     @GetMapping
@@ -65,6 +68,16 @@ class AboutController(
         return ModelAndView(
             "about/backgroundJobs", mapOf(
                 "backgroundJobStatuses" to backgroundJobStatuses,
+            )
+        )
+    }
+
+    @GetMapping(ENVIRONMENT)
+    fun showEnvironment(): ModelAndView {
+        val envProperties = environmentPropertiesApi.environmentProperties()
+        return ModelAndView(
+            "about/environment", mapOf(
+                "envProperties" to envProperties,
             )
         )
     }

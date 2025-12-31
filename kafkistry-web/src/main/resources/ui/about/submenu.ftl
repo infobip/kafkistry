@@ -28,6 +28,10 @@
                 <a class="nav-link <#if activeNavItem == "background-jobs">${activeClasses}</#if>"
                    href="${appUrl.about().showBackgroundJobs()}">Background jobs<span class="sr-only">(current)</span></a>
             </li>
+            <li class="nav-item ">
+                <a class="nav-link <#if activeNavItem == "environment">${activeClasses}</#if>"
+                   href="${appUrl.about().showEnvironment()}">Environment<span class="sr-only">(current)</span></a>
+            </li>
         </ul>
     </div>
 </nav>

@@ -100,10 +100,20 @@ class ClickhouseSQLNoSessionAuthorizationConfigurer(
 
 @Component
 @Order(400)
-class UsesSessionsAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
+class UserSessionsAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
     override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
         antMatchers("$rootPath/api/web-sessions/**").hasRole(UserRole.ADMIN.name)
         antMatchers("$rootPath/about/users-sessions").hasRole(UserRole.ADMIN.name)
+    }
+}
+
+@Component
+@Order(401)
+class EnvironmentDisplayAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
+
+    override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
+        antMatchers("$rootPath/api/environment-properties/**").hasRole(UserRole.ADMIN.name)
+        antMatchers("$rootPath/about/environment").hasRole(UserRole.ADMIN.name)
     }
 }
