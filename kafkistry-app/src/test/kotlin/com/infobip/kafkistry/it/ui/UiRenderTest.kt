@@ -224,7 +224,6 @@ class UiRenderTest {
                 "/kafkistry/acls",
                 "/kafkistry/quotas",
                 "/kafkistry/clusters",
-                "/kafkistry/autopilot",
                 "/kafkistry/consumer-groups",
                 "/kafkistry/consume",
                 "/kafkistry/produce",

@@ -8,7 +8,7 @@
 <head>
     <#include "../commonResources.ftl"/>
     <title>Kafkistry: Autopilot</title>
-    <meta name="current-nav" content="nav-autopilot"/>
+    <meta name="current-nav" content="nav-app-info"/>
 </head>
 
 <body>
@@ -26,6 +26,10 @@
 <#import "util.ftl" as autopilotUtil>
 
 <div class="container">
+
+    <#assign activeNavItem = "autopilot">
+    <#include "../about/submenu.ftl">
+
 
     <div class="card">
         <div class="card-header collapsed" data-target="#autopilot-info" data-toggle="collapsing">

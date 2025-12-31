@@ -1,4 +1,5 @@
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
+<#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
 
 <html lang="en">
 
@@ -27,6 +28,9 @@
         <li><a href="${appUrl.about().showScrapingStatuses()}">Scraping statuses</a></li>
         <li><a href="${appUrl.about().showBackgroundJobs()}">Background jobs</a></li>
         <li><a href="${appUrl.about().showEnvironment()}">Environment & Properties</a></li>
+        <#if autopilotEnabled>
+            <li><a href="${appUrl.autopilot().showAutopilotPage()}">Autopilot</a></li>
+        </#if>
     </ul>
 
 </div>

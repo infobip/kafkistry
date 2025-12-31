@@ -28,7 +28,11 @@ abstract class AutopilotCreateTopic(contextSupplier: () -> Context) : UITestCase
 
     @Test
     fun `test autopilot create missing topic`() {
-        browser.findElementById("nav-autopilot").click()
+        browser.findElementById("nav-app-info").click()
+        await {
+            assertThat(browser.currentUrl).endsWith("/about")
+        }
+        browser.findElementWithText("Autopilot").click()
         await {
             assertThat(browser.currentUrl).endsWith("/autopilot")
         }

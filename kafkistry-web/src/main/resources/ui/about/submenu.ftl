@@ -1,5 +1,6 @@
 <#-- @ftlvariable name="activeNavItem" type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
+<#-- @ftlvariable name="autopilotEnabled"  type="java.lang.Boolean" -->
 
 <style>
     #sub-navbar .nav-item .nav-link {
@@ -32,6 +33,12 @@
                 <a class="nav-link <#if activeNavItem == "environment">${activeClasses}</#if>"
                    href="${appUrl.about().showEnvironment()}">Environment<span class="sr-only">(current)</span></a>
             </li>
+            <#if autopilotEnabled>
+                <li class="nav-item ">
+                    <a class="nav-link <#if activeNavItem == "autopilot">${activeClasses}</#if>"
+                       href="${appUrl.autopilot().showAutopilotPage()}">Autopilot<span class="sr-only">(current)</span></a>
+                </li>
+            </#if>
         </ul>
     </div>
 </nav>
