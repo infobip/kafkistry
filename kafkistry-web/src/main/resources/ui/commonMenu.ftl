@@ -43,7 +43,7 @@
         <a id="nav-quotas" class="nav-link" href="${appUrl.quotas().showAll()}">Quotas<span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-consumer-groups" class="nav-link" href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}">Consumer groups<span class="sr-only">(current)</span></a>
+        <a id="nav-consumer-groups" class="nav-link" href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}">Consumers<span class="sr-only">(current)</span></a>
       </li>
       <#if autopilotEnabled>
           <li class="nav-item">
@@ -57,7 +57,7 @@
         <a id="nav-produce" class="nav-link" href="${appUrl.produceRecords().showProducePage()}">Produce<span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-records-structure" class="nav-link" href="${appUrl.recordsStructure().showMenuPage()}">Records structure<span class="sr-only">(current)</span></a>
+        <a id="nav-records-structure" class="nav-link" href="${appUrl.recordsStructure().showMenuPage()}">Record structure<span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
         <a id="nav-kstream" class="nav-link" href="${appUrl.kStream().showAll()}">KStream<span class="sr-only">(current)</span></a>
@@ -67,7 +67,7 @@
       </li>
       <#if gitStorageEnabled>
           <li class="nav-item">
-              <a id="nav-history" class="nav-link" href="${appUrl.history().showRecent()}">Git history<span class="sr-only">(current)</span></a>
+              <a id="nav-history" class="nav-link" href="${appUrl.history().showRecent()}">Git<span class="sr-only">(current)</span></a>
           </li>
       </#if>
       <#list menuItems as menuItem>
@@ -83,7 +83,6 @@
 
     <#if kafkistryUser??>
       <div>
-        <strong>${kafkistryUser.fullName}</strong>
         <#assign userTooltip>
             <table class='table mb-0'>
               <tr>
@@ -113,17 +112,21 @@
               </#if>
             </table>
         </#assign>
-        <@_info.icon tooltip=userTooltip/>
+        <strong>
+            <@_info.icon tooltip=userTooltip text=kafkistryUser.fullName/>
+        </strong>
       </div>
     </#if>
 
     <#if securityEnabled>
-      <div class="ml-3">
+      <div class="ml-1">
         <form method="post" action="logout" style="display: inline-block; margin: 0">
           <#if _csrf??>
             <input name="${_csrf.parameterName}" type="hidden" value="${_csrf.token}"/>
           </#if>
-          <input type="submit" value="Logout" class="btn btn-danger">
+          <button title="Logout" class="btn btn-danger">
+              ⏻
+          </button>
         </form>
       </div>
     </#if>
