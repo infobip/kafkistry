@@ -24,8 +24,12 @@ class SampleDataExtractor(
         if (clusterIdentifier == null || topicName == null) {
             return SampleData(null, null, emptyList())
         }
+
         return recordsStructureApiOpt.orElse(null)
-            ?.structureOfTopicOnCluster(topicName, clusterIdentifier)
+            ?.let {
+                it.structureOfTopicOnCluster(topicName, clusterIdentifier)
+                    ?: it.structureOfTopic(topicName)  //failover to globally combined structure
+            }
             ?.toSampleData()
             ?: return SampleData(null, null, emptyList())
     }
