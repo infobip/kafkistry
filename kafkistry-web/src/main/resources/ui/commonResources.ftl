@@ -61,6 +61,7 @@
     <script src="static/git/branchNamesAutocomplete.js?ver=${lastCommit}"></script>
 </#if>
 <script src="static/datatable.js?ver=${lastCommit}"></script> <!-- init datatable last to allow decoration script (textLinks) to exec first -->
+<script src="static/search/globalSearch.js?ver=${lastCommit}"></script>
 
 <link rel="stylesheet" href="static/css/main.css?ver=${lastCommit}">
 <link rel="stylesheet" href="static/css/infoIconTooltip.css?ver=${lastCommit}">
@@ -72,6 +73,7 @@
 <link rel="stylesheet" href="static/css/topicForm.css?ver=${lastCommit}">
 <link rel="stylesheet" href="static/css/collapsing.css?ver=${lastCommit}">
 <link rel="stylesheet" href="static/css/stickyTableHeaders.css?ver=${lastCommit}">
+<link rel="stylesheet" href="static/css/search.css?ver=${lastCommit}">
 
 <link rel="icon" href="static/img/${imageProps.dirPath}/${imageProps.icon}?ver=${lastCommit}"/>
 

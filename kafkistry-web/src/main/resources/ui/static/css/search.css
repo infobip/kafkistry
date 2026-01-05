@@ -1,0 +1,142 @@
+/* Global Search Dropdown */
+#global-search-input {
+    min-width: 300px;
+}
+
+#global-search-dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    max-height: 500px;
+    overflow-y: auto;
+    z-index: 10000;
+}
+
+/* Ensure footer stays on top when dropdown is shown */
+.footer {
+    z-index: 1050;
+}
+
+.search-result-category {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    color: #495057;
+    text-transform: uppercase;
+    margin-left: 6px;
+}
+
+.search-result-item {
+    display: block;
+    padding: 10px 12px;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.15s ease;
+}
+
+.search-result-item:hover,
+.search-result-item:focus {
+    background-color: #f8f9fa;
+    text-decoration: none;
+    outline: none;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #212529;
+    margin-bottom: 2px;
+}
+
+.search-result-title mark.search-highlight {
+    background-color: #fff3cd;
+    padding: 0 2px;
+    font-weight: 700;
+}
+
+.search-result-subtitle {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+
+.search-result-subtitle mark.search-highlight,
+.search-result-description mark.search-highlight {
+    background-color: #fff3cd;
+    padding: 0 2px;
+    font-weight: 600;
+}
+
+.search-result-description {
+    font-size: 12px;
+    color: #999;
+}
+
+.search-footer {
+    padding: 10px 12px;
+    background: #f8f9fa;
+    text-align: center;
+    border-top: 1px solid #ddd;
+}
+
+.search-loading,
+.search-error,
+.search-no-results {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.search-error {
+    color: #dc3545;
+}
+
+/* Dedicated Search Page */
+.search-results .card {
+    margin-bottom: 20px;
+}
+
+.search-results .list-group-item {
+    transition: background-color 0.15s ease;
+}
+
+.search-results .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Category Filter Modal */
+.category-filter {
+    margin-right: 8px;
+}
+
+/* Search term highlighting */
+mark.search-highlight {
+    background-color: #fff3cd;
+    padding: 1px 3px;
+    border-radius: 2px;
+    font-weight: 600;
+    color: inherit;
+}
+
+.list-group-item mark.search-highlight {
+    background-color: #ffeaa7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #global-search-input {
+        min-width: 200px;
+    }
+}

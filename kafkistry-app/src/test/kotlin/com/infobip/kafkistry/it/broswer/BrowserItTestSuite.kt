@@ -8,6 +8,8 @@ import com.infobip.kafkistry.api.TopicsApi
 import com.infobip.kafkistry.it.broswer.cases.autopilot.AutopilotCreateTopic
 import com.infobip.kafkistry.it.broswer.cases.clusters.AddClusterToRegistry
 import com.infobip.kafkistry.it.broswer.cases.clusters.RemoveClusterFromRegistry
+import com.infobip.kafkistry.it.broswer.cases.search.FullSearchPageTest
+import com.infobip.kafkistry.it.broswer.cases.search.GlobalSearchTest
 import com.infobip.kafkistry.it.broswer.cases.sql.PerformSqlQuery
 import com.infobip.kafkistry.it.broswer.cases.topics.*
 import com.infobip.kafkistry.kafka.ClientFactory
@@ -219,5 +221,11 @@ class BrowserItTestSuite {
 
     @Nested
     inner class AutopilotUiTest : AutopilotCreateTopic({ context() })
+
+    @Nested
+    inner class GlobalSearchUiTest : GlobalSearchTest({ context() })
+
+    @Nested
+    inner class FullSearchPageUiTest : FullSearchPageTest({ context() })
 
 }

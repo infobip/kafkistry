@@ -1,6 +1,24 @@
 <#-- @ftlvariable name="hostname" type="com.infobip.kafkistry.model.Presence" -->
 
 <div style="width: 100%; height: 150px;"></div>
-<footer class="footer bg-light text-center text-lg-start p-1 fixed-bottom">
-    Served by: <code>${hostname}</code>
+<footer class="footer bg-light text-lg-start p-1 fixed-bottom">
+    <div class="container-fluid" style="position: relative;">
+        <div style="position: relative; max-width: 500px;">
+            <input
+                type="search"
+                id="global-search-input"
+                class="form-control form-control-sm"
+                placeholder="Search topics, clusters, ACLs, quotas..."
+                autocomplete="off"
+                style="width: 100%; border-radius: 20px; padding-right: 35px;"
+            />
+            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none;">
+                ⌘K
+            </span>
+            <div id="global-search-dropdown" class="search-dropdown" style="display: none; bottom: 100%; top: auto; margin-bottom: 5px;"></div>
+        </div>
+        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap;">
+            Served by: <code>${hostname}</code>
+        </div>
+    </div>
 </footer>

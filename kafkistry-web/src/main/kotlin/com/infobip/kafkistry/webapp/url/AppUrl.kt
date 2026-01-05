@@ -17,6 +17,7 @@ import com.infobip.kafkistry.webapp.url.KStreamUrls.Companion.KSTREAM_APPS
 import com.infobip.kafkistry.webapp.url.QuotasUrls.Companion.QUOTAS
 import com.infobip.kafkistry.webapp.url.RecordsStructureUrls.Companion.RECORDS_STRUCTURE
 import com.infobip.kafkistry.webapp.url.SqlUrls.Companion.SQL
+import com.infobip.kafkistry.webapp.url.SearchUrls.Companion.SEARCH
 import com.infobip.kafkistry.webapp.url.TopicsManagementUrls.Companion.TOPICS_MANAGEMENT
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS
 import org.springframework.stereotype.Component
@@ -46,6 +47,7 @@ class AppUrl(
     private val quotas = QuotasUrls("$base$QUOTAS")
     private val kStream = KStreamUrls("$base$KSTREAM_APPS")
     private val autopilot = AutopilotUrls("$base$AUTOPILOT")
+    private val search = SearchUrls("$base$SEARCH")
     private val extraUrls: MutableMap<String, BaseUrls> = ConcurrentHashMap()
 
     fun basePath() = base
@@ -68,6 +70,7 @@ class AppUrl(
     fun quotas() = quotas
     fun kStream() = kStream
     fun autopilot() = autopilot
+    fun search() = search
 
     fun menuItem(menuItem: MenuItem): String = basePath() + menuItem.urlPath
 
