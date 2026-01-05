@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
 import java.util.*
 import jakarta.servlet.http.HttpSession
+import kotlin.jvm.optionals.getOrNull
 
 @Controller
 @RequestMapping("\${app.http.root-path}$TOPICS")
@@ -53,7 +54,7 @@ class TopicsController(
     private val topicOldestRecordAgeApiOpt: Optional<TopicOldestRecordAgeApi>,
     private val resourceAnalyzerApi: ResourceAnalyzerApi,
     private val kStreamAppsApi: KStreamAppsApi,
-    private val autopilotApi: AutopilotApi,
+    private val autopilotApi: Optional<AutopilotApi>,
     private val clusterEnabledFilter: ClusterEnabledFilter,
     private val ownershipClassifier: UserOwnershipClassifier,
 ) : BaseController() {
@@ -170,7 +171,8 @@ class TopicsController(
     ): ModelAndView {
         val topicStatuses = inspectApi.inspectTopic(topicName)
         val pendingTopicRequests = topicsApi.pendingTopicRequests(topicName)
-        val autopilotActions = autopilotApi.findTopicActions(topicName)
+        val autopilotActions = autopilotApi.getOrNull()
+            ?.findTopicActions(topicName).orEmpty()
         val topicOwned = ownershipClassifier.isOwnerOfTopic(topicStatuses.topicDescription)
         return ModelAndView("topics/topic", mutableMapOf(
             "topic" to topicStatuses,
@@ -231,7 +233,8 @@ class TopicsController(
             null
         }
         val kStreamsInvolvement = kStreamAppsApi.topicKStreamApps(topicName, clusterIdentifier)
-        val autopilotActions = autopilotApi.findTopicOnClusterActions(topicName, clusterIdentifier)
+        val autopilotActions = autopilotApi.getOrNull()
+            ?.findTopicOnClusterActions(topicName, clusterIdentifier).orEmpty()
         return ModelAndView("topics/inspect", mutableMapOf(
             "topicName" to topicName,
             "topicOwned" to topicOwned,

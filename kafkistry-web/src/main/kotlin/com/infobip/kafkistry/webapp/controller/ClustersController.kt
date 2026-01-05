@@ -33,6 +33,8 @@ import com.infobip.kafkistry.webapp.url.ClustersUrls.Companion.TAGS_ON_BRANCH
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
+import java.util.Optional
+import kotlin.jvm.optionals.getOrNull
 
 @Controller
 @RequestMapping("\${app.http.root-path}$CLUSTERS")
@@ -41,7 +43,7 @@ class ClustersController(
     private val topicsApi: TopicsApi,
     private val inspectApi: InspectApi,
     private val consumersApi: ConsumersApi,
-    private val autopilotApi: AutopilotApi,
+    private val autopilotApi: Optional<AutopilotApi>,
     private val clusterBalancingApi: ClusterBalancingApi,
     private val resourcesAnalyzerApi: ResourceAnalyzerApi,
     private val existingValuesApi: ExistingValuesApi,
@@ -102,7 +104,8 @@ class ClustersController(
     ): ModelAndView {
         val clusterStatus = inspectApi.inspectClusterStatus(clusterIdentifier)
         val pendingClusterRequests = clustersApi.pendingClustersRequests(clusterIdentifier)
-        val autopilotActions = autopilotApi.findClusterActions(clusterIdentifier)
+        val autopilotActions = autopilotApi.getOrNull()
+            ?.findClusterActions(clusterIdentifier).orEmpty()
         return ModelAndView("clusters/cluster", mutableMapOf(
             "clusterStatus" to clusterStatus,
             "pendingClusterRequests" to pendingClusterRequests,

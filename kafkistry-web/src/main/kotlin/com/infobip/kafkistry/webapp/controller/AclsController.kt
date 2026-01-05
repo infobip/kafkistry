@@ -26,6 +26,8 @@ import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_SUGGESTED_EDIT_P
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.ModelAndView
+import java.util.Optional
+import kotlin.jvm.optionals.getOrNull
 
 @Controller
 @RequestMapping("\${app.http.root-path}$ACLS")
@@ -33,7 +35,7 @@ class AclsController(
     private val inspectApi: InspectApi,
     private val suggestionApi: SuggestionApi,
     private val aclsApi: AclsApi,
-    private val autopilotApi: AutopilotApi,
+    private val autopilotApi: Optional<AutopilotApi>,
     private val existingValuesApi: ExistingValuesApi,
     private val ownershipClassifier: UserOwnershipClassifier,
 ) : BaseController() {
@@ -63,7 +65,8 @@ class AclsController(
         val principalInspectionClusterRules = inspectApi.inspectPrincipalAcls(principal)
         val principalInspectionRuleClusters = principalInspectionClusterRules.transpose()
         val pendingPrincipalAclsRequests = aclsApi.pendingPrincipalRequests(principal)
-        val autopilotActions = autopilotApi.findPrincipalActions(principal)
+        val autopilotActions = autopilotApi.getOrNull()
+            ?.findPrincipalActions(principal).orEmpty()
         val principalOwned = ownershipClassifier.isOwnerOfPrincipal(principalInspectionRuleClusters.principalAcls)
         return ModelAndView("acls/principal", mapOf(
             "principalRuleClusters" to principalInspectionRuleClusters,
