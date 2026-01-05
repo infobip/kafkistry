@@ -131,3 +131,12 @@ class PropertiesInjectingInterceptor(
 
     private fun <R> String?.ifNotBlank(operation: (String) -> R) = this?.takeIf { it.isNotBlank() }?.let(operation)
 }
+
+@Component
+class RequestStartTimeInjectingInterceptor : ModelInjectingInterceptor {
+
+    override fun inject(modelAndView: ModelAndView, request: HttpServletRequest) {
+        val startTime = request.getAttribute(REQUEST_START_TIME_ATTR) as? Long ?: return
+        modelAndView.addObject("requestStartTimeMs", startTime)
+    }
+}
