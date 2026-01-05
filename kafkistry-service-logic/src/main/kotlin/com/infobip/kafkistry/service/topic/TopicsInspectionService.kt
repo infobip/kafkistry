@@ -147,7 +147,7 @@ class TopicsInspectionService(
         val topicsPartitionReAssignments = reAssignmentsMonitorService.clusterTopicsReAssignments(cluster.identifier)
         val statusPerTopics = topicNames.map { topicName ->
             val topicDescription = allRegistryTopics[topicName]
-            val existingTopic = latestClusterData.topics.firstOrNull { it.name == topicName }
+            val existingTopic = latestClusterData.allTopics[topicName]
             val inspectionResult = topicIssuesInspector.inspectTopicDataOnClusterData(
                     topicName, topicDescription, existingTopic,
                     topicsReplicasInfos[topicName],
@@ -191,8 +191,7 @@ class TopicsInspectionService(
         val clusterRef = clustersRegistry.getCluster(clusterIdentifier).ref()
         val expectedConfig = topicsRegistry.getTopic(topicName).configForCluster(clusterRef)
         val clusterData = kafkaClustersStateProvider.getLatestClusterStateValue(clusterIdentifier)
-        val existingTopic = clusterData.topics
-                .firstOrNull { it.name == topicName }
+        val existingTopic = clusterData.allTopics[topicName]
                 ?: throw KafkistryIllegalStateException("Could not found topic '$topicName' on cluster '$clusterIdentifier'")
         return computeTopicConfigNeededChanges(clusterData.clusterInfo.config, expectedConfig, existingTopic)
     }
@@ -431,7 +430,7 @@ class TopicsInspectionService(
         dryRun: Boolean,
     ): TopicClusterStatus {
         val latestClusterState = kafkaClustersStateProvider.getLatestClusterState(clusterRef.identifier)
-        val existingTopic = latestClusterState.valueOrNull()?.topics?.firstOrNull { it.name == topicName }
+        val existingTopic = latestClusterState.valueOrNull()?.allTopics?.get(topicName)
         val topicReplicaInfos = replicaDirsService.topicReplicaInfos(clusterRef.identifier, topicName)
         val partitionsReAssignments = reAssignmentsMonitorService.topicReAssignments(clusterRef.identifier, topicName)
         return topicIssuesInspector.inspectTopicDataOnClusterData(
@@ -450,8 +449,7 @@ class TopicsInspectionService(
             .map { doInspectTopicOnCluster(topicName, topicDescription, it, dryRun) }
             .sortedBy { if (TopicInspectionResultType.CLUSTER_DISABLED in it.status.types) 1 else 0 }
             .sortedBy {
-                val clusterRef = ClusterRef(it.clusterIdentifier, it.clusterTags)
-                val needToExist = topicDescription?.presence?.needToBeOnCluster(clusterRef) == true
+                val needToExist = topicDescription?.presence?.needToBeOnCluster(it.clusterRef) == true
                 if (needToExist) 0 else 1
             }
         return topicStatuses(topicName, topicDescription, statusPerClusters)

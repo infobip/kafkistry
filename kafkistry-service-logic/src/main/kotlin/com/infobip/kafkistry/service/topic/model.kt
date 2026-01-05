@@ -58,6 +58,9 @@ data class TopicClusterStatus(
     val currentReAssignments: Map<Partition, TopicPartitionReAssignment>,
     val externInspectInfo: Map<String, Any>,
 ) {
+
+    val clusterRef = ClusterRef(clusterIdentifier, clusterTags)
+
     companion object {
         fun unavailable() = TopicClusterStatus(
             status = TopicOnClusterInspectionResult.Builder()
@@ -77,7 +80,7 @@ data class TopicClusterStatus(
     }
 }
 
-fun TopicClusterStatus.clusterRef() = ClusterRef(clusterIdentifier, clusterTags)
+fun TopicClusterStatus.clusterRef() = clusterRef
 
 data class ValueInspection(
     val valid: Boolean,

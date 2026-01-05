@@ -91,8 +91,8 @@ class TopicIssuesInspector(
             inspectRegistryTopic(ctx)
             val configEntryStatuses = ctx.computeConfigEntryStatuses()
             checkTopicInternal(ctx)
-            checkExitingTopicDisbalance(ctx)
             val existingTopicInfo = ctx.cache { computeExistingTopicInfo() }
+            checkExitingTopicDisbalance(ctx, existingTopicInfo)
             val resourceRequiredUsages = ctx.inspectRequiredResourcesUsage()
             checkAffectingAclRules(ctx)
             val externInfo = checkExternalInspectors(ctx)
@@ -365,16 +365,13 @@ class TopicIssuesInspector(
         }
     }
 
-    private fun TopicOnClusterInspectionResult.Builder.checkExitingTopicDisbalance(ctx: TopicInspectCtx) {
-        if (ctx.clusterInfo == null || ctx.existingTopic == null) {
+    private fun TopicOnClusterInspectionResult.Builder.checkExitingTopicDisbalance(
+        ctx: TopicInspectCtx, existingTopicInfo: ExistingTopicInfo?,
+    ) {
+        if (ctx.clusterInfo == null || ctx.existingTopic == null || existingTopicInfo == null) {
             return
         }
-        val currentAssignments = ctx.existingTopic.currentAssignments()
-        val disbalance = partitionsReplicasAssignor.assignmentsDisbalance(
-            existingAssignments = currentAssignments,
-            allBrokers = ctx.clusterInfo.assignableBrokers(),
-            existingPartitionLoads = currentAssignments.partitionLoads(ctx.currentTopicReplicaInfos)
-        )
+        val disbalance = existingTopicInfo.assignmentsDisbalance
         setAssignmentDisbalance(disbalance)
         if (disbalance.replicasDisbalance > 0) {
             addResultType(PARTITION_REPLICAS_DISBALANCE)

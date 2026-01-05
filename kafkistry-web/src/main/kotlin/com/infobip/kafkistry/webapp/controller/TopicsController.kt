@@ -222,8 +222,7 @@ class TopicsController(
                 true to null
             }
         }
-        val clusterRef = with(topicStatus) { ClusterRef(clusterIdentifier,  clusterTags) }
-        val topicResources = if (clusterInfo != null && clusterEnabledFilter.enabled(clusterRef)) {
+        val topicResources = if (clusterInfo != null && clusterEnabledFilter.enabled(topicStatus.clusterRef)) {
             try {
                 resourceAnalyzerApi.getTopicStatusOnCluster(clusterIdentifier, topicName)
             } catch (ex: KafkistryValidationException) {

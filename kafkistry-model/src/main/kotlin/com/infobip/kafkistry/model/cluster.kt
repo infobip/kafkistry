@@ -14,12 +14,16 @@ data class KafkaCluster(
     val tags: List<Tag> = emptyList(),
     val profiles: List<KafkaProfile> = emptyList(),
 ) {
-    fun ref() = ClusterRef(identifier, tags)
+    private val clusterRef = ClusterRef(identifier, tags)
+    fun ref() = clusterRef
 }
 
 data class ClusterRef(
     val identifier: KafkaClusterIdentifier,
     val tags: List<Tag> = emptyList(),
-)
+) {
+    private val tagsSet = tags.toSet()
+    fun tagsSet() = tagsSet
+}
 
 

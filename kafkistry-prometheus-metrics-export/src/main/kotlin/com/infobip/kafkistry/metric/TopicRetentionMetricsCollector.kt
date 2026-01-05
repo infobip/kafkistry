@@ -101,8 +101,7 @@ class RetentionMetricsCollector(
             topicStatuses.statusPerClusters.flatMap TopicCluster@{ topicStatus ->
                 val existingTopic = topicStatus.existingTopicInfo ?: return@TopicCluster emptyList()
                 val clusterIdentifier = topicStatus.clusterIdentifier
-                val clusterRef = ClusterRef(topicStatus.clusterIdentifier, topicStatus.clusterTags)
-                if (!filter(clusterRef, topicName)) {
+                if (!filter(topicStatus.clusterRef, topicName)) {
                     return@flatMap emptyList()
                 }
                 val retentionMs = existingTopic.config[TopicConfig.RETENTION_MS_CONFIG]?.value?.toLongOrNull()

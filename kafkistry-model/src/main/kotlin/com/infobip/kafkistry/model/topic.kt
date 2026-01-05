@@ -40,6 +40,8 @@ data class Presence(
     val tag: Tag? = null,
 ) : Serializable {
 
+    private val kafkaClusterIdentifiersSet = kafkaClusterIdentifiers?.toSet().orEmpty()
+
     companion object {
         val ALL = Presence(ALL_CLUSTERS)
     }
@@ -60,9 +62,9 @@ data class Presence(
 
     fun needToBeOnCluster(cluster: ClusterRef): Boolean = when (type) {
         ALL_CLUSTERS -> true
-        INCLUDED_CLUSTERS -> cluster.identifier in kafkaClusterIdentifiers.orEmpty()
-        EXCLUDED_CLUSTERS -> cluster.identifier !in kafkaClusterIdentifiers.orEmpty()
-        TAGGED_CLUSTERS -> tag in cluster.tags
+        INCLUDED_CLUSTERS -> cluster.identifier in kafkaClusterIdentifiersSet
+        EXCLUDED_CLUSTERS -> cluster.identifier !in kafkaClusterIdentifiersSet
+        TAGGED_CLUSTERS -> tag in cluster.tagsSet()
     }
 
     override fun toString(): String {

@@ -56,7 +56,9 @@ data class KafkaClusterState(
         val clusterInfo: ClusterInfo,
         val topics: List<KafkaExistingTopic>,
         val acls: List<KafkaAclRule>
-)
+) {
+    val allTopics = topics.associateBy { it.name }
+}
 
 data class ClusterConsumerGroups(
     val consumerGroups: Map<ConsumerGroupId, Maybe<ConsumerGroup>>,
