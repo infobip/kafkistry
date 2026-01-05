@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="hostname" type="com.infobip.kafkistry.model.Presence" -->
 
 <div style="width: 100%; height: 150px;"></div>
-<footer class="footer bg-light text-lg-start p-1 fixed-bottom">
+<footer class="footer bg-light text-lg-start p-1" style="position: fixed; bottom: 0; z-index: 1030;">
     <div class="container-fluid" style="position: relative;">
         <div style="position: relative; max-width: 500px;">
             <input
