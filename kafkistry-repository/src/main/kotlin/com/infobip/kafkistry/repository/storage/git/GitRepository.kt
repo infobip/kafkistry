@@ -289,6 +289,14 @@ class GitRepository(
         }
     }
 
+    fun allBranchCommitIds(): Map<Branch, CommitId> {
+        return exclusiveOnMainBranch {
+            git.branchList().call()
+                .filter { it.objectId != null }
+                .associate { it.name.toSimpleBranchName() to it.objectId.name }
+        }
+    }
+
     @Throws(GitAPIException::class)
     private fun cloneOrInitNewRepo() {
         exclusive(refreshing = true) {
@@ -326,7 +334,7 @@ class GitRepository(
                 .call()
     }
 
-    fun listBranches(): List<String> {
+    fun listBranches(): List<Branch> {
         return git.branchList().call().map { it.name.toSimpleBranchName() }
     }
 
@@ -803,7 +811,7 @@ class GitRepository(
         }
     }
 
-    private fun getRemoteBranchNames(): Set<String> {
+    private fun getRemoteBranchNames(): Set<Branch> {
         return git.branchList()
                 .setListMode(ListBranchCommand.ListMode.REMOTE)
                 .call()
@@ -811,7 +819,7 @@ class GitRepository(
                 .toSet()
     }
 
-    private fun String.toSimpleBranchName(): String = when {
+    private fun String.toSimpleBranchName(): Branch = when {
         Constants.R_HEADS in this -> substringAfter(Constants.R_HEADS)
         "origin/" in this -> substringAfter("origin/")
         else -> this

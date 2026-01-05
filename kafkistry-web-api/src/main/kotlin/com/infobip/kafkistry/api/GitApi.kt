@@ -32,7 +32,7 @@ class GitApi(
     }
 
     @GetMapping("/branches")
-    fun existingBranches(): List<String> = gitRepository.listBranches()
+    fun existingBranches(): List<Branch> = gitRepository.listBranches()
 
     @GetMapping("/branches/inspect")
     fun branchChanges(

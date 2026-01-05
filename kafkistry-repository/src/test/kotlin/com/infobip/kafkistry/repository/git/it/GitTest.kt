@@ -32,6 +32,7 @@ import org.testcontainers.shaded.org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.function.Function
+import java.util.regex.Pattern
 
 @Testcontainers
 class GitTest {
@@ -541,6 +542,19 @@ class GitTest {
                 it.updateOrInitRepositoryTest()
             }
         }.doesNotThrowAnyException()
+    }
+
+    @Test
+    fun `test enumerating branches with their commit ids`() {
+        val git = newGit()
+        git.writeFile(WriteContext(user, "test msg1", "master"), "dir", "test.txt", "test content1")
+        git.writeFile(WriteContext(user, "test msg2", "b1"), "dir", "test.txt", "test content2")
+        git.writeFile(WriteContext(user, "test msg3", "b2"), "dir", "test.txt", "test content3")
+        assertThat(git.allBranchCommitIds())
+            .containsKeys("master", "b1", "b2")
+            .allSatisfy { _, commitId ->
+                assertThat(commitId).matches(Pattern.compile("[0-9a-f]{40}"))
+            }
     }
 
     private fun newGit(

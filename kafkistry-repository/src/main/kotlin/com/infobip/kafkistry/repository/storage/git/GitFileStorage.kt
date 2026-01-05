@@ -59,7 +59,9 @@ class GitFileStorage(
         return gitRepository.listMainBranchHistory(range, subDir = subDir)
     }
 
-    override fun globallyLastCommitId(): CommitId? = gitRepository.currentCommitId()
+    override fun globallyLastCommitId(): CommitId = gitRepository.currentCommitId()
+
+    override fun allBranchCommitIds(): Map<Branch, CommitId> = gitRepository.allBranchCommitIds()
 
     private fun listChanges(
         fileName: String? = null,

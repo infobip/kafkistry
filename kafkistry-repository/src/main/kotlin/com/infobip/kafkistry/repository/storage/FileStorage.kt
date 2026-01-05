@@ -21,6 +21,7 @@ interface FileStorage {
     fun listFileChanges(name: String): List<FileChange>
     fun listCommits(range: CommitsRange): List<CommitFileChanges>
     fun globallyLastCommitId(): CommitId?
+    fun allBranchCommitIds(): Map<Branch, CommitId>
 }
 
 typealias Branch = String

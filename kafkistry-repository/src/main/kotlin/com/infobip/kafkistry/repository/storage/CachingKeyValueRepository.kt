@@ -18,6 +18,9 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
     private val commits = AtomicReference<List<CommitEntityChanges<ID, T>>>(emptyList())
     private var globalLastSeenCommitId = AtomicReference<CommitId?>(null)
 
+    private val globalLastSeenBranchCommitIds = AtomicReference<Map<Branch, CommitId>>(emptyMap())
+    private val cachedPendingRequests = AtomicReference<List<EntityRequests<ID, T>>>(emptyList())
+
     init {
         refreshAll()
     }
@@ -122,4 +125,35 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
             }
         }
     }
+
+    private fun needsPendingRequestsRefresh(): Boolean = globalLastSeenBranchCommitIds.get() != delegate.allBranchCommitsIds()
+
+    @Synchronized  //ensure that all concurrent calls will wait and use results from first which acquires the monitor
+    private fun refreshPendingRequestsIfNeeded() {
+        if (needsPendingRequestsRefresh()) {
+            refreshPendingRequests()
+        }
+    }
+
+    private fun refreshPendingRequests() {
+        val currentBranchCommitIds = delegate.allBranchCommitsIds()
+        val currentPendingRequests = delegate.findPendingRequests()
+        cachedPendingRequests.set(currentPendingRequests)
+        globalLastSeenBranchCommitIds.set(currentBranchCommitIds)
+    }
+
+    override fun findPendingRequests(): List<EntityRequests<ID, T>> {
+        refreshPendingRequestsIfNeeded()
+        return cachedPendingRequests.get()
+    }
+
+    override fun findPendingRequests(branch: Branch): List<EntityRequests<ID, T>> {
+        refreshPendingRequestsIfNeeded()
+        return cachedPendingRequests.get()
+            .map { er ->
+                er.copy(changes = er.changes.filter { it.branch == branch })
+            }
+            .filter { it.changes.isNotEmpty() }
+    }
+
 }

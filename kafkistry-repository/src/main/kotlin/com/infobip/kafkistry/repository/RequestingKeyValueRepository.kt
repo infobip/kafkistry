@@ -50,6 +50,8 @@ interface RequestingKeyValueRepository<ID : Any, T : Any> {
 
     fun globallyLastCommitId(): CommitId?
 
+    fun allBranchCommitsIds(): Map<Branch, CommitId>
+
     /**
      * Signal underlying implementation to do any refreshing if needed.
      * It may be useful in case there is some caching going on.
