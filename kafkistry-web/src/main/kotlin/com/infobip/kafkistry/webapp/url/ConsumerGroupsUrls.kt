@@ -8,6 +8,7 @@ class ConsumerGroupsUrls(base: String) : BaseUrls() {
 
     companion object {
         const val CONSUMER_GROUPS = "/consumer-groups"
+        const val CONSUMER_GROUPS_TABLE = "/consumer-groups-table"
         const val CONSUMER_GROUPS_INSPECT = "/inspect"
         const val CONSUMER_GROUPS_DELETE = "/delete"
         const val CONSUMER_GROUPS_OFFSET_RESET = "/offset-reset"
@@ -17,6 +18,7 @@ class ConsumerGroupsUrls(base: String) : BaseUrls() {
     }
 
     private val showAll = Url(base)
+    private val showConsumerGroupsTable = Url("$base$CONSUMER_GROUPS_TABLE")
     private val showConsumerGroup = Url("$base$CONSUMER_GROUPS_INSPECT", listOf("clusterIdentifier", "consumerGroupId", "shownTopic"))
     private val showDeleteConsumerGroup = Url("$base$CONSUMER_GROUPS_DELETE", listOf("clusterIdentifier", "consumerGroupId"))
     private val showResetConsumerGroupOffsets = Url("$base$CONSUMER_GROUPS_OFFSET_RESET", listOf("clusterIdentifier", "consumerGroupId"))
@@ -25,6 +27,8 @@ class ConsumerGroupsUrls(base: String) : BaseUrls() {
     private val showDeleteConsumerGroupOffsets = Url("$base$CONSUMER_GROUPS_OFFSET_DELETE", listOf("clusterIdentifier", "consumerGroupId"))
 
     fun showAllClustersConsumerGroups() = showAll.render()
+
+    fun showConsumerGroupsTable() = showConsumerGroupsTable.render()
 
     @JvmOverloads
     fun showConsumerGroup(

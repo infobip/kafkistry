@@ -7,6 +7,7 @@ class AclsUrls(base: String) : BaseUrls() {
 
     companion object {
         const val ACLS = "/acls"
+        const val ACLS_PRINCIPALS_TABLE = "/principals-table"
         const val ACLS_PRINCIPAL = "/principal"
         const val ACLS_PRINCIPAL_HISTORY = "/principal/history"
         const val ACLS_DRY_RUN_INSPECT = "/dry-run-inspect"
@@ -24,6 +25,7 @@ class AclsUrls(base: String) : BaseUrls() {
     }
 
     private val showAll = Url(base)
+    private val showPrincipalsTable = Url("$base$ACLS_PRINCIPALS_TABLE")
     private val showAllPrincipalAcls = Url("$base$ACLS_PRINCIPAL", listOf("principal", "rule", "clusterIdentifier"))
     private val showPrincipalHistory = Url("$base$ACLS_PRINCIPAL_HISTORY", listOf("principal"))
     private val showDryRunInspect = Url("$base$ACLS_DRY_RUN_INSPECT")
@@ -40,6 +42,8 @@ class AclsUrls(base: String) : BaseUrls() {
     private val showBulkDeletePrincipalRules = Url("$base$ACLS_BULK_DELETE_RULES", listOf("principal"))
 
     fun showAll() = showAll.render()
+
+    fun showPrincipalsTable() = showPrincipalsTable.render()
 
     fun showAllPrincipalAcls(principal: PrincipalId) = showAllPrincipalAcls(principal, null, null)
     fun showAllPrincipalAclsRule(principal: PrincipalId, selectedRule: String) = showAllPrincipalAcls(principal, selectedRule, null)

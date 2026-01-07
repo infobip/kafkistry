@@ -259,14 +259,14 @@ class UiRenderTest {
 
     @Test
     fun `allTopics - no topics`() {
-        val page = api.getPage("/topics")
+        val page = api.getPage("/topics/all-table")
         assertThat(page.select(".topic-row")).isEmpty()
     }
 
     @Test
     fun `allTopics - all added`() {
         addAllClustersAndTopics()
-        val page = api.getPage("/topics")
+        val page = api.getPage("/topics/all-table")
         assertThat(page.select(".topic-row")).extracting(
                 Function { it.selectFirst("a")?.text() },
                 Function { it.selectFirst("a")?.attr("href") },
@@ -341,7 +341,7 @@ class UiRenderTest {
         api.addCluster(cluster1)
         api.addCluster(cluster2)
         api.refreshClusters()
-        val page = api.getPage("/topics")
+        val page = api.getPage("/topics/all-table")
         assertThat(page.select(".topic-row")).extracting(
             Function { it.selectFirst("a")?.text() },
             Function { it.selectFirst("a")?.attr("href") },

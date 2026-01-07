@@ -7,6 +7,7 @@ class TopicsUrls(base: String) : BaseUrls() {
 
     companion object {
         const val TOPICS = "/topics"
+        const val TOPICS_ALL_TABLE = "/all-table"
         const val TOPICS_IMPORT = "/import"
         const val TOPICS_EDIT = "/edit"
         const val TOPICS_EDIT_ON_BRANCH = "/edit-on-branch"
@@ -24,6 +25,7 @@ class TopicsUrls(base: String) : BaseUrls() {
     }
 
     private val showTopics = Url(base)
+    private val showAllTopicsTable = Url("$base$TOPICS_ALL_TABLE")
     private val showImportTopic = Url("$base$TOPICS_IMPORT", listOf("topicName"))
     private val showEditTopic = Url("$base$TOPICS_EDIT", listOf("topicName"))
     private val showEditTopicOnBranch = Url("$base$TOPICS_EDIT_ON_BRANCH", listOf("topicName", "branch"))
@@ -40,6 +42,8 @@ class TopicsUrls(base: String) : BaseUrls() {
     private val showCreateTopicFromWizard = Url("$base$TOPICS_WIZARD_CREATE")
 
     fun showTopics() = showTopics.render()
+
+    fun showAllTopicsTable() = showAllTopicsTable.render()
 
     fun showImportTopic(topicName: TopicName) = showImportTopic.render("topicName" to topicName)
 

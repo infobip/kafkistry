@@ -1,24 +1,61 @@
 $(document).ready(function () {
-    $(".status-filter-btn").click(filterTableByValue);
-    initPresetConsumerGroupForm();
-    whenUrlSchemaReady(updateInitGroupButton);
-    maybeFilterDatatableByUrlHash();
+    loadAllConsumerGroupsTable();
 });
+
+function loadAllConsumerGroupsTable() {
+    showOpProgressOnId("allConsumerGroups", "Loading consumer groups...");
+    whenUrlSchemaReady(function () {
+        let url = urlFor("consumerGroups.showConsumerGroupsTable");
+        let allConsumerGroupsResultContainer = $("#all-consumer-groups-result");
+        $
+            .ajax(url, {
+                method: "GET",
+                headers: {ajax: 'true'},
+            })
+            .done(function (response) {
+                hideServerOpOnId("allConsumerGroups");
+                allConsumerGroupsResultContainer.html(response);
+                refreshAllConfValuesIn(allConsumerGroupsResultContainer);
+                registerAllInfoTooltipsIn(allConsumerGroupsResultContainer);
+                // Extract groups BEFORE datatable initialization (so we get all rows, not just first page)
+                let allConsumerGroups = extractAllConsumerGroups();
+                initDatatablesIn(allConsumerGroupsResultContainer);
+                // Setup filter buttons after content is loaded
+                $(".status-filter-btn").click(filterTableByValue);
+                initPresetConsumerGroupForm(allConsumerGroups);
+                whenUrlSchemaReady(updateInitGroupButton);
+                maybeFilterDatatableByUrlHash();
+            })
+            .fail(function (error) {
+                let errHtml = extractErrHtml(error);
+                if (errHtml) {
+                    hideServerOpOnId("allConsumerGroups");
+                    allConsumerGroupsResultContainer.html(errHtml);
+                } else {
+                    let errorMsg = extractErrMsg(error);
+                    showOpErrorOnId("allConsumerGroups", "Failed to get consumer groups", errorMsg);
+                }
+            });
+    });
+}
 
 function filterTableByValue() {
     let statusType = $(this).attr("data-status-type");
     filterDatatableBy(statusType, "consumer-groups");
 }
 
-function initPresetConsumerGroupForm() {
+function extractAllConsumerGroups() {
     let groups = {};
     $(".consumer-group-row").each(function () {
         let groupId = $(this).attr("data-consumer-group-id");
         groups[groupId] = true;
     });
-    let allExistingConsumerGroups = Object.keys(groups).sort();
+    return Object.keys(groups).sort();
+}
 
-    let consumerGroupInput = $("input[name=preset-consumer-group-id]");
+function initPresetConsumerGroupForm(allExistingConsumerGroups) {
+
+    let consumerGroupInput = $("#preset-group-form input[name=preset-consumer-group-id]");
     consumerGroupInput.on("change keyup", updateInitGroupButton);
     consumerGroupInput
         .autocomplete({
@@ -31,8 +68,10 @@ function initPresetConsumerGroupForm() {
         .focus(function () {
             $(this).data("uiAutocomplete").search($(this).val());
         });
-    $("#preset-group-form select[name=preset-cluster-identifier]").on("change keyup", updateInitGroupButton);
-    $("#preset-group-form input[name=preset-consumer-group-id]").on("change keyup", updateInitGroupButton);
+    let clusterSelectPicker = $("#preset-group-form select[name=preset-cluster-identifier]");
+    initSelectPicker(clusterSelectPicker);
+    clusterSelectPicker.on("change keyup", updateInitGroupButton);
+    consumerGroupInput.on("change keyup", updateInitGroupButton);
 }
 
 function updateInitGroupButton() {

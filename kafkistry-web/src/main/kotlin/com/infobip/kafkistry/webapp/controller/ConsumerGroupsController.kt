@@ -13,6 +13,7 @@ import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.consumers.ConsumersStats
 import com.infobip.kafkistry.service.consumers.computeStats
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS
+import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_TABLE
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_CLONE
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_DELETE
 import com.infobip.kafkistry.webapp.url.ConsumerGroupsUrls.Companion.CONSUMER_GROUPS_INSPECT
@@ -38,6 +39,11 @@ class ConsumerGroupsController(
 
     @GetMapping
     fun showAllClustersConsumerGroups(): ModelAndView {
+        return ModelAndView("consumers/allClustersConsumers")
+    }
+
+    @GetMapping(CONSUMER_GROUPS_TABLE)
+    fun showConsumerGroupsTable(): ModelAndView {
         val consumersData = consumersApi.allConsumersData()
         val clusterIdentifiers = existingValuesApi.all().clusterRefs
             .filter { clusterEnabledFilter.enabled(it) }
@@ -47,9 +53,10 @@ class ConsumerGroupsController(
             .distinct()
             .associateWith { ownershipClassifier.isOwnerOfConsumerGroup(it) }
         val consumersStats = consumersData.clustersGroups.computeStats()
-        return ModelAndView("consumers/allClustersConsumers", mapOf(
+        return ModelAndView("consumers/consumerGroupsTable", mapOf(
             "consumersData" to consumersData,
             "consumersStats" to consumersStats,
+            "clustersGroups" to consumersData.clustersGroups,
             "groupsOwned" to groupsOwned,
             "clusterIdentifiers" to clusterIdentifiers,
         ))

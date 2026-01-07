@@ -8,6 +8,7 @@ import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.quotas.AvailableQuotasOperation
 import com.infobip.kafkistry.service.quotas.QuotasInspection
 import com.infobip.kafkistry.webapp.url.QuotasUrls.Companion.QUOTAS
+import com.infobip.kafkistry.webapp.url.QuotasUrls.Companion.QUOTAS_ENTITIES_TABLE
 import com.infobip.kafkistry.webapp.url.QuotasUrls.Companion.QUOTAS_CREATE_ENTITY
 import com.infobip.kafkistry.webapp.url.QuotasUrls.Companion.QUOTAS_DELETE_ENTITY
 import com.infobip.kafkistry.webapp.url.QuotasUrls.Companion.QUOTAS_EDIT_ENTITY
@@ -40,14 +41,22 @@ class QuotasController(
 
     @GetMapping
     fun showAll(): ModelAndView {
-        val quotaEntitiesInspection = inspectApi.inspectAllQuotaEntities()
-        val unknownQuotaEntitiesInspection = inspectApi.inspectUnknownQuotaEntities()
-        val quotaEntities = quotaEntitiesInspection + unknownQuotaEntitiesInspection
         val pendingQuotaRequests = quotasApi.pendingQuotasRequests()
         return ModelAndView(
             "quotas/entities", mapOf(
-                "quotaEntities" to quotaEntities,
                 "pendingQuotaRequests" to pendingQuotaRequests
+            )
+        )
+    }
+
+    @GetMapping(QUOTAS_ENTITIES_TABLE)
+    fun showEntitiesTable(): ModelAndView {
+        val quotaEntitiesInspection = inspectApi.inspectAllQuotaEntities()
+        val unknownQuotaEntitiesInspection = inspectApi.inspectUnknownQuotaEntities()
+        val quotaEntities = quotaEntitiesInspection + unknownQuotaEntitiesInspection
+        return ModelAndView(
+            "quotas/entitiesTable", mapOf(
+                "quotaEntities" to quotaEntities,
             )
         )
     }

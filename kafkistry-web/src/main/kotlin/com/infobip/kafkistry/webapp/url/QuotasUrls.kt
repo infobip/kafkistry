@@ -7,6 +7,7 @@ class QuotasUrls(base: String) : BaseUrls() {
 
     companion object {
         const val QUOTAS = "/quotas"
+        const val QUOTAS_ENTITIES_TABLE = "/entities-table"
 
         const val QUOTAS_ENTITY = "/entity"
         const val QUOTAS_ENTITY_HISTORY = "/entity/history"
@@ -28,6 +29,7 @@ class QuotasUrls(base: String) : BaseUrls() {
     }
 
     private val showAll = Url(base)
+    private val showEntitiesTable = Url("$base$QUOTAS_ENTITIES_TABLE")
     private val showEntity = Url("$base$QUOTAS_ENTITY", listOf("quotaEntityID"))
     private val showEntityHistory = Url("$base$QUOTAS_ENTITY_HISTORY", listOf("quotaEntityID"))
     private val showCreateEntity = Url("$base$QUOTAS_CREATE_ENTITY")
@@ -47,6 +49,8 @@ class QuotasUrls(base: String) : BaseUrls() {
     private val showBulkCreateClusterQuotas = Url("$base$QUOTAS_MANAGEMENT_BULK_CREATE_CLUSTER_QUOTAS", listOf("clusterIdentifier"))
 
     fun showAll() = showAll.render()
+
+    fun showEntitiesTable() = showEntitiesTable.render()
 
     fun showEntity(quotaEntityID: QuotaEntityID) = showEntity.render("quotaEntityID" to quotaEntityID)
     fun showEntityHistory(quotaEntityID: QuotaEntityID) = showEntityHistory.render("quotaEntityID" to quotaEntityID)

@@ -9,6 +9,7 @@ import com.infobip.kafkistry.ownership.UserOwnershipClassifier
 import com.infobip.kafkistry.service.acl.AvailableAclOperation
 import com.infobip.kafkistry.service.acl.transpose
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS
+import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_PRINCIPALS_TABLE
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_BULK_CREATE_CLUSTER_RULES
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_BULK_CREATE_PRINCIPAL_RULES
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_BULK_DELETE_RULES
@@ -42,17 +43,23 @@ class AclsController(
 
     @GetMapping
     fun showAll(): ModelAndView {
+        val pendingPrincipalRequests = aclsApi.pendingPrincipalRequests()
+        return ModelAndView("acls/principals", mapOf(
+            "pendingPrincipalRequests" to pendingPrincipalRequests
+        ))
+    }
+
+    @GetMapping(ACLS_PRINCIPALS_TABLE)
+    fun showPrincipalsTable(): ModelAndView {
         val principalsInspection = inspectApi.inspectAllPrincipals()
         val unknownPrincipalsInspection = inspectApi.inspectUnknownPrincipals()
         val principals = (principalsInspection + unknownPrincipalsInspection).map { it.transpose() }
-        val pendingPrincipalRequests = aclsApi.pendingPrincipalRequests()
         val principalsOwned = principals.associate {
             it.principal to ownershipClassifier.isOwnerOfPrincipal(it.principalAcls)
         }
-        return ModelAndView("acls/principals", mapOf(
+        return ModelAndView("acls/principalsTable", mapOf(
             "principals" to principals,
             "principalsOwned" to principalsOwned,
-            "pendingPrincipalRequests" to pendingPrincipalRequests
         ))
     }
 

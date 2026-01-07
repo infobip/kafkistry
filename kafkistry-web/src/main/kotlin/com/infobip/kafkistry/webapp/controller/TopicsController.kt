@@ -16,6 +16,7 @@ import com.infobip.kafkistry.service.topic.toAssignmentsInfo
 import com.infobip.kafkistry.webapp.TopicInspectExtensionProperties
 import com.infobip.kafkistry.webapp.WizardTopicNameProperties
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS
+import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS_ALL_TABLE
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS_CLONE_ADD_NEW
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS_CLUSTER_INSPECT
 import com.infobip.kafkistry.webapp.url.TopicsUrls.Companion.TOPICS_CREATE
@@ -61,16 +62,22 @@ class TopicsController(
 
     @GetMapping
     fun showTopics(): ModelAndView {
+        val pendingTopicsRequests = topicsApi.pendingTopicsRequests()
+        return ModelAndView("topics/all", mutableMapOf(
+            "pendingTopicsUpdates" to pendingTopicsRequests,
+        ))
+    }
+
+    @GetMapping(TOPICS_ALL_TABLE)
+    fun showAllTopicsTable(): ModelAndView {
         val topics = inspectApi.inspectTopics()
         val unknownTopics = inspectApi.inspectUnknownTopics()
-        val pendingTopicsRequests = topicsApi.pendingTopicsRequests()
         val allTopics = (topics + unknownTopics).sortedBy { it.topicName }
         val topicsOwned = allTopics.associate {
             it.topicName to ownershipClassifier.isOwnerOfTopic(it.topicDescription)
         }
-        return ModelAndView("topics/all", mutableMapOf(
+        return ModelAndView("topics/allTable", mutableMapOf(
             "topics" to allTopics,
-            "pendingTopicsUpdates" to pendingTopicsRequests,
             "topicsOwned" to topicsOwned,
         ))
     }
