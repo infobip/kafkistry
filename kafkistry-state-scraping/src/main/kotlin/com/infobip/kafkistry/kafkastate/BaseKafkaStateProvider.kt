@@ -80,8 +80,8 @@ abstract class BaseKafkaStateProvider(
             components.clusterFilter.enabled(it.ref())
         }
         setupCachedState(
-                enabledClusters.map { it.identifier },
-                disabledClusters.map { it.identifier }
+            enabledClusters.map { it.identifier },
+            disabledClusters.map { it.identifier },
         )
 
         // Race for each cluster - only winners scrape

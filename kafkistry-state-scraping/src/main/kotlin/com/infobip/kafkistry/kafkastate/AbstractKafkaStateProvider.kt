@@ -53,18 +53,6 @@ abstract class AbstractKafkaStateProvider<V>(
                 stateData(StateType.DISABLED, it)
             }
         }
-
-        // Late joiner support: Try to load cached state for enabled clusters
-        enabledClusters.forEach { clusterIdentifier ->
-            if (!clusterStates.containsKey(clusterIdentifier)) {
-                val cachedState = components.stateDataPublisher
-                    .readLatestStateIfAvailable<V>(stateTypeName(), clusterIdentifier)
-                    ?: return@forEach
-                log.info("Late joiner: Loaded cached state for {}/{} (age: {}ms)",
-                    stateTypeName(), clusterIdentifier, System.currentTimeMillis() - cachedState.lastRefreshTime)
-                clusterStates[clusterIdentifier] = cachedState
-            }
-        }
     }
 
     /**

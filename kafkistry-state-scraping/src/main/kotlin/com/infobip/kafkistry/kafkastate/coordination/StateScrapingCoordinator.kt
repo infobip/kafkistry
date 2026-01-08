@@ -1,9 +1,9 @@
 package com.infobip.kafkistry.kafkastate.coordination
 
 import com.hazelcast.core.HazelcastInstance
+import com.infobip.kafkistry.hostname.HostnameResolver
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.slf4j.LoggerFactory
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -98,9 +98,10 @@ class LocalStateScrapingCoordinator : StateScrapingCoordinator {
  */
 class HazelcastStateScrapingCoordinator(
     hazelcastInstance: HazelcastInstance,
-    private val instanceId: String = UUID.randomUUID().toString()
+    hostnameResolver: HostnameResolver,
 ) : StateScrapingCoordinator {
 
+    private val kafkistryInstance = hostnameResolver.hostname
     private val log = LoggerFactory.getLogger(HazelcastStateScrapingCoordinator::class.java)
 
     // Distributed lock cache for coordinating scraping races
@@ -126,17 +127,17 @@ class HazelcastStateScrapingCoordinator(
         // Try to acquire lock with TTL = 2x interval
         // This handles slow scrapes and crashed instances
         val ttlMs = intervalMs * 2
-        val oldHolder = lockCache.put(lockKey, instanceId, ttlMs, TimeUnit.MILLISECONDS)
+        val oldHolder = lockCache.put(lockKey, kafkistryInstance, ttlMs, TimeUnit.MILLISECONDS)
 
         // Won the race if nobody held the lock before (oldHolder == null)
         val won = oldHolder == null
 
         if (won) {
             log.debug("Instance {} won scraping lock for {}/{} (round {})",
-                instanceId, stateTypeName, clusterIdentifier, scrapeRound)
+                kafkistryInstance, stateTypeName, clusterIdentifier, scrapeRound)
         } else {
             log.debug("Instance {} lost scraping race for {}/{} to {} (round {})",
-                instanceId, stateTypeName, clusterIdentifier, oldHolder, scrapeRound)
+                kafkistryInstance, stateTypeName, clusterIdentifier, oldHolder, scrapeRound)
         }
 
         return won

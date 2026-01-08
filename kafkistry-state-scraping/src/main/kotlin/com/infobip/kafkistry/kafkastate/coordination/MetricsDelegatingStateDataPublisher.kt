@@ -3,7 +3,6 @@ package com.infobip.kafkistry.kafkastate.coordination
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.metric.MetricHolder
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import io.prometheus.client.Summary
 
 private val stateDataPublisherDurationHolder = MetricHolder { prefix ->
@@ -37,13 +36,6 @@ class MetricsDelegatingStateDataPublisher(
         listener: (StateData<V>) -> Unit
     ) = measureDuration("subscribeToStateUpdates") {
         delegate.subscribeToStateUpdates(stateTypeName, listener)
-    }
-
-    override fun <V> readLatestStateIfAvailable(
-        stateTypeName: String,
-        clusterIdentifier: KafkaClusterIdentifier
-    ): StateData<V>? = measureDuration("readLatestStateIfAvailable") {
-        delegate.readLatestStateIfAvailable(stateTypeName, clusterIdentifier)
     }
 
     override fun publishSamplingStarted(event: SamplingStartedEvent) = measureDuration("publishSamplingStarted") {
