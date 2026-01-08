@@ -3,7 +3,6 @@ package com.infobip.kafkistry.kafkastate.coordination
 import com.hazelcast.core.EntryEvent
 import com.hazelcast.core.HazelcastInstance
 import com.hazelcast.map.listener.EntryUpdatedListener
-import com.infobip.kafkistry.hostname.HostnameResolver
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.slf4j.LoggerFactory
@@ -122,11 +121,7 @@ class LocalStateDataPublisher : StateDataPublisher {
  */
 class HazelcastStateDataPublisher(
     hazelcastInstance: HazelcastInstance,
-    hostnameResolver: HostnameResolver,
 ) : StateDataPublisher {
-
-    private val hostname = hostnameResolver.hostname
-    private val hMember = hazelcastInstance.name
 
     private val log = LoggerFactory.getLogger(HazelcastStateDataPublisher::class.java)
 
@@ -143,7 +138,6 @@ class HazelcastStateDataPublisher(
     override fun <V> publishStateData(stateData: StateData<V>) = with(stateData) {
         try {
             val key = cacheKey(stateTypeName, clusterIdentifier)
-            val kafkistryInstance = "$hostname-$hMember"
             val serialized = SerializedStateData.from(kafkistryInstance,this)
             stateCache.put(key, serialized)
             log.debug("Published state data for {}/{} to Hazelcast as {} (age: {}ms)", stateTypeName, clusterIdentifier, kafkistryInstance, System.currentTimeMillis() - lastRefreshTime)

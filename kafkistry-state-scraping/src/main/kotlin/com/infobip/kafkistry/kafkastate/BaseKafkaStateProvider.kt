@@ -1,19 +1,18 @@
 package com.infobip.kafkistry.kafkastate
 
-import io.prometheus.client.Gauge
-import io.prometheus.client.Summary
-import com.infobip.kafkistry.kafkastate.config.PoolingProperties
-import com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator
 import com.infobip.kafkistry.metric.MetricHolder
-import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.repository.KafkaClustersRepository
+import io.prometheus.client.Gauge
+import io.prometheus.client.Summary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory
-import java.util.concurrent.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 private val clusterPoolingSummaryHolder = MetricHolder { prefix ->
     //default name: kafkistry_cluster_pooling
@@ -39,17 +38,13 @@ private val clusterPoolingTypeOkGaugeHolder = MetricHolder { prefix ->
 }
 
 abstract class BaseKafkaStateProvider(
-    private val clustersRepository: KafkaClustersRepository,
-    private val clusterFilter: ClusterEnabledFilter,
-    promProperties: PrometheusMetricsProperties,
-    protected val poolingProperties: PoolingProperties,
-    protected val scrapingCoordinator: StateScrapingCoordinator,
+    protected val components: StateProviderComponents,
 ) : AutoCloseable {
 
     protected val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    private val clusterPoolingSummary = clusterPoolingSummaryHolder.metric(promProperties)
-    private val clusterPoolingTypeOkGauge = clusterPoolingTypeOkGaugeHolder.metric(promProperties)
+    private val clusterPoolingSummary = clusterPoolingSummaryHolder.metric(components.promProperties)
+    private val clusterPoolingTypeOkGauge = clusterPoolingTypeOkGaugeHolder.metric(components.promProperties)
 
     private val executor = ThreadPoolExecutor(
         0,
@@ -77,11 +72,13 @@ abstract class BaseKafkaStateProvider(
         SCHEDULED, REQUESTED
     }
 
-    protected open fun refreshIntervalMs(): Long = poolingProperties.intervalMs
+    protected open fun refreshIntervalMs(): Long = components.poolingProperties.intervalMs
 
     protected fun doRefreshClustersStates(initiation: RefreshInitiation) {
-        val clusters = clustersRepository.findAll()
-        val (enabledClusters, disabledClusters) = clusters.partition { clusterFilter.enabled(it.ref()) }
+        val clusters = components.clustersRepository.findAll()
+        val (enabledClusters, disabledClusters) = clusters.partition {
+            components.clusterFilter.enabled(it.ref())
+        }
         setupCachedState(
                 enabledClusters.map { it.identifier },
                 disabledClusters.map { it.identifier }
@@ -92,7 +89,7 @@ abstract class BaseKafkaStateProvider(
             CompletableFuture.supplyAsync({
                 val raceTimeMs = System.currentTimeMillis()
                 val shouldScrape = when (initiation) {
-                    RefreshInitiation.SCHEDULED -> scrapingCoordinator.tryAcquireScrapingLock(
+                    RefreshInitiation.SCHEDULED -> components.scrapingCoordinator.tryAcquireScrapingLock(
                         stateTypeName(), cluster.identifier, refreshIntervalMs(),
                     )
                     RefreshInitiation.REQUESTED -> true
@@ -106,7 +103,7 @@ abstract class BaseKafkaStateProvider(
                     log.debug("Lost scraping race for {}/{}, waiting for shared data", stateTypeName(), cluster.identifier)
                     // Wait for winner to publish state (timeout = 2x interval to match lock TTL)
                     val timeoutMs = refreshIntervalMs() * 2
-                    val received = scrapingCoordinator.waitForSharedState(
+                    val received = components.scrapingCoordinator.waitForSharedState(
                         stateTypeName(), cluster.identifier, raceTimeMs, timeoutMs
                     )
                     if (!received) {
@@ -121,7 +118,7 @@ abstract class BaseKafkaStateProvider(
     }
 
     fun refreshClusterState(clusterIdentifier: KafkaClusterIdentifier) {
-        val cluster = clustersRepository.findById(clusterIdentifier)
+        val cluster = components.clustersRepository.findById(clusterIdentifier)
         if (cluster != null) {
             refreshCluster(cluster)
             publishScrapedState(cluster.identifier)

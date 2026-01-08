@@ -67,6 +67,7 @@ data class SerializedStateData(
             stateTypeName = stateTypeName,
             lastRefreshTime = lastRefreshTime,
             value = value,
+            kafkistryInstance = kafkistryInstance,
         )
     }
 }

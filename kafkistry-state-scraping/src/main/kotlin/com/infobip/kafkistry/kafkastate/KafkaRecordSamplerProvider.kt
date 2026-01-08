@@ -1,21 +1,13 @@
 package com.infobip.kafkistry.kafkastate
 
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.kafka.*
-import com.infobip.kafkistry.kafkastate.config.PoolingProperties
-import com.infobip.kafkistry.kafkastate.coordination.SampledConsumerRecord
-import com.infobip.kafkistry.kafkastate.coordination.SamplingCompletedEvent
-import com.infobip.kafkistry.kafkastate.coordination.SamplingEventListener
-import com.infobip.kafkistry.kafkastate.coordination.SamplingStartedEvent
-import com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher
-import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
+import com.infobip.kafkistry.kafkastate.coordination.*
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.repository.KafkaClustersRepository
-import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import com.infobip.kafkistry.utils.deepToString
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -35,22 +27,11 @@ data class SamplersStates(
 
 @Component
 class KafkaRecordSamplerProvider(
-    private val clustersRepository: KafkaClustersRepository,
-    clusterFilter: ClusterEnabledFilter,
-    promProperties: PrometheusMetricsProperties,
-    poolingProperties: PoolingProperties,
-    scrapingCoordinator: com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator,
-    issuesRegistry: BackgroundJobIssuesRegistry,
-    private val stateDataPublisher: StateDataPublisher,
-    private val topicOffsetsProvider: KafkaTopicOffsetsProvider,
+    components: StateProviderComponents,
     private val clientProvider: KafkaClientProvider,
+    private val topicOffsetsProvider: KafkaTopicOffsetsProvider,
     private val recordSamplerListeners: Optional<List<RecordSamplingListener<*>>>,
-) : AbstractKafkaStateProvider<Unit>(
-    clustersRepository, clusterFilter, promProperties, poolingProperties,
-    scrapingCoordinator, issuesRegistry, stateDataPublisher,
-) : AbstractKafkaStateProvider<SamplersStates>(
-    clustersRepository, clusterFilter, promProperties, issuesRegistry,
-) {
+) : AbstractKafkaStateProvider<Unit>(components) {
     companion object {
         const val RECORDS_SAMPLING = "records_sampling"
     }
@@ -61,7 +42,7 @@ class KafkaRecordSamplerProvider(
 
     init {
         // Subscribe to sampling lifecycle events from other instances
-        stateDataPublisher.subscribeToSamplingEvents(object : SamplingEventListener {
+        components.stateDataPublisher.subscribeToSamplingEvents(object : SamplingEventListener {
             override fun onSamplingStarted(event: SamplingStartedEvent) {
                 log.debug("Received sampling started for {}/{} from another instance ({} topics)",
                     event.clusterIdentifier, event.samplingPosition, event.topics.size)
@@ -92,7 +73,7 @@ class KafkaRecordSamplerProvider(
     )
     override fun scheduledRefreshClustersStates() = doRefreshClustersStates(RefreshInitiation.SCHEDULED)
 
-    override fun refreshIntervalMs(): Long = poolingProperties.recordSamplingIntervalMs
+    override fun refreshIntervalMs(): Long = components.poolingProperties.recordSamplingIntervalMs
 
     override fun clusterRemoved(clusterIdentifier: KafkaClusterIdentifier) {
         recordSamplerListeners.orElse(emptyList()).forEach { it.clusterRemoved(clusterIdentifier) }
@@ -118,7 +99,7 @@ class KafkaRecordSamplerProvider(
     ) {
         val samplers = createTopicSamplers(kafkaCluster.identifier, topicPartitionOffsets.keys, samplingPosition)
             ?: return
-        val visitor = SamplersRecordVisitor(samplers, stateDataPublisher, kafkaCluster.ref(), samplingPosition,)
+        val visitor = SamplersRecordVisitor(samplers, components.stateDataPublisher, kafkaCluster.ref(), samplingPosition,)
         val filteredTopicsOffsets = topicPartitionOffsets
             .filterKeys { visitor.needsTopic(it) } // read only topics that sampler(s) want
 
@@ -129,7 +110,7 @@ class KafkaRecordSamplerProvider(
                 samplingPosition = samplingPosition,
                 topics = filteredTopicsOffsets.keys.toSet(), //keys from map are not Serializable
             )
-            stateDataPublisher.publishSamplingStarted(event)
+            components.stateDataPublisher.publishSamplingStarted(event)
         }
 
         try {
@@ -144,7 +125,7 @@ class KafkaRecordSamplerProvider(
                     samplingPosition = samplingPosition,
                     success = true,
                 )
-                stateDataPublisher.publishSamplingCompleted(event)
+                components.stateDataPublisher.publishSamplingCompleted(event)
             }
         } catch (ex: Throwable) {
             visitor.samplingRoundFailed(ex)
@@ -156,7 +137,7 @@ class KafkaRecordSamplerProvider(
                     success = false,
                     cause = ex.deepToString(),
                 )
-                stateDataPublisher.publishSamplingCompleted(event)
+                components.stateDataPublisher.publishSamplingCompleted(event)
             }
             throw ex
         }
@@ -175,7 +156,7 @@ class KafkaRecordSamplerProvider(
             .takeIf { it.isNotEmpty() }
             ?: return null  // No listeners
 
-        val clusterRef = clustersRepository.findById(clusterIdentifier)?.ref() ?: return null
+        val clusterRef = components.clustersRepository.findById(clusterIdentifier)?.ref() ?: return null
         val samplersTopics = allListeners
             .map {
                 it to topics.filter { topic ->
@@ -294,12 +275,3 @@ private inline fun List<RecordSampler>.forEachNoException(op: (RecordSampler) ->
         }
     }
 }
-    private inline fun List<RecordSampler<*>>.forEachNoException(op: (RecordSampler<*>) -> Unit) {
-        forEach {
-            try {
-                op(it)
-            } catch (_: Exception) {
-                //make sure exception from one sampler doesn't propagate
-            }
-        }
-    }

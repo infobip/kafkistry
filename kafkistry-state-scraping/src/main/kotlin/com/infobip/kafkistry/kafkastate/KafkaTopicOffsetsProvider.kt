@@ -1,31 +1,16 @@
 package com.infobip.kafkistry.kafkastate
 
 import com.infobip.kafkistry.kafka.KafkaClientProvider
-import com.infobip.kafkistry.kafkastate.config.PoolingProperties
-import com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher
-import com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator
-import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
-import com.infobip.kafkistry.repository.KafkaClustersRepository
-import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 
 @Component
 class KafkaTopicOffsetsProvider(
-    clustersRepository: KafkaClustersRepository,
-    clusterFilter: ClusterEnabledFilter,
-    promProperties: PrometheusMetricsProperties,
-    poolingProperties: PoolingProperties,
-    scrapingCoordinator: StateScrapingCoordinator,
-    issuesRegistry: BackgroundJobIssuesRegistry,
-    stateDataPublisher: StateDataPublisher,
+    components: StateProviderComponents,
     private val clientProvider: KafkaClientProvider
-) : AbstractKafkaStateProvider<ClusterTopicOffsets>(
-    clustersRepository, clusterFilter, promProperties, poolingProperties,
-    scrapingCoordinator, issuesRegistry, stateDataPublisher,
-) {
+) : AbstractKafkaStateProvider<ClusterTopicOffsets>(components) {
 
     companion object {
         const val TOPIC_OFFSETS = "topic_offsets"

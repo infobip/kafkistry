@@ -1,44 +1,34 @@
 package com.infobip.kafkistry.kafkastate
 
-import com.infobip.kafkistry.utils.deepToString
-import com.infobip.kafkistry.kafkastate.config.PoolingProperties
-import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.repository.KafkaClustersRepository
 import com.infobip.kafkistry.service.background.BackgroundJob
-import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
+import com.infobip.kafkistry.utils.deepToString
 import java.util.concurrent.ConcurrentHashMap
 
 abstract class AbstractKafkaStateProvider<V>(
-    clustersRepository: KafkaClustersRepository,
-    clusterFilter: ClusterEnabledFilter,
-    promProperties: PrometheusMetricsProperties,
-    poolingProperties: PoolingProperties,
-    scrapingCoordinator: com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator,
-    private val issuesRegistry: BackgroundJobIssuesRegistry,
-    private val stateDataPublisher: com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher,
-) : BaseKafkaStateProvider(clustersRepository, clusterFilter, promProperties, poolingProperties, scrapingCoordinator) {
+    components: StateProviderComponents,
+) : BaseKafkaStateProvider(components) {
 
     private val clusterStates: MutableMap<KafkaClusterIdentifier, StateData<V>> = ConcurrentHashMap()
+    private val kafkistryInstance = components.hostnameResolver.hostname
 
     init {
         // Subscribe to shared state updates from other instances
-        stateDataPublisher.subscribeToStateUpdates(stateTypeName()) { receivedState ->
+        components.stateDataPublisher.subscribeToStateUpdates(stateTypeName()) { receivedState ->
             log.info("Received shared state for {}/{} from another instance (age: {}ms)",
                 stateTypeName(), receivedState.clusterIdentifier,
                 System.currentTimeMillis() - receivedState.lastRefreshTime)
             clusterStates[receivedState.clusterIdentifier] = receivedState
             // Notify coordinator that state was received (for waiting threads)
-            scrapingCoordinator.notifyStateReceived(stateTypeName(), receivedState.clusterIdentifier)
+            components.scrapingCoordinator.notifyStateReceived(stateTypeName(), receivedState.clusterIdentifier)
         }
 
         log.info("Initialized state provider for {} with distributed coordination", stateTypeName())
     }
 
     fun getLatestState(kafkaClusterIdentifier: KafkaClusterIdentifier): StateData<V> {
-        return clusterStates[kafkaClusterIdentifier]
-            ?: StateData(StateType.UNKNOWN, kafkaClusterIdentifier, stateTypeName(), System.currentTimeMillis())
+        return clusterStates[kafkaClusterIdentifier] ?: stateData(StateType.UNKNOWN, kafkaClusterIdentifier)
     }
 
     fun getLatestStateValue(kafkaClusterIdentifier: KafkaClusterIdentifier): V {
@@ -54,20 +44,20 @@ abstract class AbstractKafkaStateProvider<V>(
             val shouldRemove = it !in enabledClusters && it !in disabledClusters
             if (shouldRemove) {
                 clusterRemoved(it)
-                issuesRegistry.clearJob(it.backgroundJob())
+                components.issuesRegistry.clearJob(it.backgroundJob())
             }
             shouldRemove
         }
         disabledClusters.forEach { clusterIdentifier ->
             clusterStates.computeIfAbsent(clusterIdentifier) {
-                StateData(StateType.DISABLED, it, stateTypeName(), System.currentTimeMillis())
+                stateData(StateType.DISABLED, it)
             }
         }
 
         // Late joiner support: Try to load cached state for enabled clusters
         enabledClusters.forEach { clusterIdentifier ->
             if (!clusterStates.containsKey(clusterIdentifier)) {
-                val cachedState = stateDataPublisher
+                val cachedState = components.stateDataPublisher
                     .readLatestStateIfAvailable<V>(stateTypeName(), clusterIdentifier)
                     ?: return@forEach
                 log.info("Late joiner: Loaded cached state for {}/{} (age: {}ms)",
@@ -83,24 +73,24 @@ abstract class AbstractKafkaStateProvider<V>(
     protected open fun clusterRemoved(clusterIdentifier: KafkaClusterIdentifier) = Unit
 
     override fun doRefreshCluster(kafkaCluster: KafkaCluster): RefreshStatus {
-        log.debug("Refreshing {} for cluster '{}'", stateTypeName(), kafkaCluster.identifier)
-        val jonExecution = issuesRegistry.newExecution(kafkaCluster.identifier.backgroundJob())
+        log.debug("Refreshing {}/{}", stateTypeName(), kafkaCluster.identifier)
+        val jonExecution = components.issuesRegistry.newExecution(kafkaCluster.identifier.backgroundJob())
         val startTime = System.currentTimeMillis()
         fun durationSec() = (System.currentTimeMillis() - startTime) / 1000.0
         val clusterState = try {
             val stateValue = fetchState(kafkaCluster)
-            log.debug("Refreshed {} of cluster '{}' in {} sec", stateTypeName(), kafkaCluster.identifier, durationSec())
+            log.debug("Refreshed successfully {}/{} in {} sec", stateTypeName(), kafkaCluster.identifier, durationSec())
             jonExecution.succeeded()
-            StateData(StateType.VISIBLE, kafkaCluster.identifier, stateTypeName(), startTime, stateValue)
+            stateData(StateType.VISIBLE, kafkaCluster.identifier, startTime, stateValue)
         } catch (ex: InvalidClusterIdException) {
             jonExecution.failed(ex.deepToString())
-            StateData(StateType.INVALID_ID, kafkaCluster.identifier, stateTypeName(), startTime)
+            stateData(StateType.INVALID_ID, kafkaCluster.identifier, startTime)
         } catch (ex: Throwable) {
-            log.error("Exception while refreshing {} for cluster {}, setting it's state as 'unreachable' after {} sec",
+            log.error("Exception while refreshing {}/{}, setting it's state as 'unreachable' after {} sec",
                 stateTypeName(), kafkaCluster.identifier, durationSec(), ex
             )
             jonExecution.failed(ex.deepToString())
-            StateData(StateType.UNREACHABLE, kafkaCluster.identifier, stateTypeName(), startTime)
+            stateData(StateType.UNREACHABLE, kafkaCluster.identifier, startTime)
         }
         clusterStates[kafkaCluster.identifier] = clusterState
         return RefreshStatus(
@@ -110,10 +100,17 @@ abstract class AbstractKafkaStateProvider<V>(
         )
     }
 
+    private fun stateData(
+        stateType: StateType,
+        clusterIdentifier: KafkaClusterIdentifier,
+        timestamp: Long = System.currentTimeMillis(),
+        value: V? = null,
+    ) = StateData(stateType, clusterIdentifier, stateTypeName(), timestamp, kafkistryInstance, value)
+
     override fun publishScrapedState(clusterIdentifier: KafkaClusterIdentifier) {
         val stateData = clusterStates[clusterIdentifier]
         if (stateData != null) {
-            stateDataPublisher.publishStateData(stateData)
+            components.stateDataPublisher.publishStateData(stateData)
             log.debug("Published scraped state for {}/{}", stateTypeName(), clusterIdentifier)
         } else {
             log.warn("Attempted to publish state for {}/{} but no state data found", stateTypeName(), clusterIdentifier)
