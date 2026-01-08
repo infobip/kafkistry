@@ -2,6 +2,8 @@ package com.infobip.kafkistry.kafkastate
 
 import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafkastate.config.PoolingProperties
+import com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher
+import com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
@@ -20,10 +22,14 @@ class KafkaClustersStateProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
     promProperties: PrometheusMetricsProperties,
+    poolingProperties: PoolingProperties,
+    scrapingCoordinator: StateScrapingCoordinator,
     issuesRegistry: BackgroundJobIssuesRegistry,
+    stateDataPublisher: StateDataPublisher,
     private val clientProvider: KafkaClientProvider
 ) : AbstractKafkaStateProvider<KafkaClusterState>(
-    clustersRepository, clusterFilter, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, poolingProperties,
+    scrapingCoordinator, issuesRegistry, stateDataPublisher,
 ) {
 
     companion object {

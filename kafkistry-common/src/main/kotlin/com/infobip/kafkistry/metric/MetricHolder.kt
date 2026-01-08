@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 typealias MetricNamePrefix = String
 
-class MetricHolder<T>(
+class MetricHolder<T : Any>(
     private val creator: (MetricNamePrefix) -> T
 ) {
 

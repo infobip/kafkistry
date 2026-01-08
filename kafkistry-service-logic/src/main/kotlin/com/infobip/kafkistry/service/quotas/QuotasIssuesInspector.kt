@@ -34,7 +34,7 @@ class QuotasIssuesInspector(
         val shouldExist = quotaDescription?.presence?.needToBeOnCluster(clusterRef) ?: false
         val expectedQuota = quotaDescription?.takeIf { shouldExist }?.quotaForCluster(clusterRef)
         val clusterQuotas = clusterQuotasState.valueOrNull()
-        val actualQuota = clusterQuotas?.quotas?.get(entity)
+        val actualQuota = clusterQuotas?.quotas?.get(entity.asID())
         val valuesInspection = inspectValues(expectedQuota, actualQuota)
         val statusType = when {
             clusterQuotasState.stateType == StateType.DISABLED -> CLUSTER_DISABLED

@@ -14,10 +14,27 @@ abstract class AbstractKafkaStateProvider<V>(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
     promProperties: PrometheusMetricsProperties,
-    private val issuesRegistry: BackgroundJobIssuesRegistry
-) : BaseKafkaStateProvider(clustersRepository, clusterFilter, promProperties) {
+    poolingProperties: PoolingProperties,
+    scrapingCoordinator: com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator,
+    private val issuesRegistry: BackgroundJobIssuesRegistry,
+    private val stateDataPublisher: com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher,
+) : BaseKafkaStateProvider(clustersRepository, clusterFilter, promProperties, poolingProperties, scrapingCoordinator) {
 
     private val clusterStates: MutableMap<KafkaClusterIdentifier, StateData<V>> = ConcurrentHashMap()
+
+    init {
+        // Subscribe to shared state updates from other instances
+        stateDataPublisher.subscribeToStateUpdates(stateTypeName()) { receivedState ->
+            log.info("Received shared state for {}/{} from another instance (age: {}ms)",
+                stateTypeName(), receivedState.clusterIdentifier,
+                System.currentTimeMillis() - receivedState.lastRefreshTime)
+            clusterStates[receivedState.clusterIdentifier] = receivedState
+            // Notify coordinator that state was received (for waiting threads)
+            scrapingCoordinator.notifyStateReceived(stateTypeName(), receivedState.clusterIdentifier)
+        }
+
+        log.info("Initialized state provider for {} with distributed coordination", stateTypeName())
+    }
 
     fun getLatestState(kafkaClusterIdentifier: KafkaClusterIdentifier): StateData<V> {
         return clusterStates[kafkaClusterIdentifier]
@@ -46,6 +63,18 @@ abstract class AbstractKafkaStateProvider<V>(
                 StateData(StateType.DISABLED, it, stateTypeName(), System.currentTimeMillis())
             }
         }
+
+        // Late joiner support: Try to load cached state for enabled clusters
+        enabledClusters.forEach { clusterIdentifier ->
+            if (!clusterStates.containsKey(clusterIdentifier)) {
+                val cachedState = stateDataPublisher
+                    .readLatestStateIfAvailable<V>(stateTypeName(), clusterIdentifier)
+                    ?: return@forEach
+                log.info("Late joiner: Loaded cached state for {}/{} (age: {}ms)",
+                    stateTypeName(), clusterIdentifier, System.currentTimeMillis() - cachedState.lastRefreshTime)
+                clusterStates[clusterIdentifier] = cachedState
+            }
+        }
     }
 
     /**
@@ -68,7 +97,7 @@ abstract class AbstractKafkaStateProvider<V>(
             StateData(StateType.INVALID_ID, kafkaCluster.identifier, stateTypeName(), startTime)
         } catch (ex: Throwable) {
             log.error("Exception while refreshing {} for cluster {}, setting it's state as 'unreachable' after {} sec",
-                stateTypeName(), kafkaCluster, durationSec(), ex
+                stateTypeName(), kafkaCluster.identifier, durationSec(), ex
             )
             jonExecution.failed(ex.deepToString())
             StateData(StateType.UNREACHABLE, kafkaCluster.identifier, stateTypeName(), startTime)
@@ -79,6 +108,16 @@ abstract class AbstractKafkaStateProvider<V>(
                 clusterState = clusterState.stateType,
                 durationMs = System.currentTimeMillis() - startTime
         )
+    }
+
+    override fun publishScrapedState(clusterIdentifier: KafkaClusterIdentifier) {
+        val stateData = clusterStates[clusterIdentifier]
+        if (stateData != null) {
+            stateDataPublisher.publishStateData(stateData)
+            log.debug("Published scraped state for {}/{}", stateTypeName(), clusterIdentifier)
+        } else {
+            log.warn("Attempted to publish state for {}/{} but no state data found", stateTypeName(), clusterIdentifier)
+        }
     }
 
     private fun KafkaClusterIdentifier.backgroundJob() = BackgroundJob.of(

@@ -3,6 +3,7 @@ package com.infobip.kafkistry.kafkastate
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
 import com.infobip.kafkistry.kafkastate.config.PoolingProperties
+import com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator
 import com.infobip.kafkistry.metric.MetricHolder
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
@@ -41,6 +42,8 @@ abstract class BaseKafkaStateProvider(
     private val clustersRepository: KafkaClustersRepository,
     private val clusterFilter: ClusterEnabledFilter,
     promProperties: PrometheusMetricsProperties,
+    protected val poolingProperties: PoolingProperties,
+    protected val scrapingCoordinator: StateScrapingCoordinator,
 ) : AutoCloseable {
 
     protected val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -66,25 +69,62 @@ abstract class BaseKafkaStateProvider(
     }
 
     @Scheduled(fixedRateString = "#{poolingProperties.intervalMs()}")
-    open fun refreshClustersStates() = doRefreshClustersStates()
+    open fun scheduledRefreshClustersStates() = doRefreshClustersStates(RefreshInitiation.SCHEDULED)
 
-    protected fun doRefreshClustersStates() {
+    fun refreshClustersStates() = doRefreshClustersStates(RefreshInitiation.REQUESTED)
+
+    protected enum class RefreshInitiation {
+        SCHEDULED, REQUESTED
+    }
+
+    protected open fun refreshIntervalMs(): Long = poolingProperties.intervalMs
+
+    protected fun doRefreshClustersStates(initiation: RefreshInitiation) {
         val clusters = clustersRepository.findAll()
         val (enabledClusters, disabledClusters) = clusters.partition { clusterFilter.enabled(it.ref()) }
         setupCachedState(
                 enabledClusters.map { it.identifier },
                 disabledClusters.map { it.identifier }
         )
-        enabledClusters
-                .map { CompletableFuture.supplyAsync({ refreshCluster(it) }, executor) }
-                .let { CompletableFuture.allOf(*it.toTypedArray()) }
-                .get()
+
+        // Race for each cluster - only winners scrape
+        val scrapingTasks = enabledClusters.map { cluster ->
+            CompletableFuture.supplyAsync({
+                val raceTimeMs = System.currentTimeMillis()
+                val shouldScrape = when (initiation) {
+                    RefreshInitiation.SCHEDULED -> scrapingCoordinator.tryAcquireScrapingLock(
+                        stateTypeName(), cluster.identifier, refreshIntervalMs(),
+                    )
+                    RefreshInitiation.REQUESTED -> true
+                }
+
+                if (shouldScrape) {
+                    log.debug("Won scraping lock for {}/{}", stateTypeName(), cluster.identifier)
+                    refreshCluster(cluster)
+                    publishScrapedState(cluster.identifier)
+                } else {
+                    log.debug("Lost scraping race for {}/{}, waiting for shared data", stateTypeName(), cluster.identifier)
+                    // Wait for winner to publish state (timeout = 2x interval to match lock TTL)
+                    val timeoutMs = refreshIntervalMs() * 2
+                    val received = scrapingCoordinator.waitForSharedState(
+                        stateTypeName(), cluster.identifier, raceTimeMs, timeoutMs
+                    )
+                    if (!received) {
+                        log.warn("Did not receive shared state for {}/{} within {}ms, will retry on next round",
+                            stateTypeName(), cluster.identifier, timeoutMs)
+                    }
+                }
+            }, executor)
+        }
+
+        CompletableFuture.allOf(*scrapingTasks.toTypedArray()).get()
     }
 
     fun refreshClusterState(clusterIdentifier: KafkaClusterIdentifier) {
         val cluster = clustersRepository.findById(clusterIdentifier)
         if (cluster != null) {
             refreshCluster(cluster)
+            publishScrapedState(cluster.identifier)
         }
     }
 
@@ -104,6 +144,8 @@ abstract class BaseKafkaStateProvider(
     )
 
     protected abstract fun doRefreshCluster(kafkaCluster: KafkaCluster): RefreshStatus
+
+    protected abstract fun publishScrapedState(clusterIdentifier: KafkaClusterIdentifier)
 
 }
 

@@ -26,5 +26,10 @@
             <artifactId>okhttp</artifactId>
             <version>4.12.0</version>
         </dependency>
+        <!-- Hazelcast for distributed coordination -->
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -71,15 +71,15 @@ fun <K, V : Any> Iterable<Map<K, V>>.reducePerValue(reduce: (V, V) -> V): Map<K,
 
 private val RULE_VIOLATION_PLACEHOLDER_REGEX = Regex("%(\\w+)%")
 
-private fun String.renderMessage(placeholders: Map<String, Placeholder>): String {
-    return RULE_VIOLATION_PLACEHOLDER_REGEX.replace(this) { match ->
+fun renderMessage(message: String, placeholders: Map<String, Placeholder>): String {
+    return RULE_VIOLATION_PLACEHOLDER_REGEX.replace(message) { match ->
         val key = match.groupValues[1]
         placeholders[key]?.value.toString()
     }
 }
 
-fun RuleViolation.renderMessage(): String = message.renderMessage(placeholders)
-fun NamedTypeCauseDescription<*>.renderMessage(): String = message.renderMessage(placeholders)
+fun RuleViolation.renderMessage(): String = renderMessage(message, placeholders)
+fun NamedTypeCauseDescription<*>.renderMessage(): String = renderMessage(message, placeholders)
 
 fun <K> Map<K, Int>.sortedByValueDescending(): Map<K, Int> = sortedDescending { it.value }
 
