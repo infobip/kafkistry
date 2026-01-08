@@ -1,31 +1,16 @@
 package com.infobip.kafkistry.kafkastate
 
 import com.infobip.kafkistry.kafka.KafkaClientProvider
-import com.infobip.kafkistry.kafkastate.config.PoolingProperties
-import com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher
-import com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator
-import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
-import com.infobip.kafkistry.repository.KafkaClustersRepository
-import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import org.springframework.stereotype.Component
 import java.util.concurrent.CompletionException
 import kotlin.math.max
 
 @Component
 class KafkaConsumerGroupsProvider(
-    clustersRepository: KafkaClustersRepository,
-    clusterFilter: ClusterEnabledFilter,
-    promProperties: PrometheusMetricsProperties,
-    poolingProperties: PoolingProperties,
-    scrapingCoordinator: StateScrapingCoordinator,
-    issuesRegistry: BackgroundJobIssuesRegistry,
-    stateDataPublisher: StateDataPublisher,
+    components: StateProviderComponents,
     private val clientProvider: KafkaClientProvider,
-) : AbstractKafkaStateProvider<ClusterConsumerGroups>(
-    clustersRepository, clusterFilter, promProperties, poolingProperties,
-    scrapingCoordinator, issuesRegistry, stateDataPublisher,
-) {
+) : AbstractKafkaStateProvider<ClusterConsumerGroups>(components) {
 
     companion object {
         const val CONSUMER_GROUPS = "consumer_groups"
@@ -33,7 +18,7 @@ class KafkaConsumerGroupsProvider(
 
     override fun stateTypeName() = CONSUMER_GROUPS
 
-    private val ignoreConsumerGroup = poolingProperties.ignoredConsumerPattern
+    private val ignoreConsumerGroup = components.poolingProperties.ignoredConsumerPattern
         .takeIf { it.isNotEmpty() }
         ?.let { Regex(it) }
 

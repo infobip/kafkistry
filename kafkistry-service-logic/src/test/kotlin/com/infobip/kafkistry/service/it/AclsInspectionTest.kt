@@ -553,6 +553,7 @@ class AclsInspectionTest {
                     consumerGroups = groups.associateWith { Maybe.Absent(RuntimeException()) },
                 )
             } else null,
+            kafkistryInstance = "localhost",
         ))
     }
 

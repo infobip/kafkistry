@@ -435,7 +435,8 @@ class QuotasInspectionTest {
                 stateTypeName = "entities_quotas",
                 lastRefreshTime = System.currentTimeMillis(),
                 value = ClusterQuotas(quotas.associate { it.entity.asID() to it.properties })
-                    .takeIf { stateType == StateType.VISIBLE }
+                    .takeIf { stateType == StateType.VISIBLE },
+                kafkistryInstance = "localhost",
             )
         )
     }

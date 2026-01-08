@@ -102,6 +102,7 @@ fun KafkaCluster.newState(
         clusterIdentifier = identifier,
         stateTypeName = "cluster_state",
         lastRefreshTime = System.currentTimeMillis(),
+        kafkistryInstance = "localhost",
         value = KafkaClusterState(
                 clusterInfo = newClusterInfo(
                         clusterId = clusterId,

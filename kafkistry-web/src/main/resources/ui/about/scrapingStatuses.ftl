@@ -26,6 +26,7 @@
             <th>Status type name</th>
             <th>Cluster</th>
             <th>Status</th>
+            <th>Refresh by</th>
             <th>Last refresh</th>
         </tr>
         </thead>
@@ -40,6 +41,9 @@
                     </a>
                 </td>
                 <td><@util.namedTypeStatusAlert type=scrapingStatus.stateType/></td>
+                <td>
+                    <code>${scrapingStatus.kafkistryInstance}</code>
+                </td>
                 <td class="time small" data-time="${scrapingStatus.lastRefreshTime?c}" data-order="${scrapingStatus.lastRefreshTime?c}"></td>
             </tr>
         </#list>

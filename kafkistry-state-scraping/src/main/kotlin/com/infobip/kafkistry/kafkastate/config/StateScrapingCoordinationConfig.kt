@@ -1,14 +1,7 @@
 package com.infobip.kafkistry.kafkastate.config
 
 import com.hazelcast.core.HazelcastInstance
-import com.infobip.kafkistry.hostname.HostnameResolver
-import com.infobip.kafkistry.kafkastate.coordination.HazelcastStateDataPublisher
-import com.infobip.kafkistry.kafkastate.coordination.HazelcastStateScrapingCoordinator
-import com.infobip.kafkistry.kafkastate.coordination.LocalStateDataPublisher
-import com.infobip.kafkistry.kafkastate.coordination.LocalStateScrapingCoordinator
-import com.infobip.kafkistry.kafkastate.coordination.MetricsDelegatingStateDataPublisher
-import com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher
-import com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator
+import com.infobip.kafkistry.kafkastate.coordination.*
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
@@ -52,11 +45,10 @@ class StateScrapingCoordinationConfig {
     fun stateDataPublisher(
         hazelcast: ObjectProvider<HazelcastInstance>,
         promProperties: PrometheusMetricsProperties,
-        hostnameResolver: HostnameResolver,
     ): StateDataPublisher {
         val delegate = when (val hazelcastInstance = hazelcast.ifAvailable) {
             null -> LocalStateDataPublisher()
-            else -> HazelcastStateDataPublisher(hazelcastInstance, hostnameResolver)
+            else -> HazelcastStateDataPublisher(hazelcastInstance)
         }
         return MetricsDelegatingStateDataPublisher(delegate, promProperties)
     }
