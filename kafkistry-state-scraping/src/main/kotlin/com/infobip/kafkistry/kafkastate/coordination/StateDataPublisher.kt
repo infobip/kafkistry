@@ -1,8 +1,6 @@
 package com.infobip.kafkistry.kafkastate.coordination
 
-import com.hazelcast.core.EntryEvent
 import com.hazelcast.core.HazelcastInstance
-import com.hazelcast.map.listener.EntryUpdatedListener
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.slf4j.LoggerFactory
@@ -29,18 +27,6 @@ interface StateDataPublisher {
         stateTypeName: String,
         listener: (StateData<V>) -> Unit,
     )
-
-    /**
-     * Read the latest available state data if cached (for late joiners).
-     *
-     * @param stateTypeName The type of state to read
-     * @param clusterIdentifier The cluster identifier
-     * @return The latest state data, or null if not available
-     */
-    fun <V> readLatestStateIfAvailable(
-        stateTypeName: String,
-        clusterIdentifier: KafkaClusterIdentifier,
-    ): StateData<V>?
 
     /**
      * Publish that sampling has started for a cluster.
@@ -88,13 +74,6 @@ class LocalStateDataPublisher : StateDataPublisher {
         // No-op: no subscription in local mode
     }
 
-    override fun <V> readLatestStateIfAvailable(
-        stateTypeName: String,
-        clusterIdentifier: KafkaClusterIdentifier,
-    ): StateData<V>? {
-        return null  // No shared cache in local mode
-    }
-
     override fun publishSamplingStarted(event: SamplingStartedEvent) {
         // No-op: no sharing in local mode
     }
@@ -113,34 +92,38 @@ class LocalStateDataPublisher : StateDataPublisher {
 }
 
 /**
- * Hazelcast-based publisher that shares state data via distributed IMap.
+ * Hazelcast-based publisher that shares state data via distributed topics.
  *
- * Winners publish their scraped data to Hazelcast.
+ * Winners publish their scraped data to Hazelcast topics.
  * Losers subscribe to updates and receive the data.
- * Late joiners can read cached data on startup.
+ * Late joiners will get fresh data on the next scraping round.
+ *
+ * Uses a separate topic per state type name for efficient message routing.
  */
 class HazelcastStateDataPublisher(
-    hazelcastInstance: HazelcastInstance,
+    private val hazelcastInstance: HazelcastInstance,
 ) : StateDataPublisher {
 
     private val log = LoggerFactory.getLogger(HazelcastStateDataPublisher::class.java)
-
-    // Distributed cache for sharing scraped state data
-    private val stateCache = hazelcastInstance.getMap<String, SerializedStateData>(
-        "kafkistry-state-scraping-cache"
-    )
 
     // Distributed topic for sharing sampling events (started, records, completed)
     private val samplingEventsTopic = hazelcastInstance.getTopic<Any>(
         "kafkistry-sampling-events"
     )
 
+    /**
+     * Get or create a topic for a specific state type.
+     */
+    private fun getStateDataTopic(stateTypeName: String) =
+        hazelcastInstance.getTopic<SerializedStateData>("kafkistry-state-data-$stateTypeName")
+
     override fun <V> publishStateData(stateData: StateData<V>) = with(stateData) {
         try {
-            val key = cacheKey(stateTypeName, clusterIdentifier)
-            val serialized = SerializedStateData.from(kafkistryInstance,this)
-            stateCache.put(key, serialized)
-            log.debug("Published state data for {}/{} to Hazelcast as {} (age: {}ms)", stateTypeName, clusterIdentifier, kafkistryInstance, System.currentTimeMillis() - lastRefreshTime)
+            val serialized = SerializedStateData.from(kafkistryInstance, this)
+            val topic = getStateDataTopic(stateTypeName)
+            topic.publish(serialized)
+            log.debug("Published state data for {}/{} to Hazelcast topic as {} (age: {}ms)",
+                stateTypeName, clusterIdentifier, kafkistryInstance, System.currentTimeMillis() - lastRefreshTime)
         } catch (ex: Exception) {
             log.error("Failed to publish state data for {}/{}", stateTypeName, clusterIdentifier, ex)
         }
@@ -151,44 +134,31 @@ class HazelcastStateDataPublisher(
         listener: (StateData<V>) -> Unit
     ) {
         try {
-            // Subscribe to entry updates in the Hazelcast map
-            stateCache.addEntryListener(object : EntryUpdatedListener<String, SerializedStateData> {
-                override fun entryUpdated(event: EntryEvent<String, SerializedStateData>) {
-                    if (event.member.localMember()) {
-                        log.trace("Ignoring entry update from local member key={}, instance={}", event.key, event.value.kafkistryInstance)
-                        return
-                    }
-                    // Filter by state type name
-                    if (!event.key.startsWith("$stateTypeName:")) {
-                        return
-                    }
-                    try {
-                        val stateData = event.value.toStateData<V>()
-                        val age = System.currentTimeMillis() - stateData.lastRefreshTime
-                        log.debug("Received shared state for {}/{} from {} (age: {}ms)",
-                            stateTypeName, stateData.clusterIdentifier, event.value.kafkistryInstance, age)
-                        listener(stateData)
-                    } catch (ex: Exception) {
-                        log.error("Failed to deserialize state data from Hazelcast for key: {}", event.key, ex)
-                    }
+            // Subscribe to state data messages from the Hazelcast topic for this specific state type
+            val topic = getStateDataTopic(stateTypeName)
+            topic.addMessageListener { message ->
+                if (message.publishingMember.localMember()) {
+                    log.trace("Ignoring state data from local member instance={}", message.messageObject.kafkistryInstance)
+                    return@addMessageListener
                 }
-            }, true)  // includeValue = true
 
-            log.info("Subscribed to shared state updates for {}", stateTypeName)
+                val serializedData = message.messageObject
+                try {
+                    val stateData = serializedData.toStateData<V>()
+                    val age = System.currentTimeMillis() - stateData.lastRefreshTime
+                    log.debug("Received shared state for {}/{} from {} (age: {}ms)",
+                        stateTypeName, stateData.clusterIdentifier, serializedData.kafkistryInstance, age)
+                    listener(stateData)
+                } catch (ex: Exception) {
+                    log.error("Failed to deserialize state data from Hazelcast topic for {}/{}",
+                        serializedData.stateTypeName, serializedData.clusterIdentifier, ex)
+                }
+            }
+
+            log.info("Subscribed to shared state updates for {} via Hazelcast topic", stateTypeName)
         } catch (ex: Exception) {
             log.error("Failed to subscribe to state updates for {}", stateTypeName, ex)
         }
-    }
-
-    override fun <V> readLatestStateIfAvailable(
-        stateTypeName: String,
-        clusterIdentifier: KafkaClusterIdentifier
-    ): StateData<V>? = try {
-        val key = cacheKey(stateTypeName, clusterIdentifier)
-        stateCache[key]?.toStateData()
-    } catch (ex: Exception) {
-        log.error("Failed to read cached state for {}/{}", stateTypeName, clusterIdentifier, ex)
-        null
     }
 
     override fun publishSamplingStarted(event: SamplingStartedEvent) = with(event) {
@@ -252,9 +222,5 @@ class HazelcastStateDataPublisher(
         } catch (ex: Exception) {
             log.error("Failed to subscribe to sampling events", ex)
         }
-    }
-
-    private fun cacheKey(stateTypeName: String, clusterIdentifier: String): String {
-        return "$stateTypeName:$clusterIdentifier"
     }
 }

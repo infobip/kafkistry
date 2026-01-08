@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.kafkastate.config
 
 import com.hazelcast.core.HazelcastInstance
+import com.infobip.kafkistry.hostname.HostnameResolver
 import com.infobip.kafkistry.kafkastate.coordination.*
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import org.springframework.beans.factory.ObjectProvider
@@ -29,11 +30,12 @@ class StateScrapingCoordinationConfig {
      */
     @Bean
     fun stateScrapingCoordinator(
-        hazelcast: ObjectProvider<HazelcastInstance>
+        hazelcast: ObjectProvider<HazelcastInstance>,
+        hostnameResolver: HostnameResolver,
     ): StateScrapingCoordinator {
         return when (val hazelcastInstance = hazelcast.ifAvailable) {
             null -> LocalStateScrapingCoordinator()
-            else -> HazelcastStateScrapingCoordinator(hazelcastInstance)
+            else -> HazelcastStateScrapingCoordinator(hazelcastInstance, hostnameResolver)
         }
     }
 
