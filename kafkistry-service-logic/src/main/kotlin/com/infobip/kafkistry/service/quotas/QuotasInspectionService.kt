@@ -38,15 +38,15 @@ class QuotasInspectionService(
     }
 
     fun inspectClusterQuotas(clusterRef: ClusterRef): ClusterQuotasInspection {
-        val entityQuotaDescriptions = quotasRegistry.listAllQuotas().associateBy { it.entity }
+        val entityQuotaDescriptions = quotasRegistry.listAllQuotas().associateBy { it.entity.asID() }
         val latestQuotasState = quotasProvider.getLatestState(clusterRef.identifier)
         val knownEntities = entityQuotaDescriptions.keys.toSet()
         val unknownEntities = latestQuotasState.valueOrNull()
             ?.quotas?.keys?.filter { it !in knownEntities }.orEmpty()
-        val entityInspections = (knownEntities + unknownEntities).sortedBy { it.asID() }
-            .map { entity ->
+        val entityInspections = (knownEntities + unknownEntities).sorted()
+            .map { entityId ->
                 quotasIssuesInspector.inspectQuotas(
-                    entity, entityQuotaDescriptions[entity], clusterRef, latestQuotasState,
+                    QuotaEntity.fromID(entityId), entityQuotaDescriptions[entityId], clusterRef, latestQuotasState,
                 )
             }
         return ClusterQuotasInspection(
@@ -63,16 +63,18 @@ class QuotasInspectionService(
     }
 
     fun inspectUnknownClientEntities(): List<EntityQuotasInspection> {
-        val knownEntities = quotasRegistry.listAllQuotas().map { it.entity }.toSet()
+        val knownEntities = quotasRegistry.listAllQuotas().map { it.entity.asID() }.toSet()
         val unknownEntities = clustersRegistry.listClustersIdentifiers()
+            .asSequence()
             .map { quotasProvider.getLatestState(it) }
             .mapNotNull { it.valueOrNull()?.quotas }
             .flatMap { it.keys }
             .filter { it !in knownEntities }
             .distinct()
-            .sortedBy { it.asID() }
-        return unknownEntities.map { quotaEntity ->
-            inspectClientEntity(quotaEntity, null)
+            .sorted()
+            .toList()
+        return unknownEntities.map { quotaEntityId ->
+            inspectClientEntity(QuotaEntity.fromID(quotaEntityId), null)
         }
     }
 

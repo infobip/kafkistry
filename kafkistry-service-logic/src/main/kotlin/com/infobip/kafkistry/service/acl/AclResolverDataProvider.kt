@@ -85,10 +85,10 @@ class AclResolverDataProviderImpl(
         return sequence {
             allQuotas.asSequence()
                 .filter { it.presence.needToBeOnCluster(clusterRef) }
-                .map { it.entity }
+                .map { it.entity.asID() }
                 .also { yieldAll(it) }
             yieldAll(clusterQuotas.valueOrNull()?.quotas.orEmpty().keys)
-        }.distinct().sortedBy { it.asID() }.toList()
+        }.distinct().sorted().map { QuotaEntity.fromID(it) }.toList()
     }
 
     private fun consumerGroupIds(

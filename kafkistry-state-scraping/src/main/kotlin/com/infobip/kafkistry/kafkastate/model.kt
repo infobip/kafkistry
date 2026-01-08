@@ -1,5 +1,8 @@
 package com.infobip.kafkistry.kafkastate
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.StateType.*
 import com.infobip.kafkistry.kafkastate.brokerdisk.NodeDiskMetric
@@ -29,7 +32,7 @@ data class StateData<T>(
     val clusterIdentifier: KafkaClusterIdentifier,
     val stateTypeName: String,
     val lastRefreshTime: Long,
-    private val value: T? = null
+    private val value: T? = null,
 ) {
     init {
         when (stateType) {
@@ -55,7 +58,7 @@ data class StateData<T>(
 data class KafkaClusterState(
         val clusterInfo: ClusterInfo,
         val topics: List<KafkaExistingTopic>,
-        val acls: List<KafkaAclRule>
+        val acls: List<KafkaAclRule>,
 ) {
     val allTopics = topics.associateBy { it.name }
 }
@@ -103,7 +106,7 @@ data class TopicPartitionReAssignments(
 )
 
 data class ClusterQuotas(
-    val quotas: Map<QuotaEntity, QuotaProperties>,
+    val quotas: Map<QuotaEntityID, QuotaProperties>,
 )
 
 data class ClusterNodeMetrics(
@@ -111,6 +114,15 @@ data class ClusterNodeMetrics(
     val brokersMetrics: Map<BrokerId, NodeDiskMetric>,
 )
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type",
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = Maybe.Result::class, name = "result"),
+    JsonSubTypes.Type(value = Maybe.Absent::class, name = "absent")
+)
 sealed class Maybe<out V> {
 
     fun <R> fold(ifResult: (V) -> R, ifAbsent: (Throwable) -> R): R = when (this) {
@@ -123,7 +135,9 @@ sealed class Maybe<out V> {
         is Absent -> this
     }
 
+    @JsonIgnore
     fun getOrNull(): V? = fold({ it }, { null })
+    @JsonIgnore
     fun getOrThrow(): V = fold({ it }, { throw it })
 
     data class Result<V>(val value: V) : Maybe<V>()

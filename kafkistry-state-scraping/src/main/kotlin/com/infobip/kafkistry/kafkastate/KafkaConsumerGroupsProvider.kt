@@ -2,12 +2,13 @@ package com.infobip.kafkistry.kafkastate
 
 import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafkastate.config.PoolingProperties
+import com.infobip.kafkistry.kafkastate.coordination.StateDataPublisher
+import com.infobip.kafkistry.kafkastate.coordination.StateScrapingCoordinator
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.repository.KafkaClustersRepository
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import org.springframework.stereotype.Component
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import kotlin.math.max
 
@@ -15,12 +16,15 @@ import kotlin.math.max
 class KafkaConsumerGroupsProvider(
     clustersRepository: KafkaClustersRepository,
     clusterFilter: ClusterEnabledFilter,
-    issuesRegistry: BackgroundJobIssuesRegistry,
-    poolingProperties: PoolingProperties,
     promProperties: PrometheusMetricsProperties,
+    poolingProperties: PoolingProperties,
+    scrapingCoordinator: StateScrapingCoordinator,
+    issuesRegistry: BackgroundJobIssuesRegistry,
+    stateDataPublisher: StateDataPublisher,
     private val clientProvider: KafkaClientProvider,
 ) : AbstractKafkaStateProvider<ClusterConsumerGroups>(
-    clustersRepository, clusterFilter, promProperties, issuesRegistry,
+    clustersRepository, clusterFilter, promProperties, poolingProperties,
+    scrapingCoordinator, issuesRegistry, stateDataPublisher,
 ) {
 
     companion object {
