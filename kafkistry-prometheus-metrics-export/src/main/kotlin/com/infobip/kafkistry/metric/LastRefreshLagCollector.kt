@@ -21,13 +21,15 @@ class LastRefreshLagCollector(
         val now = System.currentTimeMillis()
         val allSamples = providers.flatMap { provider ->
             val latestStates = provider.getAllLatestStates()
-            latestStates.map { (clusterIdentifier, state) ->
-                MetricFamilySamples.Sample(
-                    metricName, labelNames,
-                    listOf(clusterIdentifier, provider.stateTypeName()),
-                    (now - state.lastRefreshTime).toDouble()
-                )
-            }
+            latestStates
+                .filterValues { it.stateType != StateType.DISABLED }
+                .map { (clusterIdentifier, state) ->
+                    MetricFamilySamples.Sample(
+                        metricName, labelNames,
+                        listOf(clusterIdentifier, provider.stateTypeName()),
+                        (now - state.lastRefreshTime).toDouble()
+                    )
+                }
         }
         return mutableListOf(
                 MetricFamilySamples(
