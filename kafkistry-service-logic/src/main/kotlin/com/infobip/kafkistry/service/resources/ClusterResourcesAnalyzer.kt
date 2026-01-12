@@ -162,7 +162,7 @@ class ClusterResourcesAnalyzer(
         val topicNames = if (clusterRef != null) {
             topicsExpectedToExist
         } else {
-            topicsExpectedToExist + replicaDirs.replicas.keys
+            topicsExpectedToExist + replicaDirs.topicReplicas.keys
         }
         val topicsDisks = topicNames.associateWith { topicName ->
             try {
@@ -192,7 +192,7 @@ class ClusterResourcesAnalyzer(
             .filter { it.presence.needToBeOnCluster(clusterRef) }
             .map { it.name }
             .toSet()
-        val topicNames = topicsExpectedToExist + replicaDirs.replicas.keys
+        val topicNames = topicsExpectedToExist + replicaDirs.topicReplicas.keys
         val topicsDisks = topicNames.associateWith { topicName ->
             try {
                 topicDiskAnalyzer.analyzeTopicDiskUsage(

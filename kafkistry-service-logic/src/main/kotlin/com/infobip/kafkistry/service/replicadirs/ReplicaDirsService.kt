@@ -16,20 +16,20 @@ class ReplicaDirsService(
     ): TopicReplicaInfos? {
         return replicasInfoProvider.getLatestState(clusterIdentifier)
             .valueOrNull()
-            ?.replicas
+            ?.topicReplicas
             ?.get(topicName)
     }
 
     fun clusterTopicReplicaInfos(
             clusterIdentifier: KafkaClusterIdentifier
     ): Map<TopicName, TopicReplicaInfos> {
-       return replicasInfoProvider.getLatestState(clusterIdentifier).valueOrNull()?.replicas ?: emptyMap()
+       return replicasInfoProvider.getLatestState(clusterIdentifier).valueOrNull()?.topicReplicas ?: emptyMap()
     }
 
     fun allClustersTopicReplicaInfos(): Map<KafkaClusterIdentifier, Map<TopicName, TopicReplicaInfos>> {
         return replicasInfoProvider.getAllLatestStates()
             .mapValues { (_, clusterReplicas) ->
-                clusterReplicas.valueOrNull()?.replicas ?: emptyMap()
+                clusterReplicas.valueOrNull()?.topicReplicas ?: emptyMap()
             }
     }
 

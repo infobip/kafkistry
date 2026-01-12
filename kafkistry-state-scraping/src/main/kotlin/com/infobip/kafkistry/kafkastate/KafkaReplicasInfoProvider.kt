@@ -22,7 +22,7 @@ class KafkaReplicasInfoProvider(
         val replicas = clientProvider.doWithClient(kafkaCluster) {
             it.describeReplicas().get()
         }
-        return ReplicaDirs(replicas.toTopicsReplicasInfos())
+        return ReplicaDirs(replicas)
     }
 
 }

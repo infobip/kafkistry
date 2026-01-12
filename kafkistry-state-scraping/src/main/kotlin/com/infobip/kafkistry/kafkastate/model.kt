@@ -61,13 +61,18 @@ data class KafkaClusterState(
         val topics: List<KafkaExistingTopic>,
         val acls: List<KafkaAclRule>,
 ) {
+    @JsonIgnore
     val allTopics = topics.associateBy { it.name }
+    @JsonIgnore
+    val allPrincipalAcls = acls.groupBy { it.principal }
 }
 
 data class ClusterConsumerGroups(
     val consumerGroups: Map<ConsumerGroupId, Maybe<ConsumerGroup>>,
-    val topicConsumerGroups: Map<TopicName, Map<ConsumerGroupId, ConsumerGroup>> = consumerGroups.toTopicGroups(),
-)
+) {
+    @JsonIgnore
+    val topicConsumerGroups: Map<TopicName, Map<ConsumerGroupId, ConsumerGroup>> = consumerGroups.toTopicGroups()
+}
 
 private fun Map<ConsumerGroupId, Maybe<ConsumerGroup>>.toTopicGroups(): Map<TopicName, Map<ConsumerGroupId, ConsumerGroup>> {
     return values.asSequence()
@@ -95,8 +100,11 @@ data class TopicReplicaInfos(
 )
 
 data class ReplicaDirs(
-    val replicas: Map<TopicName, TopicReplicaInfos>,
-)
+    val replicas: List<TopicPartitionReplica>,
+) {
+    @JsonIgnore
+    val topicReplicas: Map<TopicName, TopicReplicaInfos> = replicas.toTopicsReplicasInfos()
+}
 
 data class OldestRecordsAges(
     val earliestRecordAges: Map<TopicName, Map<Partition, Long>>,
