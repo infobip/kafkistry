@@ -1,5 +1,7 @@
 package com.infobip.kafkistry.kafkastate
 
+import com.infobip.kafkistry.kafkastate.BaseKafkaStateProvider.RefreshInitiation.REQUESTED
+import com.infobip.kafkistry.kafkastate.BaseKafkaStateProvider.RefreshInitiation.SCHEDULED
 import com.infobip.kafkistry.metric.MetricHolder
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
@@ -64,9 +66,9 @@ abstract class BaseKafkaStateProvider(
     }
 
     @Scheduled(fixedRateString = "#{poolingProperties.intervalMs()}")
-    open fun scheduledRefreshClustersStates() = doRefreshClustersStates(RefreshInitiation.SCHEDULED)
+    open fun scheduledRefreshClustersStates() = doRefreshClustersStates(SCHEDULED)
 
-    fun refreshClustersStates() = doRefreshClustersStates(RefreshInitiation.REQUESTED)
+    fun refreshClustersStates() = doRefreshClustersStates(REQUESTED)
 
     protected enum class RefreshInitiation {
         SCHEDULED, REQUESTED
@@ -84,44 +86,56 @@ abstract class BaseKafkaStateProvider(
             disabledClusters.map { it.identifier },
         )
 
-        // Race for each cluster - only winners scrape
+        //ensure all enabled clusters get scraped
         val scrapingTasks = enabledClusters.map { cluster ->
             CompletableFuture.supplyAsync({
-                val raceTimeMs = System.currentTimeMillis()
-                val shouldScrape = when (initiation) {
-                    RefreshInitiation.SCHEDULED -> components.scrapingCoordinator.tryAcquireScrapingLock(
-                        stateTypeName(), cluster.identifier, refreshIntervalMs(),
-                    )
-                    RefreshInitiation.REQUESTED -> true
-                }
+                handleClusterScrape(initiation, cluster)
+            }, executor)
+        }
+        CompletableFuture.allOf(*scrapingTasks.toTypedArray()).get()
+    }
 
+    private fun handleClusterScrape(
+        initiation: RefreshInitiation,
+        cluster: KafkaCluster,
+    ) {
+        val raceTimeMs = System.currentTimeMillis()
+        //acquire lock even if REQUESTED (even though explicit initiation will scrape, we still want to leave a mark
+        // so that SCHEDULES scrapes know it's not needed to scrape)
+        val shouldScrape = components.scrapingCoordinator.tryAcquireScrapingLock(
+            stateTypeName(), cluster.identifier, refreshIntervalMs(),
+        )
+        when (initiation) {
+            REQUESTED -> {
+                log.debug("Explicitly requested to scrape for {}/{}", stateTypeName(), cluster.identifier)
+                refreshCluster(cluster)
+            }
+            SCHEDULED -> {
                 if (shouldScrape) {
                     log.debug("Won scraping lock for {}/{}", stateTypeName(), cluster.identifier)
                     refreshCluster(cluster)
-                    publishScrapedState(cluster.identifier)
-                } else {
-                    log.debug("Lost scraping race for {}/{}, waiting for shared data", stateTypeName(), cluster.identifier)
-                    // Wait for winner to publish state (timeout = 2x interval to match lock TTL)
-                    val timeoutMs = refreshIntervalMs() * 2
-                    val received = components.scrapingCoordinator.waitForSharedState(
-                        stateTypeName(), cluster.identifier, raceTimeMs, timeoutMs
-                    )
-                    if (!received) {
-                        log.warn("Did not receive shared state for {}/{} within {}ms, will retry on next round",
-                            stateTypeName(), cluster.identifier, timeoutMs)
-                    }
+                    return
                 }
-            }, executor)
+                log.debug("Lost scraping race for {}/{}, waiting for shared data", stateTypeName(), cluster.identifier)
+                // Wait for winner to publish state (timeout = 2x interval to match lock TTL)
+                val timeoutMs = refreshIntervalMs() * 2
+                val received = components.scrapingCoordinator.waitForSharedState(
+                    stateTypeName(), cluster.identifier, raceTimeMs, timeoutMs
+                )
+                if (!received) {
+                    log.warn(
+                        "Did not receive shared state for {}/{} within {}ms, will retry on next round",
+                        stateTypeName(), cluster.identifier, timeoutMs
+                    )
+                }
+            }
         }
-
-        CompletableFuture.allOf(*scrapingTasks.toTypedArray()).get()
     }
 
     fun refreshClusterState(clusterIdentifier: KafkaClusterIdentifier) {
         val cluster = components.clustersRepository.findById(clusterIdentifier)
         if (cluster != null) {
             refreshCluster(cluster)
-            publishScrapedState(cluster.identifier)
         }
     }
 
@@ -133,6 +147,7 @@ abstract class BaseKafkaStateProvider(
             StateType.UNREACHABLE, StateType.UNKNOWN, StateType.INVALID_ID -> 0.0
         }
         clusterPoolingTypeOkGauge.labels(cluster.identifier, refresh.scrapeType).set(ok)
+        publishScrapedState(cluster.identifier)
     }
 
     protected abstract fun setupCachedState(
