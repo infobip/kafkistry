@@ -50,11 +50,11 @@ class AclsIssuesInspector(
     ): PrincipalAclsClusterInspection {
         val clusterData = clusterState.valueOrNull()
         if (principalAcls == null) {
-            return if (clusterData?.acls == null) {
+            return if (clusterData?.allPrincipalAcls == null) {
                 emptyInspection(principal, clusterRef, clusterState.stateType)
             } else {
-                val statuses = clusterData.acls
-                        .filter { it.principal == principal }
+                val statuses = clusterData.allPrincipalAcls[principal]
+                        .orEmpty()
                         .asUnknownRules(clusterRef, false, conflictChecker)
                 PrincipalAclsClusterInspection(
                         principal = principal,
@@ -86,7 +86,7 @@ class AclsIssuesInspector(
             else -> inspectAcls(
                 clusterRef = clusterRef,
                 principalAcls = principalAcls,
-                existingPrincipalAcls = clusterData.acls.filter { it.principal == principal },
+                existingPrincipalAcls = clusterData.allPrincipalAcls[principal].orEmpty(),
                 conflictChecker = conflictChecker,
             )
         }

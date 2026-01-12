@@ -113,7 +113,7 @@ internal class ClusterResourcesAnalyzerTest {
 
     private fun mockReplicas(identifier: KafkaClusterIdentifier, topicReplicas: List<TopicPartitionReplica>) {
         reset(replicasInfoProvider)
-        val replicaDirs = ReplicaDirs(topicReplicas.toTopicsReplicasInfos())
+        val replicaDirs = ReplicaDirs(topicReplicas)
         whenever(replicasInfoProvider.getLatestStateValue(any())).thenReturn(replicaDirs)
         whenever(replicasInfoProvider.getLatestState(any())).thenReturn(
             StateData(
