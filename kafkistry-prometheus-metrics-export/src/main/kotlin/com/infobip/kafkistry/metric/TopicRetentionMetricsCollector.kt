@@ -20,8 +20,11 @@ import org.springframework.stereotype.Component
 @ConfigurationProperties("app.metrics.topic-retention")
 class RetentionMetricsProperties {
     var enabled = true
+
     @NestedConfigurationProperty
     var enabledOn = ClusterTopicFilterProperties()
+
+    var includeZeroSamples = true
 }
 
 @Component
@@ -49,6 +52,8 @@ class RetentionMetricsCollector(
         DefaultClusterMetricLabelProvider()
     }
 
+    private val takeZeros = properties.includeZeroSamples
+
     private val filter = ClusterTopicFilter(properties.enabledOn)
 
     private val labelNames = listOf(labelProvider.labelName(), "topic", "partition")
@@ -59,21 +64,21 @@ class RetentionMetricsCollector(
             MetricFamilySamples.Sample(
                 timeRetentionUsageMetricName, labelNames,
                 listOf(labelProvider.labelValue(it.clusterIdentifier), it.topic, it.partition.toString()),
-                it.timeUsage ?: return@mapNotNull null
+                it.timeUsage?.checkIncludeZero() ?: return@mapNotNull null
             )
         }
         val sizeRetentionUsageSamples = allTopicPartitionStats.mapNotNull {
             MetricFamilySamples.Sample(
                 sizeRetentionUsageMetricName, labelNames,
                 listOf(labelProvider.labelValue(it.clusterIdentifier), it.topic, it.partition.toString()),
-                it.sizeUsage ?: return@mapNotNull null
+                it.sizeUsage?.checkIncludeZero() ?: return@mapNotNull null
             )
         }
         val effectiveRetentionSamples = allTopicPartitionStats.mapNotNull {
             MetricFamilySamples.Sample(
                 effectiveRetentionMetricName, labelNames,
                 listOf(labelProvider.labelValue(it.clusterIdentifier), it.topic, it.partition.toString()),
-                it.oldestRecordAgeMs?.toDouble() ?: return@mapNotNull null
+                it.oldestRecordAgeMs?.toDouble()?.checkIncludeZero() ?: return@mapNotNull null
             )
         }
         return mutableListOf(
@@ -126,6 +131,8 @@ class RetentionMetricsCollector(
             }
         }
     }
+
+    private fun Double.checkIncludeZero(): Double? = takeIf { this != 0.0 || takeZeros }
 
     private data class TopicPartitionStats(
         val clusterIdentifier: KafkaClusterIdentifier,
