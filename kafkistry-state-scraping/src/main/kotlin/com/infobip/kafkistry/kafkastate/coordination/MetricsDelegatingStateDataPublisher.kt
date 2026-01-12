@@ -23,19 +23,12 @@ private val stateDataPublisherDurationHolder = MetricHolder { prefix ->
 class MetricsDelegatingStateDataPublisher(
     private val delegate: StateDataPublisher,
     promProperties: PrometheusMetricsProperties,
-) : StateDataPublisher {
+) : StateDataPublisher by delegate {
 
     private val duration = stateDataPublisherDurationHolder.metric(promProperties)
 
     override fun <V> publishStateData(stateData: StateData<V>) = measureDuration("publishStateData") {
         delegate.publishStateData(stateData)
-    }
-
-    override fun <V> subscribeToStateUpdates(
-        stateTypeName: String,
-        listener: (StateData<V>) -> Unit
-    ) = measureDuration("subscribeToStateUpdates") {
-        delegate.subscribeToStateUpdates(stateTypeName, listener)
     }
 
     override fun publishSamplingStarted(event: SamplingStartedEvent) = measureDuration("publishSamplingStarted") {
@@ -48,10 +41,6 @@ class MetricsDelegatingStateDataPublisher(
 
     override fun publishSamplingCompleted(event: SamplingCompletedEvent) = measureDuration("publishSamplingCompleted") {
         delegate.publishSamplingCompleted(event)
-    }
-
-    override fun subscribeToSamplingEvents(listener: SamplingEventListener) = measureDuration("subscribeToSamplingEvents") {
-        delegate.subscribeToSamplingEvents(listener)
     }
 
     private inline fun <T> measureDuration(operation: String, block: () -> T): T {
