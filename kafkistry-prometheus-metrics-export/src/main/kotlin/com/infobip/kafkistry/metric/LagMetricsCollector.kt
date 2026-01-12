@@ -20,6 +20,9 @@ class LagMetricsProperties {
 
     @NestedConfigurationProperty
     var enabledOn = ClusterTopicConsumerGroupFilterProperties()
+
+    var includeZeroSamples = true
+    var includeSinglePartitionOnAllZeroSamples = false
 }
 
 @Component
@@ -48,6 +51,9 @@ class LagMetricsCollector(
         labelProvider.labelName(), "consumer_group", "topic", "partition", "consumer_host"
     ) + additionalLabels.labelNames()
 
+    private val takeZeros = lagProperties.includeZeroSamples
+    private val includeSingleOnAllZeros = lagProperties.includeSinglePartitionOnAllZeroSamples
+
     override fun expose(context: MetricsDataContext): List<MetricFamilySamples> {
         val samples = context.partitionLagSamples()
         return mutableListOf(
@@ -68,7 +74,7 @@ class LagMetricsCollector(
                 if (clusterRef != null && !filter(clusterRef, topicMembers.topicName, consumerGroup.groupId)) {
                     emptySequence()
                 } else {
-                    topicMembers.partitionMembers.asSequence().mapNotNull { partitionMember ->
+                    val topicSamples = topicMembers.partitionMembers.mapNotNull { partitionMember ->
                         partitionMember.lag.amount?.let { lag ->
                             lagSample(
                                 clusterIdentifier = clusterGroup.clusterIdentifier,
@@ -77,6 +83,16 @@ class LagMetricsCollector(
                                 partitionMember = partitionMember,
                                 lagAmount = lag
                             )
+                        }
+                    }
+                    if (takeZeros) {
+                        topicSamples.asSequence()
+                    } else {
+                        val withoutZeros = topicSamples.filter { it.value != 0.0 }
+                        if (withoutZeros.isEmpty() && includeSingleOnAllZeros) {
+                            topicSamples.asSequence().take(1)
+                        } else {
+                            withoutZeros.asSequence()
                         }
                     }
                 }

@@ -493,12 +493,13 @@ Steadily growing lag means that consumer can't keep up with producer's rate.
 
 Available configuration properties
 
-| Property                                                                     | Default | Description                                                                                        |
-|------------------------------------------------------------------------------|---------|----------------------------------------------------------------------------------------------------|
-| `app.metrics.consumer-lag.enabled`                                           | `true`  | Enable/disable exporting lag metric at all                                                         |
-| `app.metrics.consumer-lag.enabled-on.clusters.<...filter options...>`        | _all_   | For which clusters to include consumer lag metric. See [filtering options](#filter-options)        |
-| `app.metrics.consumer-lag.enabled-on.topics.<...filter options...>`          | _all_   | For which topics to include consumer lag metric. See [filtering options](#filter-options)          |
-| `app.metrics.consumer-lag.enabled-on.consumer-groups.<...filter options...>` | _all_   | For which consumer groups to include consumer lag metric. See [filtering options](#filter-options) |
+| Property                                                                     | Default | Description                                                                                                              |
+|------------------------------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------|
+| `app.metrics.consumer-lag.enabled`                                           | `true`  | Enable/disable exporting lag metric at all                                                                               |
+| `app.metrics.consumer-lag.include-zero-samples`                              | `true`  | When false, then zero value samples are omitted (useful to reduce large number of samples if they are zero most of time) |
+| `app.metrics.consumer-lag.enabled-on.clusters.<...filter options...>`        | _all_   | For which clusters to include consumer lag metric. See [filtering options](#filter-options)                              |
+| `app.metrics.consumer-lag.enabled-on.topics.<...filter options...>`          | _all_   | For which topics to include consumer lag metric. See [filtering options](#filter-options)                                |
+| `app.metrics.consumer-lag.enabled-on.consumer-groups.<...filter options...>` | _all_   | For which consumer groups to include consumer lag metric. See [filtering options](#filter-options)                       |
 
 #### Why using Kafkistry metric for lag if `KafkaConsumer.metrics()` already has metric for lag?
 
@@ -619,11 +620,12 @@ Different regime cases:
 
 Available configuration properties
 
-| Property                                                                 | Default | Description                                                                              |
-|--------------------------------------------------------------------------|---------|------------------------------------------------------------------------------------------|
-| `app.metrics.topic-retention.enabled`                                    | `true`  | Enable/disable exporting topic partition retention metric at all                         |
-| `app.metrics.topic-retention.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include retention metric. See [filtering options](#filter-options) |
-| `app.metrics.topic-retention.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include retention metric. See [filtering options](#filter-options)   |
+| Property                                                                 | Default | Description                                                                                                              |
+|--------------------------------------------------------------------------|---------|--------------------------------------------------------------------------------------------------------------------------|
+| `app.metrics.topic-retention.enabled`                                    | `true`  | Enable/disable exporting topic partition retention metric at all                                                         |
+| `app.metrics.topic-retention.include-zero-samples`                       | `true`  | When false, then zero value samples are omitted (useful to reduce large number of samples if they are zero most of time) |
+| `app.metrics.topic-retention.enabled-on.clusters.<...filter options...>` | _all_   | For which clusters to include retention metric. See [filtering options](#filter-options)                                 |
+| `app.metrics.topic-retention.enabled-on.topics.<...filter options...>`   | _all_   | For which topics to include retention metric. See [filtering options](#filter-options)                                   |
 
 
 
