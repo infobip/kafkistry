@@ -11,6 +11,7 @@ data class ClusterScrapingStatus(
     val clusterIdentifier: KafkaClusterIdentifier,
     val stateTypeName: String,
     val lastRefreshTime: Long,
+    val computedTime: Long,
     val kafkistryInstance: String,
 )
 
@@ -25,7 +26,7 @@ class ScrapingStatusService(
                 provider.listAllLatestStates().map {
                     ClusterScrapingStatus(
                         provider.javaClass.name, it.stateType, it.clusterIdentifier, it.stateTypeName,
-                        it.lastRefreshTime, it.kafkistryInstance,
+                        it.lastRefreshTime, it.computedTime, it.kafkistryInstance,
                     )
                 }
             }

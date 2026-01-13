@@ -28,6 +28,7 @@
             <th>Status</th>
             <th>Refresh by</th>
             <th>Last refresh</th>
+            <th>Duration</th>
         </tr>
         </thead>
         <#list scrapingStatuses as scrapingStatus>
@@ -44,7 +45,11 @@
                 <td>
                     <code>${scrapingStatus.kafkistryInstance}</code>
                 </td>
-                <td class="time small" data-time="${scrapingStatus.lastRefreshTime?c}" data-order="${scrapingStatus.lastRefreshTime?c}"></td>
+                <td class="time small" data-time="${scrapingStatus.computedTime?c}" data-order="${scrapingStatus.computedTime?c}"></td>
+                <#assign durationMs = scrapingStatus.computedTime - scrapingStatus.lastRefreshTime>
+                <td class="small" data-order="${durationMs?c}">
+                    ${util.prettyDuration(durationMs/1000.0)}
+                </td>
             </tr>
         </#list>
     </table>
