@@ -33,7 +33,7 @@ class MetricsDelegatingStateDataPublisher(
 
     override fun <V> subscribeToStateUpdates(stateTypeName: String, listener: (StateData<V>) -> Unit) {
         delegate.subscribeToStateUpdates(stateTypeName) {
-            measureDuration("listenerStateDataDelay", it.lastRefreshTime) {}
+            measureDuration("listenerStateDataDelay", it.computedTime) {}
             measureDuration("listenerStateDataProcessing") { listener(it) }
         }
     }

@@ -172,10 +172,10 @@ class HazelcastStateScrapingCoordinator(
 
             if (received) {
                 val duration = System.currentTimeMillis() - startTime
-                log.debug("Received shared state for {}/{} after {}ms", stateTypeName, clusterIdentifier, duration)
+                log.debug("Received shared state for {}/{} after {}ms of waiting", stateTypeName, clusterIdentifier, duration)
                 return true
             } else {
-                log.warn("Timeout waiting for shared state for {}/{} after {}ms", stateTypeName, clusterIdentifier, timeoutMs)
+                log.warn("Timeout waiting for shared state for {}/{} after {}ms of waiting", stateTypeName, clusterIdentifier, timeoutMs)
                 return false
             }
         } finally {
