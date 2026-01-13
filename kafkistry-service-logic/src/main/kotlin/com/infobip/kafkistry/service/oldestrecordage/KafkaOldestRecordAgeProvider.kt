@@ -6,6 +6,7 @@ import com.infobip.kafkistry.kafka.SamplingPosition
 import com.infobip.kafkistry.kafkastate.OldestRecordsAges
 import com.infobip.kafkistry.kafka.RecordSampler
 import com.infobip.kafkistry.kafka.RecordSamplingListener
+import com.infobip.kafkistry.kafka.SamplerState
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
@@ -32,7 +33,7 @@ class OldestRecordAgeProviderProperties {
 class KafkaOldestRecordAgeProvider(
     properties: OldestRecordAgeProviderProperties,
     recordTimestampExtractor: Optional<RecordTimestampExtractor>,
-) : RecordSamplingListener {
+) : RecordSamplingListener<OldestRecordsAges> {
 
     private val sampleFilter = ClusterTopicFilter(properties.enabledOn)
     private val timestampExtractor = recordTimestampExtractor.orElse(RecordTimestampExtractor.NONE)
@@ -44,12 +45,24 @@ class KafkaOldestRecordAgeProvider(
         return samplingPosition == SamplingPosition.OLDEST && sampleFilter(clusterRef, topicName)
     }
 
-    override fun sampler(samplingPosition: SamplingPosition, clusterRef: ClusterRef): RecordSampler {
+    override fun sampler(samplingPosition: SamplingPosition, clusterRef: ClusterRef): RecordSampler<OldestRecordsAges> {
         return TimestampRecordVisitor(clusterRef)
     }
 
     override fun clusterRemoved(clusterIdentifier: KafkaClusterIdentifier) {
         clusterStates.remove(clusterIdentifier)
+    }
+
+    override fun updateState(clusterRef: ClusterRef, state: OldestRecordsAges?) {
+        if (state == null) {
+            clusterStates.remove(clusterRef.identifier)
+        } else {
+            clusterStates[clusterRef.identifier] = state
+        }
+    }
+
+    override fun sampledState(clusterIdentifier: KafkaClusterIdentifier): SamplerState<OldestRecordsAges> {
+        return SamplerState(KafkaOldestRecordAgeProvider::class.java, clusterStates[clusterIdentifier])
     }
 
     fun getLatestState(kafkaClusterIdentifier: KafkaClusterIdentifier): OldestRecordsAges? {
@@ -62,7 +75,7 @@ class KafkaOldestRecordAgeProvider(
 
     private inner class TimestampRecordVisitor(
         private val clusterRef: ClusterRef,
-    ) : RecordSampler {
+    ) : RecordSampler<OldestRecordsAges> {
 
         private val timestampSamples = ArrayList<Triple<TopicName, Partition, Long>>()
 

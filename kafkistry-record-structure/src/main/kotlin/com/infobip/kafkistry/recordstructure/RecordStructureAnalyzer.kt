@@ -9,6 +9,7 @@ import com.infobip.kafkistry.model.RecordsStructure
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import java.util.concurrent.ConcurrentHashMap
 
 @Component
 @ConditionalOnProperty("app.record-analyzer.enabled", matchIfMissing = true)
@@ -62,6 +63,17 @@ class RecordStructureAnalyzer(
         return with(TrimContext(properties)) {
             trimOldFields(clusterRecordsStructures)
             trimCounter.get()
+        }
+    }
+
+    fun clusterStructures(clusterIdentifier: KafkaClusterIdentifier): RecordsStructuresMap? {
+        return clusterRecordsStructures[clusterIdentifier]
+    }
+
+    fun updateClusterStructures(clusterIdentifier: KafkaClusterIdentifier, structures: RecordsStructuresMap) {
+        val clusterStructures = clusterRecordsStructures.computeIfAbsent(clusterIdentifier) { ConcurrentHashMap() }
+        clusterRecordsStructures[clusterIdentifier] = with(MergingContext(properties)) {
+            clusterStructures merge structures
         }
     }
 

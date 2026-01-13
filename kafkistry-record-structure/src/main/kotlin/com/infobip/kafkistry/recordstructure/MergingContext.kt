@@ -1,7 +1,9 @@
 package com.infobip.kafkistry.recordstructure
 
 import com.infobip.kafkistry.model.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
+import kotlin.math.max
 import kotlin.math.min
 
 open class MergingContext(
@@ -20,6 +22,20 @@ open class MergingContext(
         nullable = wrapNow(nullable),
         size = size,
     )
+
+    infix fun RecordsStructuresMap.merge(other: RecordsStructuresMap): RecordsStructuresMap {
+        return entries.asSequence().plus(other.entries)
+            .map { it.key to it.value }
+            .groupBy({ it.first }, { it.second })
+            .mapValuesTo(ConcurrentHashMap()) { (_, values) ->
+                values.reduce { acc, recordStructures ->
+                    TimestampWrapper(
+                        field = acc.field merge recordStructures.field,
+                        timestamp = max(acc.timestamp, recordStructures.timestamp),
+                    )
+                }
+            }
+    }
 
     /**
      * Simply add the newer fields to the existent ones

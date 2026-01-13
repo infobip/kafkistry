@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.recordstructure
 
-import com.infobip.kafkistry.model.*
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.model.*
 import java.time.Duration
 import java.util.concurrent.ConcurrentMap
@@ -144,3 +144,33 @@ fun generateTimestamp(): Long = System.currentTimeMillis()
 
 typealias RecordsStructuresMap = ConcurrentMap<TopicName, TimestampWrapper<TimestampWrappedRecordsStructure>>
 typealias ClusterRecordsStructuresMap = ConcurrentMap<KafkaClusterIdentifier, RecordsStructuresMap>
+
+data class Tvs(
+    val list: List<TimestampWrapper<*>>,
+    val map: Map<Class<*>, Any>,
+)
+
+fun main() {
+    val tv1 = TimestampWrapper("text", 123L)
+    val tv2 = TimestampWrapper(42, 456L)
+    val tv3 = TimestampWrapper(null, 789L)
+    val tvs = Tvs(
+        listOf(tv1, tv2, tv3),
+        mapOf(
+            RecordsStructure::class.java to true,
+            String::class.java to true,
+        )
+    )
+    tvs.sedese()
+}
+
+val mapper = jacksonObjectMapper()
+
+inline fun <reified T> T.sedese() {
+    val json = mapper.writeValueAsString(this)
+    println("-----------------")
+    println(this)
+    println(json)
+    val v = mapper.readValue(json, T::class.java)
+    println(v)
+}

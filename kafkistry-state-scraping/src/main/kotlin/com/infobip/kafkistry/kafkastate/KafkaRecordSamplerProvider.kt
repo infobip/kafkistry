@@ -2,7 +2,6 @@ package com.infobip.kafkistry.kafkastate
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.kafka.*
-import com.infobip.kafkistry.kafkastate.config.PoolingProperties
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
@@ -13,6 +12,18 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
+data class SamplersStates(
+    val states: List<SamplerState<*>>,
+) {
+    private val allStates: Map<Any, SamplerState<*>> = states.associateBy { it.samplingListener }
+
+    fun <T> getFor(clazz: Class<in RecordSamplingListener<T>>): T? {
+        val value = allStates[clazz] ?: return null
+        @Suppress("UNCHECKED_CAST")
+        return value.value as T?
+    }
+}
+
 @Component
 class KafkaRecordSamplerProvider(
     clustersRepository: KafkaClustersRepository,
@@ -21,8 +32,8 @@ class KafkaRecordSamplerProvider(
     issuesRegistry: BackgroundJobIssuesRegistry,
     private val topicOffsetsProvider: KafkaTopicOffsetsProvider,
     private val clientProvider: KafkaClientProvider,
-    private val recordSamplerListeners: Optional<List<RecordSamplingListener>>,
-) : AbstractKafkaStateProvider<Unit>(
+    private val recordSamplerListeners: Optional<List<RecordSamplingListener<*>>>,
+) : AbstractKafkaStateProvider<SamplersStates>(
     clustersRepository, clusterFilter, promProperties, issuesRegistry,
 ) {
     companion object {
@@ -41,14 +52,17 @@ class KafkaRecordSamplerProvider(
         recordSamplerListeners.orElse(emptyList()).forEach { it.clusterRemoved(clusterIdentifier) }
     }
 
-    override fun fetchState(kafkaCluster: KafkaCluster) {
+    override fun fetchState(kafkaCluster: KafkaCluster): SamplersStates {
         val offsetsLatestState = topicOffsetsProvider.getLatestState(kafkaCluster.identifier)
         if (offsetsLatestState.stateType != StateType.VISIBLE) {
-            return
+            return SamplersStates(emptyList())
         }
         val latestOffsets = offsetsLatestState.value()
         handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.OLDEST)
         handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.NEWEST)
+        return SamplersStates(
+            recordSamplerListeners.orElse(emptyList()).map { it.sampledState(kafkaCluster.identifier) }
+        )
     }
 
     private fun handleSampling(
@@ -103,8 +117,8 @@ class KafkaRecordSamplerProvider(
  * uncaught exception will not propagate back to visitor invocation
  */
 private class SamplersRecordVisitor(
-    private val samplers: List<RecordSampler>,
-    private val topicSamplers: Map<TopicName, List<RecordSampler>>,
+    private val samplers: List<RecordSampler<*>>,
+    private val topicSamplers: Map<TopicName, List<RecordSampler<*>>>,
 ) : RecordVisitor {
 
     override fun visit(record: ConsumerRecord<ByteArray?, ByteArray?>) {
@@ -119,7 +133,7 @@ private class SamplersRecordVisitor(
 
     fun samplingRoundFailed(cause: Throwable) = samplers.forEachNoException { it.samplingRoundFailed(cause) }
 
-    private inline fun List<RecordSampler>.forEachNoException(op: (RecordSampler) -> Unit) {
+    private inline fun List<RecordSampler<*>>.forEachNoException(op: (RecordSampler<*>) -> Unit) {
         forEach {
             try {
                 op(it)

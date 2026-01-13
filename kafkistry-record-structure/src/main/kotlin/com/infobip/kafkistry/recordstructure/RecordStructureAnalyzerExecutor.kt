@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.kafka.SamplingPosition
 import com.infobip.kafkistry.kafka.RecordSampler
 import com.infobip.kafkistry.kafka.RecordSamplingListener
+import com.infobip.kafkistry.kafka.SamplerState
 import com.infobip.kafkistry.metric.MetricHolder
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.ClusterRef
@@ -98,7 +99,7 @@ class RecordStructureAnalyzerExecutor(
     private val properties: RecordAnalyzerProperties,
     private val analyzeFilter: AnalyzeFilter,
     promProperties: PrometheusMetricsProperties,
-) : RecordSamplingListener, SmartLifecycle {
+) : RecordSamplingListener<RecordsStructuresMap>, SmartLifecycle {
 
     private val executor = Executors.newFixedThreadPool(
         properties.executor.concurrency, CustomizableThreadFactory("record-analyzer-")
@@ -154,7 +155,7 @@ class RecordStructureAnalyzerExecutor(
     }
 
     override fun sampler(samplingPosition: SamplingPosition, clusterRef: ClusterRef) =
-        object : RecordSampler {
+        object : RecordSampler<RecordsStructuresMap> {
 
             /**
              * Accepts one sampled message and puts it into queue to be processed by another thread
@@ -177,6 +178,20 @@ class RecordStructureAnalyzerExecutor(
 
     override fun clusterRemoved(clusterIdentifier: KafkaClusterIdentifier) {
         analyzer.removeCluster(clusterIdentifier)
+    }
+
+    override fun updateState(clusterRef: ClusterRef, state: RecordsStructuresMap?) {
+        if (state == null) {
+            return //sampling round failed
+        }
+        analyzer.updateClusterStructures(clusterRef.identifier, state)
+    }
+
+    override fun sampledState(clusterIdentifier: KafkaClusterIdentifier): SamplerState<RecordsStructuresMap> {
+        return SamplerState(
+            samplingListener = RecordStructureAnalyzerExecutor::class.java,
+            value = analyzer.clusterStructures(clusterIdentifier)
+        )
     }
 
     private fun updateQueueSizeMetric() = queueSize.set(queue.size.toDouble())
