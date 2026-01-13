@@ -3,6 +3,7 @@ package com.infobip.kafkistry.autopilot.binding
 import com.infobip.kafkistry.kafkastate.StateType
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.service.Placeholder
+import com.infobip.kafkistry.service.renderMessage
 import kotlin.reflect.KClass
 
 const val CLUSTER_IDENTIFIER_ATTR: String = "clusterIdentifier"
@@ -63,6 +64,8 @@ data class AutopilotActionBlocker(
     val message: String,
     val placeholders: Map<String, Placeholder> = emptyMap(),
 )
+
+fun AutopilotActionBlocker.renderMessage(): String = renderMessage(message, placeholders)
 
 data class ClusterUnstable(
     val stateType: StateType,

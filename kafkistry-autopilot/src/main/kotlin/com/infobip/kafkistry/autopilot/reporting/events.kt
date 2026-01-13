@@ -1,6 +1,8 @@
 package com.infobip.kafkistry.autopilot.reporting
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.infobip.kafkistry.autopilot.binding.renderMessage
+import com.infobip.kafkistry.autopilot.reporting.ActionOutcomeMapper.toOutcome
 import com.infobip.kafkistry.autopilot.repository.ActionsRepository
 import com.infobip.kafkistry.events.EventListener
 import com.infobip.kafkistry.events.EventPublisher
@@ -13,7 +15,15 @@ import org.springframework.stereotype.Component
 
 data class AutopilotActionOutcomeEvent(
     val actionOutcomeJson: String
-): KafkistryEvent
+): KafkistryEvent {
+    override fun toString(): String = toOutcome().run {
+        "AutopilotActionOutcome(action=${actionMetadata.description.actionName}, " +
+                "for=${actionMetadata.attributes}, outcome=${outcome.type}" +
+                (if (outcome.blockers.isNotEmpty()) ", blockers=${outcome.blockers.map { it.renderMessage() }}" else "") +
+                (if (outcome.unstable.isNotEmpty()) ", unstable=${outcome.unstable}" else "") +
+                (outcome.executionError?.let { ", error=[$it]" } ?: "") + ")"
+    }
+}
 
 private object ActionOutcomeMapper {
     private val mapper = jacksonObjectMapper()
