@@ -181,7 +181,7 @@ class RepositoriesConfig(
     @Bean
     fun kafkaTopicsRepository(
         @Qualifier("topicsFileStorage") topicsFileStorage: FileStorage
-    ): KafkaTopicsRepository = StorageKafkaTopicsRepository(
+    ): KafkaTopicsRefreshableRepository = StorageKafkaTopicsRepository(
         RequestingKeyValueRepositoryStorageAdapter(
             topicsFileStorage, TopicDescription::class.java, yamlMapper, KeyIdExtractor { it.name }
         ).configureCaching()
@@ -190,7 +190,7 @@ class RepositoriesConfig(
     @Bean
     fun kafkaClustersRepository(
         @Qualifier("clustersFileStorage") clustersFileStorage: FileStorage
-    ): KafkaClustersRepository = StorageKafkaClustersRepository(
+    ): KafkaClustersRefreshableRepository = StorageKafkaClustersRepository(
         RequestingKeyValueRepositoryStorageAdapter(
             clustersFileStorage, KafkaCluster::class.java, yamlMapper, KeyIdExtractor { it.identifier }
         ).configureCaching()
@@ -199,7 +199,7 @@ class RepositoriesConfig(
     @Bean
     fun kafkaAclsRepository(
         @Qualifier("aclsFileStorage") aclFileStorage: FileStorage
-    ): KafkaAclsRepository = StorageKafkaAclsRepository(
+    ): KafkaAclsRefreshableRepository = StorageKafkaAclsRepository(
         RequestingKeyValueRepositoryStorageAdapter(
             aclFileStorage, PrincipalAclRules::class.java, yamlMapper, KeyIdExtractor { it.principal }
         ).configureCaching()
@@ -208,7 +208,7 @@ class RepositoriesConfig(
     @Bean
     fun kafkaQuotasRepository(
         @Qualifier("quotasFileStorage") quotasFileStorage: FileStorage
-    ): KafkaQuotasRepository = StorageKafkaQuotasRepository(
+    ): KafkaQuotasRefreshableRepository = StorageKafkaQuotasRepository(
         RequestingKeyValueRepositoryStorageAdapter(
             quotasFileStorage, QuotaDescription::class.java, yamlMapper, KeyIdExtractor { it.entity.asID() }
         ).configureCaching()
