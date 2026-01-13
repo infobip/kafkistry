@@ -180,11 +180,11 @@ class RecordStructureAnalyzerExecutor(
         analyzer.removeCluster(clusterIdentifier)
     }
 
-    override fun updateState(clusterRef: ClusterRef, state: RecordsStructuresMap?) {
+    override fun updateState(clusterIdentifier: KafkaClusterIdentifier, state: RecordsStructuresMap?) {
         if (state == null) {
             return //sampling round failed
         }
-        analyzer.updateClusterStructures(clusterRef.identifier, state)
+        analyzer.updateClusterStructures(clusterIdentifier, state)
     }
 
     override fun sampledState(clusterIdentifier: KafkaClusterIdentifier): SamplerState<RecordsStructuresMap> {

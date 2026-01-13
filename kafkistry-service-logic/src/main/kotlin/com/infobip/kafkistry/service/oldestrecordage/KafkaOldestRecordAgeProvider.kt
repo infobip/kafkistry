@@ -53,11 +53,11 @@ class KafkaOldestRecordAgeProvider(
         clusterStates.remove(clusterIdentifier)
     }
 
-    override fun updateState(clusterRef: ClusterRef, state: OldestRecordsAges?) {
+    override fun updateState(clusterIdentifier: KafkaClusterIdentifier, state: OldestRecordsAges?) {
         if (state == null) {
-            clusterStates.remove(clusterRef.identifier)
+            clusterStates.remove(clusterIdentifier)
         } else {
-            clusterStates[clusterRef.identifier] = state
+            clusterStates[clusterIdentifier] = state
         }
     }
 

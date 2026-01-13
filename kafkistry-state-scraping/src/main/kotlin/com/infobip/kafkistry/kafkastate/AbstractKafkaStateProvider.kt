@@ -18,8 +18,9 @@ abstract class AbstractKafkaStateProvider<V>(
         components.stateDataPublisher.subscribeToStateUpdates(stateTypeName()) { receivedState ->
             log.info("Received shared state for {}/{} from another instance (age: {}ms)",
                 stateTypeName(), receivedState.clusterIdentifier,
-                System.currentTimeMillis() - receivedState.lastRefreshTime)
+                System.currentTimeMillis() - receivedState.computedTime)
             clusterStates[receivedState.clusterIdentifier] = receivedState
+            receivedStateData(receivedState)
             // Notify coordinator that state was received (for waiting threads)
             components.scrapingCoordinator.notifyStateReceived(stateTypeName(), receivedState.clusterIdentifier)
         }
@@ -38,6 +39,8 @@ abstract class AbstractKafkaStateProvider<V>(
     fun getAllLatestStates(): Map<KafkaClusterIdentifier, StateData<V>> = clusterStates.toMap()
 
     fun listAllLatestStates(): List<StateData<V>> = clusterStates.values.toList()
+
+    protected open fun receivedStateData(data: StateData<V>) = Unit
 
     override fun setupCachedState(enabledClusters: List<KafkaClusterIdentifier>, disabledClusters: List<KafkaClusterIdentifier>) {
         clusterStates.keys.removeIf {
@@ -93,7 +96,13 @@ abstract class AbstractKafkaStateProvider<V>(
         clusterIdentifier: KafkaClusterIdentifier,
         timestamp: Long = System.currentTimeMillis(),
         value: V? = null,
-    ) = StateData(stateType, clusterIdentifier, stateTypeName(), timestamp, kafkistryInstance, value)
+    ) = StateData(
+        stateType, clusterIdentifier, stateTypeName(),
+        lastRefreshTime = timestamp,
+        computedTime = System.currentTimeMillis(),
+        kafkistryInstance = kafkistryInstance,
+        value = value,
+    )
 
     override fun publishScrapedState(clusterIdentifier: KafkaClusterIdentifier) {
         val stateData = clusterStates[clusterIdentifier]

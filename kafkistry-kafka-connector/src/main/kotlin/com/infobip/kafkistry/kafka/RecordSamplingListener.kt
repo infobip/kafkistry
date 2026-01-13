@@ -25,9 +25,17 @@ interface RecordSamplingListener<V> {
      */
     fun clusterRemoved(clusterIdentifier: KafkaClusterIdentifier)
 
-    fun updateState(clusterRef: ClusterRef, state: V?)
+    fun updateState(clusterIdentifier: KafkaClusterIdentifier, state: V?)
 
     fun sampledState(clusterIdentifier: KafkaClusterIdentifier): SamplerState<V>
+
+    fun maybeAcceptStateUpdate(clusterIdentifier: KafkaClusterIdentifier, samplerState: SamplerState<*>) {
+        if (samplerState.javaClass == this.javaClass) {
+            @Suppress("UNCHECKED_CAST")
+            val state = samplerState.value as V?
+            updateState(clusterIdentifier, state)
+        }
+    }
 }
 
 data class SamplerState<T>(

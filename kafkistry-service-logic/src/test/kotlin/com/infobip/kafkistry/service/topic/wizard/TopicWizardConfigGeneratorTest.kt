@@ -65,7 +65,7 @@ class TopicWizardConfigGeneratorTest {
         ClusterRef("aws", listOf("cloud")) to clusterVisible("aws", listOf(1, 2, 3)),
         ClusterRef("disabled") to StateData(
             StateType.DISABLED, "disabled", "cluster_state",
-            System.currentTimeMillis(), "localhost",
+            System.currentTimeMillis(), System.currentTimeMillis(),"localhost",
         ),
     )
 
@@ -74,6 +74,7 @@ class TopicWizardConfigGeneratorTest {
             clusterIdentifier = identifier,
             stateTypeName = "cluster_state",
             lastRefreshTime = System.currentTimeMillis(),
+            computedTime = System.currentTimeMillis(),
             value = KafkaClusterState(
                     clusterInfo = newClusterInfo(
                             identifier = identifier,

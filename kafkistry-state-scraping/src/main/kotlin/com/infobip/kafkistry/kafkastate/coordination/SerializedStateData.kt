@@ -19,6 +19,7 @@ data class SerializedStateData(
     val clusterIdentifier: String,
     val stateTypeName: String,
     val lastRefreshTime: Long,
+    val computedTime: Long,
     val valueType: String,  // Fully qualified class name for deserialization
     val valueJson: String?,
 ) : Serializable {
@@ -43,6 +44,7 @@ data class SerializedStateData(
                 clusterIdentifier = stateData.clusterIdentifier,
                 stateTypeName = stateData.stateTypeName,
                 lastRefreshTime = stateData.lastRefreshTime,
+                computedTime = stateData.computedTime,
                 valueType = valueType,
                 valueJson = valueJson,
             )
@@ -66,6 +68,7 @@ data class SerializedStateData(
             clusterIdentifier = clusterIdentifier,
             stateTypeName = stateTypeName,
             lastRefreshTime = lastRefreshTime,
+            computedTime = computedTime,
             value = value,
             kafkistryInstance = kafkistryInstance,
         )

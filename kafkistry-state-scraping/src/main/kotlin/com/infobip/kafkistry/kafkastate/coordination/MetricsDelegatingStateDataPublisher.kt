@@ -31,28 +31,26 @@ class MetricsDelegatingStateDataPublisher(
         delegate.publishStateData(stateData)
     }
 
-    override fun publishSamplingStarted(event: SamplingStartedEvent) = measureDuration("publishSamplingStarted") {
-        delegate.publishSamplingStarted(event)
+    override fun <V> subscribeToStateUpdates(stateTypeName: String, listener: (StateData<V>) -> Unit) {
+        delegate.subscribeToStateUpdates(stateTypeName) {
+            measureDuration("listenerStateDataDelay", it.lastRefreshTime) {}
+            measureDuration("listenerStateDataProcessing") { listener(it) }
+        }
     }
 
-    override fun publishSampledRecord(record: SampledConsumerRecord) = measureDuration("publishSampledRecord") {
-        delegate.publishSampledRecord(record)
-    }
-
-    override fun publishSamplingCompleted(event: SamplingCompletedEvent) = measureDuration("publishSamplingCompleted") {
-        delegate.publishSamplingCompleted(event)
-    }
-
-    private inline fun <T> measureDuration(operation: String, block: () -> T): T {
-        val startTime = System.nanoTime()
+    private inline fun <T> measureDuration(
+        operation: String,
+        startTime: Long = System.currentTimeMillis(),
+        block: () -> T
+    ): T {
         return try {
             block().also {
-                val durationSeconds = (System.nanoTime() - startTime) / 1_000_000_000.0
+                val durationSeconds = (System.currentTimeMillis() - startTime) / 1_000.0
                 duration.labels(operation, "success").observe(durationSeconds)
             }
         } catch (ex: Exception) {
             throw ex.also {
-                val durationSeconds = (System.nanoTime() - startTime) / 1_000_000_000.0
+                val durationSeconds = (System.currentTimeMillis() - startTime) / 1_000.0
                 duration.labels(operation, "failure").observe(durationSeconds)
             }
         }

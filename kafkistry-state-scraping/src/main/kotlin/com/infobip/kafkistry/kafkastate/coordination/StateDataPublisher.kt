@@ -1,6 +1,8 @@
 package com.infobip.kafkistry.kafkastate.coordination
 
 import com.hazelcast.core.HazelcastInstance
+import com.hazelcast.memory.Capacity
+import com.hazelcast.memory.MemoryUnit
 import com.infobip.kafkistry.kafkastate.StateData
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.slf4j.LoggerFactory
@@ -27,37 +29,6 @@ interface StateDataPublisher {
         stateTypeName: String,
         listener: (StateData<V>) -> Unit,
     )
-
-    /**
-     * Publish that sampling has started for a cluster.
-     */
-    fun publishSamplingStarted(event: SamplingStartedEvent)
-
-    /**
-     * Publish a sampled Kafka record for other instances to consume.
-     *
-     * @param record The sampled record event
-     */
-    fun publishSampledRecord(record: SampledConsumerRecord)
-
-    /**
-     * Publish that sampling has completed (successfully or failed) for a cluster.
-     */
-    fun publishSamplingCompleted(event: SamplingCompletedEvent)
-
-    /**
-     * Subscribe to sampling lifecycle events from other instances.
-     */
-    fun subscribeToSamplingEvents(listener: SamplingEventListener)
-}
-
-/**
- * Listener for sampling lifecycle events.
- */
-interface SamplingEventListener {
-    fun onSamplingStarted(event: SamplingStartedEvent) = Unit
-    fun onSampledRecord(event: SampledConsumerRecord) = Unit
-    fun onSamplingCompleted(event: SamplingCompletedEvent) = Unit
 }
 
 /**
@@ -71,22 +42,6 @@ class LocalStateDataPublisher : StateDataPublisher {
     }
 
     override fun <V> subscribeToStateUpdates(stateTypeName: String, listener: (StateData<V>) -> Unit) {
-        // No-op: no subscription in local mode
-    }
-
-    override fun publishSamplingStarted(event: SamplingStartedEvent) {
-        // No-op: no sharing in local mode
-    }
-
-    override fun publishSampledRecord(record: SampledConsumerRecord) {
-        // No-op: no sharing in local mode
-    }
-
-    override fun publishSamplingCompleted(event: SamplingCompletedEvent) {
-        // No-op: no sharing in local mode
-    }
-
-    override fun subscribeToSamplingEvents(listener: SamplingEventListener) {
         // No-op: no subscription in local mode
     }
 }
@@ -106,11 +61,6 @@ class HazelcastStateDataPublisher(
 
     private val log = LoggerFactory.getLogger(HazelcastStateDataPublisher::class.java)
 
-    // Distributed topic for sharing sampling events (started, records, completed)
-    private val samplingEventsTopic = hazelcastInstance.getTopic<Any>(
-        "kafkistry-sampling-events"
-    )
-
     /**
      * Get or create a topic for a specific state type.
      */
@@ -123,7 +73,7 @@ class HazelcastStateDataPublisher(
             val topic = getStateDataTopic(stateTypeName)
             topic.publish(serialized)
             log.debug("Published state data for {}/{} to Hazelcast topic as {} (age: {}ms)",
-                stateTypeName, clusterIdentifier, kafkistryInstance, System.currentTimeMillis() - lastRefreshTime)
+                stateTypeName, clusterIdentifier, kafkistryInstance, System.currentTimeMillis() - computedTime)
         } catch (ex: Exception) {
             log.error("Failed to publish state data for {}/{}", stateTypeName, clusterIdentifier, ex)
         }
@@ -141,13 +91,14 @@ class HazelcastStateDataPublisher(
                     log.trace("Ignoring state data from local member instance={}", message.messageObject.kafkistryInstance)
                     return@addMessageListener
                 }
-
                 val serializedData = message.messageObject
                 try {
                     val stateData = serializedData.toStateData<V>()
-                    val age = System.currentTimeMillis() - stateData.lastRefreshTime
-                    log.debug("Received shared state for {}/{} from {} (age: {}ms)",
-                        stateTypeName, stateData.clusterIdentifier, serializedData.kafkistryInstance, age)
+                    val age = System.currentTimeMillis() - stateData.computedTime
+                    log.debug("Received shared state for {}/{} from {} (age: {}ms, size: {})",
+                        stateTypeName, stateData.clusterIdentifier, serializedData.kafkistryInstance, age,
+                        serializedData.valueJson?.length?.let { Capacity(it.toLong(), MemoryUnit.BYTES).toPrettyString()}
+                    )
                     listener(stateData)
                 } catch (ex: Exception) {
                     log.error("Failed to deserialize state data from Hazelcast topic for {}/{}",
@@ -158,69 +109,6 @@ class HazelcastStateDataPublisher(
             log.info("Subscribed to shared state updates for {} via Hazelcast topic", stateTypeName)
         } catch (ex: Exception) {
             log.error("Failed to subscribe to state updates for {}", stateTypeName, ex)
-        }
-    }
-
-    override fun publishSamplingStarted(event: SamplingStartedEvent) = with(event) {
-        try {
-            samplingEventsTopic.publish(this)
-            log.trace("Published sampling started for {}/{} ({} topics)", clusterIdentifier, samplingPosition, topics.size)
-        } catch (ex: Exception) {
-            log.error("Failed to publish sampling started for {}/{}", clusterIdentifier, samplingPosition, ex)
-        }
-    }
-
-    override fun publishSampledRecord(record: SampledConsumerRecord) = with(record) {
-        try {
-            samplingEventsTopic.publish(this)
-            log.trace("Published sampled record for {}/{}/{} (offset: {})", clusterIdentifier, topic, partition, offset)
-        } catch (ex: Exception) {
-            log.error("Failed to publish sampled record for {}/{}/{}", clusterIdentifier, topic, partition, ex)
-        }
-    }
-
-    override fun publishSamplingCompleted(event: SamplingCompletedEvent) = with(event) {
-        try {
-            samplingEventsTopic.publish(event)
-            log.trace("Published sampling completed for {}/{} (success: {})", clusterIdentifier, samplingPosition, success)
-        } catch (ex: Exception) {
-            log.error("Failed to publish sampling completed for {}/{}", clusterIdentifier, samplingPosition, ex)
-        }
-    }
-
-    override fun subscribeToSamplingEvents(listener: SamplingEventListener) {
-        try {
-            samplingEventsTopic.addMessageListener { message ->
-                if (message.publishingMember.localMember()) {
-                    log.trace("Ignoring sampling event coming from itself")
-                    return@addMessageListener
-                }
-                try {
-                    with(message.messageObject) {
-                        when (this) {
-                            is SamplingStartedEvent -> {
-                                log.debug("Received sampling started for {}/{} ({} topics)", clusterIdentifier, samplingPosition, topics.size)
-                                listener.onSamplingStarted(this)
-                            }
-
-                            is SampledConsumerRecord -> {
-                                log.trace("Received sampled record for {}/{}/{} (offset: {})", clusterIdentifier, topic, partition, offset)
-                                listener.onSampledRecord(this)
-                            }
-
-                            is SamplingCompletedEvent -> {
-                                log.debug("Received sampling completed for {}/{} (success: {})", clusterIdentifier, samplingPosition, success)
-                                listener.onSamplingCompleted(this)
-                            }
-                        }
-                    }
-                } catch (ex: Exception) {
-                    log.error("Failed to process sampling event", ex)
-                }
-            }
-            log.info("Subscribed to sampling events from other instances")
-        } catch (ex: Exception) {
-            log.error("Failed to subscribe to sampling events", ex)
         }
     }
 }

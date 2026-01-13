@@ -118,7 +118,8 @@ internal class ClusterResourcesAnalyzerTest {
         whenever(replicasInfoProvider.getLatestState(any())).thenReturn(
             StateData(
                 StateType.VISIBLE, identifier, "mock_replicas_state",
-                System.currentTimeMillis(), "localhost", replicaDirs,
+                System.currentTimeMillis(), System.currentTimeMillis(),
+                "localhost", replicaDirs,
             )
         )
     }
@@ -139,7 +140,8 @@ internal class ClusterResourcesAnalyzerTest {
         whenever(nodeDiskMetricsProvider.getLatestState(any())).thenReturn(
             StateData(
                 StateType.VISIBLE, identifier, "mock_disk_metrics",
-                System.currentTimeMillis(), "localhost", ClusterNodeMetrics(brokersMetrics, brokersMetrics),
+                System.currentTimeMillis(), System.currentTimeMillis(),
+                "localhost", ClusterNodeMetrics(brokersMetrics, brokersMetrics),
             )
         )
     }

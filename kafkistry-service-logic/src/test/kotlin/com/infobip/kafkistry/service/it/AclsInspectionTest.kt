@@ -548,6 +548,7 @@ class AclsInspectionTest {
             clusterIdentifier = identifier,
             stateTypeName = "groups",
             lastRefreshTime = System.currentTimeMillis(),
+            computedTime = System.currentTimeMillis(),
             value = if (stateType == StateType.VISIBLE) {
                 ClusterConsumerGroups(
                     consumerGroups = groups.associateWith { Maybe.Absent(RuntimeException()) },

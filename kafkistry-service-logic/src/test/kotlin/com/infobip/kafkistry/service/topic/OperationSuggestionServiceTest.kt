@@ -168,8 +168,9 @@ internal class OperationSuggestionServiceTest {
         topicsRegistryService: TopicsRegistryService = mock(),
         inspectionService: TopicsInspectionService = mock(),
         clusterStateProvider: KafkaClustersStateProvider = mock<KafkaClustersStateProvider>().apply {
+            val now = System.currentTimeMillis()
             whenever(getLatestClusterState(any())).thenReturn(
-                StateData(StateType.UNREACHABLE, "", "", System.currentTimeMillis(), "")
+                StateData(StateType.UNREACHABLE, "", "", now, now, "")
             )
         },
         rulesValidator: TopicConfigurationValidator = mock(),

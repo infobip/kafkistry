@@ -101,7 +101,7 @@ internal class ClusterStableFencingTest {
             val time = System.currentTimeMillis() - before
             val tmpProviders = nameStates.map { (stateName, stateType) ->
                 val stateData = StateData(
-                    stateType, cluster, stateName, time, "", if (stateType == StateType.VISIBLE) Unit else null
+                    stateType, cluster, stateName, time, time, "", if (stateType == StateType.VISIBLE) Unit else null
                 )
                 mock<AbstractKafkaStateProvider<*>>().also {
                     whenever(it.getAllLatestStates()).thenReturn(mapOf(cluster to stateData))

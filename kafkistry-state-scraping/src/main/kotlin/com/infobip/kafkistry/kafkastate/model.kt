@@ -32,6 +32,7 @@ data class StateData<T>(
     val clusterIdentifier: KafkaClusterIdentifier,
     val stateTypeName: String,
     val lastRefreshTime: Long,
+    val computedTime: Long,
     val kafkistryInstance: String,
     private val value: T? = null,
 ) {

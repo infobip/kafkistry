@@ -124,13 +124,11 @@ class HazelcastStateScrapingCoordinator(
         val scrapeRound = System.currentTimeMillis() / intervalMs
         val lockKey = "$stateTypeName:$clusterIdentifier:$scrapeRound"
 
-        // Try to acquire lock with TTL = 2x interval
-        // This handles slow scrapes and crashed instances
-        val ttlMs = intervalMs * 2
-        val oldHolder = lockCache.put(lockKey, kafkistryInstance, ttlMs, TimeUnit.MILLISECONDS)
+        // Try to acquire lock with TTL = intervalMs
+        val oldHolder = lockCache.put(lockKey, kafkistryInstance, intervalMs, TimeUnit.MILLISECONDS)
 
         // Won the race if nobody held the lock before (oldHolder == null)
-        val won = oldHolder == null
+        val won = oldHolder == null || oldHolder == kafkistryInstance
 
         if (won) {
             log.debug("Instance {} won scraping lock for {}/{} (round {})",
