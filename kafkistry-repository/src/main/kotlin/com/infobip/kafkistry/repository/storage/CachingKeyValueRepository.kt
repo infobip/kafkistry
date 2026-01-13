@@ -55,7 +55,7 @@ class CachingKeyValueRepository<ID : Any, T : Any>(
      * force reload of everything
      */
     override fun refresh() {
-        delegate.refresh()
+        super.refresh()
         refreshAll()
     }
 

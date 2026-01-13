@@ -52,11 +52,15 @@ interface RequestingKeyValueRepository<ID : Any, T : Any> {
 
     fun allBranchCommitsIds(): Map<Branch, CommitId>
 
+}
+
+interface RefreshableRepository {
+
     /**
      * Signal underlying implementation to do any refreshing if needed.
      * It may be useful in case there is some caching going on.
      */
-    fun refresh() = Unit
+    fun refresh()
 }
 
 interface KeyIdExtractor<ID, T> : (T) -> ID {
@@ -72,7 +76,12 @@ interface KeyIdExtractor<ID, T> : (T) -> ID {
 
 abstract class DelegatingRequestingKeyValueRepository<ID : Any, T : Any>(
         private val delegate: RequestingKeyValueRepository<ID, T>
-) : RequestingKeyValueRepository<ID, T> by delegate
+) : RequestingKeyValueRepository<ID, T> by delegate, RefreshableRepository {
+
+    override fun refresh() {
+        (delegate as? RefreshableRepository)?.refresh()
+    }
+}
 
 data class EntityRequests<ID, T>(
         val id: ID,

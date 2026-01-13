@@ -124,7 +124,7 @@ class GitRepositoriesConfig(
     @Bean
     fun refreshTrigger(
         git: GitRepository,
-        repositories: List<RequestingKeyValueRepository<*, *>>,
+        repositories: List<RefreshableRepository>,
     ) = GitRefreshTrigger(git, repositories, backgroundJobIssuesRegistry)
 
 }

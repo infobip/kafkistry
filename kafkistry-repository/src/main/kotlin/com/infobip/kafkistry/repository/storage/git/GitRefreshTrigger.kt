@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.repository.storage.git
 
+import com.infobip.kafkistry.repository.RefreshableRepository
 import com.infobip.kafkistry.repository.RequestingKeyValueRepository
 import com.infobip.kafkistry.service.background.BackgroundJob
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
@@ -7,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled
 
 class GitRefreshTrigger(
     private val git: GitRepository,
-    private val repositories: List<RequestingKeyValueRepository<*, *>>,
+    private val repositories: List<RefreshableRepository>,
     private val issuesRegistry: BackgroundJobIssuesRegistry,
 ) {
 
