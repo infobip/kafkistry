@@ -63,7 +63,10 @@ class TopicWizardConfigGeneratorTest {
         ClusterRef("big") to clusterVisible("big", listOf(1, 2, 3, 4, 5, 6)),
         ClusterRef("io") to clusterVisible("io", listOf(1, 2, 3)),
         ClusterRef("aws", listOf("cloud")) to clusterVisible("aws", listOf(1, 2, 3)),
-        ClusterRef("disabled") to StateData(StateType.DISABLED, "disabled", "cluster_state", System.currentTimeMillis()),
+        ClusterRef("disabled") to StateData(
+            StateType.DISABLED, "disabled", "cluster_state",
+            System.currentTimeMillis(), System.currentTimeMillis(),
+        ),
     )
 
     private fun clusterVisible(identifier: KafkaClusterIdentifier, nodes: List<Int>) = StateData(
@@ -71,6 +74,7 @@ class TopicWizardConfigGeneratorTest {
             clusterIdentifier = identifier,
             stateTypeName = "cluster_state",
             lastRefreshTime = System.currentTimeMillis(),
+            computedTime = System.currentTimeMillis(),
             value = KafkaClusterState(
                     clusterInfo = newClusterInfo(
                             identifier = identifier,

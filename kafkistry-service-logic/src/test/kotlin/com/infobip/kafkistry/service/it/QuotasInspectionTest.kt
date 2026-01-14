@@ -434,6 +434,7 @@ class QuotasInspectionTest {
                 clusterIdentifier = identifier,
                 stateTypeName = "entities_quotas",
                 lastRefreshTime = System.currentTimeMillis(),
+                computedTime = System.currentTimeMillis(),
                 value = ClusterQuotas(quotas.associate { it.entity to it.properties })
                     .takeIf { stateType == StateType.VISIBLE }
             )

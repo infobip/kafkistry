@@ -20,8 +20,7 @@ abstract class AbstractKafkaStateProvider<V>(
     private val clusterStates: MutableMap<KafkaClusterIdentifier, StateData<V>> = ConcurrentHashMap()
 
     fun getLatestState(kafkaClusterIdentifier: KafkaClusterIdentifier): StateData<V> {
-        return clusterStates[kafkaClusterIdentifier]
-            ?: StateData(StateType.UNKNOWN, kafkaClusterIdentifier, stateTypeName(), System.currentTimeMillis())
+        return clusterStates[kafkaClusterIdentifier] ?: stateData(StateType.UNKNOWN, kafkaClusterIdentifier)
     }
 
     fun getLatestStateValue(kafkaClusterIdentifier: KafkaClusterIdentifier): V {
@@ -43,7 +42,7 @@ abstract class AbstractKafkaStateProvider<V>(
         }
         disabledClusters.forEach { clusterIdentifier ->
             clusterStates.computeIfAbsent(clusterIdentifier) {
-                StateData(StateType.DISABLED, it, stateTypeName(), System.currentTimeMillis())
+                stateData(StateType.DISABLED, it)
             }
         }
     }
@@ -54,32 +53,44 @@ abstract class AbstractKafkaStateProvider<V>(
     protected open fun clusterRemoved(clusterIdentifier: KafkaClusterIdentifier) = Unit
 
     override fun doRefreshCluster(kafkaCluster: KafkaCluster): RefreshStatus {
-        log.debug("Refreshing {} for cluster '{}'", stateTypeName(), kafkaCluster.identifier)
+        log.debug("Refreshing {}/{}", stateTypeName(), kafkaCluster.identifier)
         val jonExecution = issuesRegistry.newExecution(kafkaCluster.identifier.backgroundJob())
         val startTime = System.currentTimeMillis()
         fun durationSec() = (System.currentTimeMillis() - startTime) / 1000.0
         val clusterState = try {
             val stateValue = fetchState(kafkaCluster)
-            log.debug("Refreshed {} of cluster '{}' in {} sec", stateTypeName(), kafkaCluster.identifier, durationSec())
+            log.debug("Refreshed successfully {}/{} in {} sec", stateTypeName(), kafkaCluster.identifier, durationSec())
             jonExecution.succeeded()
-            StateData(StateType.VISIBLE, kafkaCluster.identifier, stateTypeName(), startTime, stateValue)
+            stateData(StateType.VISIBLE, kafkaCluster.identifier, startTime, stateValue)
         } catch (ex: InvalidClusterIdException) {
             jonExecution.failed(ex.deepToString())
-            StateData(StateType.INVALID_ID, kafkaCluster.identifier, stateTypeName(), startTime)
+            stateData(StateType.INVALID_ID, kafkaCluster.identifier, startTime)
         } catch (ex: Throwable) {
-            log.error("Exception while refreshing {} for cluster {}, setting it's state as 'unreachable' after {} sec",
-                stateTypeName(), kafkaCluster, durationSec(), ex
+            log.error("Exception while refreshing {}/{}, setting it's state as 'unreachable' after {} sec",
+                stateTypeName(), kafkaCluster.identifier, durationSec(), ex
             )
             jonExecution.failed(ex.deepToString())
-            StateData(StateType.UNREACHABLE, kafkaCluster.identifier, stateTypeName(), startTime)
+            stateData(StateType.UNREACHABLE, kafkaCluster.identifier, startTime)
         }
         clusterStates[kafkaCluster.identifier] = clusterState
         return RefreshStatus(
-                scrapeType = stateTypeName(),
-                clusterState = clusterState.stateType,
-                durationMs = System.currentTimeMillis() - startTime
+            scrapeType = stateTypeName(),
+            clusterState = clusterState.stateType,
+            durationMs = System.currentTimeMillis() - startTime
         )
     }
+
+    private fun stateData(
+        stateType: StateType,
+        clusterIdentifier: KafkaClusterIdentifier,
+        timestamp: Long = System.currentTimeMillis(),
+        value: V? = null,
+    ) = StateData(
+        stateType, clusterIdentifier, stateTypeName(),
+        lastRefreshTime = timestamp,
+        computedTime = System.currentTimeMillis(),
+        value = value,
+    )
 
     private fun KafkaClusterIdentifier.backgroundJob() = BackgroundJob.of(
         jobClass = this@AbstractKafkaStateProvider.javaClass.name,
