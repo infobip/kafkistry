@@ -57,7 +57,7 @@ abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCas
         browser.findElementByCssSelector("input[name=highAvailability][value=STRONG_AVAILABILITY]").scrollIntoView().click()
 
         //submit
-        browser.findElementWithText("Suggest topic configuration").scrollIntoView().click()
+        browser.findElementWithText("Suggest topic configuration").ensureClick()
 
         await("for redirection to topic creation") {
             assertThat(browser.currentUrl).endsWith("/topics/wizard/create")
@@ -66,7 +66,7 @@ abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCas
         browser.assertPageText().contains("Create new topic from wizard")
 
         //check dry run inspect
-        browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
+        browser.findElementById("dry-run-inspect-btn").ensureClick()
         await {
             assertThat(browser.findElementById("dry-run-inspect-status").text).contains(
                     "my-cluster", "TO_CREATE"
@@ -77,7 +77,7 @@ abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCas
         browser.findElementByCssSelector("input[name=targetBranch]").sendKeys("my-branch")
 
         //create topic in registry
-        browser.findElementById("create-btn").scrollIntoView().click()
+        browser.findElementById("create-btn").ensureClick()
 
         //creation redirects to /topics
         await("to complete topic creation") {
@@ -130,12 +130,12 @@ abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCas
         browser.findElementByCssSelector("textarea[name=description]").sendKeys("new-description")
         browser.findElementByCssSelector("input[name=producer]").sendKeys("new-producer")
 
-        browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
+        browser.findElementById("dry-run-inspect-btn").ensureClick()
         await {
             browser.assertPageText().contains("Possible status over all clusters after saving", "ALL OK")
         }
 
-        browser.findElementById("create-btn").scrollIntoView().click()
+        browser.findElementById("create-btn").ensureClick()
         await("to create new topic and redirect to all topics page") {
             assertThat(browser.currentUrl).endsWith("/topics/inspect?topicName=my-topic-1&")
             browser.assertPageText().contains("Topic: my-topic-1")
@@ -170,7 +170,7 @@ abstract class CreateTopicInRegistry(contextSupplier: () -> Context) : UITestCas
 
         browser.findElementByCssSelector("input[name=topicName]").sendKeys("my-topic-1")
 
-        browser.findElementById("create-btn").scrollIntoView().click()
+        browser.findElementById("create-btn").ensureClick()
         await {
             browser.assertPageText().contains("Please perform 'Dry run inspect config' before saving")
         }

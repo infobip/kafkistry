@@ -3,20 +3,81 @@
     min-height: 50px;
     max-height: 80%;
 }
-.sql-insert-text:hover {
-    cursor: pointer;
-}
-.cm-matchhighlight {
-    /*font-weight: bold;*/
+[data-bs-theme="light"] .CodeMirror .cm-matchhighlight {
     background-color: #d9ea9d;
 }
-.CodeMirror span.CodeMirror-matchingbracket {
+[data-bs-theme="dark"] .CodeMirror .cm-matchhighlight {
+    background-color: #153c5e;
+}
+[data-bs-theme="light"].CodeMirror span.CodeMirror-matchingbracket {
     color: black !important;
     background-color: #59fcfc
 }
-.CodeMirror span.CodeMirror-nonmatchingbracket {
+[data-bs-theme="dark"].CodeMirror span.CodeMirror-matchingbracket {
+    color: white !important;
+    background-color: #59fcfc
+}
+[data-bs-theme="light"].CodeMirror span.CodeMirror-nonmatchingbracket {
     color: black !important;
     background-color: #ff4949;
+}
+[data-bs-theme="dark"].CodeMirror span.CodeMirror-nonmatchingbracket {
+    color: white !important;
+    background-color: #ff4949;
+}
+
+[data-bs-theme="dark"] .CodeMirror-scroll {
+    background-color: #14141a;
+}
+[data-bs-theme="dark"] .CodeMirror-placeholder {
+    color: #999 !important;
+}
+[data-bs-theme="dark"] .CodeMirror-selected {
+    background-color: #313142 !important;
+}
+[data-bs-theme="dark"] .CodeMirror-code {
+    color: #cdcdcd;
+}
+[data-bs-theme="dark"] .CodeMirror .cm-keyword {
+    color: #ac4eb9;
+}
+[data-bs-theme="dark"] .CodeMirror-cursor {
+    border-left-color: white;
+}
+[data-bs-theme="dark"] .CodeMirror .cm-string {
+    color: #cc4a34;
+}
+[data-bs-theme="dark"] .CodeMirror .cm-number {
+    color: #62b654;
+}
+[data-bs-theme="dark"] .CodeMirror .cm-atom {
+    color: #d681e6;
+}
+[data-bs-theme="dark"] .CodeMirror .cm-variable-2 {
+    color: #0471da;
+}
+
+[data-bs-theme="dark"] .CodeMirror-gutter,
+[data-bs-theme="dark"] .CodeMirror-gutters{
+    border:none;background-color:#282c34
+}
+
+[data-bs-theme="dark"] .CodeMirror-hints {
+    background: #0c0c0c;
+    border: 1px solid #515151;
+}
+
+[data-bs-theme="dark"] .CodeMirror-hint {
+    color: #8c8b8b;
+}
+[data-bs-theme="dark"] .CodeMirror-hint-active {
+    background: #053d8c;
+    color: #fff;
+}
+
+
+.sql-insert-text:hover {
+    cursor: pointer;
 }
 
 .data-value.sql-integer, .data-value.sql-bigint, .data-value.sql-double, .data-value.sql-float {

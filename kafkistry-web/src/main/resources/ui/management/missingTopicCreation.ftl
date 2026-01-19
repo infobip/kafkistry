@@ -22,7 +22,7 @@
     <h3>You are about to create topic that is missing on cluster</h3>
     <br/>
 
-    <table class="table">
+    <table class="table table-hover">
         <#assign expectedTopicInfo = topicInfo>
         <#assign clusterIdentifier = cluster.identifier>
         <#include "expectedTopicInfo.ftl">

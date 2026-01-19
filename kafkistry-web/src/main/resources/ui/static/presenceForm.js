@@ -71,4 +71,5 @@ function enableAllPresenceTypes() {
     let clusterSelectPicker = presence.find(".selected-clusters select");
     clusterSelectPicker.prop("disabled", false);
     clusterSelectPicker.selectpicker('refresh');
+    tweakSelectPickerBootstrapStyling(clusterSelectPicker);
 }

@@ -160,7 +160,7 @@ function adjustHAButtonsVisibility() {
     let haBasicElements = $(".ha-basic");
     let haAvailableElements = $(".ha-available");
     let haDurableElements = $(".ha-durable");
-    let selectedClass = "bg-light font-weight-bold";
+    let selectedClass = "bg-body-secondary fw-bold";
     haNoneElements.removeClass(selectedClass);
     haBasicElements.removeClass(selectedClass);
     haAvailableElements.removeClass(selectedClass);

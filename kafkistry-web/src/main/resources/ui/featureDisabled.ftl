@@ -23,7 +23,7 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h4>${featureName} <span class="badge badge-danger">DISABLED</span></h4>
+                        <h4>${featureName} <span class="badge bg-danger">DISABLED</span></h4>
                     </div>
                     <div class="card-body">
                         <p>Enable feature with following application property</p>

@@ -4,6 +4,7 @@ $(document).ready(function () {
         let select = $(this);
         select.find("option:selected").prependTo(select);
         select.selectpicker('refresh');
+        tweakSelectPickerBootstrapStyling(select);
     });
     $(".add-tag-btn").click(addTag);
     let tags = $(".tags");
@@ -12,6 +13,7 @@ $(document).ready(function () {
     tags.on("click", ".move-tag-down-btn", null, moveTagDown);
     let copyTagsSelect = $("select[name=copy-tags-from]");
     copyTagsSelect.selectpicker();
+    tweakSelectPickerBootstrapStyling(copyTagsSelect);
     copyTagsSelect.change(copyTagsFromSelected);
     $(document).on("change, keypress, click, input", "input, select, button", null, refreshYaml);
     $(".re-test-connection-btn").click(reTestConnection);

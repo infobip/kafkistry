@@ -14,9 +14,9 @@
     <small>
         <strong>Values:</strong>
         <#if fieldValue.highCardinality>
-            <span class="badge badge-danger">HIGH CARDINALITY</span>
+            <span class="badge bg-danger">HIGH CARDINALITY</span>
         <#elseif fieldValue.tooBig>
-            <span class="badge badge-danger">TOO BIG</span>
+            <span class="badge bg-danger">TOO BIG</span>
         <#elseif fieldValue.valueSet??>
             [
             <#list fieldValue.valueSet as val>
@@ -39,21 +39,21 @@
 
 <#macro showFieldInfo field parentType="" fullName=false>
 <#-- @ftlvariable name="field" type="com.infobip.kafkistry.model.RecordField" -->
-    <span class="field-type-tag field-type-${field.type} badge badge-secondary" title="Field type">
+    <span class="field-type-tag field-type-${field.type} badge bg-secondary" title="Field type">
         ${field.type}
     </span>
     <#if fullName>
         <#if (field.fullName)??>
             <code class="ml-2" title="Full field name">${field.fullName}</code>
         <#else>
-            <span class="badge badge-info" title="Full name = null">ROOT</span>
+            <span class="badge bg-info" title="Full name = null">ROOT</span>
         </#if>
         <#if field.nullable>
-            <span class="badge badge-dark">NULLABLE</span>
+            <span class="badge bg-neutral">NULLABLE</span>
         </#if>
     <#else>
         <#if field.nullable>
-            <span class="badge badge-dark">NULLABLE</span>
+            <span class="badge bg-neutral">NULLABLE</span>
         </#if>
         <#if (field.name)??>
             <code class="ml-2" title="Field name">${field.name}</code>
@@ -84,8 +84,8 @@
         <#if hasChildren>
             <div class="m-2 mt-1">
                 <#assign collapseTarget = nextCollapseId()>
-                <button class="btn btn-sm btn-primary" type="button" data-toggle="collapse"
-                        data-target="#${collapseTarget}">
+                <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#${collapseTarget}">
                     Sub-fields (${field.children?size})
                     <span class="if-collapsed" title="expand...">▼</span>
                     <span class="if-not-collapsed" title="collapse...">△</span>
@@ -125,8 +125,8 @@
 
 <#macro showRecordSize size>
 <#-- @ftlvariable name="size" type="com.infobip.kafkistry.model.RecordSize" -->
-    <table class="table m-0">
-        <thead class="thead-dark">
+    <table class="table table-hover m-0">
+        <thead class="table-theme-dark">
         <tr>
             <th></th>
             <th>15 Min</th>
@@ -179,9 +179,9 @@
 <#macro showPayloadStructure structure>
 <#-- @ftlvariable name="structure" type="com.infobip.kafkistry.model.RecordsStructure" -->
     <div>
-        Record root structure type: <span class="badge badge-secondary">${structure.payloadType}</span>
+        Record root structure type: <span class="badge bg-secondary">${structure.payloadType}</span>
         <#if structure.nullable>
-            <span class="badge badge-dark">NULLABLE</span>
+            <span class="badge bg-neutral">NULLABLE</span>
         </#if>
         <#if (structure.jsonFields)??>
             <div>

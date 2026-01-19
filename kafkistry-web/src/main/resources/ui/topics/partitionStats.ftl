@@ -23,8 +23,8 @@
         </span>
     </div>
     <div class="card-body p-0">
-        <table class="table table-sm m-0">
-            <thead class="thead-dark">
+        <table class="table table-hover table-sm table-hover m-0">
+            <thead class="table-theme-dark">
             <tr>
                 <th>Partition</th>
                 <th>Brokers</th>
@@ -82,7 +82,7 @@
                             <#assign highRate = (unevenRatePartitions.highRate?api.get(partition))??>
                         </#if>
                         <#-- Produce rate -->
-                        <td class="<#if highRate>value-mismatch</#if><#if lowRate>alert-warning</#if>">
+                        <td class="<#if highRate>value-mismatch</#if><#if lowRate>bg-warning-subtle</#if>">
                             ${_util.prettyNumber(rateMsgPerSec)} msg/sec
                             <#if highRate>
                                 <@_info_.icon tooltip="This is a <strong>high</strong> produce rate partition"/>
@@ -154,7 +154,7 @@
                         </#assign>
                         <#assign oldestDisabledCell>
                             <td class="small">
-                                <span class="badge badge-warning">DISABLED</span>
+                                <span class="badge bg-warning">DISABLED</span>
                                 <@_info_.icon tooltip=oldestDisabledDoc/>
                             </td>
                         </#assign>

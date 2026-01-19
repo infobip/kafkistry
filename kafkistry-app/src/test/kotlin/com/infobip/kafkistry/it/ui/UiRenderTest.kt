@@ -216,21 +216,27 @@ class UiRenderTest {
 
     fun assertNavMenuContents(path: String) {
         val page = api.getPage(path)
-        val links = page.select("nav a").map { it.attr("href") }
+        val links = page.select("nav a")
+            .map {
+                val simplifiedText = it.text().removeSuffix("(current)").replace(Regex("[^A-Za-z ]"), "").trim()
+                it.attr("href") to simplifiedText
+            }
         assertThat(links).containsOnly(
-                "/kafkistry/home",
-                "/kafkistry/topics",
+                "/kafkistry/home" to "",
+                "/kafkistry/topics" to "Topics",
                 //"/kafkistry/history",    //not expected because regular directory is used instead git for storage
-                "/kafkistry/acls",
-                "/kafkistry/quotas",
-                "/kafkistry/clusters",
-                "/kafkistry/consumer-groups",
-                "/kafkistry/consume",
-                "/kafkistry/produce",
-                "/kafkistry/records-structure",
-                "/kafkistry/kstream-apps",
-                "/kafkistry/sql",
-                "/kafkistry/about",
+                "/kafkistry/acls" to "Acls",
+                "/kafkistry/quotas" to "Quotas",
+                "/kafkistry/clusters" to "Clusters",
+                "/kafkistry/consumer-groups" to "Consumers",
+                "/kafkistry/consume" to "Consume",
+                "/kafkistry/produce" to "Produce",
+                "/kafkistry/kstream-apps" to "KStream" ,
+                "/kafkistry/sql" to "SQL",
+                "/kafkistry/about" to "About",
+                "#" to "Light",
+                "#" to "Dark",
+                "#" to "Auto",
         )
     }
 

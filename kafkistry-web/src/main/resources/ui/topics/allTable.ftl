@@ -5,8 +5,8 @@
 
 <#assign datatableId = "topics">
 <#include "../common/loading.ftl">
-<table id="${datatableId}" class="table table-bordered datatable m-0" style="display: none;">
-    <thead class="thead-dark">
+<table id="${datatableId}" class="table table-hover table-bordered datatable m-0" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th scope="col">Topic</th>
         <th scope="col">Owner</th>
@@ -19,7 +19,7 @@
         <tr class="topic-row table-row">
             <#assign topicName = topic.topicName>
             <#assign topicOwned = topicsOwned[topicName]>
-            <td data-toggle="tooltip" data-order="${topicOwned?then("0", "1")}_${topicName}">
+            <td data-bs-toggle="tooltip" data-order="${topicOwned?then("0", "1")}_${topicName}">
                 <a href="${appUrl.topics().showTopic(topicName)}">
                     ${topicName}
                 </a>
@@ -33,8 +33,8 @@
                 </td>
                 <td><@util.presence presence = topic.topicDescription.presence inline = false/></td>
             <#else>
-                <td><span class="text-primary text-monospace small">[none]</span></td>
-                <td><span class="text-primary text-monospace small">[undefined]</span></td>
+                <td><span class="text-primary font-monospace small">[none]</span></td>
+                <td><span class="text-primary font-monospace small">[undefined]</span></td>
             </#if>
             <td>
                 <#list topic.topicsStatusCounts as statusTypeCount>

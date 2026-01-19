@@ -8,7 +8,7 @@
         <h4 class="alert-heading"><span class="fas fa-check-circle"></span> Success!</h4>
         <p>Record produced successfully to topic: <strong>${result.topic}</strong></p>
         <hr>
-        <table class="table table-sm">
+        <table class="table table-hover table-sm">
             <tr>
                 <th>Partition:</th>
                 <td>${result.partition}</td>
@@ -29,7 +29,7 @@
         </table>
         <a href="${appUrl.consumeRecords().showConsumePageForProduced(topicName, clusterIdentifier, result.partition, result.offset)}"
            class="btn btn-secondary">
-            <span class="fas fa-download"></span> Consume from Topic
+            <span class="fas fa-download"></span> Consume this record from Topic
         </a>
     </div>
 <#else>
@@ -37,6 +37,6 @@
         <h4 class="alert-heading"><span class="fas fa-exclamation-triangle"></span> Error!</h4>
         <p>Failed to produce record to topic: <strong>${topicName}</strong></p>
         <hr>
-        <p><strong>Error:</strong> <span class="text-monospace">${result.errorMessage!"Unknown error"}</span></p>
+        <p><strong>Error:</strong> <span class="font-monospace">${result.errorMessage!"Unknown error"}</span></p>
     </div>
 </#if>

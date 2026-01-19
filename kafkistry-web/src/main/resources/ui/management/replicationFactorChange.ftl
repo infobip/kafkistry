@@ -26,7 +26,7 @@
     <h3>You are about to change topic replication factor by assigning new replicas on kafka cluster</h3>
     <br>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Cluster</th>
             <td>

@@ -6,7 +6,7 @@
 
 <#import "../common/util.ftl" as ccUtil>
 
-<tr class="thead-dark">
+<tr class="table-theme-dark">
     <th colspan="100" class="text-center_">
         <#switch bulkIterateBy!''>
             <#case "TOPIC">
@@ -20,7 +20,7 @@
         </#switch>
     </th>
 </tr>
-<tr class="thead-light">
+<tr class="table-theme-accent">
     <th>Key</th>
     <th>Current value</th>
     <th>New value</th>

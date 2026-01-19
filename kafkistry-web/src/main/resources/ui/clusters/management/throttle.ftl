@@ -74,8 +74,8 @@
 
     <p><strong>Cluster:</strong> ${clusterIdentifier}</p>
 
-    <table class="table fixed-layout">
-        <thead class="thead-dark">
+    <table class="table table-hover fixed-layout">
+        <thead class="table-theme-dark">
         <tr>
             <th>Broker</th>
             <th colspan="3">Leader rate</th>

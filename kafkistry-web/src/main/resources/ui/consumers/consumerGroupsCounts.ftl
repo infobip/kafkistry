@@ -9,9 +9,9 @@
         <span><i>(No consumer groups)</i></span>
     </div>
 <#else>
-    <div class="form-row">
+    <div class="row g-2">
         <div class="col-4">
-            <table class="table table-sm m-0">
+            <table class="table table-hover table-sm m-0">
                 <thead class="thead-light">
                 <tr>
                     <th colspan="2">Group status</th>
@@ -29,7 +29,7 @@
             </table>
         </div>
         <div class="col-4">
-            <table class="table table-sm m-0">
+            <table class="table table-hover table-sm m-0">
                 <thead class="thead-light">
                 <tr>
                     <th colspan="2">Lag status</th>
@@ -47,7 +47,7 @@
             </table>
         </div>
         <div class="col-4">
-            <table class="table table-sm m-0">
+            <table class="table table-hover table-sm m-0">
                 <thead class="thead-light">
                 <tr>
                     <th colspan="2">Partition assignor</th>

@@ -46,10 +46,9 @@
             <div class="h4 m-0">Select topics to preset offsets for</div>
         </div>
         <div class="card-body pr-0 pl-0">
-            <table class="table table-sm datatable">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm datatable">
+                <thead class="table-theme-dark">
                 <tr>
-                    <th></th>
                     <th>Topic</th>
                     <th>Status</th>
                 </tr>
@@ -58,15 +57,17 @@
                     <#assign haveCommits = topicsOffsets?keys?seq_contains(topic)>
                     <tr class="topic">
                         <td>
-                            <input type="checkbox" class="form-control topic-selector"
-                                   data-topic="${topic}" title="Include/exclude topic"/>
+                            <label class="form-check" style="cursor: pointer;">
+                                <input type="checkbox" class="topic-selector form-check-input"
+                                       data-topic="${topic}" title="Include/exclude topic"/>
+                                <span class="form-check-label">${topic}</span>
+                            </label>
                         </td>
-                        <td>${topic}</td>
                         <td>
                             <#if haveCommits>
-                                <span class="badge badge-primary">HAVE COMMITS</span>
+                                <span class="badge bg-primary">HAVE COMMITS</span>
                             <#else>
-                                <span class="badge badge-secondary">NO COMMITS</span>
+                                <span class="badge bg-secondary">NO COMMITS</span>
                             </#if>
                         </td>
                     </tr>
@@ -96,9 +97,9 @@
     <br/>
     <div id="preset-group-link" style="display: none;">
         Open inspect:
-        <a class="btn btn-sm btn-outline-dark"
+        <a class="btn btn-sm btn-outline-secondary"
            href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, consumerGroupId)}">
-            ${consumerGroupId} @ ${clusterIdentifier}
+            ${consumerGroupId} <span class="text-secondary">@</span>  ${clusterIdentifier}
         </a>
     </div>
 

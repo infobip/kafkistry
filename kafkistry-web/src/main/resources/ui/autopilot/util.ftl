@@ -6,26 +6,26 @@
     <#assign badgeClass = "">
     <#switch outcomeType>
         <#case "DISABLED">
-            <#assign badgeClass = "badge-secondary">
+            <#assign badgeClass = "bg-secondary">
             <#break>
         <#case "CLUSTER_UNSTABLE">
         <#case "BLOCKED">
-            <#assign badgeClass = "badge-warning">
+            <#assign badgeClass = "bg-warning">
             <#break>
         <#case "PENDING">
-            <#assign badgeClass = "badge-info">
+            <#assign badgeClass = "bg-info">
             <#break>
         <#case "NOT_ACQUIRED">
-            <#assign badgeClass = "badge-dark">
+            <#assign badgeClass = "bg-dark">
             <#break>
         <#case "FAILED">
-            <#assign badgeClass = "badge-danger">
+            <#assign badgeClass = "bg-danger">
             <#break>
         <#case "RESOLVED">
-            <#assign badgeClass = "badge-success">
+            <#assign badgeClass = "bg-success">
             <#break>
         <#case "SUCCESSFUL">
-            <#assign badgeClass = "badge-success">
+            <#assign badgeClass = "bg-success">
             <#break>
     </#switch>
     <span class="badge ${badgeClass}">${outcomeType} <@info.icon tooltip=outcomeType.doc/></span>

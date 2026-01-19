@@ -3,7 +3,7 @@
 
     <div id="filters-mode" class="mt-2" style="display: none;">
         <div class="clearfix"></div>
-        <label class="form-inline" id="filters-mode">
+        <label class="d-flex align-items-center gap-2" id="filters-mode">
             <span class="mr-1">Filtering mode: </span>
             <select name="filtersMode" class="form-control form-control-sm">
                 <option value="ALL">All filters need to match</option>
@@ -17,18 +17,18 @@
 </div>
 
 <div id="filter-rule-template" style="display: none;">
-    <div class="filter-rule form-row">
-        <label class="m-0 p-0 col-">
+    <div class="filter-rule row g-2">
+        <label class="m-0 p-0 col-auto">
             <select name="targetType" class="form-control form-control-sm">
                 <option value="JSON_FIELD">Json field</option>
                 <option value="RECORD_HEADER">Header</option>
                 <option value="RECORD_KEY">Key</option>
             </select>
         </label>
-        <label class="m-0 p-0 col text-monospace">
+        <label class="m-0 p-0 col font-monospace">
             <input name="keyName" type="text" placeholder="key name" class="form-control form-control-sm">
         </label>
-        <label class="m-0 p-0 col-">
+        <label class="m-0 p-0 col-auto">
             <select name="ruleType" class="form-control form-control-sm">
                 <option value="EXIST">Exists</option>
                 <option value="NOT_EXIST">Does not exist</option>
@@ -47,7 +47,7 @@
         <label class="m-0 p-0 col">
             <input name="value" type="text" placeholder="value" class="form-control form-control-sm">
         </label>
-        <label class="m-0 p-0 col-">
+        <label class="m-0 p-0 col-auto">
             <button type="button" class="remove-rule-btn btn btn-sm btn-outline-danger">x</button>
         </label>
     </div>

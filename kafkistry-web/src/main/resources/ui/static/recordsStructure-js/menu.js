@@ -1,5 +1,7 @@
 $(document).ready(function () {
-    $('select').on('change', updateInspectUrl);
+    let $select = $('select');
+    $select.on('change', updateInspectUrl);
+    tweakSelectPickerBootstrapStyling($select);
 });
 
 function updateInspectUrl() {

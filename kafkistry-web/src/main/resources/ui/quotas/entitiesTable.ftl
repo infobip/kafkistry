@@ -5,8 +5,8 @@
 
 <#assign datatableId = "quota-entities">
 <#include "../common/loading.ftl">
-<table id="${datatableId}" class="table table-bordered dataTable" style="display: none;">
-    <thead class="thead-dark">
+<table id="${datatableId}" class="table table-hover table-bordered dataTable" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th>Client Entity</th>
         <th>Owner</th>
@@ -19,7 +19,7 @@
     <#list quotaEntities as entityStatus>
         <tr>
             <td>
-                <a class="btn btn-sm btn-outline-dark mb-1"
+                <a
                    href="${appUrl.quotas().showEntity(entityStatus.entity.asID())}">
                     <@quotaUtil.entity entity = entityStatus.entity/>
                 </a>
@@ -28,8 +28,8 @@
                 <td>${entityStatus.quotaDescription.owner}</td>
                 <td><@util.presence presence = entityStatus.quotaDescription.presence inline = false/></td>
             <#else>
-                <td><span class="text-primary text-monospace small">[none]</span></td>
-                <td><span class="text-primary text-monospace small">[undefined]</span></td>
+                <td><span class="text-primary font-monospace small">[none]</span></td>
+                <td><span class="text-primary font-monospace small">[undefined]</span></td>
             </#if>
             <td>
                 <@util.ok ok = entityStatus.status.ok/>

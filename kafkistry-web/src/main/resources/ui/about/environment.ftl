@@ -77,11 +77,11 @@
         <div class="card-body">
             <h5 class="card-title mb-2">Active Spring Profiles</h5>
             <#if envProperties.activeProfiles?size == 0>
-                <span class="badge badge-secondary">default</span>
+                <span class="badge bg-secondary">default</span>
                 <span class="text-muted ml-2"><i>(no profiles active)</i></span>
             <#else>
                 <#list envProperties.activeProfiles as profile>
-                    <span class="badge badge-primary mr-1">${profile}</span>
+                    <span class="badge bg-primary mr-1">${profile}</span>
                 </#list>
             </#if>
         </div>
@@ -106,7 +106,7 @@
                     </#list>
                     <strong>Sensitive Properties:</strong> ${sensitiveCount}
                 </div>
-                <div class="col-md-3 text-right">
+                <div class="col-md-3 text-end">
                     <button id="toggle-mask-btn" class="btn btn-sm btn-outline-warning">
                         Show Sensitive Values
                     </button>
@@ -136,17 +136,17 @@
             <#list envProperties.propertySources as source>
                 <div class="card mb-2">
                     <div class="card-header collapsed" data-toggle="collapsing"
-                         data-target="#props-${source?index?c}">
+                         data-bs-target="#props-${source?index?c}">
                         <h5>
                             <span class="when-collapsed" title="expand...">▼</span>
                             <span class="when-not-collapsed" title="collapse...">△</span>
-                            <span class="badge badge-secondary">${source.type}</span>
+                            <span class="badge bg-secondary">${source.type}</span>
                             ${source.name}
-                            <span class="badge badge-light">${source.properties?size} properties</span>
+                            <span class="badge bg-light">${source.properties?size} properties</span>
                         </h5>
                     </div>
                     <div id="props-${source?index?c}" class="card-body p-0 collapseable">
-                        <table class="table table-sm table-bordered m-0">
+                        <table class="table table-hover table-sm table-bordered m-0">
                             <thead class="thead-light">
                                 <tr>
                                     <th style="width: 30%;">Property Name</th>
@@ -183,9 +183,9 @@
                                         </td>
                                         <td>
                                             <#if prop.sensitive>
-                                                <span class="badge badge-warning">Sensitive</span>
+                                                <span class="badge bg-warning">Sensitive</span>
                                             <#else>
-                                                <span class="badge badge-success">Visible</span>
+                                                <span class="badge bg-success">Visible</span>
                                             </#if>
                                         </td>
                                     </tr>
@@ -205,8 +205,8 @@
         <div class="tab-pane fade" id="all-props" role="tabpanel">
             <div class="card">
                 <div class="card-body px-0 py-2">
-                    <table class="table table-sm table-bordered m-0 datatable" id="all-props-table">
-                        <thead class="thead-dark">
+                    <table class="table table-hover table-sm table-bordered m-0 datatable" id="all-props-table">
+                        <thead class="table-theme-dark">
                             <tr>
                                 <th style="width: 25%;">Property Name</th>
                                 <th style="width: 24%;">Raw Value</th>
@@ -244,9 +244,9 @@
                                     <td><small>${prop.origin!''}</small></td>
                                     <td>
                                         <#if prop.sensitive>
-                                            <span class="badge badge-warning">Sensitive</span>
+                                            <span class="badge bg-warning">Sensitive</span>
                                         <#else>
-                                            <span class="badge badge-success">Visible</span>
+                                            <span class="badge bg-success">Visible</span>
                                         </#if>
                                     </td>
                                 </tr>

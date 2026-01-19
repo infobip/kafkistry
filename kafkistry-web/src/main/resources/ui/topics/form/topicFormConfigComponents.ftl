@@ -6,14 +6,18 @@
 
 <#macro topicProperties partitions replication>
     <div class="form-group row properties-row">
-        <label class="col-8">Partition count</label>
-        <input class="col-4 form-control" type="number" name="partitionCount"
-               value="${partitions}" title="Partition count"/>
+        <label class="col-5">Partition count</label>
+        <div class="col-4">
+            <input class="form-control" type="number" name="partitionCount"
+                   value="${partitions}" title="Partition count"/>
+        </div>
     </div>
     <div class="form-group row properties-row">
-        <label class="col-8">Replication factor</label>
-        <input class="col-4 form-control" type="number" name="replicationFactor"
-               value="${replication}" title="Replication factor"/>
+        <label class="col-5">Replication factor</label>
+        <div class="col-4">
+            <input class="form-control" type="number" name="replicationFactor"
+                   value="${replication}" title="Replication factor"/>
+        </div>
     </div>
 </#macro>
 
@@ -22,7 +26,7 @@
         <td>${key} <@info.icon tooltip=doc?replace('"', "'")/></td>
         <td>
             <label class="width-full">
-                <input class="width-full conf-value-in" type="text" name="${key}" value="${value}">
+                <input class="width-full conf-value-in form-control form-control-sm" type="text" name="${key}" value="${value}">
                 <span class="small text-primary conf-value-out"></span>
             </label>
         </td>
@@ -36,9 +40,9 @@
 <#-- @ftlvariable name="config" type="java.util.Map<java.lang.String, java.lang.String>" --->
     <table class="config table table-sm borderless">
         <tr class="">
-            <th>Config key</th>
-            <th>Value</th>
-            <th></th>
+            <th style="width: 40%;">Config key</th>
+            <th style="width: 60%;">Value</th>
+            <th style="width: 0%;"></th>
         </tr>
         <#list config as key, value>
             <@configEntry key=key value=value doc=(existingValues.topicConfigDoc[key])!''/>
@@ -47,7 +51,7 @@
         <tr class="no-hover">
             <td colspan="100">
                 <select class="config-key-select form-control" title="Add config entry"
-                        data-live-search="true" data-size="8" data-style="alert-primary">
+                        data-live-search="true" data-size="8" data-style="bg-primary-subtle">
                     <#list existingValues.commonTopicConfig as key, entry>
                         <option value="${key}" data-value="${entry.value}"
                                 data-doc="${(existingValues.topicConfigDoc[key]?replace('"', "'"))!''}">${key}</option>
@@ -63,14 +67,14 @@
 <#-- @ftlvariable name="overrides" type="java.util.Map<java.lang.String, java.util.Map<java.lang.String, java.lang.String>>" -->
 <#-- @ftlvariable name="topicGlobalProperties" type="com.infobip.kafkistry.model.TopicProperties" -->
     <div class="cluster-override">
-        <div class="row alert-secondary p-1 pt-3 rounded-top">
+        <div class="row alert-secondary pt-3 rounded-top">
             <div class="col">
                 <@commonLocComp.selectLocation selectedIdentifier=clusterIdentifier selectedTag=clusterTag/>
                 <div class="move-override-up-btn btn btn-sm btn-outline-info" title="Move override UP">&uarr;</div>
                 <div class="move-override-down-btn btn btn-sm btn-outline-info" title="Move override DOWN">&darr;</div>
             </div>
             <div class="col"></div>
-            <div class="col-">
+            <div class="col-auto">
                 <div class="bg-white rounded">
                     <button class="remove-cluster-btn btn btn-outline-primary btn-outline-danger">
                         - Remove override
@@ -92,7 +96,9 @@
                         </label>
                     </div>
                 </div>
-                <@topicProperties partitions=properties.partitionCount replication=properties.replicationFactor/>
+                <div class="p-2">
+                    <@topicProperties partitions=properties.partitionCount replication=properties.replicationFactor/>
+                </div>
             </div>
             <div class="col-md-8 pt-1">
                 <#assign config = overrides["config"]!{}>

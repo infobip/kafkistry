@@ -30,7 +30,7 @@
 
     <#assign clusterIdentifier = cluster.identifier>
     <#assign bulkIterateBy = "TOPIC">
-    <table class="table">
+    <table class="table table-hover">
         <#list missingTopics as expectedTopicInfo>
             <#include "expectedTopicInfo.ftl">
         </#list>

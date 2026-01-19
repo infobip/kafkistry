@@ -2,18 +2,20 @@
 <#macro entity entity>
 <#-- @ftlvariable name="entity" type="com.infobip.kafkistry.model.QuotaEntity" -->
     <#if !entity.userIsAny()>
-        <span class="badge badge-dark">User</span>
+        <span class="font-monospace text-primary">User</span>
         <#if entity.userIsDefault()>
-            <span class="badge badge-secondary">DEFAULT</span>
+            <span class="font-monospace text-secondary">DEFAULT</span>
         <#else>
             ${entity.user}
         </#if>
     </#if>
-    <#if !entity.userIsAny() && !entity.clientIsAny()>|</#if>
+    <#if !entity.userIsAny() && !entity.clientIsAny()>
+        <span class="font-monospace text-secondary">|</span>
+    </#if>
     <#if !entity.clientIsAny()>
-        <span class="badge badge-dark">ClientId</span>
+        <span class="font-monospace text-primary">ClientId</span>
         <#if entity.clientIsDefault()>
-            <span class="badge badge-secondary">DEFAULT</span>
+            <span class="font-monospace text-secondary">DEFAULT</span>
         <#else>
             ${entity.clientId}
         </#if>
@@ -28,7 +30,7 @@
                 <span class="conf-value" data-name="${name}" data-value="${value?c}">${value}${suffix}</span>
             </span>
         <#else>
-            <span class="badge badge-secondary">NONE</span>
+            <span class="badge bg-secondary">NONE</span>
         </#if>
     <#else>
         ---

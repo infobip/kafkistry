@@ -33,7 +33,7 @@
     </div>
 
     <#assign clusterIdentifier = clusterInfo.identifier>
-    <table class="table">
+    <table class="table table-hover">
         <#include "unwantedTopicInfo.ftl">
     </table>
 

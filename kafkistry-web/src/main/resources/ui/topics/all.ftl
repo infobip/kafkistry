@@ -30,24 +30,34 @@
 
     <div class="card-header">
         <span class="h4">Status of all topics in registry</span>
-        <div class="float-right">
-            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Create new topic...
-            </button>
-            <div class="dropdown-menu open">
+        <div class="float-end">
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Create new topic...
+                </button>
+                <div class="dropdown-menu">
                 <a class="dropdown-item" href="${appUrl.topics().showTopicWizard()}">Wizard</a>
                 <a class="dropdown-item" href="${appUrl.topics().showTopicCreate()}">Manual setup</a>
                 <a class="dropdown-item" id="clone-existing-btn" href>Clone existing</a>
                 <div class="clone-existing-container" style="display: none;">
-                    <form class="form-inline mb-0" action="${appUrl.topics().showCloneAddNewTopic()}" method="get">
+                    <form class="d-flex flex-wrap gap-2 mb-0" action="${appUrl.topics().showCloneAddNewTopic()}" method="get">
                         <label>
                             <input id="cloneInput" class="m-2 form-control" style="width: 300px;" type="search"
                                    name="topicName" placeholder="Choose existing topic...">
                         </label>
                     </form>
                 </div>
+                </div>
             </div>
-            <a class="btn btn-outline-info ml-2" href="${appUrl.compare().showComparePage()}">Compare...</a>
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Analyze...
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="${appUrl.compare().showComparePage()}">Compare topics</a>
+                    <a class="dropdown-item" href="${appUrl.recordsStructure().showMenuPage()}">Records Structure</a>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -7,8 +7,8 @@
 
 <#assign datatableId = "acls">
 <#include "../common/loading.ftl">
-<table id="${datatableId}" class="table table-bordered datatable" style="display: none;">
-    <thead class="thead-dark">
+<table id="${datatableId}" class="table table-hover table-bordered datatable" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th>Principal</th>
         <th>Host</th>
@@ -25,8 +25,7 @@
             <tr>
                 <td>
                     <a href="${appUrl.acls().showAllPrincipalAclsCluster(rule.principal, clusterIdentifier)}"
-                       class="btn btn-sm btn-outline-dark mb-1"
-                       title="Inspect this principal...">
+                       title="Inspect this principal on this cluster...">
                         ${rule.principal}
                     </a>
                 </td>

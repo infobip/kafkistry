@@ -1,17 +1,15 @@
 <#-- @ftlvariable name="maxBrokerIOBytes" type="java.lang.Long" -->
 
-<div class="input-group form-inline col-6 m-0 p-0">
-    <label for="throttlePerSec-input mr-2">
+<div class="input-group d-flex align-items-center m-0 p-0">
+    <label for="throttlePerSec-input" class="input-group-text bg-body-secondary">
         IO throttle per broker (leader and follower):
     </label>
-    <input type="number" id="throttlePerSec-input" value="5" class="ml-2 form-control"/>
-    <div class="input-group-append">
-        <select id="throttleUnit-input" class="form-control alert-secondary" title="throttle rate unit">
-            <option selected>MB/sec</option>
-            <option>kB/sec</option>
-            <option>B/sec</option>
-        </select>
-    </div>
+    <input type="number" id="throttlePerSec-input" value="5" class="ml-2 form-control" style="max-width: 7rem;"/>
+    <select id="throttleUnit-input" class="form-control bg-body-secondary" title="throttle rate unit" style="max-width: 7rem;">
+        <option selected>MB/sec</option>
+        <option>kB/sec</option>
+        <option>B/sec</option>
+    </select>
 </div>
 <span class="m-1"><br/></span>
 <span>Sync complete ETA:

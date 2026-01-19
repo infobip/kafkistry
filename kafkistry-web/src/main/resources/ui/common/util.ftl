@@ -201,13 +201,13 @@
 <#-- @ftlvariable name="changeType"  type="com.infobip.kafkistry.repository.storage.ChangeType" -->
     <#switch changeType>
         <#case "ADD">
-            <#return "badge-success">
+            <#return "bg-success">
         <#case "DELETE">
-            <#return "badge-danger">
+            <#return "bg-danger">
         <#case "UPDATE">
-            <#return "badge-primary">
+            <#return "bg-primary">
     </#switch>
-    <#return "badge-secondary">
+    <#return "bg-secondary">
 </#function>
 
 <#function presenceTypeClass presenceType>
@@ -238,7 +238,7 @@
     </#if>
     <#if (presence.tag)??>
         <#if !inline><br/></#if>
-        <span class="badge badge-secondary">${presence.tag}</span>
+        <span class="badge bg-secondary">${presence.tag}</span>
     </#if>
 </#macro>
 
@@ -251,7 +251,7 @@
 
 <#macro inRegistry flag>
 <#-- @ftlvariable name="flag" type="java.lang.Boolean" -->
-    <span class="badge ${flag?then("badge-success", "badge-danger")}">
+    <span class="badge ${flag?then("bg-success", "bg-danger")}">
         ${flag?then("YES", "NO")}
     </span>
 </#macro>
@@ -271,9 +271,9 @@
         </#if>
         <#assign tooltip>
             <#if type.valid>
-                <span class='badge badge-success'>VALID</span>
+                <span class='badge bg-success'>VALID</span>
             <#else>
-                <span class='badge badge-danger'>INVALID</span>
+                <span class='badge bg-danger'>INVALID</span>
             </#if>
             ${type.doc}
             <#if (type.getClass().simpleName?starts_with("Topic"))>
@@ -293,11 +293,11 @@
 <#-- @ftlvariable name="level"  type="com.infobip.kafkistry.service.resources.UsageLevel" -->
     <#switch level>
         <#case "LOW">
-            <#return "alert-success">
+            <#return "bg-success-subtle">
         <#case "MEDIUM">
-            <#return "alert-warning">
+            <#return "bg-warning-subtle">
         <#case "HIGH">
-            <#return "alert-danger">
+            <#return "alert-danger-subtle">
         <#case "OVERFLOW">
             <#return "bg-danger text-white">
         <#default>
@@ -312,7 +312,7 @@
     <#else>
         <#assign asUser = " ">
     </#if>
-    <span class="badge badge-primary" title="You${asUser}own this ${what}">YOUR</span>
+    <span class="badge bg-primary" title="You${asUser}own this ${what}">YOUR</span>
 </#macro>
 
 

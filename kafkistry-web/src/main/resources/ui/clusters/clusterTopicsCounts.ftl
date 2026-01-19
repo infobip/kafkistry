@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="clusterTopics"  type="com.infobip.kafkistry.service.topic.ClusterTopicsStatuses" -->
 <#import "../common/util.ftl" as util>
 <#if clusterTopics.topicsStatusCounts??>
-    <table class="table table-sm m-0">
+    <table class="table table-hover table-sm m-0">
         <#list clusterTopics.topicsStatusCounts as statusTypeCount>
             <#assign statusType = statusTypeCount.type>
             <#assign count = statusTypeCount.quantity>

@@ -23,8 +23,8 @@
             <span class="h4">All detected KStream apps</span>
         </div>
         <div class="card-body pl-0 pr-0">
-            <table class="table table-bordered datatable display">
-                <thead class="thead-dark">
+            <table class="table table-hover table-bordered datatable display">
+                <thead class="table-theme-dark">
                 <tr>
                     <th>App ID on cluster</th>
                     <th>#input topics</th>
@@ -35,10 +35,11 @@
                     <#list kafkaStreamsApps as kafkaStreamsApp>
                         <tr>
                             <td>
-                                <a href="${appUrl.kStream().showKStreamApp(clusterIdentifier, kafkaStreamsApp.kafkaStreamAppId)}">
-                                    <button class="btn btn-sm btn-outline-dark mb-1" title="Inspect this group KStreams app">
-                                        ${kafkaStreamsApp.kafkaStreamAppId} @ ${clusterIdentifier} 🔍
-                                    </button>
+                                <a href="${appUrl.kStream().showKStreamApp(clusterIdentifier, kafkaStreamsApp.kafkaStreamAppId)}"
+                                   title="Inspect this group KStreams app">
+                                    ${kafkaStreamsApp.kafkaStreamAppId}
+                                    <span class="text-secondary">@</span>
+                                    ${clusterIdentifier}
                                 </a>
                             </td>
                             <td>

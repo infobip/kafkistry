@@ -20,7 +20,7 @@
     </#if>
 </#list>
 
-<div class="form-row">
+<div class="row g-2">
     <#list requests as entityName, pendingUpdates>
         <#if pendingUpdates?size == 0>
             <div class="col">

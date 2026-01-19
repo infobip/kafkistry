@@ -1,6 +1,8 @@
 .ui-autocomplete {
-    background: #efefef;
-    color: #6d6c64;
+    background: var(--bs-dark-bg-subtle);
+    color: var(--bs-body);
+    /*background: #efefef;*/
+    /*color: #6d6c64;*/
     border-radius: 5px;
     z-index: 2000;
     max-height: 200px;

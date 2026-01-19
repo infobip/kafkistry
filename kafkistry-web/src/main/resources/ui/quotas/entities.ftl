@@ -31,12 +31,12 @@
 
         <div class="card-header">
             <span class="h4">Status of client entity quotas</span>
-            <div class="btn-group float-right">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+            <div class="btn-group float-end">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
                     Create entity quotas...
                 </button>
-                <div class="dropdown-menu open">
+                <div class="dropdown-menu">
                     <a class="dropdown-item" href="${appUrl.quotas().showCreateEntity()}">New entity quotas</a>
                 </div>
             </div>

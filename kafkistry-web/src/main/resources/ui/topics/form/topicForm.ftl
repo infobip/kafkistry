@@ -32,45 +32,55 @@
 <div class="card">
     <div class="card-header h3">Basic metadata</div>
     <div class="card-body pb-0">
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label" for="topic-name">Name</label>
-            <#if newName??>
-                <input id="topic-name" class="form-control col-sm-10" type="text" name="topicName"
-                       placeholder="enter topic name..." value="${newName}">
-            <#else>
-                <span class="text-monospace form-control-plaintext col-sm-10">${topic.name}</span>
-            </#if>
+            <div class="col-sm-10">
+                <#if newName??>
+                    <input id="topic-name" class="form-control" type="text" name="topicName"
+                           placeholder="enter topic name..." value="${newName}">
+                <#else>
+                    <span class="font-monospace form-control-plaintext">${topic.name}</span>
+                </#if>
+            </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label" for="owner-name">Owner</label>
-            <input id="owner-name" type="text" name="owner" placeholder="Enter owner name..." value="${topic.owner}"
-                   class="form-control col-sm-10"/>
+            <div class="col-sm-10">
+                <input id="owner-name" type="text" name="owner" placeholder="Enter owner name..." value="${topic.owner}"
+                       class="form-control"/>
+            </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <#assign labels = topic.labels>
             <#include "topicLabelsForm.ftl">
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-3">
             <label class="col-sm-2 col-form-label" for="description-text">Description</label>
-            <textarea id="description-text" class="form-control col-sm-10" name="description" rows="5"
-                      placeholder="Description what is in the topic, JIRA...">${topic.description}</textarea>
+            <div class="col-sm-10">
+                <textarea id="description-text" class="form-control" name="description" rows="5"
+                          placeholder="Description what is in the topic, JIRA...">${topic.description}</textarea>
+            </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label" for="producer-name">Producer</label>
-            <input id="producer-name" type="text" name="producer" placeholder="Which service is producing to topic..."
-                   value="${topic.producer}" class="form-control col-sm-10">
+            <div class="col-sm-10">
+                <input id="producer-name" type="text" name="producer" placeholder="Which service is producing to topic..."
+                       value="${topic.producer}" class="form-control">
+            </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label" for="allow-manual-produce">Allow Manual Produce</label>
-            <select id="allow-manual-produce" name="allowManualProduce" class="form-control col-sm-10">
-                <option value="null" <#if !topic.allowManualProduce??>selected</#if>>Default (use global setting)</option>
-                <option value="true" <#if (topic.allowManualProduce!false) == true>selected</#if>>Allow</option>
-                <option value="false" <#if topic.allowManualProduce?? && !topic.allowManualProduce>selected</#if>>Deny</option>
-            </select>
+            <div class="col-sm-3">
+                <select id="allow-manual-produce" name="allowManualProduce" class="form-control">
+                    <option value="null" <#if !topic.allowManualProduce??>selected</#if>>Default (use global setting)</option>
+                    <option value="true" <#if (topic.allowManualProduce!false) == true>selected</#if>>Allow</option>
+                    <option value="false" <#if topic.allowManualProduce?? && !topic.allowManualProduce>selected</#if>>Deny</option>
+                </select>
+            </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label">Presence</label>
-            <div id="presence" class="col-sm-10 p-1">
+            <div id="presence" class="col-sm-10">
                 <#assign presence = topic.presence>
                 <#include "../../common/presenceForm.ftl">
             </div>
@@ -103,7 +113,7 @@
             <div class="resource-input-row">
                 <div class="row">
                     <div class="col"></div>
-                    <div class="col-">
+                    <div class="col-auto">
                         <button id="apply-requirements-show-opts" class="btn btn-sm btn-outline-info">
                             Apply requirements to config...
                             <#assign applyTooltip>
@@ -121,7 +131,7 @@
                 <div id="apply-requirements-menu" class="m-2" style="display: none;">
                     <div class="row">
                         <div class="col"></div>
-                        <div class="col-">
+                        <div class="col-auto">
                             <div class="m-1">
                                 <button id="apply-requirements-for-all" class="btn btn-sm btn-primary">
                                     Apply for all
@@ -144,7 +154,7 @@
                     </div>
                     <div class="row">
                         <div class="col"></div>
-                        <div class="m-1 col- apply-requirements-menu-item">
+                        <div class="m-1 col-auto apply-requirements-menu-item">
                             <@comp.commonLocComp.selectLocation selectedIdentifier="" selectedTag="" multi=true/>
                         </div>
                         <div class="col"></div>
@@ -160,9 +170,6 @@
 </div>
 <br/>
 
-<#import "topicFormConfigComponents.ftl" as components>
-
-
 <div class="card">
     <div class="card-header h3">Field descriptions</div>
     <div class="card-body m-0">
@@ -172,6 +179,7 @@
 </div>
 <br/>
 
+<#import "topicFormConfigComponents.ftl" as components>
 
 <div style="display: none;">
     <#assign configEntryTemplate>
@@ -246,7 +254,7 @@
             </#list>
         </div>
 
-        <button id="add-cluster-override-btn" class="btn btn-outline-primary btn-sm float-right p-2">
+        <button id="add-cluster-override-btn" class="btn btn-outline-primary btn-sm float-end p-2">
             + Add per-cluster/per-tag override
         </button>
 
@@ -264,7 +272,7 @@
     <div class="alert alert-success">
         Topic configuration is detected that it can be minimized. (Having the same effect with fewer overrides)
         <br/>
-        <table class="table table-sm bg-white">
+        <table class="table table-hover table-sm bg-white">
             <thead class="thead-light">
             <tr>
                 <th></th>

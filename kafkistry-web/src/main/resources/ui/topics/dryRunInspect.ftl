@@ -11,7 +11,7 @@
     <div class="card">
         <div class="card-header">
             <div class="row align-items-center">
-                <div class="ml-2 col-">
+                <div class="ml-2 col-auto">
                     <h4>Possible status over all clusters after saving: </h4>
                 </div>
                 <div class="m-1">
@@ -23,10 +23,10 @@
         </div>
 
         <div class="card-body p-0">
-            <table class="table table-sm table-bordered m-0">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm table-bordered m-0">
+                <thead class="table-theme-dark">
                 <tr>
-                    <th>Cluster</th>
+                    <th>Topic @ Cluster</th>
                     <th>Status for config</th>
                 </tr>
                 </thead>
@@ -35,10 +35,8 @@
                     <tr>
                         <td>
                             <a href="${appUrl.topics().showInspectTopicOnCluster(topicStatuses.topicName, clusterStatus.clusterIdentifier)}"
-                                target="_blank">
-                                <button class="btn btn-sm btn-outline-dark" title="Inspect this topic on this cluster...">
-                                    ${clusterStatus.clusterIdentifier} 🔍
-                                </button>
+                                target="_blank" title="Inspect this topic on this cluster..." class="text-nowrap">
+                                    ${clusterStatus.clusterIdentifier}
                             </a>
                         </td>
                         <td>
@@ -53,7 +51,7 @@
     </div>
 
     <div class="card">
-        <div class="card-header collapsed" data-target=".expected-metrics-body" data-toggle="collapsing">
+        <div class="card-header collapsed" data-bs-target=".expected-metrics-body" data-toggle="collapsing">
             <h4>
                 <span class="when-collapsed" title="expand...">▼</span>
                 <span class="when-not-collapsed" title="collapse...">△</span>
@@ -61,8 +59,8 @@
             </h4>
         </div>
         <div class="card-body p-0 expected-metrics-body collapseable">
-            <table class="table table-sm table-bordered m-0">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm table-bordered m-0">
+                <thead class="table-theme-dark">
                 <tr>
                     <th rowspan="2">Cluster</th>
                     <@usages.usageHeaderSectionCells/>
@@ -76,10 +74,8 @@
                     <tr>
                         <td>
                             <a href="${appUrl.topics().showInspectTopicOnCluster(topicStatuses.topicName, clusterStatus.clusterIdentifier)}"
-                               target="_blank">
-                                <button class="btn btn-sm btn-outline-dark break-word" title="Inspect this topic on this cluster...">
-                                    ${clusterStatus.clusterIdentifier} 🔍
-                                </button>
+                               target="_blank" title="Inspect this topic on this cluster..." class="text-nowrap">
+                                    ${clusterStatus.clusterIdentifier}
                             </a>
                         </td>
                         <@usages.usageValuesCells optionalResourceRequiredUsages=clusterStatus.resourceRequiredUsages/>
@@ -110,7 +106,7 @@
         <div class="card-body p-0">
             <#if blockers?size == 0>
                 <div class="alert alert-success">
-                    <span class="badge badge-success">NONE</span>
+                    <span class="badge bg-success">NONE</span>
                 </div>
             <#else>
                 <div class="alert alert-danger">
@@ -120,7 +116,7 @@
                             <li class="blocker-issue-item">${blocker}</li>
                         </#list>
                     </ul>
-                    <label class="alert-warning rounded border px-3 py-1">
+                    <label class="bg-warning-subtle rounded border px-3 py-1">
                         <input name="blockers-consent" type="checkbox">
                         Allow saving ignoring blockers
                     </label>

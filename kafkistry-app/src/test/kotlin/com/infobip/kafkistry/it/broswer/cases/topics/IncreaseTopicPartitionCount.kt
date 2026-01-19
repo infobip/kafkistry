@@ -53,7 +53,7 @@ abstract class IncreaseTopicPartitionCount(contextSupplier: () -> Context) : UIT
         )
 
         //trigger actual creation of partitions
-        browser.findElementById("add-partitions-btn").scrollIntoView().click()
+        browser.findElementById("add-partitions-btn").ensureClick()
         await {
             browser.assertPageText().contains("New partitions creation completed with success")
         }

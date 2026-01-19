@@ -22,7 +22,7 @@
     <h3><#include "../common/backBtn.ftl"> Cluster resource balance</h3>
     <br/>
 
-    <table class="table fixed-layout mt-2">
+    <table class="table table-hover fixed-layout mt-2">
         <tr>
             <th>Cluster identifier</th>
             <td>
@@ -53,8 +53,8 @@
         </li>
     </ul>
 
-    <table class="table">
-        <thead class="thead-dark">
+    <table class="table table-hover">
+        <thead class="table-theme-dark">
         <tr>
             <th>Broker/Metric</th>
             <th>Disk</th>

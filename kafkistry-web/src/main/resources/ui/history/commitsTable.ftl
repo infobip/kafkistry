@@ -9,10 +9,10 @@
 
 <#import "../common/util.ftl" as util>
 
-<table class="table table-bordered m-0 <#if useDatatable>datatable datatable-no-sort</#if>"
+<table class="table table-hover table-bordered m-0 <#if useDatatable>datatable datatable-no-sort</#if>"
         <#if useDatatable && (datatableId??)>id="${datatableId}"</#if>
        <#if useDatatable>style="display: none;"</#if>>
-    <thead class="thead-dark">
+    <thead class="table-theme-dark">
     <tr>
         <th>Type</th>
         <th>Entity</th>
@@ -31,7 +31,7 @@
                 <td>
                     <span class="text-nowrap">
                         <#if changeCommit.commit.merge>
-                            <span class="badge badge-secondary">MERGE</span>
+                            <span class="badge bg-secondary">MERGE</span>
                         </#if>
                         <span class="badge ${util.changeTypeClass(change.changeType)}">
                             ${change.changeType}
@@ -46,28 +46,28 @@
                 <#switch change.class.getSimpleName()>
                     <#case "TopicChange">
                         <#assign topicChange = change>
-                        <td><span class="badge badge-dark">TOPIC</span></td>
+                        <td><span class="badge bg-neutral">TOPIC</span></td>
                         <td>
                             <a href="${appUrl.topics().showTopic(topicChange.topicName)}">${topicChange.topicName}</a>
                         </td>
                         <#break>
                     <#case "ClusterChange">
                         <#assign clusterChange = change>
-                        <td><span class="badge badge-dark">CLUSTER</span></td>
+                        <td><span class="badge bg-neutral">CLUSTER</span></td>
                         <td>
                             <a href="${appUrl.clusters().showCluster(clusterChange.identifier)}">${clusterChange.identifier}</a>
                         </td>
                         <#break>
                     <#case "AclsChange">
                         <#assign aclsChange = change>
-                        <td><span class="badge badge-dark">ACLs</span></td>
+                        <td><span class="badge bg-neutral">ACLs</span></td>
                         <td>
                             <a href="${appUrl.acls().showAllPrincipalAcls(aclsChange.principal)}">${aclsChange.principal}</a>
                         </td>
                         <#break>
                     <#case "QuotasChange">
                         <#assign quotasChange = change>
-                        <td><span class="badge badge-dark">QUOTA</span></td>
+                        <td><span class="badge bg-neutral">QUOTA</span></td>
                         <td>
                             <a href="${appUrl.quotas().showEntity(quotasChange.entityID)}">${quotasChange.entityID}</a>
                         </td>

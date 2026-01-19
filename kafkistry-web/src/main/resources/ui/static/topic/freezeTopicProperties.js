@@ -2,7 +2,9 @@ $(document).ready(function () {
     //$(document).on("change", "select.choose-label-select", null, addExistingLabelEntry);
     $("#add-freeze-directive-btn").click(addFreezeDirective);
     let directives = $(".freeze-directives");
-    directives.find("select.freezeConfigProperties").selectpicker();
+    let pickers = directives.find("select.freezeConfigProperties");
+    pickers.selectpicker();
+    tweakSelectPickerBootstrapStyling(pickers);
     directives.on("click", ".remove-freeze-directive-btn", null, removeFreezeDirective);
 });
 
@@ -10,7 +12,9 @@ function addFreezeDirective() {
     let template = $("#freeze-directive-template").html();
     $(".freeze-directives").append(template);
     let newDirective = $(".freeze-directives .freeze-directive:last");
-    newDirective.find("select.freezeConfigProperties").selectpicker();
+    let pickers = newDirective.find("select.freezeConfigProperties");
+    pickers.selectpicker();
+    tweakSelectPickerBootstrapStyling(pickers);
     maybeRefreshYaml();
 }
 

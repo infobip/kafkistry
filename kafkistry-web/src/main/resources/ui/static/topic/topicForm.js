@@ -224,6 +224,7 @@ function ensureClusterOverride(whereType, whereValue) {
     let whereSelect = overrideContainer.find("select[name=overrideWhere]");
     whereSelect.find("option[data-type='"+whereType+"'][value='" + whereValue + "']").prop("selected", true);
     whereSelect.selectpicker('refresh');
+    tweakSelectPickerBootstrapStyling(whereSelect);
     console.log("Returning new container: "+whereType+":"+whereValue);
     return overrideContainer;
 }
@@ -278,7 +279,7 @@ function addConfigValue(event, preventRefreshYaml, predefinedValue) {
         value = predefinedValue;
     }
     let doc = option.attr("data-doc");
-    let configValues = $(this).closest(".config");
+    let configValues = $(this).closest(".config").find("tbody");
     let configEntryTemplate = $("#config-entry-template").text();
     let configEntry = configEntryTemplate
         .replace(/%key-PH%/g, key)
@@ -288,6 +289,7 @@ function addConfigValue(event, preventRefreshYaml, predefinedValue) {
     registerAllInfoTooltips();
     let inElement = configValues.find(".config-entry:last-child input").focus().get().slice(-1)[0];
     $(this).selectpicker('val', '');    //deselect picked option
+    tweakSelectPickerBootstrapStyling($(this));
     refreshInputConfigValue.call(inElement, true);
     if (preventRefreshYaml === undefined) refreshYaml();
 }
@@ -321,6 +323,7 @@ function initSelectConfigPropertyPickers(selector) {
 function initChildConfigPropertyPickers(container) {
     container.find("select.config-key-select").each(function () {
         $(this).selectpicker();
+        tweakSelectPickerBootstrapStyling($(this));
     });
 }
 
@@ -329,9 +332,9 @@ function togglePropertiesOverridden() {
     let parent = $(this).closest(".cluster-override");
     parent.find(".properties-row input[type='number']").attr("disabled", !overridden);
     if (overridden) {
-        parent.find(".properties-row").css("color", "black");
+        parent.find(".properties-row").removeClass("text-muted");
     } else {
-        parent.find(".properties-row").css("color", "gray");
+        parent.find(".properties-row").addClass("text-muted");
     }
 }
 

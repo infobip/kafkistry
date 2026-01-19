@@ -22,8 +22,8 @@
 
 <div class="container">
     <h3>Delete consumer group on cluster</h3>
-    <table class="table">
-        <thead class="thead-dark">
+    <table class="table table-hover">
+        <thead class="table-theme-dark">
         <tr>
             <th>Cluster</th>
             <th>Group</th>

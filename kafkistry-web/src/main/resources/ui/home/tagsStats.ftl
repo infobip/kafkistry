@@ -13,10 +13,10 @@
 <#else>
     <div class="p-3">
         <#list tagsCounts as tag, count>
-            <a class="m-0 p-0 btn btn-sm btn-outline-light"
+            <a class="m-0 p-0 text-decoration-none"
                href="${appUrl.clusters().showClusters()}#${tag}" title="Click to filter clusters...">
-                <span class="badge badge-secondary">${tag}</span><#t>
-                <span class="badge badge-info" title="number of clusters">${count}</span>
+                <span class="badge bg-secondary">${tag}</span><#t>
+                <span class="badge bg-info" title="number of clusters">${count}</span>
             </a>
         </#list>
     </div>

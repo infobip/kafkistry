@@ -1,3 +1,4 @@
+<#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
 <#-- @ftlvariable name="consumersData" type="com.infobip.kafkistry.service.consumers.AllConsumersData" -->
 <#-- @ftlvariable name="consumersStats"  type="com.infobip.kafkistry.service.consumers.ConsumersStats" -->
 <#-- @ftlvariable name="clustersGroups" type="java.util.List<com.infobip.kafkistry.service.consumers.ClusterConsumerGroup>" -->
@@ -8,7 +9,7 @@
 <#import "../common/infoIcon.ftl" as info>
 
 <div class="card">
-    <div class="card-header collapsed" data-toggle="collapsing" data-target="#cluster-pooling-statuses-body">
+    <div class="card-header collapsed" data-toggle="collapsing" data-bs-target="#cluster-pooling-statuses-body">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         <span class="h5">Cluster pooling statuses</span>
@@ -29,7 +30,7 @@
     </div>
 </div>
 <div class="card">
-    <div class="card-header" data-toggle="collapsing" data-target="#statistics-counts-body">
+    <div class="card-header" data-toggle="collapsing" data-bs-target="#statistics-counts-body">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         <span class="h5">Statistics / counts</span>
@@ -46,7 +47,7 @@
             <div class="col">
                 <span class="h4">All clusters consumers</span>
             </div>
-            <div class="col-">
+            <div class="col-auto">
                 <#assign presetDoc>
                     Use when need to prepare consumer group offsets to particular point
                     (<code>begin</code>, <code>end</code>, <code>@ timestamp</code>,...)
@@ -56,7 +57,7 @@
                     start from <code>latest</code> or <code>(now-1h)</code>-corresponding offset.
                 </#assign>
                 <div id="preset-group-form-btn" class="btn btn-outline-primary"
-                     data-toggle="collapsing" data-target="#preset-group-form">
+                     data-toggle="collapsing" data-bs-target="#preset-group-form">
                     Init-preset group... <@info.icon tooltip=presetDoc/>
                 </div>
             </div>
@@ -66,10 +67,9 @@
         <div class="row mb-3 collapseable" id="preset-group-form">
             <div class="col"></div>
             <div class="col">
-                <div class="form-row">
+                <div class="row g-2">
                     <div class="col m-1">
-                        Mene ima
-                        <select name="preset-cluster-identifier" class="form-control selectpicker"
+                        <select name="preset-cluster-identifier" class="selectpicker"
                             title="Custer Identifier">
                             <option disabled selected value="">Select cluster...</option>
                             <#list clusterIdentifiers as clusterIdentifier>
@@ -78,15 +78,15 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-row">
+                <div class="row g-2">
                     <div class="col m-1">
                         <input type="text" name="preset-consumer-group-id" class="form-control"
                                placeholder="Enter consumer group to init/preset offsets" title="Consumer group ID"/>
                     </div>
                 </div>
-                <div class="form-row">
+                <div class="row g-2">
                     <div class="col m-1">
-                        <a class="btn btn-sm btn-primary form-control disabled"
+                        <a class="btn btn-sm btn-primary disabled"
                            id="init-consumer-group-btn"
                            data-base-href="${appUrl.consumerGroups().showPresetConsumerGroupOffsets("", "")}">
                             Continue to preset offsets...</a>
@@ -97,8 +97,8 @@
         </div>
         <#assign datatableId = "consumer-groups">
         <#include "../common/loading.ftl">
-        <table id="${datatableId}" class="table table-bordered datatable display" style="display: none;">
-    <thead class="thead-dark">
+        <table id="${datatableId}" class="table table-hover table-bordered datatable display" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th>Group</th>
         <th>Status</th>
@@ -114,9 +114,10 @@
             data-consumer-group-id="${consumerGroup.groupId}"
             data-cluster-identifier="${clusterGroup.clusterIdentifier}">
             <td data-order="${groupOwned?then("0", "1")}_${consumerGroup.groupId}_${clusterGroup.clusterIdentifier}">
-                <a href="${appUrl.consumerGroups().showConsumerGroup(clusterGroup.clusterIdentifier, consumerGroup.groupId)}"
-                   class="btn btn-sm btn-outline-dark mb-1">
-                    ${consumerGroup.groupId} @ ${clusterGroup.clusterIdentifier} 🔍
+                <a href="${appUrl.consumerGroups().showConsumerGroup(clusterGroup.clusterIdentifier, consumerGroup.groupId)}">
+                    ${consumerGroup.groupId}
+                    <span class="text-secondary">@</span>
+                    ${clusterGroup.clusterIdentifier}
                 </a>
                 <#if groupOwned>
                     <@util.yourOwned what="consumer group"/>

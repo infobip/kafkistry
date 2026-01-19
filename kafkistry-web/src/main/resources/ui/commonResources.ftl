@@ -30,6 +30,17 @@
 <meta charset="utf-8">
 <base href="${rootPath}/">
 
+<#-- Apply theme immediately to prevent flash of wrong theme -->
+<script>
+(function() {
+    const theme = localStorage.getItem('kafkistry-theme') || 'auto';
+    const resolvedTheme = theme === 'auto'
+        ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : theme;
+    document.documentElement.setAttribute('data-bs-theme', resolvedTheme);
+})();
+</script>
+
 <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/yamljs/0.3.0/yaml.js"></script>
@@ -41,6 +52,7 @@
     </#list>
 </#if>
 
+<script src="static/themeManager.js?ver=${lastCommit}"></script>
 <script src="static/selectPicker.js?ver=${lastCommit}"></script>
 <script src="static/urlManager.js?ver=${lastCommit}"></script>
 <script src="static/globalErrorHandler.js?ver=${lastCommit}"></script>
@@ -77,15 +89,14 @@
 
 <link rel="icon" href="static/img/${imageProps.dirPath}/${imageProps.icon}?ver=${lastCommit}"/>
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch_uncompressed.js"></script>
 
-<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 <script src="https://cdn.jsdelivr.net/g/mark.js(jquery.mark.min.js)"></script>
 <script src="https://cdn.datatables.net/plug-ins/1.10.13/features/mark.js/datatables.mark.js"></script>
 
@@ -98,11 +109,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/json-parse-bigint@1.0.2/index.min.js"></script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.17/dist/css/bootstrap-select.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.17/dist/js/bootstrap-select.min.js"></script>
-
-<link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
 <script src="static/diffHtml.js?ver=${lastCommit}"></script>
 <script src="static/yamlDiff.js?ver=${lastCommit}"></script>

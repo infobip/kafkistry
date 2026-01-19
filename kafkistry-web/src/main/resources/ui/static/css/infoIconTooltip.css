@@ -37,5 +37,13 @@
     pointer-events: none;   /* prevent flickering */
 }
 
+.tooltip-inner, .tooltip-arrow, .tooltip-arrow::before {
+    --bs-tooltip-bg: var(--bs-dark-bg-subtle);
+    --bs-tooltip-color: var(--bs-body);
+}
+
+.tooltip-inner .table {
+    --bs-table-bg: transparent !important;
+}
 
 

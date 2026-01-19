@@ -1,5 +1,5 @@
 <div class="mt-2 mb-2">
-    <div class="text-right">
+    <div class="text-end">
         <button id="refresh-git-now-btn" class="btn btn-secondary">
             Refresh git now <@_info.icon tooltip=_doc.refreshGitBtn/>
         </button>

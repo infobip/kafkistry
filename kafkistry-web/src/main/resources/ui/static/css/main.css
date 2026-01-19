@@ -1,6 +1,3 @@
-tr:hover:not(.no-hover) {
-    background-color: #f4f4f4;
-}
 
 .width-full {
     width: 100%;
@@ -63,24 +60,33 @@ td.agg-count-status-type {
     padding: 6px !important;
 }
 
-[data-toggle=collapse] {
+[data-toggle=collapse],
+[data-bs-toggle=collapse] {
     cursor: pointer;
 }
 
-[data-toggle=collapse]:hover {
+[data-toggle=collapse]:hover,
+[data-bs-toggle=collapse]:hover {
     background-color: #d8dbdb;
 }
 
-[data-toggle="collapse"].collapsed .if-not-collapsed {
+[data-toggle="collapse"].collapsed .if-not-collapsed,
+[data-bs-toggle="collapse"].collapsed .if-not-collapsed {
     display: none;
 }
-[data-toggle="collapse"]:not(.collapsed) .if-collapsed {
+[data-toggle="collapse"]:not(.collapsed) .if-collapsed,
+[data-bs-toggle="collapse"]:not(.collapsed) .if-collapsed {
     display: none;
 }
 
-.value-mismatch {
+[data-bs-theme="light"] .value-mismatch {
     background-color: #ff8c8c;
 }
+
+[data-bs-theme="dark"] .value-mismatch {
+    background-color: #8b3a3a;
+}
+
 
 .todo {
     z-index: 10;
@@ -122,5 +128,185 @@ td.agg-count-status-type {
 
 #kafkistry-navbar .nav-item .nav-link.active {
     font-weight: bold;
+}
+
+/* ===========================
+   Dark Theme Customizations
+   =========================== */
+
+/* Dark mode collapse hover */
+[data-bs-theme="dark"] [data-toggle=collapse]:hover,
+[data-bs-theme="dark"] [data-bs-toggle=collapse]:hover {
+    background-color: #2c3034;
+}
+
+/* Dark mode for custom components */
+[data-bs-theme="dark"] .popover-body {
+    background-color: #212529;
+}
+
+/* Improve contrast for alerts in dark mode */
+/*[data-bs-theme="dark"] .alert-danger {*/
+/*    background-color: #842029;*/
+/*    border-color: #a52834;*/
+/*    color: #f8d7da;*/
+/*}*/
+
+/*[data-bs-theme="dark"] .alert-warning {*/
+/*    background-color: #664d03;*/
+/*    border-color: #997404;*/
+/*    color: #ffecb5;*/
+/*}*/
+
+/*[data-bs-theme="dark"] .alert-info {*/
+/*    background-color: #055160;*/
+/*    border-color: #087990;*/
+/*    color: #b6effb;*/
+/*}*/
+
+/*[data-bs-theme="dark"] .alert-success {*/
+/*    background-color: #0f5132;*/
+/*    border-color: #146c43;*/
+/*    color: #d1e7dd;*/
+/*}*/
+
+/* Custom status badges in dark mode */
+[data-bs-theme="dark"] .status-flag,
+[data-bs-theme="dark"] .cluster-status-badge {
+    filter: brightness(0.85);
+}
+
+/* DataTables styling in dark mode */
+[data-bs-theme="dark"] table.dataTable tbody tr {
+    background-color: transparent;
+}
+
+[data-bs-theme="dark"] table.dataTable.stripe tbody tr.odd,
+[data-bs-theme="dark"] table.dataTable.display tbody tr.odd {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+[data-bs-theme="dark"] table.dataTable.hover tbody tr:hover,
+[data-bs-theme="dark"] table.dataTable.display tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.075);
+}
+
+/* ===========================
+   Bootstrap 5 Size Overrides
+   =========================== */
+
+/* Ensure form-check-inline displays properly */
+.form-check-inline {
+    display: inline-block;
+    margin-right: 1rem;
+}
+
+.form-check-inline .form-check-input {
+    margin-right: 0.5rem;
+    margin-top: 0.125rem;
+}
+
+/* Ensure btn-sm has proper small sizing */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+/* Ensure form-control-sm has proper small sizing */
+.form-control-sm,
+.form-select-sm {
+    min-height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+
+.input-group-sm > .form-control,
+.input-group-sm > .form-select,
+.input-group-sm > .input-group-text,
+.input-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+
+
+/* ===========================
+   Neutral badge themed color
+   =========================== */
+
+[data-bs-theme="dark"] .bg-neutral {
+    background-color: rgba(255, 255, 255, 0.81);
+    color: rgb(39, 39, 39);
+}
+
+[data-bs-theme="light"] .bg-neutral {
+    background-color: rgba(0, 0, 0, 0.81);
+    color: rgb(250, 250, 250);
+}
+
+
+
+[data-bs-theme="light"] .table-theme-opposite {
+    --bs-table-color: #fff;
+    --bs-table-bg: #212529;
+    --bs-table-border-color: #4d5154;
+    color: var(--bs-table-color);
+    border-color: var(--bs-table-border-color);
+}
+
+
+[data-bs-theme="dark"] .table-theme-opposite {
+    --bs-table-color: #000;
+    --bs-table-bg: #f8f9fa;
+    --bs-table-border-color: #c6c7c8;
+    color: var(--bs-table-color);
+    border-color: var(--bs-table-border-color);
+}
+
+[data-bs-theme="light"] .table-theme-accent {
+    --bs-table-color: #000000;
+    --bs-table-bg: #e0e0e0;
+    --bs-table-border-color: #c8c8c8;
+    color: var(--bs-table-color);
+    border-color: var(--bs-table-border-color);
+}
+
+[data-bs-theme="dark"] .table-theme-accent {
+    --bs-table-color: #c9c9c9;
+    --bs-table-bg: #131415;
+    --bs-table-border-color: #3f3f3f;
+    color: var(--bs-table-color);
+    border-color: var(--bs-table-border-color);
+}
+
+[data-bs-theme="light"] .table-theme-dark {
+    --bs-table-color: #fff;
+    --bs-table-bg: #212529;
+    --bs-table-border-color: #4d5154;
+    --bs-table-striped-bg: #2c3034;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #373b3e;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #323539;
+    --bs-table-hover-color: #fff;
+    color: var(--bs-table-color);
+    border-color: var(--bs-table-border-color);
+}
+
+[data-bs-theme="dark"] .table-theme-dark {
+    --bs-table-color: #c9c9c9;
+    --bs-table-bg: #131415;
+    --bs-table-border-color: #3f3f3f;
+    --bs-table-striped-bg: #2c3034;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #373b3e;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #323539;
+    --bs-table-hover-color: #fff;
+    color: var(--bs-table-color);
+    border-color: var(--bs-table-border-color);
 }
 

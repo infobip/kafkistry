@@ -10,15 +10,15 @@
         <h4>
             Disk resource usage of topic on ${clusterIdentifier}
             <a href="${appUrl.clusters().showClusterResources(clusterIdentifier)}"
-                class="btn btn-sm btn-outline-dark" target="_blank">🔍</a>
+                class="btn btn-sm btn-outline-secondary" target="_blank">🔍</a>
         </h4>
     </div>
     <div class="card-body p-0">
         <#assign hasActual = topicResources.combined.usage.actualUsedBytes??>
         <#assign hasPossible = topicResources.combined.usage.retentionBoundedBytes??>
         <#assign hasOrphaned = topicResources.combined.usage.orphanedReplicasCount gt 0>
-        <table class="table table-bordered m-0">
-            <thead class="thead-dark table-sm text-center">
+        <table class="table table-hover table-hover table-striped table-bordered m-0">
+            <thead class="table-theme-dark table-sm text-center">
             <tr>
                 <th rowspan="2">Broker</th>
                 <th rowspan="2">Replicas</th>
@@ -208,7 +208,7 @@
                     </#if>
                 </td>
             </#macro>
-            <tr class="collapsed" data-target=".broker-resources-row.collapse-${clusterIdentifier?url}" data-toggle="collapsing">
+            <tr class="collapsed" data-bs-target=".broker-resources-row.collapse-${clusterIdentifier?url}" data-toggle="collapsing">
                 <@diskUsage broker="ALL"
                     usage=topicResources.combined
                     portions=topicResources.combinedPortions
@@ -219,7 +219,7 @@
                 />
             </tr>
             <tr>
-                <td colspan="100" class="bg-light p-1"></td>
+                <td colspan="100" class="bg-body p-1"></td>
             </tr>
             <#list topicResources.brokerUsages as brokerId, brokerUsage>
                 <tr class="small table-sm broker-resources-row collapse-${clusterIdentifier?url} collapseable">

@@ -7,10 +7,10 @@
 <#import "../common/documentation.ftl" as doc>
 <#import "util.ftl" as aclUtil>
 
-<table class="table table-bordered mb-0 rules-table">
-    <thead class="thead-dark">
+<table class="table table-hover table-bordered mb-0 rules-table">
+    <thead class="table-theme-dark">
     <tr>
-        <th class="toggle-column" data-toggle="collapse" data-target=".cluster-info-row"></th>
+        <th class="toggle-column" data-bs-toggle="collapse" data-bs-target=".cluster-info-row"></th>
         <th colspan="3">Cluster</th>
         <th>OK</th>
         <th>Statuses</th>
@@ -25,7 +25,7 @@
         <#assign shown = clusterIdentifier == selectedCluster>
         <#assign collapsedClass = shown?then("", "collapsed")>
         <#assign showClass = shown?then("show", "")>
-        <tr class="card-header ${collapsedClass} rule-row" data-target=".cluster-${clusterStatuses?index}"
+        <tr class="card-header ${collapsedClass} rule-row" data-bs-target=".cluster-${clusterStatuses?index}"
             data-toggle="collapsing">
             <td class="toggle-column p-0" style="height: 1px;">
                 <span class="when-collapsed" title="expand...">▼</span>

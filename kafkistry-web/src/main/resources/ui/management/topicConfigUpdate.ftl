@@ -22,7 +22,7 @@
     <h3>You are about to update topic's config on kafka cluster</h3>
     <br>
 
-    <table class="table">
+    <table class="table table-hover">
         <#assign clusterIdentifier = cluster.identifier>
         <#include "topicConfigChanges.ftl">
     </table>

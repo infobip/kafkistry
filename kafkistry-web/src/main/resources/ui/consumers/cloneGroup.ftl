@@ -100,7 +100,7 @@
         <br/>
         <div id="into-group-link" style="display: none;">
             Open inspect:
-            <a class="btn btn-sm btn-outline-dark"
+            <a class="btn btn-sm btn-outline-secondary"
                href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, intoConsumerGroupId)}">
                 ${intoConsumerGroupId} @ ${clusterIdentifier}
             </a>

@@ -8,8 +8,8 @@
 <#assign datatableId = "quotas">
 <#include "../common/loading.ftl">
 
-<table id="${datatableId}" class="table table-bordered datatable" style="display: none;">
-    <thead class="thead-dark">
+<table id="${datatableId}" class="table table-hover table-bordered datatable" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th>Entity</th>
         <th>Producer byte rate</th>
@@ -21,9 +21,9 @@
     </thead>
     <#list clusterQuotas.entityInspections as inspection>
         <#assign entity = inspection.entity>
-        <tr class="missing-quotas-entity thead-light" data-entity-id="${entity.asID()}">
+        <tr class="missing-quotas-entity table-theme-accent" data-entity-id="${entity.asID()}">
             <td>
-                <a class="btn btn-sm btn-outline-dark mb-1"
+                <a title="Inspect quota entity on this cluster..."
                    href="${appUrl.quotas().showEntity(entity.asID())}">
                     <@quotaUtil.entity entity = entity/>
                 </a>

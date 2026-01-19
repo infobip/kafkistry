@@ -1,5 +1,5 @@
 .collapseable:not(.show) {
-    display: none;
+    display: none !important;
 }
 [data-toggle=collapsing] {
     cursor: pointer;
@@ -7,6 +7,11 @@
 
 [data-toggle=collapsing]:hover:not(.alert) {
     background-color: #d8dbdb;
+}
+
+/* Dark mode hover for custom collapsing */
+[data-bs-theme="dark"] [data-toggle=collapsing]:hover:not(.alert) {
+    background-color: #2c3034;
 }
 
 [data-toggle=collapsing].collapsed .when-not-collapsed {

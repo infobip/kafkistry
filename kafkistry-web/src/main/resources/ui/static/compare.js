@@ -22,16 +22,17 @@ $(document).ready(function () {
 });
 
 function addTopicAutocomplete(subjectForm) {
-    subjectForm
-        .autocomplete({
-            source: allTopics,
-            select: compareTopics,
-            minLength: 0
-        })
-        .focus(function () {
-            $(this).data("uiAutocomplete").search($(this).val());
-            compareTopics();
-        });
+    initAutocompleteInput(allTopics, subjectForm, compareTopics);
+    // subjectForm
+    //     .autocomplete({
+    //         source: allTopics,
+    //         select: compareTopics,
+    //         minLength: 0
+    //     })
+    //     .focus(function () {
+    //         $(this).data("uiAutocomplete").search($(this).val());
+    //         compareTopics();
+    //     });
 }
 
 function compareTopics() {

@@ -62,7 +62,7 @@
                 <#assign clusterIdentifier = allClusters?first>
             </#if>
             Cluster:
-            <select name="cluster" class="form-control form-control-sm mr-sm-1 selectPicker"
+            <select name="cluster" class="form-control mr-sm-1 selectPicker"
                     data-live-search="true" data-size="6">
                 <option value="" disabled <#if !(clusterIdentifier??)>selected</#if>>Select cluster...</option>
                 <#list allClusters as cluster>
@@ -74,13 +74,13 @@
         <label>
             Topic:
             <input type="search" placeholder="Select topic..." name="topic"
-                   class="topic-input form-control form-control-sm mr-sm-1" value="${topicName!""}">
+                   class="topic-input form-control mr-sm-1" value="${topicName!""}">
         </label>
         <label>
-            <a id="inspect-topic-btn" href="#" class="btn btn-sm btn-outline-secondary">Inspect 🔍</a>
+            <a id="inspect-topic-btn" href="#" class="btn btn-outline-secondary">Inspect 🔍</a>
         </label>
 
-        <div class="clearfix"></div>
+        <div class="clearfix mb-3"></div>
         <label>
             Max records:
             <input type="number" value="${(numRecords?c)!'20'}" name="numRecords" class="form-control form-control-sm mr-sm-1">
@@ -120,7 +120,7 @@
         </label>
 
 
-        <div id="determine-partition-form" style="display: none;" class="bg-light rounded border p-1">
+        <div id="determine-partition-form" style="display: none;" class="bg-body-tertiary rounded border p-1">
             <div class="clearfix"></div>
             <label>
                 Key:
@@ -154,7 +154,7 @@
                     Resolve <@info.icon tooltip=resolveTooltip/>
                 </button>
                 &nbsp;
-                <span id="resolved-partition-for-key-result" class="text-monospace"></span>
+                <span id="resolved-partition-for-key-result" class="font-monospace"></span>
             </label>
             <div class="clearfix"></div>
             <#assign statusId = "resolve-partition">
@@ -165,7 +165,7 @@
         <div class="clearfix"></div>
         <label class="offset-type-form">
             <span class="mr-sm-1">Read starting from: </span>
-            <label class="form-inline">
+            <label class="d-flex align-items-center gap-2">
             <select name="offsetType" class="form-control form-control-sm mr-sm-1">
                 <option value="LATEST" <#if ((offsetType.name())!'') == 'LATEST'>selected</#if>>Latest minus</option>
                 <option value="EARLIEST" <#if ((offsetType.name())!'') == 'EARLIEST'>selected</#if>>Earliest plus</option>
@@ -206,19 +206,24 @@
             </select>
         </label>
 
-        <div class="clearfix"></div>
-        <label class="form-inline">
-            <input class="mr-1" type="checkbox" name="readOnlyCommitted" <#if (readOnlyCommitted?? && readOnlyCommitted)>checked</#if>>
-            <span class="mr-sm-1">Read only transactionally committed records </span>
-        </label>
+        <div class="clearfix mb-2"></div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="readOnlyCommitted" name="readOnlyCommitted"
+                       <#if (readOnlyCommitted?? && readOnlyCommitted)>checked</#if>>
+                <label class="form-check-label" for="readOnlyCommitted">
+                    Read only transactionally committed records
+                </label>
+            </div>
+        </div>
 
         <div class="clearfix"></div>
-        <div class="form-inline">
-            <label class="form-check-inline">
-                <input id="filterEnabled" name="filterEnabled" type="checkbox" class="form-control form-control-sm mr-1">
-                <span>Use records filtering</span>
-            </label>
-            <span class="p-1 pr-2">
+        <div class="d-flex align-items-center gap-2">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="filterEnabled" name="filterEnabled">
+                <label class="form-check-label" for="filterEnabled">Use records filtering</label>
+            </div>
+            <span class="p-1 pe-2">
                 Help: <@info.icon tooltip=doc.filterHelp />
             </span>
             <span class="small">Note: filter is just linear search over records</span>
@@ -228,7 +233,6 @@
             <#include "readFilters.ftl">
         </div>
 
-        <br/>
         <div class="clearfix"></div>
         <label>
             Auto-continuation
@@ -257,11 +261,11 @@
             </span>
         </label>
 
-        <div class="clearfix"></div>
-        <button type="button" class="consume-trigger-btn btn btn-primary form-control" id="consume-btn">
+        <div class="clearfix mb-2"></div>
+        <button type="button" class="consume-trigger-btn btn btn-primary w-100" id="consume-btn">
             Start reading
         </button>
-        <button type="button" class="consume-stop-btn btn btn-danger form-control" id="stop-btn" style="display: none;">
+        <button type="button" class="consume-stop-btn btn btn-danger w-100" id="stop-btn" style="display: none;">
             Stop reading
         </button>
     </div>

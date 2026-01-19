@@ -32,7 +32,7 @@
 
 
     <div class="card">
-        <div class="card-header collapsed" data-target="#autopilot-info" data-toggle="collapsing">
+        <div class="card-header collapsed" data-bs-target="#autopilot-info" data-toggle="collapsing">
             <h4>
                 <span class="when-collapsed" title="expand...">▼</span>
                 <span class="when-not-collapsed" title="collapse...">△</span>
@@ -40,8 +40,8 @@
             </h4>
         </div>
         <div class="card-body collapseable p-0" id="autopilot-info">
-            <table class="table table-sm table-bordered">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm table-bordered">
+                <thead class="table-theme-dark">
                 <tr>
                     <th colspan="2" class="text-center">Properties</th>
                 </tr>
@@ -55,8 +55,8 @@
                     <td>${util.prettyDuration(autopilotStatus.cyclePeriodMs / 1000)}</td>
                 </tr>
             </table>
-            <table class="table table-sm table-bordered">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm table-bordered">
+                <thead class="table-theme-dark">
                 <tr>
                     <th colspan="2" class="text-center">Implemented capabilities</th>
                 </tr>
@@ -68,19 +68,19 @@
                 <#list autopilotStatus.possibleActions as actionDescription>
                     <tr>
                         <td>
-                            <span class="text-monospace" title="${actionDescription.actionClass}">
+                            <span class="font-monospace" title="${actionDescription.actionClass}">
                                 ${actionDescription.actionName?remove_ending("Action")}
                             </span>
                             <@info.icon tooltip = actionDescription.doc/>
                         </td>
                         <td>
-                            <span class="badge badge-primary"
+                            <span class="badge bg-primary"
                                   title="Action target type">${actionDescription.targetType}</span>
                         </td>
                     </tr>
                 </#list>
             </table>
-            <table class="table table-sm table-bordered">
+            <table class="table table-hover table-sm table-bordered">
                 <#macro enablesDisabledValues what enabledValues disabledValues>
                 <#-- @ftlvariable name="what" type="java.lang.String" -->
                 <#-- @ftlvariable name="enabledValues" type="java.util.Collection<? extends java.lang.Object>" -->
@@ -93,7 +93,7 @@
                         <ul>
                             <#list enabledValues as value>
                                 <li>
-                                    <span class="text-monospace small">
+                                    <span class="font-monospace small">
                                         <#if value?is_string>${value}<#else>${value.toString()}</#if>
                                     </span>
                                 </li>
@@ -105,7 +105,7 @@
                         <ul>
                             <#list disabledValues as value>
                                 <li>
-                                    <span class="text-monospace small">
+                                    <span class="font-monospace small">
                                         <#if value?is_string>${value}<#else>${value.toString()}</#if>
                                     </span>
                                 </li>
@@ -113,7 +113,7 @@
                         </ul>
                     </#if>
                 </#macro>
-                <thead class="thead-dark">
+                <thead class="table-theme-dark">
                 <tr>
                     <th colspan="2" class="text-center">Enabled actions filter</th>
                 </tr>
@@ -126,9 +126,9 @@
                     <th>Enabled globally</th>
                     <td>
                         <#if autopilotStatus.enableFilter.enabled>
-                            <span class="badge badge-primary">ENABLED</span>
+                            <span class="badge bg-primary">ENABLED</span>
                         <#else>
-                            <span class="badge badge-secondary">DISABLED</span>
+                            <span class="badge bg-secondary">DISABLED</span>
                         </#if>
                     </td>
                 </tr>
@@ -204,8 +204,8 @@
         <div class="card-body pr-0 pl-0">
             <#assign datatableId = "autopilotActions">
             <#include "../common/loading.ftl">
-            <table id="${datatableId}" class="table datatable" style="display: none;">
-                <thead class="thead-dark">
+            <table id="${datatableId}" class="table table-hover datatable" style="display: none;">
+                <thead class="table-theme-dark">
                 <tr>
                     <th class="no-sort-column details-toggle-column"></th>
                     <th>Action</th>
@@ -222,21 +222,21 @@
                             <span class="when-not-collapsed" title="collapse...">△</span>
                         </td>
                         <td>
-                            <span class="text-monospace" title="${actionDescription.actionClass}">
+                            <span class="font-monospace" title="${actionDescription.actionClass}">
                                 ${actionDescription.actionName?remove_ending("Action")}
                             </span>
                             <@info.icon tooltip = actionDescription.doc/>
                             <br/>
                             <#assign actionTargetUrl = autopilotUtil.resolveLink(actionFlow.metadata)>
                             <#if actionTargetUrl?length gt 0>
-                                <a class="btn btn-xsmall btn-outline-dark"
+                                <a class="btn btn-xsmall btn-outline-secondary"
                                    title="Open this ${actionDescription.targetType}"
                                    href="${actionTargetUrl}" target="_blank">🔍</a>
                             </#if>
-                            <span class="small badge badge-primary"
+                            <span class="small badge bg-primary"
                                   title="Action target type">${actionDescription.targetType}</span>
                             <#list actionFlow.metadata.attributes as attrKey, attrVal>
-                                <span class="small badge badge-info" title="${attrKey}">${attrVal}</span>
+                                <span class="small badge bg-info" title="${attrKey}">${attrVal}</span>
                             </#list>
                         </td>
                         <td data-order="${actionFlow.lastTimestamp?c}">
@@ -249,7 +249,7 @@
                             </#if>
                         </td>
                         <td>
-                            <table class="table table-sm m-0 no-hover">
+                            <table class="table table-hover table-sm m-0 no-hover">
                                 <thead class="thead-light">
                                 <tr>
                                     <th>Run time</th>
@@ -270,7 +270,7 @@
                                             <#if outcomeItem.unstable?size gt 0>
                                                 <div class="alert alert-warning">
                                                     <strong>Unstable cluster</strong>:<br/>
-                                                    <table class="table table-sm">
+                                                    <table class="table table-hover table-sm">
                                                         <#list outcomeItem.unstable as unstable>
                                                             <tr>
                                                                 <td title="Name of state provider/scraper">

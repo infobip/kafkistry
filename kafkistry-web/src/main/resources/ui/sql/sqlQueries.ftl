@@ -5,8 +5,8 @@
 
 <#macro button sql text>
     <#assign url = sqlUrl(sql)>
-    <a class="btn btn-sm btn-outline-dark" href="${url}">
-        <span class="badge badge-primary">SQL</span> ${text}
+    <a class="btn btn-sm btn-outline-secondary" href="${url}">
+        <span class="badge bg-primary">SQL</span> ${text}
     </a>
 </#macro>
 

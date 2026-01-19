@@ -6,7 +6,7 @@
 
 <#import "../common/util.ftl" as etUtil>
 
-<tr class="thead-dark">
+<tr class="table-theme-dark">
     <th colspan="100" class="text-center_">
         <#switch bulkIterateBy!''>
             <#case "TOPIC">

@@ -138,12 +138,12 @@ abstract class PerformSqlQuery(contextSupplier: () -> Context) : UITestCase(cont
         await {
             browser.assertPageText().contains("Table name Column names")
         }
-        browser.findElementWithText("Topics_Replicas").scrollIntoView().click()
+        browser.findElementWithText("Topics_Replicas").ensureClick()
         await {
             assertThat(getEditorContent()).contains("SELECT", "Topics_Replicas")
         }
 
-        browser.findElementWithText("Execute SQL").click()
+        browser.findElementWithText("Execute SQL").ensureClick()
         await {
             browser.assertPageText().contains(
                     "Got result set of 20 rows, total count without LIMIT would be ${3 * 1 + 12 * 3 + 6 * 2}"

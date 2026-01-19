@@ -31,12 +31,12 @@
     </#if>
 </#function>
 
-<table class="table table-bordered m-0">
-    <thead class="thead-dark">
+<table class="table table-hover table-bordered m-0">
+    <thead class="table-theme-dark">
     <tr>
         <#assign hasTitle = tableTitle?? && tableTitle != "">
         <#if hasTitle>
-            <th><span class="badge badge-primary">${tableTitle}</span></th>
+            <th><span class="badge bg-primary">${tableTitle}</span></th>
         <#else>
             <th rowspan="2">Broker</th>
         </#if>
@@ -228,7 +228,7 @@
         </#if>
     </#macro>
 
-    <tr <#if collapseEnabled>class="collapsed" data-target=".broker-resources-row.collapse-${collapseId}" data-toggle="collapsing"</#if>>
+    <tr <#if collapseEnabled>class="collapsed" data-bs-target=".broker-resources-row.collapse-${collapseId}" data-toggle="collapsing"</#if>>
         <@diskUsages broker="ALL" disk=clusterResources.combined
             worstCurrentUsageLevel=clusterResources.worstCurrentUsageLevel
             worstPossibleUsageLevel=clusterResources.worstPossibleUsageLevel

@@ -19,12 +19,12 @@
 
         <div class="card">
             <div class="card-header">
-                <span class="float-left"><b>Kafkistry</b></span>
+                <span class="float-start"><b>Kafkistry</b></span>
 
                 <#if (request.parameterMap.logout)??>
-                    <span style="color: green" class="float-right">You have been logged out</span>
+                    <span style="color: green" class="float-end">You have been logged out</span>
                 <#elseif (request.parameterMap.error)??>
-                    <span style="color: red" class="float-right">
+                    <span style="color: red" class="float-end">
                         Login failed<#if SPRING_SECURITY_LAST_EXCEPTION??>, reason: ${SPRING_SECURITY_LAST_EXCEPTION.message}</#if>
                     </span>
                 </#if>

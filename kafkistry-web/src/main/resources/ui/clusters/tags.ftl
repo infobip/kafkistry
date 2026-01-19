@@ -57,7 +57,7 @@
                 <div class="col pr-1">
                     <input name="new-tag-name" class="form-control" placeholder="Tag name..." title="Tag name" value="${tag}">
                 </div>
-                <div class="col-">
+                <div class="col-auto">
                     <button class="remove-tag-btn btn btn-sm btn-outline-danger">x</button>
                 </div>
             </div>
@@ -109,19 +109,17 @@
             </#if>
         </div>
         <div class="card-body p-0">
-            <table class="table m-0" id="tags-table">
-                <thead class="thead-dark">
+            <table class="table table-hover m-0" id="tags-table">
                 <tr>
-                    <th>
+                    <th class="bg-body-secondary">
                         <input type="search" name="tag-filter" class="form-control" title="Simple any-of query to narrow results"
                                placeholder="Tag filter...">
                     </th>
-                    <th>
+                    <th class="bg-body-secondary">
                         <input type="search" name="cluster-filter" class="form-control" title="Simple any-of query to narrow results"
                                placeholder="Cluster filter...">
                     </th>
                 </tr>
-                </thead>
                 <#if allTags?size == 0>
                     <tr>
                         <td colspan="100">
@@ -134,7 +132,7 @@
                     <#assign renderedTags = renderedTags + [tagData.tag]>
                     <tr class="tag-row" data-tag="${tagData.tag}">
                         <td>
-                            <span class="badge badge-secondary mb-2">${tagData.tag}</span>
+                            <span class="badge bg-secondary mb-2">${tagData.tag}</span>
                             <br/>
                             <#if (tagTopics[tagData.tag])??>
                                 <#assign topics = tagTopics[tagData.tag]>
@@ -169,7 +167,7 @@
                     </#list>
                 </#if>
             </table>
-            <button id="add-new-tag-btn" class="btn btn-sm btn-outline-primary form-control m-2">
+            <button id="add-new-tag-btn" class="btn btn-sm btn-outline-primary m-2">
                 Add new tag...
             </button>
         </div>
@@ -206,9 +204,9 @@
         <#list enabledClusterIdentifiers as enabledClusterIdentifier>
             <div class="card">
                 <div class="card-header collapsed dry-run-row"
-                     data-target=".cluster-dry-run-inspect-result[data-cluster-identifier=${enabledClusterIdentifier}]" data-toggle="collapsing">
-                    <div class="form-row">
-                        <div class="col-">
+                     data-bs-target=".cluster-dry-run-inspect-result[data-cluster-identifier=${enabledClusterIdentifier}]" data-toggle="collapsing">
+                    <div class="row g-2">
+                        <div class="col-auto">
                             <span class="h4">
                                 <span class="when-collapsed" title="expand...">▼</span>
                                 <span class="when-not-collapsed" title="collapse...">△</span>

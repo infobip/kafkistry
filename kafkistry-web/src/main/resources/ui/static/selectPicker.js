@@ -1,5 +1,6 @@
 function initSelectPicker(select) {
     let picker = select.selectpicker();
+    tweakSelectPickerBootstrapStyling(select);
     picker.on('loaded.bs.select', function () {
         let $el = $(this);
         let $lis = $el.data('selectpicker').selectpicker.main.elements.filter(function (item) {
@@ -17,5 +18,14 @@ function initSelectPicker(select) {
                 'html': true,
             });
         });
+    });
+}
+
+function tweakSelectPickerBootstrapStyling(selects) {
+    selects.each(function () {
+        //select-picker version 1.14.0-beta doesn't yet support bootstrap 5, so tweak classes a bit
+        $(this.nextSibling)
+            .removeClass("btn-light")
+            .addClass("border");
     });
 }

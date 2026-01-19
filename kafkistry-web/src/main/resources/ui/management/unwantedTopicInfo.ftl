@@ -10,7 +10,7 @@
 <#import "../common/util.ftl" as util>
 <#import "../consumers/util.ftl" as consumerUtil>
 
-<tr class="thead-dark">
+<tr class="table-theme-dark">
     <th colspan="100" class="text-center_">
         <#switch bulkIterateBy!''>
             <#case "TOPIC">
@@ -40,8 +40,8 @@
         <#if topicConsumerGroups?size == 0>
             <i>(no consumer groups reading from this topic)</i>
         <#else>
-            <table class="table table-sm mb-0">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-theme-dark">
                 <tr>
                     <th style="width: 60%">Group</th>
                     <th>Status</th>

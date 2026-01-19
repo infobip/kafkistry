@@ -49,18 +49,18 @@
                 <div class="btn btn-sm btn-outline-primary mouse-pointer" id="clone-acton-btn">Clone...</div>
 
                 <div id="clone-form" class="p-2" style="display: none;">
-                    <div class="form-row form-group">
+                    <div class="row g-2 form-group">
                         <input class="form-control col" type="search" name="otherConsumerGroup"
                                placeholder="Other consumer group id... (choose existing or enter new)" title="consumer group id">
                     </div>
-                    <div class="form-row">
-                        <label class="col-">
+                    <div class="row g-2">
+                        <label class="col-auto">
                             <a id="clone-from-btn" class="btn btn-sm btn-primary" href>Clone from &larr;</a>
                         </label>
-                        <label class="col-">
+                        <label class="col-auto">
                             <a id="clone-into-btn" class="btn btn-sm btn-primary" href>Clone into &rarr;</a>
                         </label>
-                        <label class="col-">
+                        <label class="col-auto">
                             <div id="cancel-clone-btn" class="mouse-pointer btn btn-sm btn-outline-secondary" href>Cancel</div>
                         </label>
                     </div>
@@ -78,10 +78,9 @@
             <div class="card">
                 <div class="card-header">
                     <span class="h4">KStream application:</span>
-                    <a href="${appUrl.kStream().showKStreamApp(clusterIdentifier, kafkaStreamsApp.kafkaStreamAppId)}">
-                        <button class="btn btn-sm btn-outline-dark mb-1" title="Inspect this group KStreams app">
-                            ${kafkaStreamsApp.kafkaStreamAppId} 🔍
-                        </button>
+                    <a href="${appUrl.kStream().showKStreamApp(clusterIdentifier, kafkaStreamsApp.kafkaStreamAppId)}"
+                       title="Inspect this group KStreams app">
+                            ${kafkaStreamsApp.kafkaStreamAppId}
                     </a>
                 </div>
             </div>
@@ -103,9 +102,9 @@
                 <#assign showClass = shown?then("show", "")>
                 <#assign topic = topicMember.topicName>
                 <div class="card">
-                    <div class="card-header ${collapsedClass}" data-target="#topic-${topicMember?index}"
-                         data-toggle="collapse">
-                        <div class="float-left">
+                    <div class="card-header ${collapsedClass}" data-bs-target="#topic-${topicMember?index}"
+                         data-bs-toggle="collapse">
+                        <div class="float-start">
                             <span class="if-collapsed">▼</span>
                             <span class="if-not-collapsed">△</span>
                             <span>${topic}</span>
@@ -115,7 +114,7 @@
                                 </a>
                             </span>
                         </div>
-                        <div class="float-right">
+                        <div class="float-end">
                             <@util.namedTypeStatusAlert type=topicMember.lag.status small=true/>
                             Total lag:${topicMember.lag.amount!'N/A'}
                             <#if topicMember.lag.percentage??>
@@ -130,15 +129,15 @@
                         </div>
                     </div>
                     <div id="topic-${topicMember?index}" class="card-body p-0 collapse ${showClass}">
-                        <table class="table table-sm m-0">
-                            <thead class="thead-dark">
+                        <table class="table table-hover table-sm m-0">
+                            <thead class="table-theme-dark">
                             <tr>
                                 <th>Partition</th>
                                 <th></th>
-                                <th class="text-right">
+                                <th class="text-end">
                                     Lag <@statusUtil.lagDoc/>
                                 </th>
-                                <th class="text-right">
+                                <th class="text-end">
                                     % <@statusUtil.lagPercentDoc/>
                                 </th>
                                 <th>Member client id</th>
@@ -152,24 +151,24 @@
                                     <td>
                                         <@util.namedTypeStatusAlert type=partition.lag.status small=true/>
                                     </td>
-                                    <td class="text-right">
+                                    <td class="text-end">
                                         <#assign partitionLagTooltip>
                                             <table class='table table-sm m-0'>
                                                 <tr>
                                                     <th>Begin</th>
-                                                    <td class='text-right text-monospace small'>
+                                                    <td class='text-end font-monospace small'>
                                                         ${(topicsOffsets[topic].partitionsOffsets?api.get(partition.partition).begin)!"N/A"}
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <th>Consumer</th>
-                                                    <td class='text-right text-monospace small'>
+                                                    <td class='text-end font-monospace small'>
                                                         ${(partition.offset)!"N/A"}
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <th>End</th>
-                                                    <td class='text-right text-monospace small'>
+                                                    <td class='text-end font-monospace small'>
                                                         ${(topicsOffsets[topic].partitionsOffsets?api.get(partition.partition).end)!"N/A"}
                                                     </td>
                                                 </tr>
@@ -178,7 +177,7 @@
                                         ${partition.lag.amount!'N/A'}
                                         <@info.icon tooltip=partitionLagTooltip/>
                                     </td>
-                                    <td class="text-right">
+                                    <td class="text-end">
                                         <#if partition.lag.percentage??>
                                             <#if partition.lag.percentage?is_infinite>
                                                 <code class="small">(inf)</code>

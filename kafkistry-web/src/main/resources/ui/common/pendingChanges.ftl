@@ -56,7 +56,7 @@
                 <#if request.class.getSimpleName() == "ClusterRequest">
                 <#-- @ftlvariable name="clusterRequest"  type="com.infobip.kafkistry.service.history.ClusterRequest" -->
                     <#assign clusterRequest = request>
-                    <div class="col- m-1">
+                    <div class="col-auto m-1">
                         <a href="${appUrl.clusters().showEditClusterOnBranch(clusterRequest.identifier, clusterRequest.branch)}">
                             <button class="btn btn-outline-primary btn-sm">Edit... <@info.icon tooltip=doc.editPendingChangeBtn/></button>
                         </a>
@@ -65,7 +65,7 @@
                 <#if request.class.getSimpleName() == "TopicRequest">
                 <#-- @ftlvariable name="topicRequest"  type="com.infobip.kafkistry.service.history.TopicRequest" -->
                     <#assign topicRequest = request>
-                    <div class="col- m-1">
+                    <div class="col-auto m-1">
                         <a href="${appUrl.topics().showEditTopicOnBranch(topicRequest.topicName, topicRequest.branch)}">
                             <button class="btn btn-outline-primary btn-sm">Edit... <@info.icon tooltip=doc.editPendingChangeBtn/></button>
                         </a>
@@ -74,7 +74,7 @@
                 <#if request.class.getSimpleName() == "AclsRequest">
                 <#-- @ftlvariable name="aclsRequest"  type="com.infobip.kafkistry.service.history.AclsRequest" -->
                     <#assign aclsRequest = request>
-                    <div class="col- m-1">
+                    <div class="col-auto m-1">
                         <a href="${appUrl.acls().showEditPrincipalOnBranch(aclsRequest.principal, aclsRequest.branch)}">
                             <button class="btn btn-outline-primary btn-sm">Edit... <@info.icon tooltip=doc.editPendingChangeBtn/></button>
                         </a>
@@ -83,7 +83,7 @@
                 <#if request.class.getSimpleName() == "QuotasRequest">
                 <#-- @ftlvariable name="quotasRequest"  type="com.infobip.kafkistry.service.quotas.QuotasRequest" -->
                     <#assign quotasRequest = request>
-                    <div class="col- m-1">
+                    <div class="col-auto m-1">
                         <a href="${appUrl.quotas().showEditEntityOnBranch(quotasRequest.entityID, quotasRequest.branch)}">
                             <button class="btn btn-outline-primary btn-sm">Edit... <@info.icon tooltip=doc.editPendingChangeBtn/></button>
                         </a>

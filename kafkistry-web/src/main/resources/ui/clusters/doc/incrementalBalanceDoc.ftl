@@ -1,5 +1,5 @@
 <div>
-    <button role="button" data-toggle="collapse" data-target="#incremental-balancing-doc"
+    <button role="button" data-bs-toggle="collapse" data-bs-target="#incremental-balancing-doc"
             class="btn btn-sm btn-outline-info mb-2">
         Incremental balancing documentation...
     </button>

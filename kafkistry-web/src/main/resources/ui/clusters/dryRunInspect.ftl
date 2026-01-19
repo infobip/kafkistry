@@ -8,7 +8,7 @@
 <#if clusterDryRunInspect.errors?size gt 0>
     <div class="card">
         <div class="card-header">
-            <h4><span class="badge badge-danger">WARNING</span> Having ${clusterDryRunInspect.errors?size} errors</h4>
+            <h4><span class="badge bg-danger">WARNING</span> Having ${clusterDryRunInspect.errors?size} errors</h4>
         </div>
         <div class="card-body">
             <#list clusterDryRunInspect.errors as error>
@@ -97,7 +97,7 @@
 <#macro topicsList topics title topicDisks>
 <#-- @ftlvariable name="topicDisks" type="java.util.Map<java.lang.String, com.infobip.kafkistry.service.OptionalValue<com.infobip.kafkistry.service.resources.TopicClusterDiskUsage>>" -->
 <div class="card">
-    <div class="card-header collapsed" data-target=".diff-topics-${title?replace('[^A-Za-z]', '_', 'r')}" data-toggle="collapsing">
+    <div class="card-header collapsed" data-bs-target=".diff-topics-${title?replace('[^A-Za-z]', '_', 'r')}" data-toggle="collapsing">
         <div class="h5">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
@@ -105,7 +105,7 @@
         </div>
     </div>
     <div class="card-body p-0 pt-2 pb-2 diff-topics-${title?replace('[^A-Za-z]', '_', 'r')} collapseable">
-        <table class="table table-bordered datatable">
+        <table class="table table-hover table-bordered datatable">
             <thead class="thead-light">
             <tr>
                 <th>Topic</th>
@@ -175,7 +175,7 @@
 
 <#macro aclsList acls title>
 <div class="card">
-    <div class="card-header collapsed" data-target=".diff-acls-${title?replace('[^A-Za-z]', '_', 'r')}" data-toggle="collapsing">
+    <div class="card-header collapsed" data-bs-target=".diff-acls-${title?replace('[^A-Za-z]', '_', 'r')}" data-toggle="collapsing">
         <div class="h5">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
@@ -198,7 +198,7 @@
 
 <#macro quotasList quotas title>
 <div class="card">
-    <div class="card-header collapsed" data-target=".diff-acls-${title?replace('[^A-Za-z]', '_', 'r')}" data-toggle="collapsing">
+    <div class="card-header collapsed" data-bs-target=".diff-acls-${title?replace('[^A-Za-z]', '_', 'r')}" data-toggle="collapsing">
         <div class="h5">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
@@ -228,7 +228,7 @@
         <#if topicsDiff.problems?size gt 0>
             <div class="card">
                 <div class="card-header">
-                    <h4><span class="badge badge-danger">WARNING</span> Having ${topicsDiff.problems?size} problems</h4>
+                    <h4><span class="badge bg-danger">WARNING</span> Having ${topicsDiff.problems?size} problems</h4>
                 </div>
                 <div class="card-body">
                     <#list topicsDiff.problems as problem>
@@ -240,8 +240,8 @@
             </div>
             <br/>
         </#if>
-        <table class="table table-sm">
-            <thead class="thead-dark">
+        <table class="table table-hover table-sm">
+            <thead class="table-theme-dark">
             <tr>
                 <th>Topic status type</th>
                 <th>Current count</th>
@@ -287,8 +287,8 @@
         <h4>ACLs diff</h4>
     </div>
     <div class="card-body p-0">
-        <table class="table table-sm">
-            <thead class="thead-dark">
+        <table class="table table-hover table-sm">
+            <thead class="table-theme-dark">
             <tr>
                 <th>ACL status type</th>
                 <th>Current count</th>
@@ -328,8 +328,8 @@
         <h4>Quotas diff</h4>
     </div>
     <div class="card-body p-0">
-        <table class="table table-sm">
-            <thead class="thead-dark">
+        <table class="table table-hover table-sm">
+            <thead class="table-theme-dark">
             <tr>
                 <th>Entity quotas status type</th>
                 <th>Current count</th>
@@ -381,7 +381,7 @@
     <#assign gearSymbol>&#9881;</#assign>
 
     <#if topicsDiff.affectedTopicsCount gt 0>
-        <span class="badge badge-dark" title="Affected topics count">
+        <span class="badge bg-neutral" title="Affected topics count">
             ${gearSymbol} Topics: ${topicsDiff.affectedTopicsCount}
         </span>
     </#if>
@@ -390,7 +390,7 @@
         + clusterDryRunInspect.aclsDiff.aclsToDelete?size
     >
     <#if affectedAclsCount gt 0>
-        <span class="badge badge-dark" title="Affected ACLs count">
+        <span class="badge bg-neutral" title="Affected ACLs count">
             ${gearSymbol} ACLs: ${affectedAclsCount}
         </span>
     </#if>
@@ -400,7 +400,7 @@
         + clusterDryRunInspect.quotasDiff.quotasToReconfigure?size
     >
     <#if affectedQuotasCount gt 0>
-        <span class="badge badge-dark" title="Affected Client quotas count">
+        <span class="badge bg-neutral" title="Affected Client quotas count">
             ${gearSymbol} Quotas: ${affectedQuotasCount}
         </span>
     </#if>

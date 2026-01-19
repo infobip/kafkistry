@@ -4,12 +4,10 @@
 <#import "../../common/infoIcon.ftl" as icon>
 
 <#macro fieldClassification classification>
-    <div class="field-classification input-group input-group-sm" >
+    <div class="field-classification input-group input-group-sm mb-1" >
         <input class="form-control" name="field-classification" placeholder="Classification..."
                title="Field classification" value="${classification}">
-        <div class="input-group-append">
-            <div class="remove-field-classification-btn btn btn-outline-danger">x</div>
-        </div>
+        <div class="remove-field-classification-btn btn btn-outline-danger">x</div>
     </div>
 </#macro>
 
@@ -18,9 +16,9 @@
     <div class="topic-field-description">
         <div class="row m-n1">
             <div class="col-auto px-1">
-                <div class="btn-group-vertical">
-                    <button type="button" class="btn btn-xs btn-outline-info move-up-btn" title="Move up">↑</button>
-                    <button type="button" class="btn btn-xs btn-outline-info move-down-btn" title="Move down">↓</button>
+                <div class="btn-group-vertical btn-group-sm">
+                    <button type="button" class="btn btn-xs btn-outline-secondary move-up-btn" title="Move up">↑</button>
+                    <button type="button" class="btn btn-xs btn-outline-secondary move-down-btn" title="Move down">↓</button>
                 </div>
             </div>
             <div class="col-4 px-1">
@@ -33,7 +31,7 @@
                         <@fieldClassification classification=classification/>
                     </#list>
                 </div>
-                <div class="add-field-classification-btn btn btn-sm btn-outline-primary w-100">
+                <div class="add-field-classification-btn btn btn-outline-primary w-100">
                     Add classification...
                 </div>
             </div>

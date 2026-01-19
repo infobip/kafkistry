@@ -39,7 +39,7 @@
 
 <div style="overflow-x: scroll;">
 <table class="compare-result table table-sm table-striped table-bordered">
-    <thead class="thead-dark">
+    <thead class="table-theme-dark">
     <tr>
         <th></th>
         <th>
@@ -99,8 +99,8 @@
     </#list>
 </table>
 
-<table class="table table-sm table-bordered small" style="width: auto;">
-    <thead class="thead-dark">
+<table class="table table-hover table-sm table-bordered small" style="width: auto;">
+    <thead class="table-theme-dark">
     <tr>
         <th colspan="100">Legend</th>
     </tr>

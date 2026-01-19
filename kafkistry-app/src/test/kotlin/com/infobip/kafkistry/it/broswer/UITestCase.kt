@@ -17,14 +17,17 @@ import com.infobip.kafkistry.service.topic.configForCluster
 import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.topic.assignableBrokers
 import com.infobip.kafkistry.service.topic.propertiesForCluster
+import com.infobip.kafkistry.utils.deepToString
 import org.junit.jupiter.api.BeforeEach
 import org.openqa.selenium.By
+import org.openqa.selenium.ElementClickInterceptedException
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.Keys
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated
 import org.openqa.selenium.support.ui.WebDriverWait
+import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -97,10 +100,20 @@ abstract class UITestCase(
     }
 
     fun WebElement.scrollIntoView() = apply {
-        (browser as JavascriptExecutor).executeScript("arguments[0].scrollIntoView(true);", this)
+        (browser as JavascriptExecutor).executeScript("arguments[0].scrollIntoView({block: 'center'});", this)
         WebDriverWait(browser, Duration.ofSeconds(1)).until(
             visibilityOfElementLocated(By.xpath(generateXPATH(this)))
         )
+    }
+
+    fun WebElement.ensureClick() {
+        scrollIntoView()
+        try {
+            click()
+        } catch (ex: ElementClickInterceptedException) {
+            LoggerFactory.getLogger(javaClass).warn("Failed to click on element $this, will try to click via javascript, cause: ${ex.deepToString()}")
+            (browser as JavascriptExecutor).executeScript("arguments[0].click();", this)
+        }
     }
 
     private fun generateXPATH(childElement: WebElement, current: String = ""): String? {

@@ -15,16 +15,16 @@
 <#else>
     <#macro aclsStatsTable aStats navigateSuffix="">
         <#-- @ftlvariable name="aStats"  type="java.util.Map<com.infobip.kafkistry.service.acl.AclInspectionResultType, java.lang.Integer>" -->
-        <table class="table table-sm m-0">
+        <table class="table table-hover table-sm m-0">
             <#list aStats as stateType, count>
                 <tr>
                     <td>
-                        <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                        <a class="m-0 p-0 width-full btn btn-sm text-start"
                            href="${appUrl.acls().showAll()}#${stateType.name}${navigateSuffix}" title="Click to filter ACLs...">
                             <@util.namedTypeStatusAlert type = stateType alertInline=false/>
                         </a>
                     </td>
-                    <td class="text-right">${count}</td>
+                    <td class="text-end pe-2">${count}</td>
                 </tr>
             </#list>
         </table>

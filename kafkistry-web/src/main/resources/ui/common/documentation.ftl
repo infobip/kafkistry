@@ -61,7 +61,7 @@ perform after preferred leader re-balance.">
 <#assign runtimeOk = "Topic has some runtime issues on kafka on some cluster(s)">
 
 <#assign filterHelp>
-    <table class='table table-sm mb-0'>
+    <table class='table table-sm table-transparent mb-0'>
         <tr>
             <td>Json field</td>
             <td>Works only for json formatted records</td>

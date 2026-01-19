@@ -6,8 +6,8 @@
 
 <#assign datatableId = "principals">
 <#include "../common/loading.ftl">
-<table id="${datatableId}" class="table table-bordered dataTable" style="display: none;">
-    <thead class="thead-dark">
+<table id="${datatableId}" class="table table-hover table-bordered dataTable" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th>Principal</th>
         <th>Owner</th>
@@ -23,7 +23,6 @@
             <tr>
                 <td data-order="${principalOwned?then("0", "1")}_${principalStatus.principal}">
                     <a href="${appUrl.acls().showAllPrincipalAcls(principalStatus.principal)}"
-                       class="btn btn-sm btn-outline-dark mb-1"
                        title="Inspect this principal...">
                         ${principalStatus.principal}
                     </a>
@@ -37,7 +36,7 @@
                     </td>
                 <#else>
                     <td data-order="00_[none]">
-                        <span class="text-primary text-monospace small">[none]</span>
+                        <span class="text-primary font-monospace small">[none]</span>
                     </td>
                 </#if>
                 <td><@util.ok ok = principalStatus.status.ok/></td>

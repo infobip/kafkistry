@@ -34,7 +34,7 @@
     </div>
 
     <#assign bulkIterateBy = "TOPIC">
-    <table class="table">
+    <table class="table table-hover">
         <#list unwantedTopics as topicName>
             <#assign topicConsumerGroups = topicsConsumerGroups[topicName]>
             <#if (topicsTopicOffsets[topicName])??>

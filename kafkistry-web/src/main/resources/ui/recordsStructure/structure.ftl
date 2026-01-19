@@ -11,7 +11,7 @@
     <script src="static/recordsStructure-js/recordsStructure.js?ver=${lastCommit}"></script>
     <link rel="stylesheet" href="static/css/recordStructure.css?ver=${lastCommit}">
     <title>Kafkistry: Records Structure</title>
-    <meta name="current-nav" content="nav-records-structure"/>
+    <meta name="current-nav" content="nav-topics"/>
 </head>
 
 <body>
@@ -25,7 +25,7 @@
 <div class="container">
     <h3><#include "../common/backBtn.ftl"> Records structure of topic</h3>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Topic</th>
             <td>
@@ -42,10 +42,10 @@
             <th>Cluster</th>
             <td>
                 <#if clusterIdentifier??>
-                    <span class="badge badge-dark">CLUSTER</span>
+                    <span class="badge bg-neutral">CLUSTER</span>
                     <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a>
                 <#else>
-                    <span class="badge badge-primary">ALL COMBINED</span>
+                    <span class="badge bg-primary">ALL COMBINED</span>
                 </#if>
             </td>
         </tr>

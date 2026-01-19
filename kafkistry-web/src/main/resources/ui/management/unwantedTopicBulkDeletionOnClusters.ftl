@@ -34,7 +34,7 @@
     </div>
 
     <#assign bulkIterateBy = "CLUSTER">
-    <table class="table">
+    <table class="table table-hover">
         <#list unwantedTopicClusters as clusterIdentifier>
             <#assign topicConsumerGroups = clusterConsumerGroups[clusterIdentifier]>
             <#if (clusterTopicOffsets[clusterIdentifier])??>

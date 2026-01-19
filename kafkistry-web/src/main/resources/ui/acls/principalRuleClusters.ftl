@@ -8,10 +8,10 @@
 <#import "../common/infoIcon.ftl" as info>
 <#import "../common/documentation.ftl" as doc>
 
-<table class="table table-bordered mb-0 rules-table">
-    <thead class="thead-dark">
+<table class="table table-hover table-bordered mb-0 rules-table">
+    <thead class="table-theme-dark">
     <tr>
-        <th class="toggle-column" data-toggle="collapsing" data-target=".rule-info-row"></th>
+        <th class="toggle-column" data-toggle="collapsing" data-bs-target=".rule-info-row"></th>
         <th>Host <@info.icon tooltip=doc.aclHostHelpMsg/></th>
         <th>Resource</th>
         <th>Operation</th>
@@ -34,7 +34,7 @@
         <#assign shown = (ruleStatuses.aclRule.toString() == selectedRule)>
         <#assign collapsedClass = shown?then("", "collapsed")>
         <#assign showClass = shown?then("show hover", "")>
-        <tr class="card-header ${collapsedClass} rule-row" data-target=".rule-${ruleStatuses?index}"
+        <tr class="card-header ${collapsedClass} rule-row" data-bs-target=".rule-${ruleStatuses?index}"
             data-toggle="collapsing">
             <td class="toggle-column p-0" style="height: 1px;">
                 <span class="when-collapsed" title="expand...">▼</span>
@@ -77,7 +77,7 @@
                     <#else>
                         <#list clusterStatus.conflictingAcls as conflictingAcl>
                             <a href="${appUrl.acls().showAllPrincipalAcls(conflictingAcl.principal, conflictingAcl.toString(), clusterIdentifier)}"
-                                class="btn btn-sm btn-outline-dark">
+                               title="Inspect this ACL rule...">
                                 ${conflictingAcl.toString()}
                             </a>
                         </#list>

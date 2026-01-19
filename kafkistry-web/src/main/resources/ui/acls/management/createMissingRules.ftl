@@ -33,8 +33,8 @@
     <p><strong>Principal:</strong> ${principal}</p>
     <p><strong>Cluster:</strong> ${clusterIdentifier}</p>
 
-    <table class="table">
-        <thead class="thead-dark">
+    <table class="table table-hover">
+        <thead class="table-theme-dark">
         <tr>
             <th>Principal</th>
             <th>Host</th>

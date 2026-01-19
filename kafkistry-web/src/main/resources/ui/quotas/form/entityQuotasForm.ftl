@@ -115,15 +115,15 @@
                         <label class="width-full">User</label>
                         <input type="text" name="user" title="Entity user" class="entity-user-input form-control"
                                value="${user}" style="display: none;" <#if entityIdInputDisabled>disabled</#if>>
-                        <span class="entity-user-default badge badge-secondary" style="display: none;">DEFAULT</span>
-                        <span class="entity-user-any badge badge-dark" style="display: none;">ANY</span>
+                        <span class="entity-user-default badge bg-secondary" style="display: none;">DEFAULT</span>
+                        <span class="entity-user-any badge bg-neutral" style="display: none;">ANY</span>
                     </div>
                     <div class="col">
                         <label class="width-full">Client Id</label>
                         <input type="text" name="clientId" title="Entity clientId" class="entity-clientId-input form-control"
                                value="${clientId}" style="display: none;" <#if entityIdInputDisabled>disabled</#if>>
-                        <span class="entity-clientId-default badge badge-secondary" style="display: none;">DEFAULT</span>
-                        <span class="entity-clientId-any badge badge-dark" style="display: none;">ANY</span>
+                        <span class="entity-clientId-default badge bg-secondary" style="display: none;">DEFAULT</span>
+                        <span class="entity-clientId-any badge bg-neutral" style="display: none;">ANY</span>
                     </div>
                 </div>
             </div>
@@ -191,8 +191,8 @@
         <span class="h4">Quota properties</span>
     </div>
     <div class="card-body p-0">
-        <table class="table m-0">
-            <thead class="thead-dark">
+        <table class="table table-hover m-0">
+            <thead class="table-theme-dark">
             <tr>
                 <th>Location</th>
                 <th>Producer byte rate</th>
@@ -219,7 +219,7 @@
             <tfoot>
             <tr class="no-hover">
                 <td colspan="100">
-                    <div id="add-quota-override-btn" class="btn btn-sm btn-outline-primary float-right">
+                    <div id="add-quota-override-btn" class="btn btn-sm btn-outline-primary float-end">
                         Add cluster/tag override...
                     </div>
                 </td>

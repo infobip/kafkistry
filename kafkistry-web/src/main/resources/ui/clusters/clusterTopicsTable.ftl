@@ -6,8 +6,8 @@
 
 <#assign datatableId = "topics">
 <#include "../common/loading.ftl">
-<table id="${datatableId}" class="table table-bordered datatable" style="display: none;">
-    <thead class="thead-dark">
+<table id="${datatableId}" class="table table-hover table-bordered datatable" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th>Topic name</th>
         <th style="width: 200px;">Topic status</th>
@@ -22,15 +22,13 @@
             <#assign presentInRegistry = !statusTypes?seq_contains("UNKNOWN")>
             <tr class="topic-row table-row">
                 <td>
-                    <a href="${appUrl.topics().showInspectTopicOnCluster(topicName, clusterIdentifier)}">
-                        <button class="btn btn-sm btn-outline-dark"
-                                title="Inspect this topic on this cluster...">
+                    <a href="${appUrl.topics().showInspectTopicOnCluster(topicName, clusterIdentifier)}"
+                       title="Inspect this topic on this cluster...">
                             <#if presentInRegistry>
-                                <span class="font-weight-bold">${topicStatus.topicName} 🔍</span>
+                                <span class="font-weight-bold">${topicStatus.topicName}</span>
                             <#else>
-                                <span class="text-info">${topicStatus.topicName} 🔍</span>
+                                <span class="text-info">${topicStatus.topicName}</span>
                             </#if>
-                        </button>
                     </a>
                 </td>
                 <td style="width: 200px;">

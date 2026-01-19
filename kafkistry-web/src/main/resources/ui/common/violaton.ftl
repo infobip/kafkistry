@@ -31,23 +31,23 @@
 <#function severityClass severity>
     <#switch severity>
         <#case "NONE">
-            <#return "badge-success">
+            <#return "bg-success">
         <#case "MINOR">
-            <#return "badge-info">
+            <#return "bg-info">
         <#case "WARNING">
-            <#return "badge-warning">
+            <#return "bg-warning">
         <#case "CRITICAL">
         <#case "ERROR">
-            <#return "badge-danger">
+            <#return "bg-danger">
         <#default>
-            <#return "badge-secondary">
+            <#return "bg-secondary">
     </#switch>
 </#function>
 
 <#macro interpretMessage violation>
 <#-- @ftlvariable name="violation" type="com.infobip.kafkistry.service.RuleViolation" -->
     <#assign ruleSimpleName = violation.ruleClassName?substring(violation.ruleClassName?last_index_of(".") + 1)>
-    <strong>Rule</strong>: <span class="small text-monospace" title="${violation.ruleClassName}">${ruleSimpleName}</span><br/>
+    <strong>Rule</strong>: <span class="small font-monospace" title="${violation.ruleClassName}">${ruleSimpleName}</span><br/>
     <strong>Severity</strong>:
     <span class="badge ${severityClass(violation.severity)}">${violation.severity}</span>
     <br/>

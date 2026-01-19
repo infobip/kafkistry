@@ -28,12 +28,12 @@
 
     <div class="card">
         <div class="card-header">
-            <div class="form-row">
+            <div class="row g-2">
                 <div class="col">
                     <span class="h4">Recent history</span>
                 </div>
                 <#assign lastCounts = [5, 10, 25, 100]>
-                <div class="col text-right">
+                <div class="col text-end">
                     Show latest:
                     <#list lastCounts as count>
                         <a class="small btn btn-sm btn-outline-secondary" href="${appUrl.history().showRecentCount(count)}">
@@ -54,7 +54,7 @@
     <br/>
     <#if allCommits?size gt 0>
         <a href="${appUrl.history().showAll()}" >
-            <button class="btn btn-primary width-full" data-toggle="collapse" data-target="#opening">
+            <button class="btn btn-primary width-full" data-bs-toggle="collapse" data-bs-target="#opening">
                 Show full history... <i id="opening" class="collapse">Opening...</i>
             </button>
         </a>

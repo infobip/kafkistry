@@ -5,12 +5,14 @@ function registerAllInfoTooltips() {
 }
 
 function registerAllInfoTooltipsIn(container) {
-    $.fn.popover.Constructor.Default.whiteList.table = [];
-    $.fn.popover.Constructor.Default.whiteList.tr = [];
-    $.fn.popover.Constructor.Default.whiteList.td = [];
-    $.fn.popover.Constructor.Default.whiteList.th = [];
-    $.fn.popover.Constructor.Default.whiteList.tbody = [];
-    $.fn.popover.Constructor.Default.whiteList.thead = [];
+    // Bootstrap 5 renamed whiteList to allowList
+    const myDefaultAllowList = bootstrap.Tooltip.Default.allowList;
+    myDefaultAllowList.table = [];
+    myDefaultAllowList.tr = [];
+    myDefaultAllowList.td = [];
+    myDefaultAllowList.th = [];
+    myDefaultAllowList.tbody = [];
+    myDefaultAllowList.thead = [];
 
     let infoIcons = [];
     container.find(".info-icon, .info-label").each(function () {
@@ -21,6 +23,9 @@ function registerAllInfoTooltipsIn(container) {
         }
     });
     infoIcons.forEach(function (element) {
-        element.tooltip();
+        element.tooltip({
+            html: true,
+            placement: 'auto',
+        });
     });
 }

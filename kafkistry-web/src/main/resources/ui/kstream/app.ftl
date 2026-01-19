@@ -20,7 +20,7 @@
 <div class="container">
     <h3><#include  "../common/backBtn.ftl"> KStream application info</h3>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Cluster</th>
             <td><a href="${appUrl.clusters().showCluster(clusterIdentifier)}">${clusterIdentifier}</a></td>
@@ -33,10 +33,9 @@
         <tr>
             <th>Consumer group</th>
             <td>
-                <a href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, kafkaStreamsApp.kafkaStreamAppId)}">
-                    <button class="btn btn-sm btn-outline-dark mb-1" title="Inspect this group KStreams app">
-                        ${kafkaStreamsApp.kafkaStreamAppId} 🔍
-                    </button>
+                <a href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, kafkaStreamsApp.kafkaStreamAppId)}"
+                   title="Inspect this group KStreams app">
+                        ${kafkaStreamsApp.kafkaStreamAppId}
                 </a>
             </td>
         </tr>
@@ -47,8 +46,8 @@
             <h4>Involved topics</h4>
         </div>
         <div class="card-body p-0">
-            <table class="table m-0">
-                <tr class="thead-dark">
+            <table class="table table-hover m-0">
+                <tr class="table-theme-dark">
                     <th>Topic</th>
                     <th>Involvement</th>
                 </tr>
@@ -59,7 +58,7 @@
                                 ${inputTopic}
                             </a>
                         </td>
-                        <td><span class="badge badge-primary">INPUT</span></td>
+                        <td><span class="badge bg-primary">INPUT</span></td>
                     </tr>
                 </#list>
                 <#list kafkaStreamsApp.getKStreamInternalTopics() as internalTopic>
@@ -69,7 +68,7 @@
                                 ${internalTopic}
                             </a>
                         </td>
-                        <td><span class="badge badge-info">INTERNAL</span></td>
+                        <td><span class="badge bg-info">INTERNAL</span></td>
                     </tr>
                 </#list>
             </table>

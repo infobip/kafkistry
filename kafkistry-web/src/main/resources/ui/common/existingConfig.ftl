@@ -11,15 +11,15 @@
 
 <style>
     .non-default {
-        background-color: #ccc;
+        --bs-table-bg: var(--bs-primary-bg-subtle);
     }
     .non-default .conf-value {
         font-weight: bold;
     }
 </style>
 
-<table class="table table-sm table-bordered">
-    <thead class="thead-dark">
+<table class="table table-hover table-sm table-bordered table-hover">
+    <thead class="table-theme-dark">
     <tr>
         <th>Key</th>
         <th>Value</th>
@@ -53,7 +53,7 @@
                 </#if>
             </td>
             <td>
-                <span class="small badge badge-secondary">
+                <span class="small badge bg-secondary">
                     ${configVal.source.name()?replace('_', ' ')?replace('CONFIG', '')}
                 </span>
             </td>

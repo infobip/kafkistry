@@ -46,7 +46,7 @@
 
     <h3><#include  "../common/backBtn.ftl"> Topic on cluster inspection </h3>
 
-    <table class="table table-sm">
+    <table class="table table-hover table-sm">
         <tr>
             <th>Topic</th>
             <td>
@@ -132,8 +132,8 @@
                 <div class="card-header h4">Resource requirements</div>
                 <div class="card-body p-0">
                     <#assign requirements=expectedTopicInfo.resourceRequirements>
-                    <table class="table table-sm table-bordered">
-                        <thead class="thead-dark">
+                    <table class="table table-hover table-sm table-bordered">
+                        <thead class="table-theme-dark">
                             <tr>
                                 <th>Avg message size</th>
                                 <th>Messages rate</th>
@@ -171,8 +171,8 @@
                             </td>
                         </tr>
                     </table>
-                    <table class="table table-bordered table-sm m-0">
-                        <thead class="thead-dark">
+                    <table class="table table-hover table-bordered table-sm m-0">
+                        <thead class="table-theme-dark">
                         <tr><@usages.usageHeaderSectionCells/></tr>
                         <tr><@usages.usageHeaderCells/></tr>
                         </thead>
@@ -193,9 +193,9 @@
         <div class="card">
         <div class="card-header h4">Topic configuration</div>
         <div class="card-body p-0">
-        <table class="table table-sm table-bordered">
-            <tr class="thead-dark">
-                <th class="thead-dark">Topic ID (uuid)</th>
+        <table class="table table-hover table-sm table-bordered table-hover">
+            <tr class="table-theme-dark">
+                <th class="table-theme-dark">Topic ID (uuid)</th>
                 <td>
                     <#if topicStatus.existingTopicInfo.uuid??>
                         <strong><code>${topicStatus.existingTopicInfo.uuid}</code></strong>
@@ -205,14 +205,12 @@
                 </td>
             </tr>
         </table>
-        <table class="table table-sm table-bordered">
-            <thead class="thead-dark">
-            <tr>
+        <table class="table table-hover table-sm table-bordered table-hover">
+            <tr class="table-theme-dark">
                 <th>Property</th>
                 <th>Actual value</th>
                 <th>Expected value</th>
             </tr>
-            </thead>
             <tbody>
             <tr>
                 <#assign wrong = wrongPartitionValues?seq_contains("partition-count")>
@@ -258,16 +256,14 @@
                 <#if topicConsumerGroups?size == 0>
                     <i>(no consumer groups reading from this topic)</i>
                 <#else>
-                    <table class="table table-sm mb-0">
-                        <thead class="thead-dark">
-                        <tr>
+                    <table class="table table-hover table-sm table-hover mb-0">
+                        <tr class="table-theme-dark">
                             <th style="width: 60%">Group</th>
                             <th>Status</th>
                             <th>Lag</th>
-                            <th class="text-right"><@consumerUtil.lagDoc/></th>
-                            <th class="text-right"><@consumerUtil.lagPercentDoc/></th>
+                            <th class="text-end"><@consumerUtil.lagDoc/></th>
+                            <th class="text-end"><@consumerUtil.lagPercentDoc/></th>
                         </tr>
-                        </thead>
                         <#list topicConsumerGroups as consumerGroup>
                             <tr>
                                 <td>
@@ -283,10 +279,10 @@
                                         <td>
                                             <@util.namedTypeStatusAlert type=topicMember.lag.status small=true/>
                                         </td>
-                                        <td class="text-right">
+                                        <td class="text-end">
                                             ${topicMember.lag.amount!'N/A'}
                                         </td>
-                                        <td class="text-right">
+                                        <td class="text-end">
                                             <#if topicMember.lag.percentage??>
                                                 <small title="Percentage of worst partition lag">
                                                     <#if topicMember.lag.percentage?is_infinite>
@@ -316,8 +312,8 @@
                 <#if kStreamsInvolvement.inputOf?size == 0 && !(kStreamsInvolvement.internalIn)??>
                     <i>(not involved in KStreams)</i>
                 <#else>
-                    <table class="table table-sm mb-0">
-                        <thead class="thead-dark">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="table-theme-dark">
                         <tr>
                             <th>KStream App</th>
                             <th>This topic involved as</th>
@@ -330,7 +326,7 @@
                                         ${kStreamApp.kafkaStreamAppId}
                                     </a>
                                 </td>
-                                <td><span class="badge badge-primary">INPUT</span></td>
+                                <td><span class="badge bg-primary">INPUT</span></td>
                             </tr>
                         </#list>
                         <#if kStreamsInvolvement.internalIn??>
@@ -341,7 +337,7 @@
                                         ${kStreamApp.kafkaStreamAppId}
                                     </a>
                                 </td>
-                                <td><span class="badge badge-info">INTERNAL</span></td>
+                                <td><span class="badge bg-info">INTERNAL</span></td>
                             </tr>
                         </#if>
                     </table>
@@ -391,7 +387,7 @@
 
         <#if reAssignmentInProgress>
             <div>
-                <button class="btn btn-outline-danger btn-sm mb-2 collapsed" data-toggle="collapsing" data-target="#cancel-re-assignment-menu">
+                <button class="btn btn-outline-danger btn-sm mb-2 collapsed" data-toggle="collapsing" data-bs-target="#cancel-re-assignment-menu">
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>
                     Cancel in-progress re-assignments...
@@ -401,7 +397,7 @@
                             data-cluster-identifier="${clusterInfo.identifier}" class="btn btn-danger btn-sm">
                         Do cancel re-assignment of ${partitionReAssignments?size} partitions
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm" data-toggle="collapsing" data-target="#cancel-re-assignment-menu">
+                    <button class="btn btn-outline-secondary btn-sm" data-toggle="collapsing" data-bs-target="#cancel-re-assignment-menu">
                         Don't cancel
                     </button>
                 </div>
@@ -411,7 +407,7 @@
 
         <div>
             <div>
-                <button class="btn btn-outline-info btn-sm mb-2 collapsed" data-toggle="collapsing" data-target="#unwanted-leader-menu">
+                <button class="btn btn-outline-info btn-sm mb-2 collapsed" data-toggle="collapsing" data-bs-target="#unwanted-leader-menu">
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>
                     Re-assign by setting unwanted preferred leader...
@@ -424,7 +420,7 @@
                         ${brokerId?c}
                     </a>
                 </#list>
-                <button class="btn btn-outline-secondary btn-sm" data-toggle="collapsing" data-target="#unwanted-leader-menu">
+                <button class="btn btn-outline-secondary btn-sm" data-toggle="collapsing" data-bs-target="#unwanted-leader-menu">
                     Cancel
                 </button>
             </div>
@@ -433,7 +429,7 @@
 
         <div>
             <div>
-                <button class="btn btn-outline-info btn-sm mb-2 collapsed" data-toggle="collapsing" data-target="#excluded-brokers-menu">
+                <button class="btn btn-outline-info btn-sm mb-2 collapsed" data-toggle="collapsing" data-bs-target="#excluded-brokers-menu">
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>
                     Re-assign by excluding brokers from assignment...
@@ -466,25 +462,25 @@
                             </tr>
                         </#list>
                 </table>
-                <button class="btn btn-outline-secondary btn-sm" data-toggle="collapsing" data-target="#excluded-brokers-menu">
+                <button class="btn btn-outline-secondary btn-sm" data-toggle="collapsing" data-bs-target="#excluded-brokers-menu">
                     Cancel
                 </button>
             </div>
         </div>
         <br/>
 
-        <div class="form-row">
-            <div class="col-">
+        <div class="row g-2">
+            <div class="col-auto">
                 <a class="btn btn-outline-info btn-sm" href="${appUrl.topicsManagement().showCustomReAssignmentInput(topicName, clusterIdentifier)}">
                     Specify custom assignments...
                 </a>
             </div>
-            <div class="col-">
+            <div class="col-auto">
                 <a class="btn btn-outline-info btn-sm" href="${appUrl.topicsManagement().showTopicConfigSet(topicName, clusterIdentifier)}">
                     Set config...
                 </a>
             </div>
-            <div class="col-">
+            <div class="col-auto">
                 <a class="btn btn-outline-danger btn-sm" href="${appUrl.topicsManagement().showDeleteTopicOnCluster(topicName, clusterInfo.identifier)}">
                     Force delete...
                 </a>

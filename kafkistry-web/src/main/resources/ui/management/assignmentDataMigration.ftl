@@ -4,7 +4,7 @@
 <tr>
     <th>Total bytes all brokers</th>
     <td class="p-0">
-        <table class="table table-sm">
+        <table class="table table-hover table-sm">
             <thead class="thead-light">
             <tr>
                 <th>Transfer IO</th>
@@ -24,7 +24,7 @@
 <tr class="no-hover">
     <th>Bytes per broker</th>
     <td class="p-0">
-        <table class="table table-sm m-0">
+        <table class="table table-hover table-sm m-0">
             <thead class="thead-light">
             <tr>
                 <th>Broker</th>

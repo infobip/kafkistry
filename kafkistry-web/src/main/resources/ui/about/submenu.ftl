@@ -16,34 +16,34 @@
         <ul class="navbar-nav mr-auto">
             <li class="nav-item ">
                 <a class="nav-link <#if activeNavItem == "build-info">${activeClasses}</#if>"
-                   href="${appUrl.about().showBuildInfo()}">Build info<span class="sr-only">(current)</span></a>
+                   href="${appUrl.about().showBuildInfo()}">Build info<span class="visually-hidden">(current)</span></a>
             </li>
             <li class="nav-item ">
                 <a class="nav-link <#if activeNavItem == "users-sessions">${activeClasses}</#if>"
-                   href="${appUrl.about().showUsersSessions()}">Users sessions<span class="sr-only">(current)</span></a>
+                   href="${appUrl.about().showUsersSessions()}">Users sessions<span class="visually-hidden">(current)</span></a>
             </li>
             <li class="nav-item ">
                 <a class="nav-link <#if activeNavItem == "scraping-statuses">${activeClasses}</#if>"
-                   href="${appUrl.about().showScrapingStatuses()}">Scraping statuses<span class="sr-only">(current)</span></a>
+                   href="${appUrl.about().showScrapingStatuses()}">Scraping statuses<span class="visually-hidden">(current)</span></a>
             </li>
             <li class="nav-item ">
                 <a class="nav-link <#if activeNavItem == "background-jobs">${activeClasses}</#if>"
-                   href="${appUrl.about().showBackgroundJobs()}">Background jobs<span class="sr-only">(current)</span></a>
+                   href="${appUrl.about().showBackgroundJobs()}">Background jobs<span class="visually-hidden">(current)</span></a>
             </li>
             <li class="nav-item ">
                 <a class="nav-link <#if activeNavItem == "environment">${activeClasses}</#if>"
-                   href="${appUrl.about().showEnvironment()}">Environment<span class="sr-only">(current)</span></a>
+                   href="${appUrl.about().showEnvironment()}">Environment<span class="visually-hidden">(current)</span></a>
             </li>
             <#if autopilotEnabled>
                 <li class="nav-item ">
                     <a class="nav-link <#if activeNavItem == "autopilot">${activeClasses}</#if>"
-                       href="${appUrl.autopilot().showAutopilotPage()}">Autopilot<span class="sr-only">(current)</span></a>
+                       href="${appUrl.autopilot().showAutopilotPage()}">Autopilot<span class="visually-hidden">(current)</span></a>
                 </li>
             </#if>
             <#if gitStorageEnabled>
                 <li class="nav-item ">
                     <a class="nav-link <#if activeNavItem == "git">${activeClasses}</#if>"
-                       href="${appUrl.history().showRecent()}">Git<span class="sr-only">(current)</span></a>
+                       href="${appUrl.history().showRecent()}">Git<span class="visually-hidden">(current)</span></a>
                 </li>
             </#if>
         </ul>

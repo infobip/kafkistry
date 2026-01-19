@@ -14,8 +14,8 @@
         <#if pendingBranches?size == 0>
             <i>(no pending changes)</i>
         <#else>
-            <table class="table table-sm mb-0">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-theme-dark">
                 <tr>
                     <th>Branch</th>
                     <th>Clusters</th>

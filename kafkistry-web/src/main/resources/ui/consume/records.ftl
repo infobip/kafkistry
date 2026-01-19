@@ -99,18 +99,20 @@
         </#list>
     </ul>
     <#assign totalSum = preRetention + totalSkipCount + totalReadCount + recordsResult.remainingCount>
+    <div class="text-body">
     <@pb.progressBar total=totalSum preRetention=preRetention skip=totalSkipCount read=totalReadCount remain=recordsResult.remainingCount
         emHeight=2 legend=true/>
+    </div>
 </div>
 
-<button type="button" class="consume-trigger-btn btn btn-secondary form-control" id="continue-consume-btn">
+<button type="button" class="consume-trigger-btn btn btn-secondary w-100" id="continue-consume-btn">
     Continue reading
 </button>
 <div class="spacing"></div>
 
 <div class="card">
     <div id="partition-stats-toggler" class="card-header collapsed"
-         data-toggle="collapsing" data-target="#partition-stats-container" title="Expand/collapse...">
+         data-toggle="collapsing" data-bs-target="#partition-stats-container" title="Expand/collapse...">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         <span class="h5">Partition read stats</span>
@@ -122,32 +124,34 @@
 <br/>
 <div class="spacing"></div>
 
-<div class="form-row">
-    <div class="col-3">
+<div class="row">
+    <div class="col-auto">
         <label>Control</label>
         <div class="width-full">
             <button id="expand-all-btn" class="btn btn-sm btn-secondary">Expand all</button>
             <button id="collapse-all-btn" class="btn btn-sm btn-secondary">Collapse all</button>
         </div>
     </div>
-    <div class="col-5">
+    <div class="col"></div>
+    <div class="col-auto">
         <label>Show</label>
-        <div class="width-full form-row show-flags">
-            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+        <div class="show-flags">
+            <label class="btn btn-sm btn-outline-secondary mouse-pointer">
                 Metadata <input type="checkbox" name="showMetadata" checked>
             </label>
-            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+            <label class="btn btn-sm btn-outline-secondary mouse-pointer">
                 Key <input type="checkbox" name="showKey" checked>
             </label>
-            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+            <label class="btn btn-sm btn-outline-secondary mouse-pointer">
                 Headers <input type="checkbox" name="showHeaders" checked>
             </label>
-            <label class="btn btn-sm btn-outline-secondary m-1 mouse-pointer">
+            <label class="btn btn-sm btn-outline-secondary mouse-pointer">
                 Value <input type="checkbox" name="showValue" checked>
             </label>
         </div>
     </div>
-    <div class="col-4">
+    <div class="col"></div>
+    <div class="col-auto">
         <label>Extra</label>
         <div class="width-full">
             <button id="export-btn" class="btn btn-sm btn-secondary">Export to file...</button>
@@ -161,7 +165,7 @@
     <div class="record card">
         <div class="card-header h6">Record ${record?index+1} of ${records?size}</div>
         <div class="card-body">
-            <div class="form-row metadata-row mb-2">
+            <div class="row g-2 metadata-row mb-2">
                 <div class="col-1">
                     <strong>Metadata</strong>:
                 </div>
@@ -178,7 +182,7 @@
                     <br/>
                     <span class="text-nowrap">
                         <span>Timestamp</span>:
-                        <span class="badge badge-secondary record-timestamp-type"
+                        <span class="badge bg-secondary record-timestamp-type"
                               data-timestamp-type="${record.timestampType.name()}">${record.timestampType}</span>
                         <code class="timestamp record-metadata-value"
                               data-timestamp="${record.timestamp?c}">${record.timestamp?c}</code>
@@ -186,7 +190,7 @@
                     </span>
                 </div>
             </div>
-            <div class="form-row key-row mb-2">
+            <div class="row g-2 key-row mb-2">
                 <div class="col-1">
                     <strong>Key</strong>:
                 </div>
@@ -195,15 +199,15 @@
                     <#include "kafkaValue.ftl">
                 </div>
             </div>
-            <div class="form-row headers-row mb-2">
+            <div class="row g-2 headers-row mb-2">
                 <div class="col-1">
                     <strong>Headers</strong>:
                 </div>
-                <div class="col">
+                <div class="col p-0">
                     <#if record.headers?size == 0>
                         <span><i>(none)</i></span>
                     <#else>
-                        <div class="record-value headers-collapsed">
+                        <div class="record-value headers-collapsed mx-1">
                             <pre class="renderjson"><#t>
                                 <span class="disclosure">⊕</span><#t>
                                 {<#t>
@@ -214,7 +218,7 @@
                             </pre>
                         </div>
                         <div class="headers-expanded" style="display: none;">
-                            <pre class="renderjson"><#t>
+                            <pre class="renderjson px-1"><#t>
                                 <a href="#" class="headers-collapse" onclick="return false;"><#t>
                                     <span class="disclosure">⊖</span><#t>
                                 </a><#t>
@@ -222,14 +226,14 @@
                             <table class="table table-sm table-borderless m-0">
                                 <#list record.headers as header>
                                     <tr class="record-header">
-                                        <td class="form-row pl-0">
+                                        <td class="row ps-0">
                                             <div class="col">
                                                 <div class="record-value header-name renderjson" data-type="key">
                                                     <span class="key">${header.key}</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="pr-0">
+                                        <td class="pe-0">
                                             <#assign kafkaValue = header.value>
                                             <#include "kafkaValue.ftl">
                                         </td>
@@ -240,7 +244,7 @@
                     </#if>
                 </div>
             </div>
-            <div class="form-row value-row mb-2">
+            <div class="row g-2 value-row mb-2">
                 <div class="col-1">
                     <strong>Value</strong>:
                 </div>

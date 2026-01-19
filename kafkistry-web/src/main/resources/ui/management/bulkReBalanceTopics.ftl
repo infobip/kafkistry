@@ -39,15 +39,15 @@
 
     <h4>Selection pipeline:</h4>
     <div class="row">
-        <div class="col text-center"><span class="badge badge-primary p-2">ALL</span><br/>${stats.counts.all}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-danger p-2">FILTERED</span><br/>${stats.counts.filtered}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-info p-2">QUALIFIED</span><br/>${stats.counts.qualified}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-warning p-2">CANDIDATES</span><br/>${stats.counts.candidates}</div>
-        <div class="col- h4">&rarr;</div>
-        <div class="col text-center"><span class="badge badge-success p-2">SELECTED</span><br/>${stats.counts.selected}</div>
+        <div class="col text-center"><span class="badge bg-primary p-2">ALL</span><br/>${stats.counts.all}</div>
+        <div class="col-auto h4">&rarr;</div>
+        <div class="col text-center"><span class="badge bg-danger p-2">FILTERED</span><br/>${stats.counts.filtered}</div>
+        <div class="col-auto h4">&rarr;</div>
+        <div class="col text-center"><span class="badge bg-info p-2">QUALIFIED</span><br/>${stats.counts.qualified}</div>
+        <div class="col-auto h4">&rarr;</div>
+        <div class="col text-center"><span class="badge bg-warning p-2">CANDIDATES</span><br/>${stats.counts.candidates}</div>
+        <div class="col-auto h4">&rarr;</div>
+        <div class="col text-center"><span class="badge bg-success p-2">SELECTED</span><br/>${stats.counts.selected}</div>
     </div>
     <br/>
     <p>
@@ -56,10 +56,10 @@
         <#else>
             Selection of topics was limited by:
             <#list selectionLimitedBy as causeType>
-                <span class="badge badge-dark">${causeType}</span>
+                <span class="badge bg-neutral">${causeType}</span>
             </#list>
         </#if>
-        <button role="button" data-toggle="collapse" data-target="#pipeline-selection-details"
+        <button role="button" data-bs-toggle="collapse" data-bs-target="#pipeline-selection-details"
                 class="btn btn-sm btn-secondary mx-2">
             Pipeline selection details...
         </button>
@@ -68,8 +68,8 @@
     <div id="pipeline-selection-details" class="collapse">
         <#macro filterStageDisplay filterStages>
         <#-- @ftlvariable name="filterStages" type="java.util.List<com.infobip.kafkistry.service.topic.BulkReAssignmentSuggestion.TopicSuggestStage>" -->
-            <table class="table table-sm">
-                <tr class="thead-dark">
+            <table class="table table-hover table-sm">
+                <tr class="table-theme-dark">
                     <th>#</th>
                     <th>Topic</th>
                     <th>Outcome</th>
@@ -85,9 +85,9 @@
                         </td>
                         <td>
                             <#if filterStage.passed>
-                                <span class="badge badge-success">PASSED</span>
+                                <span class="badge bg-success">PASSED</span>
                             <#else>
-                                <span class="badge badge-danger">DROPPED</span>
+                                <span class="badge bg-danger">DROPPED</span>
                             </#if>
                         </td>
                         <td>
@@ -141,9 +141,9 @@
         <#assign assignmentStatus = topicsReBalanceStatuses[topicName]>
         <#assign topicReplicas = clusterTopicsReplicas[topicName]>
         <div class="card">
-            <div class="card-header collapsed" data-target="#topic-${topicName?index}"
-                 data-toggle="collapse">
-                <div class="float-left">
+            <div class="card-header collapsed" data-bs-target="#topic-${topicName?index}"
+                 data-bs-toggle="collapse">
+                <div class="float-start">
                     <span class="if-collapsed">▼</span>
                     <span class="if-not-collapsed">△</span>
                     <strong>${topicName?index + 1})</strong>
@@ -164,8 +164,8 @@
     <#if topicsReBalanceSuggestions?size gt 0>
         <br/>
         <#assign dataMigration = totalDataMigration>
-        <table class="table">
-            <thead class="thead-dark">
+        <table class="table table-hover">
+            <thead class="table-theme-dark">
                 <tr><th colspan="2" class="text-center">Total data migration</th></tr>
             </thead>
             <#include "assignmentDataMigration.ftl">

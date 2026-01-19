@@ -13,7 +13,7 @@
         </a>
     </div>
 <#else>
-    <table class="table table-sm m-0">
+    <table class="table table-hover table-sm m-0">
         <thead class="thead-light">
         <tr>
             <th colspan="2">State</th>
@@ -22,16 +22,16 @@
         <#list clustersStats as stateType, count>
             <tr>
                 <td>
-                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                    <a class="m-0 p-0 width-full btn btn-sm text-start"
                        href="${appUrl.clusters().showClusters()}#${stateType}" title="Click to filter clusters...">
                         <@util.namedTypeStatusAlert type=stateType alertInline=false/>
                     </a>
                 </td>
-                <td class="text-right">${count}</td>
+                <td class="text-end align-content-center pe-2">${count}</td>
             </tr>
         </#list>
     </table>
-    <table class="table table-sm m-0">
+    <table class="table table-hover table-sm m-0">
         <thead class="thead-light">
         <tr>
             <th colspan="2">Issues</th>
@@ -40,12 +40,12 @@
         <#list issuesStats as issue, count>
             <tr>
                 <td>
-                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                    <a class="m-0 p-0 width-full btn btn-sm text-start"
                        href="${appUrl.clusters().showClusters()}#${issue.name}" title="Click to filter clusters...">
                         <@util.namedTypeStatusAlert type=issue alertInline=false/>
                     </a>
                 </td>
-                <td class="text-right">${count}</td>
+                <td class="text-end align-content-center pe-2">${count}</td>
             </tr>
         </#list>
     </table>

@@ -5,6 +5,7 @@ $(document).ready(function() {
     let metadataUpdateTimeout = null;
 
     let clusterSelect = $("#cluster-select");
+    tweakSelectPickerBootstrapStyling(clusterSelect);
     let nullKeyCheckbox = $("#null-key-checkbox");
     let nullValueCheckbox = $("#null-value-checkbox");
     let topicInput = $("#topic-input");
@@ -372,9 +373,7 @@ $(document).ready(function() {
         const errorHtml = `
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 ${message}
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;
         resultContainer.html(errorHtml).show().animate({ scrollTop: resultContainer.offset().top }, 500);

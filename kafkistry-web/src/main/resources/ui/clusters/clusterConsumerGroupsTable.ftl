@@ -8,8 +8,8 @@
 <#assign datatableId = "consumer-groups">
 <#include "../common/loading.ftl">
 
-<table id="${datatableId}" class="table table-bordered datatable" style="display: none;">
-    <thead class="thead-dark">
+<table id="${datatableId}" class="table table-hover table-bordered datatable" style="display: none;">
+    <thead class="table-theme-dark">
     <tr>
         <th>Group</th>
         <th>Status</th>
@@ -21,7 +21,7 @@
         <tr>
             <td>
                 <a href="${appUrl.consumerGroups().showConsumerGroup(clusterIdentifier, consumerGroup.groupId)}"
-                   class="btn btn-sm btn-outline-dark mb-1">
+                   title="Inspect consumer group on this cluster...">
                     ${consumerGroup.groupId}
                 </a>
             </td>

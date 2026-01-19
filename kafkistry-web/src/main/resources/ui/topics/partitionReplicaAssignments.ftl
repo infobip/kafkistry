@@ -105,17 +105,17 @@
             <#import "../clusters/clusterNodesList.ftl" as brokerBadge>
 
             <div style="overflow-x: auto; max-height: 90vh;">
-                <table id="assignments" class="partitions-assignments table table-sm sticky-table-headers m-0">
+                <table id="assignments" class="partitions-assignments table table-sm table-hover sticky-table-headers m-0">
                     <thead class="sticky-header">
-                    <tr class="thead-dark">
+                    <tr class="table-theme-dark">
                         <th class="sticky-header text-center">
-                            <div class="text-right">
+                            <div class="text-end">
                                 Brokers
                             </div>
                             <div style="height: 6px;" class="align-content-center">
-                                <div style="height: 1px; background-color: white; transform: rotate(10deg)"></div>
+                                <div style="height: 1px; background-color: var(--bs-table-color); transform: rotate(10deg)"></div>
                             </div>
-                            <div class="text-left">
+                            <div class="text-start">
                                 Partition
                             </div>
                         </th>
@@ -127,7 +127,7 @@
                         </#list>
                     </tr>
                     <#if topicReplicas??>
-                        <tr class="thead-light">
+                        <tr class="table-light">
                             <th class="sticky-header text-center">
                                 <span title="All size sum">
                                     ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
@@ -150,13 +150,13 @@
                         <tr>
                             <#assign rackUsageDisbalanced = assignmentsDisbalance?? && assignmentsDisbalance.partitionsPerRackDisbalance.partitionDisbalance?api.get(partition.partition) gt 0>
                             <#assign singleRackWarning = assignmentStatus.clusterHasRacks && partition.singleRackReplicas>
-                            <td class="sticky-header font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning<#else>bg-white</#if>">
+                            <td class="sticky-header font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning<#else>bg-body</#if>">
                                 ${partition.partition}
                             </td>
                             <#if assignmentStatus.clusterHasRacks>
                                 <td class="small <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning</#if>">
                                     <#if singleRackWarning>
-                                        <span class="badge badge-warning" title="This partition is hosted by brokers of same rack">Single rack</span>
+                                        <span class="badge bg-warning" title="This partition is hosted by brokers of same rack">Single rack</span>
                                     </#if>
                                     <#list partition.rackCounts as rackStatus>
                                         <#assign rackTitle = (rackStatus.oldCount == rackStatus.newCount)?then(
@@ -166,17 +166,17 @@
                                         <div class="text-nowrap <#if rackStatus.newCount == 0>crossed</#if>"
                                              title="${rackTitle}<#if rackStatus.newCount == 0>, to remove</#if>">
                                             <#if rackStatus.oldCount == rackStatus.newCount>
-                                                <span class="badge badge-secondary">${rackStatus.newCount}</span>
+                                                <span class="badge bg-secondary">${rackStatus.newCount}</span>
                                             <#else>
                                                 <#if rackStatus.newCount gt rackStatus.oldCount>
                                                     <#if rackStatus.oldCount == 0>
-                                                        <span class="badge badge-success">+${rackStatus.newCount}</span>
+                                                        <span class="badge bg-success">+${rackStatus.newCount}</span>
                                                     <#else>
                                                         <span class="btn-group">
-                                                            <span class="badge badge-secondary" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                                            <span class="badge bg-secondary" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
                                                                 ${rackStatus.oldCount}
                                                             </span>
-                                                            <span class="badge badge-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                            <span class="badge bg-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
                                                                 +${rackStatus.newCount-rackStatus.oldCount}
                                                             </span>
                                                         </span>
@@ -184,13 +184,13 @@
                                                 </#if>
                                                 <#if rackStatus.oldCount gt rackStatus.newCount>
                                                     <#if rackStatus.newCount == 0>
-                                                        <span class="badge badge-danger">-${rackStatus.oldCount}</span>
+                                                        <span class="badge bg-danger">-${rackStatus.oldCount}</span>
                                                     <#else>
                                                         <span class="btn-group">
-                                                            <span class="badge badge-secondary" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                                            <span class="badge bg-secondary" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
                                                                 ${rackStatus.oldCount}
                                                             </span>
-                                                            <span class="badge badge-danger" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                            <span class="badge bg-danger" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
                                                                 -${rackStatus.oldCount-rackStatus.newCount}
                                                             </span>
                                                         </span>
@@ -294,9 +294,9 @@
                                                             <li>
                                                                 Lag diff between HW and LEO:
                                                                 <#if replicaInfo.offsetLag gt 0>
-                                                                    <span class='badge badge-danger'>Lag: ${_util.prettyNumber(replicaInfo.offsetLag)}</span>
+                                                                    <span class='badge bg-danger'>Lag: ${_util.prettyNumber(replicaInfo.offsetLag)}</span>
                                                                 <#else>
-                                                                    <span class='badge badge-success'>No lag</span>
+                                                                    <span class='badge bg-success'>No lag</span>
                                                                 </#if>
                                                             </li>
                                                         </#if>
@@ -329,7 +329,7 @@
                                                 <span title="Size of replica">${_util.prettyDataSize(replicaInfo.sizeBytes)}</span>
                                                 <#if replicaInfo.future>
                                                     <br/>
-                                                    <span class="badge badge-light">future replica</span>
+                                                    <span class="badge bg-light">future replica</span>
                                                 </#if>
                                             </div>
                                         </#if>

@@ -13,11 +13,11 @@
                 </#if>
                 <#include "../../common/presenceForm.ftl">
             </div>
-            <div class="col-">
+            <div class="col-auto">
                 <button role="button" class="remove-rule-btn btn btn-sm btn-outline-danger">x</button>
             </div>
         </div>
-        <div class="ruleData form-row pt-3">
+        <div class="ruleData row g-2 pt-3">
             <div class="col">
                 <#assign host = (rule.host)!''>
                 <input type="text" name="host" placeholder="host ip(s) or * for any" value="${host}" class="form-control"

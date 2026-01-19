@@ -55,7 +55,7 @@
                 Got result set of <code>${result.count}</code> rows<#if result.totalCount gt result.count>, total count without <strong>LIMIT</strong> would be <code>${result.totalCount}</code></#if>
             </p>
         </div>
-        <div class="col-">
+        <div class="col-auto">
             <#if result.count gt 0>
                 <button id="export-csv-btn" class="btn btn-sm btn-secondary">
                     <span>📥</span> Export to CSV
@@ -67,13 +67,13 @@
 
 <div style="overflow-x: scroll;">
 
-<table class="table table-sm table-bordered table-striped text-monospace text-small small">
-    <thead class="thead-dark">
+<table class="table table-hover table-sm table-bordered table-striped font-monospace text-small small">
+    <thead class="table-theme-dark">
     <tr>
         <th>#</th>
         <#list result.linkedCompoundTypes as type>
             <th>
-                <span class="badge badge-info">
+                <span class="badge bg-info">
                 ${type.name()?replace("_","-")?lower_case}
                 </span>
             </th>
@@ -100,7 +100,7 @@
                         <#if row.linkedResource?? && row.linkedResource.types?seq_contains(type)>
                             <a href="${compoundLink(type, row.linkedResource)}"
                                target="_blank"
-                               class="btn-xsmall btn btn-outline-dark"
+                               class="btn-xsmall btn btn-outline-secondary"
                                title="Open ${type.name()?lower_case?replace('_', '-')}..."
                             >🔍</a>
                         <#else>

@@ -29,13 +29,13 @@
 <#import "../common/infoIcon.ftl" as info>
 
 <div class="container">
-    <h3>Cluster: <span class="text-monospace">${clusterIdentifier}</span></h3>
+    <h3>Cluster: <span class="font-monospace">${clusterIdentifier}</span></h3>
 
     <div class="dropdown btn-group">
-        <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Registry action...
         </button>
-        <div class="dropdown-menu open">
+        <div class="dropdown-menu">
             <button id="refresh-btn" class="dropdown-item text-secondary">
                 Refresh
             </button>
@@ -49,10 +49,10 @@
     </div>
 
     <div class="dropdown btn-group">
-        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Create all missing...
         </button>
-        <div class="dropdown-menu open">
+        <div class="dropdown-menu">
             <a href="${appUrl.topicsManagement().showBulkCreateMissingTopics(clusterIdentifier)}"
                class="dropdown-item text-primary">
                 Create missing topics...
@@ -69,10 +69,10 @@
     </div>
 
     <div class="dropdown btn-group">
-        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Topic<small>(s)</small> action...
         </button>
-        <div class="dropdown-menu open">
+        <div class="dropdown-menu">
             <a href="${appUrl.topicsManagement().showBulkConfigUpdates(clusterIdentifier)}"
                class="dropdown-item text-info">
                 Update topics wrong configs...
@@ -98,26 +98,26 @@
     </div>
 
     <div class="dropdown btn-group">
-        <button type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Throttle...
         </button>
-        <div class="dropdown-menu open">
+        <div class="dropdown-menu">
             <a href="${appUrl.clustersManagement().showApplyThrottling(clusterIdentifier)}"
-               class="dropdown-item text-dark">
+               class="dropdown-item text-secondary">
                 Change throttle rate...
             </a>
             <a href="${appUrl.topicsManagement().showThrottleBrokerPartitionsForm(clusterIdentifier)}"
-               class="dropdown-item text-dark">
+               class="dropdown-item text-secondary">
                 Throttle specific broker(s)/topic(s)...
             </a>
         </div>
     </div>
 
     <div class="dropdown btn-group">
-        <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Inspect...
         </button>
-        <div class="dropdown-menu open">
+        <div class="dropdown-menu">
             <a href="${appUrl.clusters().showClusterBalance(clusterIdentifier)}" class="dropdown-item text-secondary">
                 Cluster balance...
             </a>
@@ -129,7 +129,7 @@
 
     <br/>
 
-    <table class="table table-sm mt-3">
+    <table class="table table-hover table-sm mt-3">
         <tr>
             <th>Cluster identifier</th>
             <td>${clusterIdentifier}</td>
@@ -141,7 +141,7 @@
                     <i>(no tags)</i>
                 <#else>
                     <#list clusterModel.tags as tag>
-                        <span class="mb-1 badge badge-secondary">${tag}</span>
+                        <span class="mb-1 badge bg-secondary">${tag}</span>
                     </#list>
                 </#if>
             </td>
@@ -162,7 +162,7 @@
                     ----
                 </#if>
                 <#list clusterModel.profiles as profile>
-                    <span class="badge badge-light">${profile}</span>
+                    <span class="badge bg-light">${profile}</span>
                 </#list>
             </td>
         </tr>
@@ -194,7 +194,7 @@
                 <th>Consensus type</th>
                 <td>
                     <#assign clusterConsensusType = clusterInfo.kraftEnabled?then("KRaft", "Zookeper")>
-                    <span class="badge badge-dark">${clusterConsensusType}</span>
+                    <span class="badge bg-neutral">${clusterConsensusType}</span>
                 </td>
             </tr>
             <#if clusterInfo.kraftEnabled>
@@ -307,7 +307,7 @@
     <br/>
 
     <div class="card">
-        <div class="card-header collapsed" data-toggle="collapsing" data-target="#topics-card-body">
+        <div class="card-header collapsed" data-toggle="collapsing" data-bs-target="#topics-card-body">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
             <span class="h4">Status per topic on this cluster</span>
@@ -322,7 +322,7 @@
     <br/>
 
     <div class="card">
-        <div class="card-header collapsed" data-toggle="collapsing" data-target="#acls-card-body">
+        <div class="card-header collapsed" data-toggle="collapsing" data-bs-target="#acls-card-body">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
             <span class="h4">Status per ACLs on this cluster</span>
@@ -337,7 +337,7 @@
     <br/>
 
     <div class="card">
-        <div class="card-header collapsed" data-toggle="collapsing" data-target="#quotas-card-body">
+        <div class="card-header collapsed" data-toggle="collapsing" data-bs-target="#quotas-card-body">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
             <span class="h4">Status per entity quotas on this cluster</span>
@@ -352,7 +352,7 @@
     <br/>
 
     <div class="card">
-        <div class="card-header collapsed" data-toggle="collapsing" data-target="#consumer-groups-card-body">
+        <div class="card-header collapsed" data-toggle="collapsing" data-bs-target="#consumer-groups-card-body">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
             <span class="h4">Status per consumer group on this cluster</span>
@@ -367,7 +367,7 @@
     <br/>
 
     <div class="card">
-        <div class="card-header collapsed" data-toggle="collapsing" data-target="#cluster-metadata-info-card-body">
+        <div class="card-header collapsed" data-toggle="collapsing" data-bs-target="#cluster-metadata-info-card-body">
             <span class="when-collapsed" title="expand...">▼</span>
             <span class="when-not-collapsed" title="collapse...">△</span>
             <span class="h4">Cluster metadata info / broker config properties</span>
@@ -377,13 +377,13 @@
             <#if clusterStatus.clusterInfo??>
                 <#assign clusterInfo = clusterStatus.clusterInfo>
                 <div>
-                    <table class="table table-sm">
-                        <tr class="thead-dark"><th colspan="100">Cluster features</th></tr>
+                    <table class="table table-hover table-sm">
+                        <tr class="table-theme-dark"><th colspan="100">Cluster features</th></tr>
                         <tr>
                             <th>Finalized Features Epoch</th>
                             <td>${clusterInfo.features.finalizedFeaturesEpoch}</td>
                         </tr>
-                        <tr class="thead-dark"><th>Finalized Feature</th><th>Versions range (min..max)</th></tr>
+                        <tr class="table-theme-dark"><th>Finalized Feature</th><th>Versions range (min..max)</th></tr>
                         <#list clusterInfo.features.finalizedFeatures as feature, versions>
                             <tr>
                                 <th>${feature}</th>
@@ -395,7 +395,7 @@
                         <#if clusterInfo.features.finalizedFeatures?size == 0>
                             <tr><td colspan="100" class="text-center"><i>(empty)</i></td></tr>
                         </#if>
-                        <tr class="thead-dark"><th>Supported Feature</th><th>Versions range  (min..max)</th></tr>
+                        <tr class="table-theme-dark"><th>Supported Feature</th><th>Versions range  (min..max)</th></tr>
                         <#list clusterInfo.features.supportedFeatures as feature, versions>
                             <tr>
                                 <th>${feature}</th>
@@ -409,7 +409,7 @@
                         </#if>
                     </table>
                 </div>
-                <table class="table table-sm">
+                <table class="table table-hover table-sm">
                     <tr>
                         <th>Select node config / Api keys</th>
                         <td>
@@ -417,7 +417,7 @@
                                 <#list clusterInfo.nodeIds as nodeId>
                                     <li>
                                         <#assign active = (nodeId == clusterInfo.controllerId)?then("active", "")>
-                                        <a class="btn btn-sm btn-outline-dark m-1 ${active}" data-toggle="tab"
+                                        <a class="btn btn-sm btn-outline-secondary m-1 ${active}" data-toggle="tab"
                                            href="#node-${nodeId?c}-config">
                                             ${nodeId?c}
                                         </a>
@@ -436,13 +436,13 @@
                                 <p>
                                     ZK migration:
                                     <#if nodeApiKeys.zkMigrationEnabled>
-                                        <span class="badge badge-success">ENABLED</span>
+                                        <span class="badge bg-success">ENABLED</span>
                                     <#else>
-                                        <span class="badge badge-secondary">NOT ENABLED</span>
+                                        <span class="badge bg-secondary">NOT ENABLED</span>
                                     </#if>
                                 </p>
-                                <table class="table table-sm">
-                                    <thead class="thead-dark">
+                                <table class="table table-hover table-sm">
+                                    <thead class="table-theme-dark">
                                     <tr>
                                         <th>Api Id</th>
                                         <th>Api name</th>
@@ -460,31 +460,31 @@
                                         <tr>
                                             <td><code>${apiKey.id}</code></td>
                                             <#if apiKey.metadata??>
-                                                <td><span class="badge badge-dark">${apiKey.metadata.name}</span></td>
+                                                <td><span class="badge bg-neutral">${apiKey.metadata.name}</span></td>
                                                 <td>
                                                     <#if apiKey.metadata.clusterAction>
-                                                        <span class="badge badge-primary">YES</span>
+                                                        <span class="badge bg-primary">YES</span>
                                                     <#else>
-                                                        <span class="badge badge-secondary">NO</span>
+                                                        <span class="badge bg-secondary">NO</span>
                                                     </#if>
                                                 </td>
                                                 <td>
                                                     <#if apiKey.metadata.forwardable>
-                                                        <span class="badge badge-primary">YES</span>
+                                                        <span class="badge bg-primary">YES</span>
                                                     <#else>
-                                                        <span class="badge badge-secondary">NO</span>
+                                                        <span class="badge bg-secondary">NO</span>
                                                     </#if>
                                                 </td>
                                                 <td>
                                                     <#if apiKey.metadata.requiresDelayedAllocation>
-                                                        <span class="badge badge-primary">REQUIRED</span>
+                                                        <span class="badge bg-primary">REQUIRED</span>
                                                     <#else>
-                                                        <span class="badge badge-secondary">NOT REQUIRED</span>
+                                                        <span class="badge bg-secondary">NOT REQUIRED</span>
                                                     </#if>
                                                 </td>
                                                 <td><code>${apiKey.metadata.minRequiredInterBrokerMagic}</code></td>
                                             <#else>
-                                                <td><span class="badge badge-warning">UNKNOWN</span></td>
+                                                <td><span class="badge bg-warning">UNKNOWN</span></td>
                                                 <td colspan="4">---</td>
                                             </#if>
                                             <td>${apiKey.minVersion!'---'}</td>

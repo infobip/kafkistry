@@ -25,15 +25,15 @@
     <br/>
     <p>
         <strong>Entity:</strong>
-        <a class="btn btn-sm btn-outline-dark mb-1"
+        <a title="Inspect this entity..."
            href="${appUrl.quotas().showEntity(entity.asID())}">
             <@quotaUtil.entity entity = entity/>
         </a>
     </p>
     <hr/>
 
-    <table class="table table-bordered">
-        <thead class="thead-dark">
+    <table class="table table-hover table-bordered">
+        <thead class="table-theme-dark">
         <tr>
             <th>Entity</th>
             <th>Cluster</th>
@@ -45,7 +45,7 @@
         <#list unwantedClusterQuotas as clusterIdentifier, inspection>
             <tr class="unwanted-quotas-cluster" data-cluster-identifier="${clusterIdentifier}">
                 <td>
-                    <a class="btn btn-sm btn-outline-dark mb-1"
+                    <a title="Inspect this entity..."
                        href="${appUrl.quotas().showEntity(entity.asID())}">
                         <@quotaUtil.entity entity = entity/>
                     </a>

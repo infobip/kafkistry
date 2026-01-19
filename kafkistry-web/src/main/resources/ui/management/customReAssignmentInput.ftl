@@ -25,7 +25,7 @@
 <div class="container">
     <h1>Topic re-assign with custom assignment</h1>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Cluster</th>
             <td>
@@ -46,8 +46,8 @@
         </tr>
     </table>
 
-    <table class="table table-sm fixed-layout">
-        <thead class="thead-dark">
+    <table class="table table-hover table-sm fixed-layout">
+        <thead class="table-theme-dark">
         <tr>
             <th>Partition</th>
             <th>Preferred leader's size</th>

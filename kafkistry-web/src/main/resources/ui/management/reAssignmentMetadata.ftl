@@ -5,7 +5,7 @@
 <#-- @ftlvariable name="reBalanceSuggestion" type="com.infobip.kafkistry.service.topic.ReBalanceSuggestion" -->
 <#-- @ftlvariable name="topicReplicas" type="com.infobip.kafkistry.kafkastate.TopicReplicaInfos" -->
 
-<table class="table">
+<table class="table table-hover">
     <tr>
         <th>Cluster</th>
         <td>

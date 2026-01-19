@@ -4,7 +4,7 @@
     <div class="progress-bar-section h-100 d-flex ${colorClass} <#if amount == 0>progress-bar-empty</#if>"
          title="${what} ${amount} record(s) ${util.prettyNumber(percent)}%"
          style="width: ${percent?c}%;">
-        <div class="m-auto text-monospace">
+        <div class="m-auto font-monospace">
             <#if percent gt 20>
                 ${what}: ${util.prettyNumber(percent)}%
             <#elseif percent gt 4>
@@ -25,14 +25,14 @@
     <#if total gt 0>
         <#if legend>
             <div class="row m-0 text-center">
-                <div class="col-">
-                    <span class="badge badge-dark">Begin</span> &rarr;
+                <div class="col-auto">
+                    <span class="badge bg-neutral">Begin</span> &rarr;
                 </div>
                 <div class="col">
                     &rarr; <span class="font-italic">Read progress</span> &rarr;
                 </div>
-                <div class="col-">
-                    &rarr; <span class="badge badge-dark">End</span>
+                <div class="col-auto">
+                    &rarr; <span class="badge bg-neutral">End</span>
                 </div>
             </div>
         </#if>

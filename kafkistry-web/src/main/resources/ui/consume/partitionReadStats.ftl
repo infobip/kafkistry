@@ -3,7 +3,7 @@
 <#import "../common/util.ftl" as util>
 <#import "progressBar.ftl" as pb>
 
-<table class="table table-sm m-0">
+<table class="table table-hover table-sm m-0">
     <thead class="thead-light">
     <tr>
         <th>Partition</th>
@@ -40,7 +40,7 @@
                                   title="Started at timestamp"></span>
                         </#if>
                     </div>
-                    <div class="col-">&rarr;</div>
+                    <div class="col-auto">&rarr;</div>
                     <div class="col">
                         <code title="Ended at offset">${partitionStatus.endedAtOffset}</code>
                         <@offsetPercentage offset=partitionStatus.endedAtOffset zeroDivDefault=100.0 partitionStatus=partitionStatus/>
@@ -64,9 +64,9 @@
             <td>${partitionStatus.matching}</td>
             <td>
                 <#if partitionStatus.reachedEnd>
-                    <span class="badge badge-primary">YES</span>
+                    <span class="badge bg-primary">YES</span>
                 <#else>
-                    <span class="badge badge-secondary">NO</span>
+                    <span class="badge bg-secondary">NO</span>
                 </#if>
                 <#if partitionStatus.remaining gt 0>
                     <span title="Remaining to end" class="small">

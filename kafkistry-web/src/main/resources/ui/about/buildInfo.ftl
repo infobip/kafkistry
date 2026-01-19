@@ -26,7 +26,7 @@
                 Module: ${module.maven.artifactId}
             </div>
             <div class="card-body p-0">
-                <table class="table m-0">
+                <table class="table table-hover m-0">
                     <tr>
                         <th>Group ID</th><td>${module.maven.groupId}</td>
                     </tr>

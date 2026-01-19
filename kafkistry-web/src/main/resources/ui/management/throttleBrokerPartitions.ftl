@@ -22,7 +22,7 @@
 <div class="container">
     <h1><#include "../common/backBtn.ftl"> Cluster global throttling from/into specific broker(s)</h1>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Cluster</th>
             <td>
@@ -90,8 +90,8 @@
     </div>
     <br/>
 
-    <table class="table">
-        <thead class="thead-dark">
+    <table class="table table-hover">
+        <thead class="table-theme-dark">
         <tr>
             <th colspan="100" class="text-center">Total maximum data migration if throttled brokers were totally
                 out-of-sync

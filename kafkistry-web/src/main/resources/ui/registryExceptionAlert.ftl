@@ -9,32 +9,32 @@
 
     <#switch httpStatus.series().value()>
         <#case 1>
-            <#assign codeClass = "badge-primary">
+            <#assign codeClass = "bg-primary">
             <#break>
         <#case 2>
-            <#assign codeClass = "badge-success">
+            <#assign codeClass = "bg-success">
             <#break>
         <#case 3>
-            <#assign codeClass = "badge-warning">
+            <#assign codeClass = "bg-warning">
             <#break>
         <#case 4>
         <#case 5>
-            <#assign codeClass = "badge-danger">
+            <#assign codeClass = "bg-danger">
             <#break>
         <#default>
-            <#assign codeClass = "badge-secondary">
+            <#assign codeClass = "bg-secondary">
     </#switch>
 
     <span class="badge ${codeClass}">${httpStatus.getReasonPhrase()} - ${httpStatus.value()}</span>
     <br/>
 
-    <span class="message font-weight-bold">Error message</span>:
-    <pre class="pre-message" style="color: #e80000;">${exceptionMessage}</pre>
+    <span class="message fw-bold">Error message</span>:
+    <pre class="pre-message">${exceptionMessage}</pre>
 
     <#if attrsDump?? && attrsDump?size gt 0>
         <div class="card card-sm mt-2">
             <div class="card-header p-2 alert-dark" style="cursor: pointer;"
-                 data-toggle="collapsing" data-target="#attrsDumpCollapse" aria-expanded="false" aria-controls="attrsDumpCollapse">
+                 data-toggle="collapsing" data-bs-target="#attrsDumpCollapse" aria-expanded="false" aria-controls="attrsDumpCollapse">
                 <small class="font-weight-bold">
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>

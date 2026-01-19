@@ -22,7 +22,7 @@
 <div class="container">
     <h1><#include "../common/backBtn.ftl"> Topic manually set config on topic</h1>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Cluster</th>
             <td>
@@ -37,8 +37,8 @@
         </tr>
     </table>
 
-    <table class="table table-sm fixed-layout">
-        <thead class="thead-dark">
+    <table class="table table-hover table-sm fixed-layout">
+        <thead class="table-theme-dark">
         <tr>
             <th>Config property</th>
             <th>Current value</th>
@@ -59,7 +59,8 @@
                 </td>
                 <td>
                     <label class="width-full">
-                        <input class="width-full conf-value-in" type="text" name="${configKey}" value="${configValue.value!''}" data-callback="refreshDiff">
+                        <input class="width-full conf-value-in form-control form-control-sm"
+                               type="text" name="${configKey}" value="${configValue.value!''}" data-callback="refreshDiff">
                         <span class="small text-primary conf-value-out"></span>
                     </label>
                 </td>

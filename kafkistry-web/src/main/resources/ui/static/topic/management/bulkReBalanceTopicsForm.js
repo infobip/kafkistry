@@ -1,6 +1,5 @@
 $(document).ready(function () {
     initRefreshBulkReBalanceUrl();
-    $("select").selectpicker();
     $(document).on("change, keypress, input", "input", null, refreshBulkReBalanceUrl);
     $(document).on("changed.bs.select", "select", null, refreshBulkReBalanceUrl);
     topicNames = $("#topic-names .topic-name").map(function (){
@@ -9,8 +8,10 @@ $(document).ready(function () {
     initPatternAutocomplete();
     setTimeout(function () {
         //when navigating back from submitted and browser restores previously picked options
-        $("select").selectpicker("refresh");
-    }, 50);
+        let $select = $("select");
+        $select.selectpicker();
+        tweakSelectPickerBootstrapStyling($select);
+    }, 0);
     $("#bulkReBalanceUrl").click(function () {
         $(".suggest-loading").show();
     })

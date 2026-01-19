@@ -31,7 +31,7 @@
     <div class="card">
     <div class="card-header">
         <span class="h4">Status of clusters registry</span>
-        <div class="float-right">
+        <div class="float-end">
             <a href="${appUrl.clusters().showAddCluster()}" class="btn btn-primary mr-2">
                 Add new cluster...
             </a>
@@ -47,8 +47,8 @@
     <div class="card-body p-0 pt-2 pb-2">
 
     <#assign disabledCount = 0>
-    <table id="clusters" class="table datatable table-bordered m-0">
-        <thead class="thead-dark">
+    <table id="clusters" class="table table-hover datatable table-bordered m-0">
+        <thead class="table-theme-dark">
         <tr>
             <th>Cluster</th>
             <th>Tags</th>
@@ -69,21 +69,21 @@
                 data-clusterIdentifier="${clusterIdentifier}"
                 data-clusterState="${clusterStatus.clusterState}">
                 <td>
-                    <a class="btn btn-sm btn-outline-dark" href="${appUrl.clusters().showCluster(clusterIdentifier)}">
+                    <a class="" href="${appUrl.clusters().showCluster(clusterIdentifier)}">
                         ${clusterIdentifier}
                     </a>
                 </td>
                 <td>
                     <#if cluster.tags?size gt 0>
                         <div class="alert alert-dark alert-sm mb-1 collapsed" data-toggle="collapsing"
-                             data-target="#cluster-tags-${clusterIdentifier}">
+                             data-bs-target="#cluster-tags-${clusterIdentifier}">
                             <span class="when-collapsed" title="expand...">▼</span>
                             <span class="when-not-collapsed" title="collapse...">△</span>
                             ${cluster.tags?size} tag(s)
                         </div>
                         <div id="cluster-tags-${clusterIdentifier}" class="collapseable">
                             <#list cluster.tags as tag>
-                                <span class="mb-1 badge badge-secondary">${tag}</span>
+                                <span class="mb-1 badge bg-secondary">${tag}</span>
                             </#list>
                         </div>
                     <#else>
@@ -121,14 +121,14 @@
     <#if disabledCount gt 0>
         <br/>
         <div class="card">
-            <div  class="card-header collapsed" data-toggle="collapsing" data-target="#disabled-clusters-card-body">
+            <div  class="card-header collapsed" data-toggle="collapsing" data-bs-target="#disabled-clusters-card-body">
                 <span class="when-collapsed" title="expand...">▼</span>
                 <span class="when-not-collapsed" title="collapse...">△</span>
                 <span class="h5">Disabled clusters (${disabledCount})</span>
             </div>
             <div id="disabled-clusters-card-body" class="card-body p-0 pt-2 pb-2 collapseable">
-                <table id="disabled-clusters" class="table datatable table-bordered m-0">
-                    <thead class="thead-dark">
+                <table id="disabled-clusters" class="table table-hover datatable table-bordered m-0">
+                    <thead class="table-theme-dark">
                     <tr>
                         <th>Cluster</th>
                         <th>Tags</th>
@@ -146,14 +146,14 @@
                             data-clusterIdentifier="${clusterIdentifier}"
                             data-clusterState="${clusterStatus.clusterState}">
                             <td>
-                                <a class="btn btn-sm btn-outline-dark" href="${appUrl.clusters().showCluster(clusterIdentifier)}">
+                                <a href="${appUrl.clusters().showCluster(clusterIdentifier)}">
                                     ${clusterIdentifier}
                                 </a>
                             </td>
                             <td>
                                 <#if cluster.tags?size gt 0>
                                     <#list cluster.tags as tag>
-                                        <span class="mb-1 badge badge-secondary">${tag}</span>
+                                        <span class="mb-1 badge bg-secondary">${tag}</span>
                                     </#list>
                                 <#else>
                                     ---

@@ -2,7 +2,7 @@
 
 <#import "../common/util.ftl" as util>
 
-<table class="table table-sm m-0">
+<table class="table table-hover table-sm m-0">
     <#list clusterAcls.status.statusCounts as statusTypeCount>
         <#assign statusType = statusTypeCount.type>
         <#assign count = statusTypeCount.quantity>

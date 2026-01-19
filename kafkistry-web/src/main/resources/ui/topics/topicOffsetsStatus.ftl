@@ -19,7 +19,7 @@
         </#if>
         <#if topicOffsets.messagesRate??>
             <#assign rate = topicOffsets.messagesRate>
-            <table class="table table-sm" style="table-layout: fixed;">
+            <table class="table table-hover table-sm" style="table-layout: fixed;">
                 <thead class="">
                 <tr>
                     <th colspan="10" class="alert-secondary text-center">Avg msg/sec rate in last</th>

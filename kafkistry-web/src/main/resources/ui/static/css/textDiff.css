@@ -1,17 +1,42 @@
 .diff-equal {
 
 }
-.diff-added {
+
+
+[data-bs-theme="light"] .diff-added {
     background-color: #d2ffc0;
 }
-.diff-added-detail {
+
+[data-bs-theme="light"] .diff-added-detail {
     background-color: #82d373;
     border-radius: 3px;
 }
-.diff-removed {
+
+[data-bs-theme="light"] .diff-removed {
     background-color: #ffcbc1;
 }
-.diff-removed-detail {
+
+[data-bs-theme="light"] .diff-removed-detail {
     background-color: #ff9092;
     border-radius: 3px;
 }
+
+
+[data-bs-theme="dark"] .diff-added {
+    background-color: #2d531e;
+}
+
+[data-bs-theme="dark"] .diff-added-detail {
+    background-color: #42a727;
+    border-radius: 3px;
+}
+
+[data-bs-theme="dark"] .diff-removed {
+    background-color: #6c382d;
+}
+
+[data-bs-theme="dark"] .diff-removed-detail {
+    background-color: #bc0303;
+    border-radius: 3px;
+}
+

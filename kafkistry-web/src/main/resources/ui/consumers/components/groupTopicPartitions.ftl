@@ -15,14 +15,14 @@
                 <input type="checkbox" name="topic" data-topic="${topic}">
                 ${topic}
             </label>
-            <span class="collapsed pr-4 pl-4" data-target="#partitions-${topicMembers?index}" data-toggle="collapse">
+            <span class="collapsed pr-4 pl-4" data-bs-target="#partitions-${topicMembers?index}" data-bs-toggle="collapse">
                 <span class="if-collapsed">▼ <small>${topicMembers.partitionMembers?size} partition(s)...</small></span>
                 <span class="if-not-collapsed">△</span>
             </span>
         </div>
         <div id="partitions-${topicMembers?index}" class="collapse">
-            <table class="table table-sm m-0 mb-4">
-                <tr class="thead-dark">
+            <table class="table table-hover table-sm m-0 mb-4">
+                <tr class="table-theme-dark">
                     <th>Partition</th>
                     <th>Topic begin</th>
                     <th>Group's current</th>

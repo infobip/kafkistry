@@ -24,18 +24,18 @@
             <input id="connection" type="text" placeholder="Enter bootstrap servers: host1:port1,host2:port2,..."
                 class="form-control">
         </label>
-        <div class="col-">
+        <div class="col-auto">
             <label class="form-control" style="cursor: pointer;">
             SSL <input id="ssl" type="checkbox">
             </label>
         </div>
-        <div class="col-">
+        <div class="col-auto">
             <label class="form-control" style="cursor: pointer;">
             SASL <input id="sasl" type="checkbox">
             </label>
         </div>
-        <div class="col-">
-            <select id="profiles" class="kafka-profiles form-control selectpicker" multiple title="Properties profiles">
+        <div class="col-auto">
+            <select id="profiles" class="kafka-profiles selectpicker" multiple title="Properties profiles">
                 <#list existingValues.kafkaProfiles as profile>
                     <option>${profile}</option>
                 </#list>
@@ -44,7 +44,7 @@
 
         <label class="col-2">
             <input id="test-btn" type="submit" value="Test connection"
-                   class="btn btn-outline-primary btn-sm form-control">
+                   class="btn btn-outline-primary btn-sm">
         </label>
         <br/>
     </div>

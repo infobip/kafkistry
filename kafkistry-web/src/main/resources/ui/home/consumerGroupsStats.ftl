@@ -14,41 +14,37 @@
 <#else>
     <#macro consumerStatsTables cStats navigateSuffix="">
     <#-- @ftlvariable name="cStats"  type="com.infobip.kafkistry.service.consumers.ConsumersStats" -->
-        <table class="table table-sm m-0">
-            <thead class="thead-light">
-            <tr>
+        <table class="table table-hover table-sm m-0">
+            <tr class="table-light">
                 <th colspan="2">Group status</th>
             </tr>
-            </thead>
             <#list cStats.consumerStatusCounts as stateType, count>
                 <tr>
                     <td>
-                        <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                        <a class="m-0 p-0 width-full btn btn-sm text-start"
                            href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}${navigateSuffix}"
                            title="Click to filter consumer groups...">
                             <@util.namedTypeStatusAlert type=stateType alertInline=false/>
                         </a>
                     </td>
-                    <td class="text-right">${count}</td>
+                    <td class="text-end align-content-center pe-2">${count}</td>
                 </tr>
             </#list>
         </table>
-        <table class="table table-sm m-0">
-            <thead class="thead-light">
-            <tr>
+        <table class="table table-hover table-sm m-0">
+            <tr class="table-light">
                 <th colspan="2">Lag status</th>
             </tr>
-            </thead>
             <#list cStats.lagStatusCounts as stateType, count>
                 <tr>
                     <td>
-                        <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                        <a class="m-0 p-0 width-full btn btn-sm text-start"
                            href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}#${stateType}${navigateSuffix}"
                            title="Click to filter consumer groups...">
                             <@util.namedTypeStatusAlert type=stateType alertInline=false/>
                         </a>
                     </td>
-                    <td class="text-right">${count}</td>
+                    <td class="text-end align-content-center pe-2">${count}</td>
                 </tr>
             </#list>
         </table>

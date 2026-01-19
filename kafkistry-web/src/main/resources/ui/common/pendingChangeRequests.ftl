@@ -10,9 +10,9 @@
         <#if pendingUpdates?size == 0>
             <i>(no pending update requests)</i>
         <#else>
-            <table class="table table-sm mb-0">
+            <table class="table table-hover table-sm mb-0">
                 <thead>
-                <tr class="thead-dark">
+                <tr class="table-theme-dark">
                     <th>${entityName}</th>
                     <th>Pending branch/commits</th>
                 </tr>

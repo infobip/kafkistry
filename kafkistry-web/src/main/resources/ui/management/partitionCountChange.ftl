@@ -25,7 +25,7 @@
     <h3>You are about to change topic partition count on kafka cluster</h3>
     <br>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Cluster</th>
             <td>

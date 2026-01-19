@@ -26,7 +26,7 @@
     <h3><#include "../common/backBtn.ftl"> Commit changes</h3>
 
     <#assign commit = commitChanges.commit>
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Committer username</th>
             <td>${commit.username}</td>

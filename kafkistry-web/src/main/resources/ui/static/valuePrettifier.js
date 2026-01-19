@@ -189,9 +189,9 @@ function setupTooltipHelp(input, name, parent) {
     }
     help.addClass("info-icon");
     help.attr("title", helpText);
-    help.attr("data-placement", "bottom");
-    help.attr("data-toggle", "tooltip");
-    help.attr("data-html", "true");
+    help.attr("data-bs-placement", "bottom");
+    help.attr("data-bs-toggle", "tooltip");
+    help.attr("data-bs-html", "true");
     help.attr("tooltip-initialized", "true");
     help.tooltip();
 }

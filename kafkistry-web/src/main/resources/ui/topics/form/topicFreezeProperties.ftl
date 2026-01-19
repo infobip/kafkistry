@@ -8,14 +8,14 @@
                 <input class="form-control mb-2" name="freezeReason" title="Reason text"
                     placeholder="Enter reason why is this freeze here (links, jira ABC-123...)" value="${reason}"/>
 
-                <div class="form-row">
-                    <div class="col-">
+                <div class="row g-2">
+                    <div class="col-auto">
                         <label class="form-control">
                             Partition count
                             <input type="checkbox" name="freezePartitionCount" <#if partitionCount>checked</#if>>
                         </label>
                     </div>
-                    <div class="col-">
+                    <div class="col-auto">
                         <label class="form-control">
                             Replication factor
                             <input type="checkbox" name="freezeReplicationFactor" <#if replicationFactor>checked</#if>>
@@ -33,7 +33,7 @@
                     </div>
                 </div>
             </div>
-            <label class="col-">
+            <label class="col-auto">
                 <button class="remove-freeze-directive-btn btn btn-sm btn-outline-danger">x</button>
             </label>
         </div>
@@ -51,7 +51,7 @@
         />
     </#list>
 </div>
-<button id="add-freeze-directive-btn" class="btn btn-outline-primary float-right">
+<button id="add-freeze-directive-btn" class="btn btn-outline-primary float-end">
     Add freeze directive for config/properties
 </button>
 

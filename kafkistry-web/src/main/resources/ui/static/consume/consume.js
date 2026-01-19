@@ -34,7 +34,9 @@ $(document).ready(function () {
     if (offsetTypeInput.val() === 'TIMESTAMP') {
         initDatePicker();
     }
-    $("select[name=cluster]").change(adjustClusterChange);
+    let clusterPicker = $("select[name=cluster]");
+    clusterPicker.change(adjustClusterChange);
+    tweakSelectPickerBootstrapStyling(clusterPicker);
     let topicInput = $("input[name=topic]");
     topicInput.on('autocompleteselect', function () {
         setTimeout(adjustTopicChange, 10);
@@ -672,6 +674,8 @@ function toggleSuppressedKafkaValues() {
 function showCopiedTooltip(copyBtn, copyInput) {
     console.log("copied: '"+copyInput.val()+"'");
     let originalTitle = copyBtn.attr("title");
+    copyBtn.attr("data-bs-placement", "auto");
+    copyBtn.attr("data-bs-trigger", "manual");
     copyBtn.attr("title", "Copied!");
     copyBtn.tooltip('show');
     setTimeout(function () {

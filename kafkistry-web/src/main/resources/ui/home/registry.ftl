@@ -16,7 +16,7 @@
 <#include "../commonMenu.ftl">
 
 <div class="container">
-    <div class="text-center pt-2 form-row">
+    <div class="text-center pt-2 row g-2">
         <div class="col">
             <h1>
                 <span class="align-middle">
@@ -29,7 +29,7 @@
     <hr/>
     <h3 class="text-center">Your owned Status counts / quick navigate</h3>
 
-    <div class="form-row">
+    <div class="row g-2">
         <div class="col">
             <div class="card">
                 <div class="card-header">
@@ -71,7 +71,7 @@
     <hr/>
     <h3 class="text-center">All Status counts / quick navigate</h3>
 
-    <div class="form-row mb-2">
+    <div class="row g-2 mb-2">
         <div class="col-4">
             <div class="card">
                 <div class="card-header">
@@ -95,7 +95,7 @@
             </div>
         </div>
     </div>
-    <div class="form-row">
+    <div class="row g-2">
         <div class="col">
             <div class="card">
                 <div class="card-header">

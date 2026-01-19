@@ -45,7 +45,7 @@
     <#assign alerts = []>
     <#assign seenIssues = []>
     <#assign issuesTooltip>
-        <table class="table table-sm table-borderless ml-1">
+        <table class="table table-hover table-sm table-borderless ml-1">
         <#list clusterIssues as issue>
             <#if seenIssues?seq_contains(issue.name)>
                 <#continue>
@@ -61,7 +61,7 @@
         </table>
     </#assign>
     <div class="text-nowrap alert alert-sm ${mostSevereClass(alerts)} mb-1 collapsed" data-toggle="collapsing"
-         data-target="#cluster-issues-${clusterIdentifier}">
+         data-bs-target="#cluster-issues-${clusterIdentifier}">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         CLUSTER ISSUES
@@ -78,13 +78,13 @@
     <#assign fullyOk = false>
     <#assign alerts = []>
     <#assign topicsCountsTooltip>
-        <table class="table table-sm table-borderless ml-1">
+        <table class="table table-hover table-sm table-borderless ml-1">
             <#list clusterTopics.topicsStatusCounts as statusTypeCount>
                 <#assign statusType = statusTypeCount.type>
                 <#assign count = statusTypeCount.quantity>
                 <tr>
                     <td class="p-0">
-                        <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                        <a class="m-0 p-0 width-full btn btn-sm text-start"
                            href="${clusterUrl}#topics|${statusType.name}" title="Filter topics by...">
                             <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
                             <@util.namedTypeStatusAlert type=statusType alertInline=false small=true/>
@@ -96,7 +96,7 @@
         </table>
     </#assign>
     <div class="text-nowrap alert alert-sm ${mostSevereClass(alerts)} mb-1 collapsed"
-         data-toggle="collapsing" data-target="#topic-issues-${clusterIdentifier}">
+         data-toggle="collapsing" data-bs-target="#topic-issues-${clusterIdentifier}">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         TOPIC ISSUES
@@ -113,13 +113,13 @@
     <#assign fullyOk = false>
     <#assign alerts = []>
     <#assign aclsCountsTooltip>
-        <table class="table table-sm table-borderless ml-1">
+        <table class="table table-hover table-sm table-borderless ml-1">
             <#list clusterAcls.status.statusCounts as statusTypeCount>
                 <#assign statusType = statusTypeCount.type>
                 <#assign count = statusTypeCount.quantity>
                 <tr>
                     <td class="p-0">
-                        <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                        <a class="m-0 p-0 width-full btn btn-sm text-start"
                            href="${clusterUrl}#acls|${statusType.name}" title="Filter ACLs by...">
                             <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
                             <@util.namedTypeStatusAlert type=statusType alertInline=false small=true/>
@@ -131,7 +131,7 @@
         </table>
     </#assign>
     <div class="text-nowrap alert alert-sm ${mostSevereClass(alerts)} mb-1 collapsed"
-         data-toggle="collapsing" data-target="#acls-issues-${clusterIdentifier}">
+         data-toggle="collapsing" data-bs-target="#acls-issues-${clusterIdentifier}">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         ACLS ISSUES
@@ -148,13 +148,13 @@
     <#assign fullyOk = false>
     <#assign alerts = []>
     <#assign quotasCountsTooltip>
-        <table class="table table-sm table-borderless ml-1">
+        <table class="table table-hover table-sm table-borderless ml-1">
             <#list clusterQuotas.status.statusCounts as statusTypeCount>
                 <#assign statusType = statusTypeCount.type>
                 <#assign count = statusTypeCount.quantity>
                 <tr>
                     <td class="p-0">
-                        <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                        <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-start"
                            href="${clusterUrl}#quotas|${statusType.name}" title="Filter quotas by...">
                             <#assign alerts = alerts + [util.levelToHtmlClass(statusType.level)]>
                             <@util.namedTypeStatusAlert type=statusType alertInline=false small=true/>
@@ -166,7 +166,7 @@
         </table>
     </#assign>
     <div class="text-nowrap alert alert-sm ${mostSevereClass(alerts)} mb-1 collapsed"
-         data-toggle="collapsing" data-target="#quotas-issues-${clusterIdentifier}">
+         data-toggle="collapsing" data-bs-target="#quotas-issues-${clusterIdentifier}">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         QUOTAS ISSUES
@@ -182,14 +182,14 @@
 <#assign cgFullyOk = true>
 <#assign alerts = []>
 <#assign consumerGroupsCountsTooltip>
-    <table class="table table-sm table-borderless ml-1">
+    <table class="table table-hover table-sm table-borderless ml-1">
         <#list clusterGroups.consumersStats.lagStatusCounts as lagStatusType, count>
             <#if lagStatusType.toString() != "NO_LAG" && lagStatusType.toString() != "MINOR_LAG">
                 <#assign cgFullyOk = false>
             </#if>
             <tr>
                 <td class="p-0">
-                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-start"
                        href="${clusterUrl}#consumer-groups|${lagStatusType}" title="Filter consumer groups by...">
                         <#assign alerts = alerts + [util.levelToHtmlClass(lagStatusType.level)]>
                         <@util.namedTypeStatusAlert type=lagStatusType alertInline=false small=true/>
@@ -204,7 +204,7 @@
             </#if>
             <tr>
                 <td class="p-0">
-                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-start"
                        href="${clusterUrl}#consumer-groups|${stateStatusType}" title="Filter consumer groups by...">
                         <#assign alerts = alerts + [util.levelToHtmlClass(stateStatusType.level)]>
                         <@util.namedTypeStatusAlert type=stateStatusType alertInline=false small=true/>
@@ -218,7 +218,7 @@
 <#if !cgFullyOk>
     <#assign fullyOk = false>
     <div class="text-nowrap alert alert-sm ${mostSevereClass(alerts)} mb-1 collapsed"
-         data-toggle="collapsing" data-target="#consumer-groups-issues-${clusterIdentifier}">
+         data-toggle="collapsing" data-bs-target="#consumer-groups-issues-${clusterIdentifier}">
         <span class="when-collapsed" title="expand...">▼</span>
         <span class="when-not-collapsed" title="collapse...">△</span>
         CONSUMER GROUPS ISSUES

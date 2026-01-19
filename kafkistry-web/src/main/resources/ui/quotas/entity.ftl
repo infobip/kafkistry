@@ -29,7 +29,7 @@
 
     <#assign entityID = entityInspection.entity.asID()>
     <#assign existInRegistry = entityInspection.quotaDescription??>
-    <table class="table mb-0">
+    <table class="table table-hover mb-0">
         <tr>
             <th>Quotas entity</th>
             <td><@quotaUtil.entity entity = entityInspection.entity/></td>
@@ -48,7 +48,7 @@
                 <#if existInRegistry>
                     ${entityInspection.quotaDescription.owner}
                 <#else>
-                    <span class="text-primary text-monospace small">[none]</span>
+                    <span class="text-primary font-monospace small">[none]</span>
                 </#if>
             </td>
         </tr>
@@ -112,8 +112,8 @@
     <div class="card">
         <div class="card-header h4">Status per cluster</div>
         <div class="card-body p-0">
-            <table class="table m-0">
-                <thead class="thead-dark">
+            <table class="table table-hover m-0">
+                <thead class="table-theme-dark">
                 <tr>
                     <th>Cluster</th>
                     <th>Status</th>
@@ -174,8 +174,8 @@
                     <i>(none)</i>
                 </div>
             <#else>
-                <table class="table table-sm">
-                    <thead class="thead-dark">
+                <table class="table table-hover table-sm">
+                    <thead class="table-theme-dark">
                     <tr>
                         <th>Principal</th>
                         <th>Affected on clusters</th>
@@ -184,7 +184,7 @@
                     <#list entityInspection.affectedPrincipals as principal, presence>
                         <tr>
                             <td>
-                                <a class="btn btn-sm btn-outline-dark"
+                                <a title="Inspect principal..."
                                    href="${appUrl.acls().showAllPrincipalAcls(principal)}">
                                     ${principal}</a>
                             </td>

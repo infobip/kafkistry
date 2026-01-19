@@ -10,16 +10,16 @@
         </a>
     </div>
 <#else>
-    <table class="table table-sm m-0">
+    <table class="table table-hover table-sm m-0">
         <#list quotasStats as stateType, count>
             <tr>
                 <td>
-                    <a class="m-0 p-0 width-full btn btn-sm btn-outline-light text-left"
+                    <a class="m-0 p-0 width-full btn btn-sm text-start"
                        href="${appUrl.quotas().showAll()}#${stateType.name}" title="Click to filter quotas...">
                         <@util.namedTypeStatusAlert type = stateType alertInline=false/>
                     </a>
                 </td>
-                <td class="text-right">${count}</td>
+                <td class="text-end align-content-center pe-2">${count}</td>
             </tr>
         </#list>
     </table>

@@ -9,8 +9,8 @@
 <#import "../common/infoIcon.ftl" as info>
 <#import "../common/util.ftl" as util>
 
-<table class="table m-0">
-    <thead class="thead-dark table-sm">
+<table class="table table-hover m-0">
+    <thead class="table-theme-dark table-sm">
     <tr>
         <th>Type</th>
         <th>User</th>
@@ -33,7 +33,7 @@
                 <td>
                     <span class="text-nowrap">
                         <#if commit.merge>
-                            <span class="badge badge-secondary">MERGE</span>
+                            <span class="badge bg-secondary">MERGE</span>
                         </#if>
                         <span class="badge ${util.changeTypeClass(request.type)}">
                             ${request.type}

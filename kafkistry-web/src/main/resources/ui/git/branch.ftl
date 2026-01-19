@@ -35,8 +35,8 @@
                 <span>${fileChanges.name}</span>
             </div>
             <div class="card-body p-0 pb-1">
-                <table class="table table-sm">
-                    <tr class="thead-dark">
+                <table class="table table-hover table-sm">
+                    <tr class="table-theme-dark">
                         <th>Type</th>
                         <th>User</th>
                         <th>Commit</th>
@@ -66,8 +66,8 @@
                     </#list>
                 </table>
                 <strong>Total diff</strong> over ${fileChanges.commitChanges?size} commit(s):
-                <button class="btn btn-sm btn-outline-secondary collapsed" data-toggle="collapse"
-                        data-target=".diff-${fileChanges?index}">
+                <button class="btn btn-sm btn-outline-secondary collapsed" data-bs-toggle="collapse"
+                        data-bs-target=".diff-${fileChanges?index}">
                     <span class="if-collapsed">Expand...</span>
                     <span class="if-not-collapsed">Collapse</span>
                 </button>

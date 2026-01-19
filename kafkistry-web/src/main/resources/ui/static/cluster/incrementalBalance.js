@@ -22,6 +22,7 @@ function getClusterIdentifier() {
 
 function initBalanceObjectivePicker(picker) {
     picker.selectpicker();
+    tweakSelectPickerBootstrapStyling(picker);
     let numOptions = picker.find("option").length;
     picker.on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
         let $title = $(this).parent().find('.filter-option-inner-inner');

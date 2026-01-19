@@ -6,10 +6,9 @@
 <#macro aclRuleRow aclRule>
 <#-- @ftlvariable name="aclRule" type="com.infobip.kafkistry.kafka.KafkaAclRule" -->
     <td>
-        <a href="${appUrl.acls().showAllPrincipalAclsRule(aclRule.principal, aclRule.toString())}">
-            <button class="btn btn-sm btn-outline-dark mb-1" title="Inspect this principal's rule...">
-                ${aclRule.principal} 🔍
-            </button>
+        <a href="${appUrl.acls().showAllPrincipalAclsRule(aclRule.principal, aclRule.toString())}"
+           title="Inspect this principal's rule...">
+                ${aclRule.principal}
         </a>
     </td>
     <td>${aclRule.host}</td>
@@ -26,8 +25,8 @@
         <#if affectingAcls?size == 0>
             <i class="m-2">(none)</i>
         <#else>
-            <table class="table table-sm">
-                <thead class="thead-dark">
+            <table class="table table-hover table-sm">
+                <thead class="table-theme-dark">
                 <tr>
                     <th>Principal</th>
                     <th>Host</th>
@@ -51,7 +50,7 @@
                 </#list>
                 <#if wildcardAcls?size gt 0>
                     <tr>
-                        <td colspan="100" class="collapsed" data-target=".wildcard-acl-rule" data-toggle="collapsing">
+                        <td colspan="100" class="collapsed" data-bs-target=".wildcard-acl-rule" data-toggle="collapsing">
                             <div class="p-2">
                                 <span class="when-collapsed" title="expand...">▼</span>
                                 <span class="when-not-collapsed" title="collapse...">△</span>

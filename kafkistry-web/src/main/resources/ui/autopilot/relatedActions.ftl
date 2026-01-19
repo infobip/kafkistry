@@ -10,12 +10,12 @@
 <#if autopilotActions?size == 0>
     ----
 <#else>
-    <table class="table table-sm m-0">
+    <table class="table table-hover table-sm m-0">
         <thead class="thead-light">
         <tr>
             <th>
                 <a href="${appUrl.autopilot().showAutopilotPage()}#${actionsSearchTerm?url}"
-                   class="btn btn-xsmall btn-outline-dark">🔍</a>
+                   class="btn btn-xsmall btn-outline-secondary">🔍</a>
             </th>
             <th>Action</th>
             <th>Target</th>
@@ -29,7 +29,7 @@
                     <td colspan="100">
                         ...and ${autopilotActions?size - actionFlow?index} more action(s)
                         <a href="${appUrl.autopilot().showAutopilotPage()}#${actionsSearchTerm?url}"
-                           class="btn btn-xsmall btn-outline-dark">🔍</a>
+                           class="btn btn-xsmall btn-outline-secondary">🔍</a>
                     </td>
                 </tr>
                 <#break>
@@ -42,16 +42,16 @@
             <tr>
                 <td>
                     <a href="${appUrl.autopilot().showAutopilotPage()}#${actionSearch?url}"
-                        class="btn btn-xsmall btn-outline-dark">🔍</a>
+                        class="btn btn-xsmall btn-outline-secondary">🔍</a>
                 </td>
                 <td>
-                    <span class="text-monospace" title="${actionDescription.actionClass}">
+                    <span class="font-monospace" title="${actionDescription.actionClass}">
                         ${actionDescription.actionName?remove_ending("Action")}
                     </span>
                 </td>
                 <td>
                     <#list actionFlow.metadata.attributes as attrKey, attrVal>
-                        <span class="small badge badge-info" title="${attrKey}">${attrVal}</span>
+                        <span class="small badge bg-info" title="${attrKey}">${attrVal}</span>
                     </#list>
                 </td>
                 <td>

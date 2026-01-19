@@ -62,7 +62,7 @@
         </div>
         <div class="card-body p-0">
             <table id="effective-migrations" class="migrations-table table m-0">
-                <thead class="thead-dark">
+                <thead class="table-theme-dark">
                 <tr>
                     <th>Topic partition</th>
                     <th>Migration</th>
@@ -79,7 +79,7 @@
                 </#list>
             </table>
             <table id="iteration-migrations" class="migrations-table table m-0" style="display: none;">
-                <thead class="thead-dark">
+                <thead class="table-theme-dark">
                 <tr>
                     <th>Iteration</th>
                     <th>Topic partition</th>
@@ -121,8 +121,8 @@
                 </li>
             </ul>
 
-            <table class="table m-0">
-                <thead class="thead-dark">
+            <table class="table table-hover m-0">
+                <thead class="table-theme-dark">
                 <tr>
                     <th>Broker/Metric</th>
                     <th>When</th>
@@ -140,7 +140,7 @@
                     <#assign loadAfter = statusAfter.brokerLoads?api.get(brokerId)>
                     <tr>
                         <th rowspan="3">${brokerId?c}</th>
-                        <th><span class="badge badge-secondary">Before</span></th>
+                        <th><span class="badge bg-secondary">Before</span></th>
 
                         <#assign maxClass = statusBefore.maxLoadBrokers.size?seq_contains(brokerId)?then(maxValueClass, "")>
                         <#assign minClass = statusBefore.minLoadBrokers.size?seq_contains(brokerId)?then(minValueClass, "")>
@@ -173,7 +173,7 @@
                         <td class="${classes}">${loadBefore.leaders}</td>
                     </tr>
                     <tr>
-                        <th><span class="badge badge-dark">After</span></th>
+                        <th><span class="badge bg-neutral">After</span></th>
 
                         <#assign maxClass = statusAfter.maxLoadBrokers.size?seq_contains(brokerId)?then(maxValueClass, "")>
                         <#assign minClass = statusAfter.minLoadBrokers.size?seq_contains(brokerId)?then(minValueClass, "")>
@@ -206,7 +206,7 @@
                         <td class="${classes}">${loadAfter.leaders}</td>
                     </tr>
                     <tr>
-                        <th><span class="badge badge-primary">Diff</span></th>
+                        <th><span class="badge bg-primary">Diff</span></th>
                         <td class="small">
                             <#if loadAfter.size gt loadBefore.size>+</#if>${util.prettyDataSize(loadAfter.size - loadBefore.size)}
                         </td>
@@ -242,7 +242,7 @@
                 </tr>
                 <tr>
                     <th rowspan="3">Disbalance<br/><small>|max - min|</small></th>
-                    <th><span class="badge badge-secondary">Before</span></th>
+                    <th><span class="badge bg-secondary">Before</span></th>
                     <td>${util.prettyDataSize(statusBefore.brokersLoadDiff.size)}</td>
                     <td>${util.prettyNumber(statusBefore.brokersLoadDiff.rate)} msg/sec</td>
                     <td>${util.prettyNumber(statusBefore.brokersLoadDiff.consumeRate)} msg/sec</td>
@@ -251,7 +251,7 @@
                     <td>${statusBefore.brokersLoadDiff.leaders}</td>
                 </tr>
                 <tr>
-                    <th><span class="badge badge-dark">After</span></th>
+                    <th><span class="badge bg-neutral">After</span></th>
                     <td>${util.prettyDataSize(statusAfter.brokersLoadDiff.size)}</td>
                     <td>${util.prettyNumber(statusAfter.brokersLoadDiff.rate)} msg/sec</td>
                     <td>${util.prettyNumber(statusAfter.brokersLoadDiff.consumeRate)} msg/sec</td>
@@ -260,7 +260,7 @@
                     <td>${statusAfter.brokersLoadDiff.leaders}</td>
                 </tr>
                 <tr>
-                    <th><span class="badge badge-primary">Diff</span></th>
+                    <th><span class="badge bg-primary">Diff</span></th>
                     <td>
                         <#assign change = statusAfter.brokersLoadDiff.size - statusBefore.brokersLoadDiff.size>
                         <#if change lte 0>
@@ -312,7 +312,7 @@
                 </tr>
                 <tr>
                     <th rowspan="3">Disbalance<br/>portion<br/><small>(100 * diff / avg)</small></th>
-                    <th><span class="badge badge-secondary">Before</span></th>
+                    <th><span class="badge bg-secondary">Before</span></th>
                     <td>${util.prettyNumber(statusBefore.loadDiffPortion.size)}%</td>
                     <td>${util.prettyNumber(statusBefore.loadDiffPortion.rate)}%</td>
                     <td>${util.prettyNumber(statusBefore.loadDiffPortion.consumeRate)}%</td>
@@ -321,7 +321,7 @@
                     <td>${util.prettyNumber(statusBefore.loadDiffPortion.leaders)}%</td>
                 </tr>
                 <tr>
-                    <th><span class="badge badge-dark">After</span></th>
+                    <th><span class="badge bg-neutral">After</span></th>
                     <td>${util.prettyNumber(statusAfter.loadDiffPortion.size)}%</td>
                     <td>${util.prettyNumber(statusAfter.loadDiffPortion.rate)}%</td>
                     <td>${util.prettyNumber(statusAfter.loadDiffPortion.consumeRate)}%</td>
@@ -330,7 +330,7 @@
                     <td>${util.prettyNumber(statusAfter.loadDiffPortion.leaders)}%</td>
                 </tr>
                 <tr>
-                    <th><span class="badge badge-primary">Diff</span></th>
+                    <th><span class="badge bg-primary">Diff</span></th>
                     <td>
                         <#assign change = statusAfter.loadDiffPortion.size - statusBefore.loadDiffPortion.size>
                         <#if change lte 0>
@@ -390,7 +390,7 @@
             <h4>Data migration summary</h4>
         </div>
         <div class="card-body p-0">
-            <table class="table m-0">
+            <table class="table table-hover m-0">
                 <#assign dataMigration = proposedMigrations.dataMigration>
                 <#include "../management/assignmentDataMigration.ftl">
             </table>

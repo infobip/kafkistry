@@ -35,25 +35,31 @@
         <span class="h4">Principal</span>
     </div>
     <div class="card-body pb-0">
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label">Principal:</label>
-            <#if newName??>
-                <input class="form-control col-sm-10" style="width: 500px;" type="text" name="principal"
-                       placeholder="enter principal name... (e.g. 'User:example')"
-                >
-            <#else>
-                <span class="text-monospace form-control-plaintext col-sm-10"
-                      id="fixed-principal">${principalAcls.principal}</span>
-            </#if>
+            <div class="col-sm-10">
+                <#if newName??>
+                    <input class="form-control" style="width: 500px;" type="text" name="principal"
+                           placeholder="enter principal name... (e.g. 'User:example')"
+                    >
+                <#else>
+                    <span class="font-monospace form-control-plaintext"
+                          id="fixed-principal">${principalAcls.principal}</span>
+                </#if>
+            </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label">Description:</label>
-            <textarea class="form-control col-sm-10" name="description"
-                      placeholder="Enter description, may contain jira task like ABC-123">${(principalAcls.description)!''}</textarea>
+            <div class="col-sm-10">
+                <textarea class="form-control" name="description"
+                          placeholder="Enter description, may contain jira task like ABC-123">${(principalAcls.description)!''}</textarea>
+            </div>
         </div>
-        <div class="form-group row">
+        <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label">Owner:</label>
-            <input class="form-control col-sm-10" type="text" name="owner" title="Owner" value="${(principalAcls.owner)!''}">
+            <div class="col-sm-10">
+                <input class="form-control" type="text" name="owner" title="Owner" value="${(principalAcls.owner)!''}">
+            </div>
         </div>
     </div>
 </div>
@@ -71,7 +77,7 @@
                 </#list>
             </#if>
         </div>
-        <div class="float-right">
+        <div class="float-end">
             <button id="add-rule-btn" role="button" class="btn btn-sm btn-primary">Add ACL rule</button>
         </div>
     </div>

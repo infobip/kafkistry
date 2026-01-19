@@ -32,23 +32,21 @@
     </p>
 
     <div class="form">
-        <div class="form-row form-group">
+        <div class="row g-2 form-group mb-3">
             <div class="col">
                 <label>Topic(s) name filter:</label>
                 <div class="input-group">
-                    <div class="input-group-append">
-                        <select class="form-control" name="patternFilterType" title="Include/Exclude" data-style="alert-secondary">
-                            <option value="INCLUDE" data-content="<span class='text-success'>Include</span>" selected></option>
-                            <option value="EXCLUDE" data-content="<span class='text-danger'>Exclude</span>"></option>
-                        </select>
-                    </div>
+                    <select class="form-control" name="patternFilterType" title="Include/Exclude" data-style="alert-secondary">
+                        <option value="INCLUDE" data-content="<span class='text-success'>Include</span>" selected></option>
+                        <option value="EXCLUDE" data-content="<span class='text-danger'>Exclude</span>"></option>
+                    </select>
                     <input class="form-control" name="topicNamePattern" type="text"
                            placeholder="enter optional /pattern/..." title="Topic name regex">
                 </div>
             </div>
         </div>
 
-        <div class="form-row form-group">
+        <div class="row g-2 form-group mb-3">
             <div class="col">
                 <label>Topic count limit:</label>
                 <input class="form-control" name="topicCountLimit" type="number" placeholder="optional max topics count..."
@@ -65,20 +63,18 @@
                     <input class="form-control" name="totalMigrationBytesLimit" type="number"
                            placeholder="optional max data migration..."
                            title="Maximum total data migration" value="20">
-                    <div class="input-group-append">
-                        <select class="form-control" data-style="alert-secondary" name="totalMigrationBytesLimit-unit" title="data unit">
-                            <option>TB</option>
-                            <option selected>GB</option>
-                            <option>MB</option>
-                            <option>kB</option>
-                            <option>B</option>
-                        </select>
-                    </div>
+                    <select class="form-control" data-style="bg-body-secondary" name="totalMigrationBytesLimit-unit" title="data unit">
+                        <option>TB</option>
+                        <option selected>GB</option>
+                        <option>MB</option>
+                        <option>kB</option>
+                        <option>B</option>
+                    </select>
                 </div>
             </div>
         </div>
 
-        <div class="form-row form-group">
+        <div class="row g-2 form-group mb-3">
             <div class="col">
                 <label>Re-assign objectives:</label>
                 <div>
@@ -94,20 +90,18 @@
             </div>
         </div>
 
-        <div class="form-row form-group">
+        <div class="row g-2 form-group mb-3">
             <div class="col">
                 <label>Topics to re-balance selection order:</label>
                 <div class="input-group">
-                    <div class="input-group-append">
-                        <#assign defaultTopicSelectOrder = "TOP">
-                        <select name="topicSelectOrder" class="form-control" data-style="alert-secondary" title="Topics select order">
-                            <#assign topicSelectOrders = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicSelectOrder"]>
-                            <#list topicSelectOrders as topicSelectOrder, enum>
-                                <#assign selected = topicSelectOrder == defaultTopicSelectOrder>
-                                <option value="${topicSelectOrder}" <#if selected>selected</#if>>${topicSelectOrder} BY</option>
-                            </#list>
-                        </select>
-                    </div>
+                    <#assign defaultTopicSelectOrder = "TOP">
+                    <select name="topicSelectOrder" class="form-control" data-style="alert-secondary" title="Topics select order">
+                        <#assign topicSelectOrders = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicSelectOrder"]>
+                        <#list topicSelectOrders as topicSelectOrder, enum>
+                            <#assign selected = topicSelectOrder == defaultTopicSelectOrder>
+                            <option value="${topicSelectOrder}" <#if selected>selected</#if>>${topicSelectOrder} BY</option>
+                        </#list>
+                    </select>
                     <#assign defaultTopicBy = "MIGRATION_BYTES">
                     <select name="topicBy" class="form-control" title="Topics select by">
                         <#assign topicByTypes = enums["com.infobip.kafkistry.service.topic.BulkReAssignmentOptions$TopicBy"]>
@@ -145,7 +139,7 @@
 
     </div>
 
-    <div class="form-row">
+    <div class="row g-2 mt-2">
         <a id="bulkReBalanceUrl" class="btn btn-primary width-full" href="#">
             <div class="suggest-loading spinner-border spinner-border-sm" role="status" style="display: none;"></div>
             Propose re-assignments for re-balance

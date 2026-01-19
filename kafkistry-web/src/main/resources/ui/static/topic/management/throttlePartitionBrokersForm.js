@@ -1,6 +1,8 @@
 $(document).ready(function () {
     $(document).on("change", ".topic-checkbox", null, topicCheckboxChanged);
-    $("select").selectpicker();
+    let brokerIdsSelect = $("select[name=brokerIds]");
+    brokerIdsSelect.selectpicker();
+    tweakSelectPickerBootstrapStyling(brokerIdsSelect);
     $("input[name=topicSelectType]").change(adjustTopicSelectType);
     allTopics = $(".topic-name").map(function (){
         return $(this).attr("data-topic");

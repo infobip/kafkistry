@@ -36,6 +36,7 @@ function advanceToSaveStep(clusterInfo) {
         profileOption.prependTo(profilesSelect);
     }
     profilesSelect.selectpicker('refresh');
+    tweakSelectPickerBootstrapStyling(profilesSelect);
     $(".test-connection-step").hide();
     $(".save-step").show();
 }

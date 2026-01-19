@@ -23,7 +23,7 @@
 <div class="container">
     <h1><#include "../common/backBtn.ftl"> Cluster global throttling from/into specific broker(s)</h1>
 
-    <table class="table">
+    <table class="table table-hover">
         <tr>
             <th>Cluster</th>
             <td>
@@ -44,7 +44,7 @@
     <form autocomplete="off">
 
     <div class="form table">
-        <div class="form-row">
+        <div class="row g-2">
             <div class="col-2">
                 Select broker(s)
             </div>
@@ -66,22 +66,21 @@
 
     <div class="card">
         <div class="card-header">
-            <div class="form-row form-inline" id="topic-select-type">
+            <div class="d-flex align-items-center gap-2" id="topic-select-type">
                 <h5>Select topics</h5>
-                <label class="btn btn-outline-primary form-control m-1 active">
+                <label class="btn btn-outline-primary m-1 active">
                     All <input type="radio" name="topicSelectType" value="ALL" checked>
                 </label>
-                <label  class="btn btn-outline-success form-control m-1">
+                <label  class="btn btn-outline-success m-1">
                     Custom <input type="radio" name="topicSelectType" value="CUSTOM">
                 </label>
                 <h5>(<span id="selected-topics-count">0</span>)</h5>
             </div>
         </div>
         <div id="topics-multi-select" class="card-body pl-0 pr-0" style="display: none;">
-            <table id="topics-table" class="table datatable">
-                <thead class="thead-dark">
+            <table id="topics-table" class="table table-hover datatable">
+                <thead class="table-theme-dark">
                 <tr>
-                    <th></th>
                     <th>Topic</th>
                     <th>Size</th>
                     <th>Rate</th>
@@ -89,11 +88,13 @@
                 </thead>
                 <#list topics as topic>
                     <tr>
-                        <td data-order="0">
-                            <input type="checkbox" class="topic-checkbox form-control mouse-pointer"
-                                   title="select/unselect" data-topic="${topic.topicName}">
+                        <td>
+                            <label class="form-check">
+                                <input type="checkbox" class="topic-checkbox mouse-pointer form-check-input"
+                                       title="select/unselect" data-topic="${topic.topicName}">
+                                <span class="form-check-label">${topic.topicName}</span>
+                            </label>
                         </td>
-                        <td>${topic.topicName}</td>
                         <#if (topicsReplicas[topic.topicName].totalSizeBytes)??>
                             <#assign sizeBytes = topicsReplicas[topic.topicName].totalSizeBytes>
                             <td data-order="${sizeBytes?c}">

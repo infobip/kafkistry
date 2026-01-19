@@ -8,17 +8,17 @@
 
 
 <#macro tagInput tag>
-    <div class="tag-input form-group form-row mb-0">
-        <label class="col- pr-0">
+    <div class="tag-input form-group row g-2 mb-0">
+        <label class="col-auto pr-0">
             <button class="move-tag-up-btn btn btn-sm btn-outline-info" title="Move tag UP">&uarr;</button>
         </label>
-        <label class="col-">
+        <label class="col-auto">
             <button class="move-tag-down-btn btn btn-sm btn-outline-info" title="Move tag DOWN">&darr;</button>
         </label>
         <label class="col-4">
             <input type="text" name="tag" class="form-control" value="${tag}" placeholder="Tag name...">
         </label>
-        <label class="col-">
+        <label class="col-auto">
             <button class="remove-tag-btn btn btn-sm btn-outline-danger mt-1">x</button>
         </label>
     </div>
@@ -60,19 +60,18 @@
     </div>
     <div class="form-group row">
         <label class="col-2">Properties</label>
-        <div class="col- pl-3"></div>
-        <div class="col-">
-            <label class="mr-2 form-control" style="cursor: pointer;">
+        <div class="col-auto">
+            <label class="form-control" style="cursor: pointer;">
                 SSL <input name="ssl" type="checkbox" <#if (cluster.sslEnabled)!false>checked</#if>>
             </label>
         </div>
-        <div class="col-">
-            <label class="mr-2 form-control" style="cursor: pointer;">
+        <div class="col-auto">
+            <label class="form-control" style="cursor: pointer;">
                 SASL <input name="sasl" type="checkbox" <#if (cluster.saslEnabled)!false>checked</#if>>
             </label>
         </div>
-        <div class="col- ml-3">
-            <select name="profiles" class="kafka-profiles form-control selectpicker" multiple title="Properties profiles">
+        <div class="col-auto ml-3">
+            <select name="profiles" class="kafka-profiles selectpicker" multiple title="Properties profiles">
                 <#assign selectedProfiles = (cluster.profiles)![]>
                 <#list selectedProfiles as profile>
                     <option value="${profile}" selected>${profile}</option>
@@ -85,8 +84,8 @@
             </select>
         </div>
         <div class="col"></div>
-        <div class="col-3">
-            <button class="re-test-connection-btn form-control btn btn-info">
+        <div class="col-auto">
+            <button class="re-test-connection-btn btn btn-info">
                 Re-test connection
             </button>
         </div>
@@ -98,7 +97,7 @@
                 <input name="clusterIdentifier" class="form-control" type="text" title="clusterIdentifier"
                        placeholder="Human-readable unique cluster identifier...">
             <#else>
-                <span class="text-monospace form-control-plaintext col-sm-10"
+                <span class="font-monospace form-control-plaintext col-sm-10"
                       id="fixed-cluster-identifier">${cluster.identifier}</span>
             </#if>
         </div>
@@ -113,7 +112,7 @@
             </div>
             <button class="add-tag-btn btn btn-sm btn-outline-primary">Add tag...</button>
             <label>
-                <select name="copy-tags-from" class="form-control"
+                <select name="copy-tags-from" class="form-control form-control-sm"
                         data-live-search="true" data-size="8">
                     <option disabled selected value="non-selected">Copy all from...</option>
                     <#list existingValues.clusterRefs as clusterRef>

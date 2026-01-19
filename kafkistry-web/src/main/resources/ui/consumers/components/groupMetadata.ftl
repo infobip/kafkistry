@@ -10,7 +10,7 @@
 <#import "../../common/documentation.ftl" as doc>
 <#import "../util.ftl" as statusUtil>
 
-<table class="table table-sm m-0">
+<table class="table table-hover table-sm m-0">
     <tr>
         <th>Group Id</th>
         <td class="h6">

@@ -1,5 +1,5 @@
 <div>
-    <button role="button" data-toggle="collapse" data-target="#re-balance-doc"
+    <button role="button" data-bs-toggle="collapse" data-bs-target="#re-balance-doc"
             class="btn btn-sm btn-outline-info mb-2">
         Topic balance documentation...
     </button>

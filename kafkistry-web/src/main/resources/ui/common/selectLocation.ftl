@@ -14,7 +14,7 @@
                     </#assign>
                     <#assign display>
                         <span class='value-marker' data-value='${tag}'>
-                            <span class='badge badge-dark'>TAG</span> ${tag}
+                            <span class='badge bg-neutral'>TAG</span> ${tag}
                         </span>
                     </#assign>
                     <option value="${tag}" data-type="TAG" data-content="${display}"
@@ -31,7 +31,7 @@
                     </#assign>
                     <#assign display>
                         <span class='value-marker' data-value='${cId}'>
-                            <span class='badge badge-dark'>CLUSTER</span> ${cId}
+                            <span class='badge bg-neutral'>CLUSTER</span> ${cId}
                         </span>
                     </#assign>
                     <option value="${cId}" data-type="CLUSTER" data-content="${display}"

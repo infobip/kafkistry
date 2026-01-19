@@ -38,9 +38,9 @@
 </div>
 
 <div class="container">
-    <div style="border: 1px solid #999999;">
+    <div style="border: 1px solid var(--bs-border-color);">
         <textarea id="sql-edit" class="width-full" name="sql"
-                  placeholder="enter your 'SELECT' SQL query... (CTRL+SPACE to autocomplete tables/columns)"
+                  placeholder="enter your 'SELECT' SQL query... (CTRL+SPACE or CONTROL+SPACE to autocomplete tables/columns)"
         >${query!''}</textarea>
     </div>
     <div class="pt-2">
@@ -49,16 +49,16 @@
             <i>Auto add <code>LIMIT</code> clause if not present</i>
             <input type="checkbox" name="auto-limit" checked>
         </label>
-        <div class="float-right">
+        <div class="float-end">
             <button id="schema-help-btn" type="button" class="btn btn-outline-info">
                 Schema help
             </button>
-            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown"
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"
                     aria-haspopup="true"
                     aria-expanded="false">
                 Query examples...
             </button>
-            <div class="dropdown-menu open">
+            <div class="dropdown-menu">
                 <#list queryExamples as query>
                     <span class="dropdown-item query-example" data-sql="${query.sql}">${query.title}</span>
                 </#list>
@@ -66,7 +66,7 @@
         </div>
     </div>
     <div id="schema-info" style="display: none;">
-        <table class="table table-sm mt-2">
+        <table class="table table-hover table-sm mt-2">
             <thead class="thead-light h5">
             <tr>
                 <th><span>#</span></th>
@@ -76,7 +76,7 @@
             </thead>
             <#list tables as table>
                 <tr class="no-hover">
-                    <td class="text-right">
+                    <td class="text-end">
                         <#if tableCounts[table.name]??>
                             <#assign allCount = tableCounts[table.name]>
                             <small title="Number of rows in table: ${allCount?c}">${_util.prettyNumber(allCount)}</small>
@@ -97,13 +97,13 @@
                     <td>
                         <#list table.columns as column>
                             <#if column.joinKey>
-                                <#assign colClass = "badge-info font-weight-bold">
+                                <#assign colClass = "bg-black font-weight-bold">
                             <#elseif column.primaryKey>
-                                <#assign colClass = "badge-primary font-weight-bold">
+                                <#assign colClass = "bg-primary font-weight-bold">
                             <#elseif column.referenceKey>
-                                <#assign colClass = "badge-secondary font-weight-bold">
+                                <#assign colClass = "bg-success font-weight-bold">
                             <#else>
-                                <#assign colClass = "badge-light">
+                                <#assign colClass = "bg-secondary">
                             </#if>
                             <#assign tooltip>
                                 <#if column.joinKey>
@@ -116,10 +116,10 @@
                                     <span class='badge ${colClass}'>VALUE</span>
                                 </#if>
                                 <br/>
-                                <span class='mt-1 badge badge-light'>${column.type}</span>
+                                <span class='mt-1 badge bg-danger'>${column.type}</span>
                             </#assign>
-                            <span class="sql-column sql-insert-text info-label badge ${colClass}" title="${tooltip}" data-toggle="tooltip"
-                                  data-html="true">
+                            <span class="sql-column sql-insert-text info-label badge ${colClass}" title="${tooltip}" data-bs-toggle="tooltip"
+                                  data-bs-html="true">
                                 ${column.name}
                             </span>
                         </#list>
@@ -133,15 +133,15 @@
 
     <#include "../common/serverOpStatus.ftl">
 
-    <div id="chart-components-wrapper" class="width-full" style="display: none;">
-        <div class="text-right">
-            <button class="btn btn-sm btn-outline-secondary" data-target="#chart-components" data-toggle="collapse">
+    <div id="chart-components-wrapper" class="width-full mb-2" style="display: none;">
+        <div class="text-end">
+            <button class="btn btn-sm btn-outline-secondary" data-bs-target="#chart-components" data-bs-toggle="collapse">
                 <span class="if-collapsed">▼ Show chart</span>
                 <span class="if-not-collapsed">△ Hide chart</span>
             </button>
         </div>
         <div id="chart-components" class="showing collapse show">
-            <div id="chart-container" class="m-4" style="display: none;">
+            <div id="chart-container" class="m-4 bg-body-tertiary" style="display: none;">
                 <canvas id="chart" width="1000" height="350" style="margin: auto;"></canvas>
             </div>
             <#assign statusId = "chart">

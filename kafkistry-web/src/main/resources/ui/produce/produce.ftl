@@ -101,7 +101,7 @@
                         <div class="row">
                             <div class="col-auto">
                                 <div class="input-group">
-                                    <label for="key-serializer" class="input-group-text input-group-prepend">Key Serializer:</label>
+                                    <label for="key-serializer" class="input-group-text">Key Serializer:</label>
                                     <select id="key-serializer" class="form-control">
                                         <#list availableSerializerTypes as type>
                                             <option value="${type}"
@@ -126,7 +126,7 @@
                     </label>
                     <div id="value-section">
                         <div class="input-group">
-                            <label for="value-serializer" class="input-group-text input-group-prepend">Value Serializer:</label>
+                            <label for="value-serializer" class="input-group-text">Value Serializer:</label>
                             <select id="value-serializer" class="form-control">
                                 <#list availableSerializerTypes as type>
                                     <option value="${type}"
@@ -162,8 +162,8 @@
 
         <div class="card">
             <div class="card-header">
-                <button type="button" class="btn btn-sm btn-link" data-toggle="collapse"
-                        data-target="#advanced-options">
+                <button type="button" class="btn btn-sm btn-link" data-bs-toggle="collapse"
+                        data-bs-target="#advanced-options">
                     <span class="fas fa-cog"></span> Advanced Options
                 </button>
             </div>

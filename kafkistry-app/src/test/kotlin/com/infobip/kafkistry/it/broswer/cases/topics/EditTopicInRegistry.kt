@@ -37,13 +37,13 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
             sendKeys("by test updated description")
         }
 
-        browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
+        browser.findElementById("dry-run-inspect-btn").ensureClick()
         await {
             assertThat(browser.findElementById("dry-run-inspect-status").text).contains("my-cluster", "OK")
         }
 
         //try save without message
-        browser.findElementById("edit-btn").scrollIntoView().click()
+        browser.findElementById("edit-btn").ensureClick()
         await {
             browser.assertPageText().contains("Please specify update reason")
         }
@@ -160,21 +160,21 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
             }
 
         //field descriptions
-        browser.findElementWithText("Add field description").scrollIntoView().click()
+        browser.findElementWithText("Add field description").ensureClick()
         browser.findElementByCssSelector(".field-descriptions input[name=field-selector]").clearAndSendKeys("fieldName")
-        browser.findElementByCssSelector(".field-descriptions .add-field-classification-btn").click()
+        browser.findElementByCssSelector(".field-descriptions .add-field-classification-btn").ensureClick()
         browser.findElementByCssSelector(".field-descriptions input[name=field-classification]").clearAndSendKeys("CLS")
         browser.findElementByCssSelector(".field-descriptions textarea[name=field-description]").clearAndSendKeys("documentation of fieldName being CLS")
 
-        browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
+        browser.findElementById("dry-run-inspect-btn").ensureClick()
         await {
             assertThat(browser.findElementById("dry-run-inspect-status").text).contains(
                 "my-cluster", "UPDATE_CONFIG", "CHANGE_PARTITION_COUNT", "CHANGE_REPLICATION_FACTOR"
             )
         }
 
-        browser.findElementWithText("Allow saving ignoring blockers").scrollIntoView().click()
-        browser.findElementById("edit-btn").scrollIntoView().click()
+        browser.findElementWithText("Allow saving ignoring blockers").ensureClick()
+        browser.findElementById("edit-btn").ensureClick()
         await("to save edit and redirect to topic page") {
             assertThat(browser.currentUrl).contains("/topics/inspect")
             browser.assertPageText().contains("Topic: my-edit-1")

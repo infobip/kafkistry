@@ -31,7 +31,7 @@
 
     <#assign bulkIterateBy = "TOPIC">
     <#assign clusterIdentifier = cluster.identifier>
-    <table class="table">
+    <table class="table table-hover">
         <#list topicsConfigChanges as topicName, configChanges>
             <#include "topicConfigChanges.ftl">
         </#list>

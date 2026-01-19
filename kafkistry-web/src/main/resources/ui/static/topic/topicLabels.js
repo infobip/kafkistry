@@ -1,6 +1,8 @@
 $(document).ready(function () {
     $(document).on("change", "select.choose-label-select", null, addExistingLabelEntry);
-    $("select.choose-label-select").selectpicker();
+    let labelPicker = $("select.choose-label-select");
+    labelPicker.selectpicker();
+    tweakSelectPickerBootstrapStyling(labelPicker);
     let labels = $(".labels");
     labels.on("click", ".remove-label-btn", null, removeLabel);
     labels.on("click", ".move-label-up-btn", null, moveLabelUp);

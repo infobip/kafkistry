@@ -30,7 +30,7 @@
     <h3><#include "../common/backBtn.ftl"> Cluster resource balance</h3>
     <br/>
     <#include "doc/incrementalBalanceDoc.ftl">
-    <table class="table fixed-layout mt-2">
+    <table class="table table-hover fixed-layout mt-2">
         <tr>
             <th>Cluster identifier</th>
             <td>
@@ -41,22 +41,20 @@
     <hr/>
 
     <div class="form">
-        <div class="form-row form-group">
-            <label class="col-">Topic(s) name filter:</label>
+        <div class="row g-2 form-group">
+            <label class="col-auto">Topic(s) name filter:</label>
             <div class="col">
                 <div class="input-group">
-                    <div class="input-group-append">
-                        <select class="form-control" name="patternFilterType" title="Include/Exclude" data-style="alert-secondary">
-                            <option value="INCLUDE" data-content="<span class='text-success'>Include</span>" selected></option>
-                            <option value="EXCLUDE" data-content="<span class='text-danger'>Exclude</span>"></option>
-                        </select>
-                    </div>
+                    <select class="form-control" name="patternFilterType" title="Include/Exclude" data-style="alert-secondary">
+                        <option value="INCLUDE" data-content="<span class='text-success'>Include</span>" selected></option>
+                        <option value="EXCLUDE" data-content="<span class='text-danger'>Exclude</span>"></option>
+                    </select>
                     <input class="form-control" name="topicNamePattern" type="text"
                            placeholder="enter optional /pattern/..." title="Topic name regex">
                 </div>
             </div>
         </div>
-        <div class="form-row">
+        <div class="row g-2">
             <div class="form-group col-3">
                 <label for="balance-objective">
                     Balancing objective(s)
@@ -106,18 +104,16 @@
                 <div class="input-group">
                     <input id="max-migration-size" name="max-migration-size" class="form-control" type="number" value=""
                         placeholder="limit or blank">
-                    <div class="input-group-append">
-                        <select class="form-control alert-secondary" name="max-migration-size-unit" title="size unit">
-                            <option>GB</option>
-                            <option selected>MB</option>
-                            <option>kB</option>
-                            <option>B</option>
-                        </select>
-                    </div>
+                    <select class="form-control alert-secondary" name="max-migration-size-unit" title="size unit">
+                        <option>GB</option>
+                        <option selected>MB</option>
+                        <option>kB</option>
+                        <option>B</option>
+                    </select>
                 </div>
             </div>
         </div>
-        <div class="form-row">
+        <div class="row g-2">
             <button id="incremental-migrations-btn" class="btn btn-sm btn-primary width-full">
                 Suggest incremental migration(s)
             </button>

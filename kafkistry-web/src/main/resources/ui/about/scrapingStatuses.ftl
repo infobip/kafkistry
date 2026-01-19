@@ -20,8 +20,8 @@
     <#assign activeNavItem = "scraping-statuses">
     <#include "submenu.ftl">
 
-    <table class="table table-bordered datatable">
-        <thead class="thead-dark">
+    <table class="table table-hover table-bordered datatable">
+        <thead class="table-theme-dark">
         <tr>
             <th>Status type name</th>
             <th>Cluster</th>

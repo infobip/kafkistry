@@ -11,7 +11,7 @@ function setupChart() {
     console.log(JSON.stringify(adaptedData, null, 4));
 
     let charContainer = $("#chart-container");
-    let chartComponentsToggleButton = $("button[data-target='#chart-components']");
+    let chartComponentsToggleButton = $("button[data-bs-target='#chart-components']");
     if (adaptedData.error) {
         if (!chartComponentsToggleButton.hasClass("collapsed")) {
             chartComponentsToggleButton.trigger('click');

@@ -63,7 +63,7 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
         )
 
         //trigger actual creation of partitions
-        browser.findElementById("assign-new-replicas-btn").scrollIntoView().click()
+        browser.findElementById("assign-new-replicas-btn").ensureClick()
         await {
             browser.assertPageText().contains("New partition replicas assignment completed with success")
         }
@@ -77,7 +77,7 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
             assertThat(topicStatus.currentReAssignments).`as`("reassignment actually completes").isEmpty()
         }
 
-        browser.findElementWithText("Back").scrollIntoView().click()
+        browser.findElementWithText("Back").ensureClick()
         await {
             browser.assertPageText().contains("Topic on cluster inspection")
         }
@@ -89,7 +89,7 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
         }
 
         await {
-            browser.findElementWithText("Execute verify re-assignments").scrollIntoView().click()
+            browser.findElementWithText("Execute verify re-assignments").ensureClick()
             await {
                 browser.assertPageText().contains("Verified")
             }
@@ -104,7 +104,7 @@ abstract class IncreaseTopicReplicationFactor(contextSupplier: () -> Context) : 
         }
 
         //go back to topic inspection page
-        browser.findElementWithText("Back").scrollIntoView().click()
+        browser.findElementWithText("Back").ensureClick()
         await {
             browser.assertPageText().contains(
                     "Topic: my-replication-1"

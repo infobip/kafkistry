@@ -4,19 +4,17 @@
 
 <#macro affectedTopic cluster, topic>
     <a href="${appUrl.topics().showInspectTopicOnCluster(topic, cluster)}">
-        <button class="btn btn-sm btn-outline-dark mb-1"
-                title="Inspect this topic on this cluster...">
-            ${topic} 🔍
-        </button>
+        <span title="Inspect this topic on this cluster...">
+            ${topic}
+        </span>
     </a>
 </#macro>
 
 <#macro affectedConsumerGroup cluster, groupId>
     <a href="${appUrl.consumerGroups().showConsumerGroup(cluster, groupId)}">
-        <button class="btn btn-sm btn-outline-dark mb-1"
-                title="Inspect this consumer group on this cluster...">
-            ${groupId} 🔍
-        </button>
+        <span title="Inspect this consumer group on this cluster...">
+            ${groupId}
+        </span>
     </a>
 </#macro>
 
@@ -26,7 +24,7 @@
         <#if ruleStatus.affectedTopics?size == 1>
             <@affectedTopic cluster=clusterIdentifier topic=ruleStatus.affectedTopics[0]/>
         <#elseif ruleStatus.affectedTopics?size gt 1>
-            <div class="collapsed" data-target=".affected-topics-${clusterIdentifier}" data-toggle="collapsing">
+            <div class="collapsed" data-bs-target=".affected-topics-${clusterIdentifier}" data-toggle="collapsing">
                 <div class="p-2">
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>
@@ -43,7 +41,7 @@
         <#if ruleStatus.affectedConsumerGroups?size == 1>
             <@affectedConsumerGroup cluster=clusterIdentifier groupId=ruleStatus.affectedConsumerGroups[0]/>
         <#elseif ruleStatus.affectedConsumerGroups?size gt 1>
-            <div class="collapsed" data-target=".affected-groups-${clusterIdentifier}" data-toggle="collapsing">
+            <div class="collapsed" data-bs-target=".affected-groups-${clusterIdentifier}" data-toggle="collapsing">
                 <div class="p-2">
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>

@@ -25,8 +25,8 @@
     <p><strong>Principal:</strong> ${principal}</p>
     <hr/>
 
-    <table class="table table-bordered">
-        <thead class="thead-dark">
+    <table class="table table-hover table-bordered">
+        <thead class="table-theme-dark">
         <tr>
             <th>Principal</th>
             <th>Host</th>

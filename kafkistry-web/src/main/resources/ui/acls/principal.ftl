@@ -42,11 +42,11 @@
 
     <h3>
         <#include "../common/backBtn.ftl">
-        Principal ACLs: <span class="text-monospace">${principal}</span>
+        Principal ACLs: <span class="font-monospace">${principal}</span>
     </h3>
 
     <#assign existInRegistry = principalRuleClusters.principalAcls??>
-    <table class="table mb-0">
+    <table class="table table-hover mb-0">
         <tr>
             <th>Principal</th>
             <td><strong>${principal}</strong></td>
@@ -68,7 +68,7 @@
                         <@util.yourOwned what="principal"/>
                     </#if>
                 <#else>
-                    <span class="text-primary text-monospace small">[none]</span>
+                    <span class="text-primary font-monospace small">[none]</span>
                 </#if>
             </td>
         </tr>
@@ -143,11 +143,11 @@
 
     <div class="card">
         <div class="card-header">
-            <div class="float-left">
+            <div class="float-start">
                 <span class="h4">ACL rule statuses</span>
             </div>
             <#if existInRegistry>
-                <div class="float-right">
+                <div class="float-end">
                     <a href="${appUrl.acls().showEditPrincipal(principal)}" class="btn btn-primary">
                         Add new rule...
                     </a>
@@ -186,8 +186,8 @@
                     <i>(none)</i>
                 </div>
             <#else>
-                <table class="table table-sm">
-                    <thead class="thead-dark">
+                <table class="table table-hover table-sm">
+                    <thead class="table-theme-dark">
                     <tr>
                         <th>Quota entity</th>
                         <th>Affected by on clusters</th>
@@ -196,7 +196,7 @@
                     <#list principalClusterRules.affectingQuotaEntities as entity, presence>
                         <tr>
                             <td>
-                                <a class="btn btn-sm btn-outline-dark" href="${appUrl.quotas().showEntity(entity.asID())}">
+                                <a class="" href="${appUrl.quotas().showEntity(entity.asID())}">
                                     <@quotaUtil.entity entity=entity/>
                                 </a>
                             </td>

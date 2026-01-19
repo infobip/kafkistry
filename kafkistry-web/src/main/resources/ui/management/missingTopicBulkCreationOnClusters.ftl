@@ -29,7 +29,7 @@
     <p>There are ${clusterExpectedTopicInfos?size} cluster(s) on which this topic is missing</p>
 
     <#assign bulkIterateBy = "CLUSTER">
-    <table class="table">
+    <table class="table table-hover">
         <#list clusterExpectedTopicInfos as clusterIdentifier, expectedTopicInfo>
             <#include "expectedTopicInfo.ftl">
         </#list>

@@ -66,13 +66,13 @@ abstract class SuggestedTopicEdit(contextSupplier: () -> Context) : UITestCase(c
 
         browser.findElementByCssSelector("input#update-message").sendKeys("suggested edit")
 
-        browser.findElementById("dry-run-inspect-btn").scrollIntoView().click()
+        browser.findElementById("dry-run-inspect-btn").ensureClick()
         await {
             assertThat(browser.findElementById("dry-run-inspect-status").text).contains("my-cluster", "OK")
         }
 
         //trigger actual edit
-        browser.findElementById("edit-btn").scrollIntoView().click()
+        browser.findElementById("edit-btn").ensureClick()
         await("to save edit and redirect to topic page") {
             assertThat(browser.currentUrl).contains("/topics/inspect")
             browser.assertPageText().contains("Topic: my-suggest-1")

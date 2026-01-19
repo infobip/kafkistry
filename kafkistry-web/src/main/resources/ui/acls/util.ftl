@@ -2,23 +2,23 @@
 
 <#macro resource resource>
 <#-- @ftlvariable name="resource" type="com.infobip.kafkistry.model.AclResource" -->
-    <span class="badge badge-dark">${resource.type}</span>
+    <span class="badge bg-neutral">${resource.type}</span>
     ${resource.name}<#if resource.namePattern.name() == "PREFIXED"><code>*</code></#if>
 </#macro>
 
 <#macro operation type>
 <#-- @ftlvariable name="type" type="com.infobip.kafkistry.model.AclOperation.Type" -->
-    <span class="badge badge-dark">${type}</span>
+    <span class="badge bg-neutral">${type}</span>
 </#macro>
 
 <#macro policy policy>
 <#-- @ftlvariable name="policy" type="com.infobip.kafkistry.model.AclOperation.Policy" -->
     <#switch policy>
         <#case "ALLOW">
-            <span class="badge badge-success">ALLOW</span>
+            <span class="badge bg-success">ALLOW</span>
             <#break>
         <#case "DENY">
-            <span class="badge badge-danger">DENY</span>
+            <span class="badge bg-danger">DENY</span>
             <#break>
         <#default>
             <span>${policy}</span>

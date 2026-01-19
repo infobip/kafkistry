@@ -16,10 +16,10 @@
 <#import "common/infoIcon.ftl" as _info>
 <#import "common/util.ftl" as _util>
 
-<nav class="navbar navbar-expand-sm navbar-light bg-light nav-tabs mb-0 pb-0">
+<nav class="navbar navbar-expand-sm bg-body-tertiary nav-tabs p-1 pb-0 w-100" style="position: sticky; top: 0; z-index: 1030;">
 
   <div class="collapse navbar-collapse" id="kafkistry-navbar">
-    <ul class="navbar-nav mr-auto">
+    <ul class="navbar-nav me-auto">
       <li class="nav-item">
         <a id="nav-home" class="nav-link" href="${appUrl.main().url()}">
             &nbsp;
@@ -27,46 +27,43 @@
                  style="margin: -5px; height: 1.9em;"
                  alt="Home" title="Home"/>
             &nbsp;
-            <span class="sr-only">(current)</span>
+            <span class="visually-hidden">(current)</span>
         </a>
       </li>
       <li class="nav-item">
-          <a id="nav-clusters" class="nav-link" href="${appUrl.clusters().showClusters()}">Clusters<span class="sr-only">(current)</span></a>
+          <a id="nav-clusters" class="nav-link" href="${appUrl.clusters().showClusters()}">Clusters<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-topics" class="nav-link" href="${appUrl.topics().showTopics()}">Topics<span class="sr-only">(current)</span></a>
+        <a id="nav-topics" class="nav-link" href="${appUrl.topics().showTopics()}">Topics<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-acls" class="nav-link" href="${appUrl.acls().showAll()}">Acls<span class="sr-only">(current)</span></a>
+        <a id="nav-acls" class="nav-link" href="${appUrl.acls().showAll()}">Acls<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-quotas" class="nav-link" href="${appUrl.quotas().showAll()}">Quotas<span class="sr-only">(current)</span></a>
+        <a id="nav-quotas" class="nav-link" href="${appUrl.quotas().showAll()}">Quotas<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-consumer-groups" class="nav-link" href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}">Consumers<span class="sr-only">(current)</span></a>
+        <a id="nav-consumer-groups" class="nav-link" href="${appUrl.consumerGroups().showAllClustersConsumerGroups()}">Consumers<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-consume" class="nav-link" href="${appUrl.consumeRecords().showConsumePage()}">Consume<span class="sr-only">(current)</span></a>
+        <a id="nav-consume" class="nav-link" href="${appUrl.consumeRecords().showConsumePage()}">Consume<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-produce" class="nav-link" href="${appUrl.produceRecords().showProducePage()}">Produce<span class="sr-only">(current)</span></a>
+        <a id="nav-produce" class="nav-link" href="${appUrl.produceRecords().showProducePage()}">Produce<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-records-structure" class="nav-link" href="${appUrl.recordsStructure().showMenuPage()}">Record structure<span class="sr-only">(current)</span></a>
+        <a id="nav-kstream" class="nav-link" href="${appUrl.kStream().showAll()}">KStream<span class="visually-hidden">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a id="nav-kstream" class="nav-link" href="${appUrl.kStream().showAll()}">KStream<span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a id="nav-sql" class="nav-link" href="${appUrl.sql().showSqlPage()}">SQL<span class="sr-only">(current)</span></a>
+        <a id="nav-sql" class="nav-link" href="${appUrl.sql().showSqlPage()}">SQL<span class="visually-hidden">(current)</span></a>
       </li>
       <#list menuItems as menuItem>
         <li class="nav-item">
-          <a id="${menuItem.id}" class="nav-link" href="${appUrl.menuItem(menuItem)}">${menuItem.name} <#if menuItem.newItem><@_util.newTag/></#if><span class="sr-only">(current)</span></a>
+          <a id="${menuItem.id}" class="nav-link" href="${appUrl.menuItem(menuItem)}">${menuItem.name} <#if menuItem.newItem><@_util.newTag/></#if><span class="visually-hidden">(current)</span></a>
         </li>
       </#list>
       <li class="nav-item">
-          <a id="nav-app-info" class="nav-link" href="${appUrl.about().showAboutPage()}">About<span class="sr-only">(current)</span></a>
+          <a id="nav-app-info" class="nav-link" href="${appUrl.about().showAboutPage()}">About<span class="visually-hidden">(current)</span></a>
       </li>
 
     </ul>
@@ -108,8 +105,32 @@
       </div>
     </#if>
 
+    <#-- Theme Picker Dropdown -->
+    <div class="dropdown mx-1" id="theme-selector">
+      <a class="nav-link dropdown-toggle" type="button" id="theme-dropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Change theme">
+        <span id="theme-icon">🔄</span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="theme-dropdown">
+        <li>
+          <a class="dropdown-item" href="#" data-theme-selector data-theme="light">
+            ☀️ Light
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#" data-theme-selector data-theme="dark">
+            🌙 Dark
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#" data-theme-selector data-theme="auto">
+            🔄 Auto
+          </a>
+        </li>
+      </ul>
+    </div>
+
     <#if securityEnabled>
-      <div class="ml-1">
+      <div class="ms-1">
         <form method="post" action="logout" style="display: inline-block; margin: 0">
           <#if _csrf??>
             <input name="${_csrf.parameterName}" type="hidden" value="${_csrf.token}"/>
@@ -142,7 +163,7 @@
     <#list backgroundJobIssueGroups as issuesGroup>
         <#if issuesGroup.issues?size gt 1>
             <div class="alert alert-danger issue collapsed" role="alert"
-                 data-target=".issue-group-${issuesGroup?index}" data-toggle="collapsing"
+                 data-bs-target=".issue-group-${issuesGroup?index}" data-toggle="collapsing"
                  <#if elemIndex gte maxShown>style="display: none;" </#if>>
                 <span class="when-collapsed" title="expand...">▼</span>
                 <span class="when-not-collapsed" title="collapse...">△</span>
@@ -165,7 +186,7 @@
         <#else>
             <#list issuesGroup.issues as issue>
                 <div class="alert alert-danger issue collapsed" role="alert"
-                     data-target=".issue-msg-${elemIndex}" data-toggle="collapsing"
+                     data-bs-target=".issue-msg-${elemIndex}" data-toggle="collapsing"
                      <#if elemIndex gte maxShown>style="display: none;" </#if>>
                     <span class="when-collapsed" title="expand...">▼</span>
                     <span class="when-not-collapsed" title="collapse...">△</span>

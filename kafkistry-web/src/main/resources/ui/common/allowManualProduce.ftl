@@ -2,11 +2,11 @@
 
 <#if topicDescription.allowManualProduce??>
     <#if topicDescription.allowManualProduce>
-        <span class="badge badge-success">Allowed</span>
+        <span class="badge bg-success">Allowed</span>
     <#else>
-        <span class="badge badge-danger">Denied</span>
+        <span class="badge bg-danger">Denied</span>
     </#if>
 <#else>
-    <span class="badge badge-secondary">Default</span>
+    <span class="badge bg-secondary">Default</span>
     <span class="text-muted small">(use global setting)</span>
 </#if>

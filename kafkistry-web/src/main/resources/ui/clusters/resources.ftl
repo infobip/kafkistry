@@ -26,7 +26,7 @@
     <h3><#include "../common/backBtn.ftl"> Cluster resources usage</h3>
     <br/>
 
-    <table class="table mt-2">
+    <table class="table table-hover mt-2">
         <tr>
             <th>Cluster identifier</th>
             <td>

@@ -21,8 +21,8 @@
     <#assign activeNavItem = "background-jobs">
     <#include "submenu.ftl">
 
-    <table class="table table-bordered datatable">
-        <thead class="thead-dark">
+    <table class="table table-hover table-bordered table-hover datatable">
+        <thead class="table-theme-dark">
         <tr>
             <th>Job</th>
             <th>Cluster</th>
@@ -60,9 +60,9 @@
                 </td>
                 <td>
                     <#if jobStatus.lastSuccess>
-                        <span class="badge badge-success">SUCCESS</span>
+                        <span class="badge bg-success">SUCCESS</span>
                     <#else>
-                        <span class="badge badge-danger">FAILED</span>
+                        <span class="badge bg-danger">FAILED</span>
                     </#if>
                     <#if jobStatus.lastFailureMessage??>
                         <div class="alert alert-danger mt-1">

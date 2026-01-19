@@ -1,7 +1,6 @@
 
 .record-value {
     text-shadow: none;
-    background: #e0e0e0;
     padding: 0.6em;
     word-wrap: break-word;
 }
@@ -12,8 +11,6 @@
 
 .type-tag {
     border-radius: 5px;
-    background-color: gray;
-    color: white;
     padding: 4px;
     font-size: 12px;
     margin: 3px;
@@ -28,75 +25,20 @@ pre.renderjson {
     margin: 0;
 }
 
-.renderjson a {
-    text-decoration: none;
-}
-
 .renderjson .disclosure {
-    color: #b85c57;
     margin-right: 2px;
 }
 
-.renderjson .syntax {
-    color: grey;
-}
-
-.renderjson .string {
-    color: #3c8418;
-}
-
-.renderjson .number {
-    color: #326dff;
-}
-
-.renderjson .boolean {
-    color: #9b6add;
-}
-
-.renderjson .key {
-    color: #b5602d;
-}
-
-.renderjson .keyword {
-    color: #767661;
-}
-
-.renderjson .object.syntax {
-    color: #122512;
-}
-
-.renderjson .array.syntax {
-    color: #122512;
-}
-
 .renderjson .masked {
-    color: #de2323;
     font-weight: bold;
-}
-
-.value-base64 .renderjson, .renderjson .value-base64{
-    color: #1e1aaf;
-}
-
-.value-string .renderjson{
-    color: #4b7904;
-}
-
-.record-value.value-null{
-    color: #ee31dd;
-}
-
-.record-value.value-empty{
-    color: #6c6c6c;
-}
-
-.record-value.value-failed{
-    color: #c70101;
 }
 
 .record-metadata-value {
-    color: #2a75c0 !important;
     font-weight: bold;
+}
+
+.kafka-value-guttered {
+    position: relative;
 }
 
 .kafka-value-gutter {
@@ -105,8 +47,139 @@ pre.renderjson {
     font-size: 0.7em;
     font-weight: 700;
     top: 0.1rem;
-    right: 0.4rem;
+    right: 0.1rem;
     line-height: 1;
     text-transform: uppercase;
     color: #999;
 }
+
+
+[data-bs-theme="light"] .record-value {
+    background: #e0e0e0;
+}
+[data-bs-theme="dark"] .record-value {
+    background: #161b20;
+}
+
+[data-bs-theme="light"] .type-tag {
+    background-color: gray;
+    color: white;
+}
+[data-bs-theme="dark"] .type-tag {
+    background-color: gray;
+    color: white;
+}
+
+[data-bs-theme="light"] .renderjson .disclosure {
+    color: #b85c57;
+}
+[data-bs-theme="dark"] .renderjson .disclosure {
+    color: #e8635c;
+}
+
+[data-bs-theme="light"] .renderjson .syntax {
+    color: grey;
+}
+[data-bs-theme="dark"] .renderjson .syntax {
+    color: grey;
+}
+
+[data-bs-theme="light"] .renderjson .string {
+    color: #3c8418;
+}
+[data-bs-theme="dark"] .renderjson .string {
+    color: #3c8418;
+}
+
+[data-bs-theme="light"] .renderjson .number {
+    color: #326dff;
+}
+[data-bs-theme="dark"] .renderjson .number {
+    color: #326dff;
+}
+
+[data-bs-theme="light"] .renderjson .boolean {
+    color: #9b6add;
+}
+[data-bs-theme="dark"] .renderjson .boolean {
+    color: #9b6add;
+}
+
+[data-bs-theme="light"] .renderjson .key {
+    color: #b5602d;
+}
+[data-bs-theme="dark"] .renderjson .key {
+    color: #ea7e3d;
+}
+
+[data-bs-theme="light"] .renderjson .keyword {
+    color: #767661;
+}
+[data-bs-theme="dark"] .renderjson .keyword {
+    color: #767661;
+}
+
+[data-bs-theme="light"] .renderjson .object.syntax {
+    color: #122512;
+}
+[data-bs-theme="dark"] .renderjson .object.syntax {
+    color: #667e66;
+}
+
+[data-bs-theme="light"] .renderjson .array.syntax {
+    color: #122512;
+}
+[data-bs-theme="dark"] .renderjson .array.syntax {
+    color: #667e66;
+}
+
+[data-bs-theme="light"] .renderjson .masked {
+    color: #de2323;
+}
+[data-bs-theme="dark"] .renderjson .masked {
+    color: #de2323;
+}
+
+[data-bs-theme="light"] .value-base64 .renderjson, .renderjson .value-base64{
+    color: #1e1aaf;
+}
+[data-bs-theme="dark"] .value-base64 .renderjson, .renderjson .value-base64{
+    color: #1e1aaf;
+}
+
+[data-bs-theme="light"] .value-string .renderjson{
+    color: #4b7904;
+}
+[data-bs-theme="dark"] .value-string .renderjson{
+    color: #4b7904;
+}
+
+[data-bs-theme="light"] .record-value.value-null{
+    color: #ee31dd;
+}
+[data-bs-theme="dark"] .record-value.value-null{
+    color: #ee31dd;
+}
+
+[data-bs-theme="light"] .record-value.value-empty{
+    color: #6c6c6c;
+}
+[data-bs-theme="dark"] .record-value.value-empty{
+    color: #6c6c6c;
+}
+
+[data-bs-theme="light"] .record-value.value-failed{
+    color: #c70101;
+}
+[data-bs-theme="dark"] .record-value.value-failed{
+    color: #c70101;
+}
+
+[data-bs-theme="light"] .record-metadata-value {
+    color: #2a75c0 !important;
+}
+[data-bs-theme="dark"] .record-metadata-value {
+    color: #2a75c0 !important;
+}
+
+

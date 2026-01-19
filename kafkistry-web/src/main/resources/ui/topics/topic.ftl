@@ -29,9 +29,9 @@
 <#assign existInRegistry = topic.topicDescription??>
 
 <div class="container">
-    <h3>Topic: <span class="text-monospace">${topicName}</span></h3>
+    <h3>Topic: <span class="font-monospace">${topicName}</span></h3>
 
-    <table class="table table-sm">
+    <table class="table table-hover table-sm">
         <tr>
             <th>Name</th>
             <td>${topicName}</td>
@@ -50,7 +50,7 @@
                         <@util.yourOwned what="topic"/>
                     </#if>
                 <#else>
-                    <span class="text-primary text-monospace small">[none]</span>
+                    <span class="text-primary font-monospace small">[none]</span>
                 </#if>
             </td>
         </tr>
@@ -66,8 +66,8 @@
                         ---
                     <#else>
                         <#list topic.topicDescription.labels as label>
-                            <span class="badge badge-secondary" title="Label category">${label.category}</span>
-                            <span class="text-monospace" title="Label name">${label.name}</span>
+                            <span class="badge bg-secondary" title="Label category">${label.category}</span>
+                            <span class="font-monospace" title="Label name">${label.name}</span>
                             &nbsp;
                         </#list>
                     </#if>
@@ -103,10 +103,10 @@
                                     <strong>Reason</strong>: <span class="text-links">${freezeDirectve.reasonMessage}</span>
                                     <ul>
                                         <#if freezeDirectve.partitionCount>
-                                            <li><span class="badge badge-secondary">Partition count</span> ${padlockSymol}</li>
+                                            <li><span class="badge bg-secondary">Partition count</span> ${padlockSymol}</li>
                                         </#if>
                                         <#if freezeDirectve.replicationFactor>
-                                            <li><span class="badge badge-secondary">Replication factor</span> ${padlockSymol}</li>
+                                            <li><span class="badge bg-secondary">Replication factor</span> ${padlockSymol}</li>
                                         </#if>
                                         <#list freezeDirectve.configProperties as frozenProperty>
                                             <li><code>${frozenProperty}</code> ${padlockSymol}</li>
@@ -151,32 +151,32 @@
             <td>
                 <#assign topicActions = util.enumListToStringList(topic.availableActions)>
                 <#if existInRegistry>
-                    <p class="float-left mr-2">
+                    <p class="float-start ms-2">
                         <a href="${appUrl.topics().showDeleteTopic(topicName)}">
                             <button class="btn btn-outline-danger btn-sm">Delete topic from registry...</button>
                         </a>
                     </p>
 
-                    <p class="float-left mr-2">
+                    <p class="float-start ms-2">
                         <a href="${appUrl.topics().showEditTopic(topicName)}">
                             <button class="btn btn-outline-primary btn-sm">Edit topic...</button>
                         </a>
                     </p>
 
-                    <p class="float-left mr-2">
+                    <p class="float-start ms-2">
                         <a href="${appUrl.topics().showCloneAddNewTopic(topicName)}">
                             <button class="btn btn-outline-primary btn-sm">Clone as new...</button>
                         </a>
                     </p>
 
-                    <p class="float-left mr-2">
+                    <p class="float-start ms-2">
                         <a href="${appUrl.compare().showComparePage(topicName)}">
                             <button class="btn btn-outline-info btn-sm">Compare...</button>
                         </a>
                     </p>
 
                     <#if topicActions?seq_contains("CREATE_TOPIC")>
-                        <p class="float-left mr-2">
+                        <p class="float-start ms-2">
                             <a href="${appUrl.topicsManagement().showBulkCreateMissingTopicOnClusters(topicName)}">
                                 <button class="btn btn-outline-primary btn-sm">Create where missing...</button>
                             </a>
@@ -184,21 +184,21 @@
                     </#if>
 
                     <#if topicActions?seq_contains("ALTER_TOPIC_CONFIG")>
-                        <p class="float-left mr-2">
+                        <p class="float-start ms-2">
                             <a href="${appUrl.topicsManagement().showTopicConfigBulkUpdate(topicName)}">
                                 <button class="btn btn-outline-warning btn-sm">Alter config where wrong...</button>
                             </a>
                         </p>
                     </#if>
 
-                    <p class="float-left mr-2">
+                    <p class="float-start ms-2">
                         <a href="${appUrl.recordsStructure().showTopicStructurePage(topicName)}">
                             <button class="btn btn-outline-info btn-sm">Records structure...</button>
                         </a>
                     </p>
                 <#else>
                     <#if topicActions?seq_contains("IMPORT_TOPIC")>
-                        <p class="float-left mr-2">
+                        <p class="float-start ms-2">
                             <a href="${appUrl.topics().showImportTopic(topicName)}">
                                 <button class="btn btn-outline-primary btn-sm">
                                     Import topic... <@info.icon tooltip=doc.importTopicBtn/>
@@ -209,7 +209,7 @@
                 </#if>
 
                 <#if topicActions?seq_contains("DELETE_TOPIC_ON_KAFKA")>
-                    <p class="float-left mr-2">
+                    <p class="float-start ms-2">
                         <a href="${appUrl.topicsManagement().showBulkDeleteUnwantedTopicOnClusters(topicName)}">
                             <button class="btn btn-outline-danger btn-sm">Delete where unwanted...</button>
                         </a>
@@ -224,10 +224,10 @@
         <h4>Statuses per clusters</h4>
     </div>
     <div class="card-body p-0">
-    <table class="table">
-        <thead class="thead-dark table-lg">
+    <table class="table table-hover">
+        <thead class="table-theme-dark table-lg">
         <tr>
-            <th>Cluster</th>
+            <th>Topic @ Cluster</th>
             <th>Status</th>
             <th>Action</th>
         </tr>
@@ -243,10 +243,10 @@
         <#list topic.statusPerClusters as clusterStatus>
             <tr class="per-cluster-status-row">
                 <td>
-                    <a href="${appUrl.topics().showInspectTopicOnCluster(topicName, clusterStatus.clusterIdentifier)}">
-                        <button class="btn btn-sm btn-outline-dark text-nowrap" title="Inspect this topic on this cluster...">
-                            ${clusterStatus.clusterIdentifier} 🔍
-                        </button>
+                    <a href="${appUrl.topics().showInspectTopicOnCluster(topicName, clusterStatus.clusterIdentifier)}"
+                       class="text-nowrap"
+                       title="Inspect this topic on this cluster...">
+                        ${clusterStatus.clusterIdentifier}
                     </a>
                 </td>
                 <td>
@@ -273,8 +273,8 @@
                 <h4>Field descriptions</h4>
             </div>
             <div class="card-body p-0">
-                <table class="table table-sm m-0">
-                    <thead class="thead-dark">
+                <table class="table table-hover table-sm m-0">
+                    <thead class="table-theme-dark">
                     <tr>
                         <th>Field name/selector</th>
                         <th>Classifications</th>
@@ -290,7 +290,7 @@
                                         <i>(none)</i>
                                     <#else>
                                         <#list fieldDescription.classifications as classification>
-                                            <span class="badge badge-dark">${classification}</span>
+                                            <span class="badge bg-neutral">${classification}</span>
                                         </#list>
                                     </#if>
                                 </td>

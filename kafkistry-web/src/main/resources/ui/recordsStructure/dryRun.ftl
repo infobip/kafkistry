@@ -11,7 +11,7 @@
     <script src="static/recordsStructure-js/dryRunExamples.js?ver=${lastCommit}"></script>
     <script src="static/recordsStructure-js/dryRunInspect.js?ver=${lastCommit}"></script>
     <link rel="stylesheet" href="static/css/recordStructure.css?ver=${lastCommit}">
-    <meta name="current-nav" content="nav-records-structure"/>
+    <meta name="current-nav" content="nav-topics"/>
 </head>
 
 <body>
@@ -24,7 +24,7 @@
     <h3>Records structure - dry-run inspect</h3>
     <hr/>
 
-    <div class="form-row mb-2">
+    <div class="row g-2 mb-2">
         <div class="col-4">
             <label>Input mode</label>
             <select name="inputMode" class="form-control" title="Input mode">
@@ -48,17 +48,17 @@
     </div>
 
     <div style="border: 1px solid #999999;">
-        <textarea id="record-payload-editor" class="form-control width-full"
+        <textarea id="record-payload-editor" class="width-full"
                   placeholder="enter record payload (json)"></textarea>
     </div>
     <br/>
 
-    <div class="form-row">
-        <div class="col-">
+    <div class="row g-2">
+        <div class="col-auto">
             <button id="format-json-btn" type="button" class="btn btn-secondary">Format JSON</button>
         </div>
         <div class="col">
-            <button id="dry-run-inspect-records-structure-btn" type="button" class="btn btn-primary form-control">
+            <button id="dry-run-inspect-records-structure-btn" type="button" class="btn btn-primary">
                 Dry-run inspect records structure
             </button>
         </div>

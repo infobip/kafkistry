@@ -39,7 +39,7 @@
                 <div class="form-group row">
                     <label class="col-sm-2 col-form-label">${topicNameProperties.nameLabel}</label>
                     <div class="col-sm-10" >
-                        <span id="generatedTopicName" class="text-monospace small"><i>---</i></span>
+                        <span id="generatedTopicName" class="font-monospace small"><i>---</i></span>
                     </div>
                 </div>
 
@@ -57,29 +57,35 @@
         <div class="card">
             <div class="card-header h4">Metadata</div>
             <div class="card-body pb-0">
-                <div class="form-group row">
+                <div class="form-group row mb-1">
                     <label class="col-sm-2 col-form-label" for="owner-name">Owner</label>
-                    <input id="owner-name" type="text" name="teamName" placeholder="Which team is owner of the topic..." value="${topic.owner}"
-                           class="form-control col-sm-10" />
-                    <div id="owners" style="display: none;">
-                        <#list existingValues.owners as owner>
-                            <span>${owner}</span>
-                        </#list>
+                    <div class="col-sm-10">
+                        <input id="owner-name" type="text" name="teamName" placeholder="Which team is owner of the topic..." value="${topic.owner}"
+                               class="form-control" />
+                        <div id="owners" style="display: none;">
+                            <#list existingValues.owners as owner>
+                                <span>${owner}</span>
+                            </#list>
+                        </div>
                     </div>
                 </div>
-                <div class="form-group row">
+                <div class="form-group row mb-1">
                     <label class="col-sm-2 col-form-label" for="description-text">Description</label>
-                    <textarea id="description-text" class="form-control col-sm-10" name="purpose" rows="5"
-                              placeholder="Describe what is in the topic, specify some Jira task like ABC-123...">${topic.description}</textarea>
+                    <div class="col-sm-10">
+                        <textarea id="description-text" class="form-control" name="purpose" rows="5"
+                                  placeholder="Describe what is in the topic, specify some Jira task like ABC-123...">${topic.description}</textarea>
+                    </div>
                 </div>
-                <div class="form-group row">
+                <div class="form-group row mb-1">
                     <label class="col-sm-2 col-form-label" for="producer-name">Producer</label>
-                    <input id="producer-name" type="text" name="producer" placeholder="Which service is producing to topic..."
-                           value="${topic.producer}" class="form-control col-sm-10">
-                    <div id="producers" style="display: none;">
-                        <#list existingValues.producers as producer>
-                            <span>${producer}</span>
-                        </#list>
+                    <div class="col-sm-10">
+                        <input id="producer-name" type="text" name="producer" placeholder="Which service is producing to topic..."
+                               value="${topic.producer}" class="form-control">
+                        <div id="producers" style="display: none;">
+                            <#list existingValues.producers as producer>
+                                <span>${producer}</span>
+                            </#list>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group row">
@@ -107,32 +113,32 @@
             <div class="card-header h4">High Availability</div>
             <div class="card-body p-0">
                 <div class="ha-container">
-                    <table class="table m-0">
+                    <table class="table table-hover m-0">
                         <thead class="thead-light">
                         <tr>
                             <th>
-                                <div class="form-row">
+                                <div class="row g-2">
                                     <div class="col"></div>
-                                    <div class="col-">Select mode</div>
+                                    <div class="col-auto">Select mode</div>
                                 </div>
                             </th>
                             <th class="p-1">
-                                <label class="m-0 btn btn-outline-secondary form-control">
+                                <label class="m-0 btn btn-outline-secondary">
                                     <input type="radio" name="highAvailability" value="NONE"> None
                                 </label>
                             </th>
                             <th class="p-1">
-                                <label class="m-0 btn btn-outline-info form-control active">
+                                <label class="m-0 btn btn-outline-info active">
                                     <input type="radio" name="highAvailability" value="BASIC" checked> Basic
                                 </label>
                             </th>
                             <th class="p-1">
-                                <label class="m-0 btn btn-outline-primary form-control">
+                                <label class="m-0 btn btn-outline-primary">
                                     <input type="radio" name="highAvailability" value="STRONG_AVAILABILITY"> Availability
                                 </label>
                             </th>
                             <th class="p-1">
-                                <label class="m-0 btn btn-outline-primary form-control">
+                                <label class="m-0 btn btn-outline-primary">
                                     <input type="radio" name="highAvailability" value="STRONG_DURABILITY"> Durability
                                 </label>
                             </th>
@@ -169,31 +175,31 @@
                         </tr>
                         <tr>
                             <td>One broker down (maintenance/incident) - Can consume?</td>
-                            <td class="ha-none"><span class="badge badge-danger">no</span></td>
-                            <td class="ha-basic"><span class="badge badge-success">yes</span></td>
-                            <td class="ha-available"><span class="badge badge-success">yes</span></td>
-                            <td class="ha-durable"><span class="badge badge-success">yes</span></td>
+                            <td class="ha-none"><span class="badge bg-danger">no</span></td>
+                            <td class="ha-basic"><span class="badge bg-success">yes</span></td>
+                            <td class="ha-available"><span class="badge bg-success">yes</span></td>
+                            <td class="ha-durable"><span class="badge bg-success">yes</span></td>
                         </tr>
                         <tr>
                             <td>One broker down (maintenance/incident) - Can produce?</td>
-                            <td class="ha-none"><span class="badge badge-danger">no</span></td>
-                            <td class="ha-basic"><span class="badge badge-success">yes</span></td>
-                            <td class="ha-available"><span class="badge badge-success">yes</span></td>
-                            <td class="ha-durable"><span class="badge badge-success">yes</span></td>
+                            <td class="ha-none"><span class="badge bg-danger">no</span></td>
+                            <td class="ha-basic"><span class="badge bg-success">yes</span></td>
+                            <td class="ha-available"><span class="badge bg-success">yes</span></td>
+                            <td class="ha-durable"><span class="badge bg-success">yes</span></td>
                         </tr>
                         <tr>
                             <td>Two brokers down (maintenance+incident) - Can consume?</td>
-                            <td class="ha-none"><span class="badge badge-danger">no</span></td>
-                            <td class="ha-basic"><span class="badge badge-danger">no</span></td>
-                            <td class="ha-available"><span class="badge badge-success">yes</span></td>
-                            <td class="ha-durable"><span class="badge badge-success">yes</span></td>
+                            <td class="ha-none"><span class="badge bg-danger">no</span></td>
+                            <td class="ha-basic"><span class="badge bg-danger">no</span></td>
+                            <td class="ha-available"><span class="badge bg-success">yes</span></td>
+                            <td class="ha-durable"><span class="badge bg-success">yes</span></td>
                         </tr>
                         <tr>
                             <td>Two brokers down (maintenance+incident) - Can produce?</td>
-                            <td class="ha-none"><span class="badge badge-danger">no</span></td>
-                            <td class="ha-basic"><span class="badge badge-danger">no</span></td>
-                            <td class="ha-available"><span class="badge badge-success">yes</span></td>
-                            <td class="ha-durable"><span class="badge badge-danger">no</span></td>
+                            <td class="ha-none"><span class="badge bg-danger">no</span></td>
+                            <td class="ha-basic"><span class="badge bg-danger">no</span></td>
+                            <td class="ha-available"><span class="badge bg-success">yes</span></td>
+                            <td class="ha-durable"><span class="badge bg-danger">no</span></td>
                         </tr>
                         <#assign minimalDataLossInfoMsg>
                             Might loose only messages that were produced just prior to broker failure,
@@ -209,28 +215,28 @@
                         <tr>
                             <td>One broker's host permanent HW failure causes data-loss?</td>
                             <td class="ha-none">
-                                <span class="badge badge-danger">yes</span>
+                                <span class="badge bg-danger">yes</span>
                                 <@info.icon tooltip=completeDataLossInfoMsg/>
                             </td>
                             <td class="ha-basic">
-                                <span class="badge badge-warning">minimal</span>
+                                <span class="badge bg-warning">minimal</span>
                                 <@info.icon tooltip=minimalDataLossInfoMsg/>
                             </td>
                             <td class="ha-available">
-                                <span class="badge badge-warning">minimal</span>
+                                <span class="badge bg-warning">minimal</span>
                                 <@info.icon tooltip=minimalDataLossInfoMsg/>
                             </td>
                             <td class="ha-durable">
-                                <span class="badge badge-success">no</span>
+                                <span class="badge bg-success">no</span>
                                 <@info.icon tooltip=noDataLossInfoMsg/>
                             </td>
                         </tr>
                         <tr>
                             <td>Storage disk usage</td>
-                            <td class="ha-none"><span class="badge badge-success">1x</span></td>
-                            <td class="ha-basic"><span class="badge badge-warning">2x</span></td>
-                            <td class="ha-available"><span class="badge badge-danger">3x</span></td>
-                            <td class="ha-durable"><span class="badge badge-danger">3x</span></td>
+                            <td class="ha-none"><span class="badge bg-success">1x</span></td>
+                            <td class="ha-basic"><span class="badge bg-warning">2x</span></td>
+                            <td class="ha-available"><span class="badge bg-danger">3x</span></td>
+                            <td class="ha-durable"><span class="badge bg-danger">3x</span></td>
                         </tr>
                         </tbody>
                     </table>

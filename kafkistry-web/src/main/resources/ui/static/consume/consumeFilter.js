@@ -104,7 +104,7 @@ function enableAutocomplete(inputs, fieldNames) {
                     }),
                     minLength: 0,
                     classes: {
-                        "ui-autocomplete": "text-monospace, small"
+                        "ui-autocomplete": "font-monospace, small"
                     }
                 })
                 .focus(function () {
@@ -127,13 +127,13 @@ function enableAutocomplete(inputs, fieldNames) {
  * @return {string}
  */
 function fieldAutocompleteHtml(item) {
-    let itemHtml = "<span class='badge badge-secondary' style='width: 60px;'>"+item.type+"</span>";
+    let itemHtml = "<span class='badge bg-secondary' style='width: 60px;'>"+item.type+"</span>";
     itemHtml += " <code>"+item.fullName+"</code>";
     if (item.enumerated) {
-        itemHtml += " <span class='float-right badge badge-info'>ENUMERATED</span>";
+        itemHtml += " <span class='float-right badge bg-info'>ENUMERATED</span>";
     }
     if (item.nullable) {
-        itemHtml += " <span class='float-right badge badge-dark'>NULLABLE</span>";
+        itemHtml += " <span class='float-right badge bg-neutral'>NULLABLE</span>";
     }
     return itemHtml
 }
@@ -186,7 +186,7 @@ function setupFilterValueAutocomplete() {
                 source: stringValues,
                 minLength: 0,
                 classes: {
-                    "ui-autocomplete": "text-monospace, small"
+                    "ui-autocomplete": "font-monospace, small"
                 }
             })
             .focus(function () {

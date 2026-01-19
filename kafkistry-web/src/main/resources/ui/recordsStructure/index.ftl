@@ -10,7 +10,7 @@
     <#include "../commonResources.ftl"/>
     <script src="static/recordsStructure-js/menu.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Records Structure</title>
-    <meta name="current-nav" content="nav-records-structure"/>
+    <meta name="current-nav" content="nav-topics"/>
 </head>
 
 <body>
@@ -31,27 +31,27 @@
     <div class="ui-helper-clearfix"></div>
 
     <div class="form-group">
-        <div class="form-row mb-2">
+        <div class="row g-2 mb-2">
             <label class="col-2">Cluster</label>
             <div class="col">
-                <select title="select cluster..." name="clusterIdentifier" class="form-control selectPicker">
+                <select title="select cluster..." name="clusterIdentifier" class="selectPicker">
                     <#assign allHtml>
-                        <span class='badge badge-primary'>All clusters combined</span>
+                        <span class='badge bg-primary'>All clusters combined</span>
                     </#assign>
                     <option value="ALL" selected data-content="${allHtml}"></option>
                     <#list clusterIdentifiers as clusterIdentifier>
                         <#assign clusterHtml>
-                            <span class='badge badge-dark'>CLUSTER</span> ${clusterIdentifier}
+                            <span class='badge bg-neutral'>CLUSTER</span> ${clusterIdentifier}
                         </#assign>
                         <option value="${clusterIdentifier}" data-content="${clusterHtml}"></option>
                     </#list>
                 </select>
             </div>
         </div>
-        <div class="form-row mb-2">
+        <div class="row g-2 mb-2">
             <label class="col-2">Topic</label>
             <div class="col">
-                <select title="select topic..." name="topicName" class="form-control selectPicker"
+                <select title="select topic..." name="topicName" class="selectPicker"
                         data-live-search="true" data-size="6">
                     <#list topicNames as topicName>
                         <#assign topicHtml>
@@ -66,10 +66,10 @@
                             </#if>
                             <#if payloadTypes?size gt 0>
                                 <#list payloadTypes as payloadType>
-                                    <span class='badge badge-dark'>${payloadType}</span>
+                                    <span class='badge bg-neutral'>${payloadType}</span>
                                 </#list>
                             <#else>
-                                <span class='badge badge-warning'>no data</span>
+                                <span class='badge bg-warning'>no data</span>
                             </#if>
                             </span>
                             <span>${topicName}</span>
@@ -82,7 +82,7 @@
     </div>
 
     <a id="inspect-records-structure-btn">
-        <button type="button" class="btn btn-primary form-control">
+        <button type="button" class="btn btn-primary">
             Inspect records structure
         </button>
     </a>

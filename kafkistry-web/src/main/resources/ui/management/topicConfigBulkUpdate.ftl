@@ -28,7 +28,7 @@
     <p>There are ${clusterConfigChanges?size} cluster(s) on which this topic has wrong config</p>
 
     <#assign bulkIterateBy = "CLUSTER">
-    <table class="table">
+    <table class="table table-hover">
         <#list clusterConfigChanges as clusterIdentifier, configChanges>
             <#include "topicConfigChanges.ftl">
         </#list>

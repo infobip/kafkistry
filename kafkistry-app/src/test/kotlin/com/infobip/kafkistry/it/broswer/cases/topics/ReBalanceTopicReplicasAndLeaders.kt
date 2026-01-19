@@ -51,7 +51,7 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
             browser.assertPageText().contains("Topic on cluster inspection")
         }
 
-        browser.findElementWithText("Suggest re-balance").scrollIntoView().click()
+        browser.findElementWithText("Suggest re-balance").ensureClick()
         await {
             browser.assertPageText().contains("Topic re-balance on kafka")
             assertThat(browser.currentUrl).endsWith("reBalanceMode=REPLICAS_THEN_LEADERS")
@@ -65,14 +65,14 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
         )
 
         //trigger actual rebalance of replicas&leaders
-        browser.findElementById("apply-re-assignments-btn").scrollIntoView().click()
+        browser.findElementById("apply-re-assignments-btn").ensureClick()
         await {
             browser.assertPageText().contains("New partition assignments applied with success")
         }
 
         Thread.sleep(1_500) //should complete re-assignment
 
-        browser.findElementWithText("Back").scrollIntoView().click()
+        browser.findElementWithText("Back").ensureClick()
         await {
             browser.assertPageText().contains(
                     "Topic my-rebalance-1"
@@ -88,7 +88,7 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
         }
 
         await("wait for sync on new replicas") {
-            browser.findElementWithText("Execute verify re-assignments").scrollIntoView().click()
+            browser.findElementWithText("Execute verify re-assignments").ensureClick()
             await {
                 browser.assertPageText().contains("Verified")
             }
@@ -105,7 +105,7 @@ abstract class ReBalanceTopicReplicasAndLeaders(contextSupplier: () -> Context) 
         }
 
         browser.assertPageText().contains("NEEDS_LEADER_ELECTION")
-        browser.findElementById("run-preferred-replica-election-btn").scrollIntoView().click()
+        browser.findElementById("run-preferred-replica-election-btn").ensureClick()
         await("for election completion") {
             browser.assertPageText().contains("Elections completed")
         }

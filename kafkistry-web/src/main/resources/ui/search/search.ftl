@@ -48,15 +48,13 @@
                     value="${query}"
                     autofocus
                 />
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="button" id="search-btn">
-                        Search
-                    </button>
-                </div>
+                <button class="btn btn-primary" type="button" id="search-btn">
+                    Search
+                </button>
             </div>
         </div>
         <div class="col-3">
-            <button class="btn btn-outline-secondary btn-block" data-toggle="modal" data-target="#filter-modal">
+            <button class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#filter-modal">
                 Filter Categories
             </button>
         </div>
@@ -93,7 +91,7 @@
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">
                                     <@highlightMatches text=result.title matches=result.matches.titleMatches/>
-                                    <span class="badge badge-secondary ml-2">${result.category.displayName}</span>
+                                    <span class="badge bg-secondary ml-2">${result.category.displayName}</span>
                                 </h6>
                                 <#if result.score gt 0.0 && result.score lte 1.0>
                                     <small class="text-muted">
@@ -129,9 +127,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Filter Categories</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <#list allCategories as category>
@@ -150,7 +146,7 @@
                 </#list>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="apply-filters-btn">Apply Filters</button>
             </div>
         </div>

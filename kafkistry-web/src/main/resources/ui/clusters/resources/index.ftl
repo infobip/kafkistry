@@ -61,7 +61,7 @@
             <ul>
                 <li>
                     <#if !(branch??)>
-                        <span class="badge badge-primary">SELECTED</span>
+                        <span class="badge bg-primary">SELECTED</span>
                     </#if>
                     <a href="${appUrl.clusters().showClusterResourcesInspect()}">main branch</a>
                 </li>
@@ -69,7 +69,7 @@
                     <#assign url = appUrl.clusters().showClusterResourcesInspectOnBranch(topicsBranch.branch)>
                     <li>
                         <#if topicsBranch.branch == (branch!'')>
-                            <span class="badge badge-primary">SELECTED</span>
+                            <span class="badge bg-primary">SELECTED</span>
                         </#if>
                         <a href="${url}">${topicsBranch.branch}</a>
                         <ul class="small">
@@ -88,7 +88,7 @@
                     <#assign url = appUrl.clusters().showClusterResourcesInspectOnBranch(clustersBranch.branch)>
                     <li>
                         <#if clustersBranch.branch == (branch!'')>
-                            <span class="badge badge-primary">SELECTED</span>
+                            <span class="badge bg-primary">SELECTED</span>
                         </#if>
                         <a href="${url}">${clustersBranch.branch}</a>
                         <ul class="small">
@@ -142,7 +142,7 @@
                     <#include "../resourcesInspect.ftl">
                 <#else>
                     <div class="alert alert-danger">
-                        <span class="badge badge-danger">ERROR</span>
+                        <span class="badge bg-danger">ERROR</span>
                         ${optionalClusterRecources.absentReason}
                     </div>
                 </#if>
@@ -157,13 +157,13 @@
                             <#include "../resourcesInspect.ftl">
                         <#else>
                             <div class="alert alert-danger">
-                                <span class="badge badge-danger">ERROR</span>
+                                <span class="badge bg-danger">ERROR</span>
                                 ${optionalClusterRecourcesDiff.absentReason}
                             </div>
                         </#if>
                     <#else>
                         <div class="alert alert-danger">
-                            <span class="badge badge-danger">ERROR</span> Cluster absent in branch
+                            <span class="badge bg-danger">ERROR</span> Cluster absent in branch
                         </div>
                     </#if>
                 </#if>
@@ -178,13 +178,13 @@
                             <#include "../resourcesInspect.ftl">
                         <#else>
                             <div class="alert alert-danger">
-                                <span class="badge badge-danger">ERROR</span>
+                                <span class="badge bg-danger">ERROR</span>
                                 ${optionalClusterRecourcesBranch.absentReason}
                             </div>
                         </#if>
                     <#else>
                         <div class="alert alert-danger">
-                            <span class="badge badge-danger">ERROR</span> Cluster absent in branch
+                            <span class="badge bg-danger">ERROR</span> Cluster absent in branch
                         </div>
                     </#if>
                 </#if>

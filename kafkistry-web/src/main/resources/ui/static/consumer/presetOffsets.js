@@ -11,6 +11,7 @@ function topicSelectorChanged() {
     let selected = checkbox.is(":checked");
     selectedTopics[topic] = !!selected;
     $("#topic-count").text(extractSelectedTopics().length);
+    console.log("preset offsets", JSON.stringify(extractPresetOffsets()));
 }
 
 function extractSelectedTopics() {
