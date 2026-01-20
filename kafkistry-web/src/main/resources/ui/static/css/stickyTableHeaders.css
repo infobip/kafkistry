@@ -15,6 +15,17 @@
     position: sticky;
 }
 
+.sticky-table-headers tr > .sticky-header-border::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--bs-border-color);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
 .sticky-table-headers .sticky-header th {
     border-width: 0 !important;
 }

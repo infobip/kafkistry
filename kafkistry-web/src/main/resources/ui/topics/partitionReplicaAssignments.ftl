@@ -128,7 +128,7 @@
                     </tr>
                     <#if topicReplicas??>
                         <tr class="table-light">
-                            <th class="sticky-header text-center">
+                            <th class="sticky-header sticky-header-border text-center">
                                 <span title="All size sum">
                                     ${_util.prettyDataSize(topicReplicas.totalSizeBytes)}
                                 </span>
@@ -150,13 +150,14 @@
                         <tr>
                             <#assign rackUsageDisbalanced = assignmentsDisbalance?? && assignmentsDisbalance.partitionsPerRackDisbalance.partitionDisbalance?api.get(partition.partition) gt 0>
                             <#assign singleRackWarning = assignmentStatus.clusterHasRacks && partition.singleRackReplicas>
-                            <td class="sticky-header font-weight-bold text-center align-middle <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning<#else>bg-body</#if>">
+                            <#assign cellStatusClasses = singleRackWarning?then("bg-danger-subtle", "") + " " + rackUsageDisbalanced?then("bg-warning-subtle", "")>
+                            <td class="sticky-header sticky-header-border fw-bold text-center align-middle ${cellStatusClasses}">
                                 ${partition.partition}
                             </td>
                             <#if assignmentStatus.clusterHasRacks>
                                 <td class="small <#if singleRackWarning>alert-danger<#elseif rackUsageDisbalanced>alert-warning</#if>">
                                     <#if singleRackWarning>
-                                        <span class="badge bg-warning" title="This partition is hosted by brokers of same rack">Single rack</span>
+                                        <span class="badge bg-warning text-dark" title="This partition is hosted by brokers of same rack">Single rack</span>
                                     </#if>
                                     <#list partition.rackCounts as rackStatus>
                                         <#assign rackTitle = (rackStatus.oldCount == rackStatus.newCount)?then(
