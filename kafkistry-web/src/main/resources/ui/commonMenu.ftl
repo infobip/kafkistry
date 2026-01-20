@@ -30,6 +30,7 @@
             <span class="visually-hidden">(current)</span>
         </a>
       </li>
+      <#include "globalSearchDropdown.ftl">
       <li class="nav-item">
           <a id="nav-clusters" class="nav-link" href="${appUrl.clusters().showClusters()}">Clusters<span class="visually-hidden">(current)</span></a>
       </li>

@@ -6,15 +6,87 @@ let searchTimeout;
 const SEARCH_DELAY_MS = 300;
 const MIN_QUERY_LENGTH = 2;
 
+function toggleSearchDropdown() {
+    const $searchContainer = $('#navbar-search-dropdown');
+    if ($searchContainer.hasClass('show')) {
+        closeSearchDropdown();
+    } else {
+        openSearchDropdown();
+    }
+}
+
+function openSearchDropdown() {
+    const $searchContainer = $('#navbar-search-dropdown');
+    const $searchInput = $('#global-search-input');
+    const $searchToggle = $('#global-search-toggle');
+
+    $searchContainer.addClass('show');
+    $searchToggle.attr('aria-expanded', 'true');
+    $searchToggle.addClass('active'); // Highlight nav-link when dropdown is open
+
+    setTimeout(() => {
+        $searchInput.focus();
+    }, 50);
+}
+
+function closeSearchDropdown() {
+    const $searchContainer = $('#navbar-search-dropdown');
+    const $searchToggle = $('#global-search-toggle');
+    const $resultsDropdown = $('#global-search-dropdown');
+
+    $searchContainer.removeClass('show');
+    $searchToggle.attr('aria-expanded', 'false');
+    $searchToggle.removeClass('active'); // Remove highlight when dropdown closes
+    $resultsDropdown.hide();
+}
+
 function initGlobalSearch() {
+    const $searchToggle = $('#global-search-toggle');
+    const $searchContainer = $('#navbar-search-dropdown');
     const $searchInput = $('#global-search-input');
     const $dropdown = $('#global-search-dropdown');
 
-    // Keyboard shortcut: Cmd+K (Mac) or Ctrl+K (Windows/Linux) to focus search
+    // Toggle dropdown when icon is clicked
+    $searchToggle.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSearchDropdown();
+    });
+
+    // Prevent dropdown from closing when clicking inside
+    $searchContainer.on('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Prevent Bootstrap dropdown from handling keyboard events in search container
+    $searchContainer.on('keydown', function(e) {
+        // Handle Escape key to close dropdown
+        if (e.which === 27) { // Escape
+            e.stopPropagation();
+            closeSearchDropdown();
+            return;
+        }
+        // Stop propagation for arrow keys to prevent Bootstrap interference
+        if (e.which === 38 || e.which === 40) {
+            e.stopPropagation();
+        }
+    });
+
+    // Keyboard shortcut: Cmd+K (Mac) or Ctrl+K (Windows/Linux)
     $(document).on('keydown', function(e) {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
-            $searchInput.focus();
+            const $searchContainer = $('#navbar-search-dropdown');
+            if (!$searchContainer.hasClass('show')) {
+                openSearchDropdown();
+            } else {
+                $searchInput.focus();
+            }
+        }
+
+        // Close on Escape
+        if (e.key === 'Escape') {
+            closeSearchDropdown();
         }
     });
 
@@ -45,15 +117,21 @@ function initGlobalSearch() {
 
     // Hide dropdown when clicking outside
     $(document).on('click', function(e) {
-        if (!$(e.target).closest('#global-search-input, #global-search-dropdown').length) {
-            $dropdown.hide();
+        if (!$(e.target).closest('#global-search-container').length) {
+            closeSearchDropdown();
         }
+    });
+
+    // Close dropdown when navigating to a result
+    $dropdown.on('click', 'a.search-result-item', function() {
+        closeSearchDropdown();
     });
 
     // Keyboard navigation (arrow keys)
     $searchInput.on('keydown', function(e) {
         if (e.which === 40) { // Arrow down
             e.preventDefault();
+            e.stopPropagation(); // Prevent Bootstrap dropdown from interfering
             $dropdown.find('a:first').focus();
         }
     });
@@ -62,6 +140,7 @@ function initGlobalSearch() {
     $dropdown.on('keydown', 'a', function(e) {
         if (e.which === 38) { // Arrow up
             e.preventDefault();
+            e.stopPropagation(); // Prevent Bootstrap dropdown from interfering
             const $prev = $(this).prev('a');
             if ($prev.length) {
                 $prev.focus();
@@ -70,6 +149,7 @@ function initGlobalSearch() {
             }
         } else if (e.which === 40) { // Arrow down
             e.preventDefault();
+            e.stopPropagation(); // Prevent Bootstrap dropdown from interfering
             const $next = $(this).next('a');
             if ($next.length) {
                 $next.focus();
