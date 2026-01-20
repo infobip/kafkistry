@@ -417,7 +417,7 @@
                                 <#list clusterInfo.nodeIds as nodeId>
                                     <li>
                                         <#assign active = (nodeId == clusterInfo.controllerId)?then("active", "")>
-                                        <a class="btn btn-sm btn-outline-secondary m-1 ${active}" data-toggle="tab"
+                                        <a class="btn btn-sm btn-outline-secondary m-1 ${active}" data-bs-toggle="tab"
                                            href="#node-${nodeId?c}-config">
                                             ${nodeId?c}
                                         </a>
