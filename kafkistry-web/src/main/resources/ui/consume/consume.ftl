@@ -55,7 +55,7 @@
 <#import "../common/infoIcon.ftl" as info>
 <#import "../common/documentation.ftl" as doc>
 
-<div class="container">
+<div class="container pt-2">
     <div class="mb-1">
         <label>
             <#if !clusterIdentifier?? && allClusters?size == 1>

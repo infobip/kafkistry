@@ -19,7 +19,7 @@
 <#import "../common/util.ftl" as util>
 <#import "util.ftl" as aclUtil>
 
-<div class="container">
+<div class="container pt-2">
     <#if gitStorageEnabled>
         <#assign pendingUpdates = pendingPrincipalRequests>
         <#assign entityName = "Principal ACLs">

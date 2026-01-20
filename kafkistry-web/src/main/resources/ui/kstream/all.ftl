@@ -16,7 +16,7 @@
 <#import "../common/util.ftl" as util>
 <#import "../common/infoIcon.ftl" as info>
 
-<div class="container">
+<div class="container pt-2">
 
     <div class="card">
         <div class="card-header">

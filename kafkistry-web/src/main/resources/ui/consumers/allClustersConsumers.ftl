@@ -24,11 +24,11 @@
 <#import "../common/documentation.ftl" as doc>
 <#import "util.ftl" as statusUtil>
 
-<div class="container">
+<div class="container pt-2">
+    <div id="all-consumer-groups-result"></div>
     <#assign statusId = "allConsumerGroups">
     <#include "../common/serverOpStatus.ftl">
     <#assign statusId = "">
-    <div id="all-consumer-groups-result"></div>
 </div>
 
 <#include "../common/pageBottom.ftl">

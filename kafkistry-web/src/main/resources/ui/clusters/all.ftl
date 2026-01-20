@@ -19,7 +19,7 @@
 
 <#import "../common/util.ftl" as util>
 
-<div class="container">
+<div class="container pt-2">
 
     <#if gitStorageEnabled>
         <#assign pendingUpdates = pendingClustersUpdates>
