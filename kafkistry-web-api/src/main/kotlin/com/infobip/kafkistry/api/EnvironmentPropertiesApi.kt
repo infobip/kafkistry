@@ -1,5 +1,6 @@
 package com.infobip.kafkistry.api
 
+import com.infobip.kafkistry.utils.deepToString
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.core.env.EnumerablePropertySource
 import org.springframework.core.env.Environment
@@ -26,7 +27,8 @@ data class PropertyEntryDto(
     val value: String?,
     val resolvedValue: String?,
     val sensitive: Boolean,
-    val origin: String?
+    val origin: String? = null,
+    val error: String? = null,
 )
 
 @RestController
@@ -99,16 +101,24 @@ class EnvironmentPropertiesApi(
             is EnumerablePropertySource<*> -> {
                 for (propertyName in propertySource.propertyNames) {
                     val rawValue = propertySource.getProperty(propertyName)?.toString()
-                    val resolvedValue = environment.getProperty(propertyName)
-                    properties.add(
+                    val propertyDto = try {
+                        val resolvedValue = environment.getProperty(propertyName)
                         PropertyEntryDto(
                             key = propertyName,
                             value = rawValue,
                             resolvedValue = resolvedValue,
                             sensitive = propertyName.isSensitive(),
-                            origin = null,
                         )
-                    )
+                    } catch (ex: Exception) {
+                        PropertyEntryDto(
+                            key = propertyName,
+                            value = rawValue,
+                            resolvedValue = null,
+                            sensitive = propertyName.isSensitive(),
+                            error = ex.deepToString(),
+                        )
+                    }
+                    properties.add(propertyDto)
                 }
             }
             else -> {

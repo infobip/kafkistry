@@ -118,12 +118,12 @@
     <#-- Tab navigation -->
     <ul class="nav nav-tabs" id="envTabs" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="by-source-tab" data-toggle="tab" href="#by-source" role="tab">
+            <a class="nav-link active" id="by-source-tab" data-bs-toggle="tab" href="#by-source" role="tab">
                 By Property Source
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="all-props-tab" data-toggle="tab" href="#all-props" role="tab">
+            <a class="nav-link" id="all-props-tab" data-bs-toggle="tab" href="#all-props" role="tab">
                 All Properties
             </a>
         </li>
@@ -142,12 +142,12 @@
                             <span class="when-not-collapsed" title="collapse...">△</span>
                             <span class="badge bg-secondary">${source.type}</span>
                             ${source.name}
-                            <span class="badge bg-light">${source.properties?size} properties</span>
+                            <span class="badge bg-neutral">${source.properties?size} properties</span>
                         </h5>
                     </div>
                     <div id="props-${source?index?c}" class="card-body p-0 collapseable">
                         <table class="table table-hover table-sm table-bordered m-0">
-                            <thead class="thead-light">
+                            <thead class="table-theme-accent">
                                 <tr>
                                     <th style="width: 30%;">Property Name</th>
                                     <th style="width: 30%;">Raw Value</th>
@@ -168,7 +168,10 @@
                                             </#if>
                                         </td>
                                         <td class="property-value">
-                                            <#if prop.sensitive>
+                                            <#if prop.error??>
+                                                <span class="badge bg-danger">Resolution error</span>
+                                                <code>${prop.error}</code>
+                                            <#elseif prop.sensitive>
                                                 <span class="sensitive-value masked-value"
                                                       data-value="${prop.resolvedValue!''}">***MASKED***</span>
                                             <#else>
@@ -228,7 +231,10 @@
                                         </#if>
                                     </td>
                                     <td class="property-value">
-                                        <#if prop.sensitive>
+                                        <#if prop.error??>
+                                                <span class="badge bg-danger">Resolution error</span>
+                                                <code>${prop.error}</code>
+                                        <#elseif prop.sensitive>
                                             <span class="sensitive-value masked-value"
                                                   data-value="${prop.resolvedValue!''}">***MASKED***</span>
                                         <#else>
@@ -370,7 +376,7 @@
         }, 100);
 
         // Re-apply truncation when tabs are switched
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
             // Force DataTable to adjust column widths when All Properties tab is shown
             if ($(e.target).attr('href') === '#all-props') {
                 let dt = getDataTable();
