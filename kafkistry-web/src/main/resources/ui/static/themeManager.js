@@ -6,6 +6,9 @@
     const THEME_DARK = 'dark';
     const THEME_AUTO = 'auto';
 
+    // Theme change listeners
+    const themeChangeListeners = [];
+
     /**
      * Gets the stored theme preference or returns 'auto' as default
      */
@@ -39,17 +42,33 @@
     }
 
     /**
+     * Notifies all registered theme change listeners
+     */
+    function notifyThemeChangeListeners(theme, resolvedTheme) {
+        themeChangeListeners.forEach(listener => {
+            try {
+                listener(theme, resolvedTheme);
+            } catch (error) {
+                console.error('Error in theme change listener:', error);
+            }
+        });
+    }
+
+    /**
      * Applies the theme to the document
      */
     function applyTheme(theme) {
         const resolvedTheme = theme === THEME_AUTO
             ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? THEME_DARK : THEME_LIGHT)
             : theme;
-
+        console.log(`Applying '${theme}' theme which resolves to '${resolvedTheme}' on UI`);
         document.documentElement.setAttribute('data-bs-theme', resolvedTheme);
 
         // Update theme selector UI if it exists
         updateThemeSelector(theme);
+
+        // Notify all listeners about the theme change
+        notifyThemeChangeListeners(theme, resolvedTheme);
     }
 
     /**
@@ -134,6 +153,25 @@
             applyTheme(theme);
         },
         getTheme: getStoredTheme,
-        getCurrentTheme: getPreferredTheme
+        getCurrentTheme: getPreferredTheme,
+        /**
+         * Register a listener to be notified when the theme changes
+         * @param {Function} listener - Callback function (theme, resolvedTheme) => void
+         * @returns {Function} Unregister function to remove the listener
+         */
+        addThemeChangeListener: function(listener) {
+            if (typeof listener !== 'function') {
+                throw new Error('Theme change listener must be a function');
+            }
+            themeChangeListeners.push(listener);
+
+            // Return unregister function
+            return function() {
+                const index = themeChangeListeners.indexOf(listener);
+                if (index > -1) {
+                    themeChangeListeners.splice(index, 1);
+                }
+            };
+        }
     };
 })();

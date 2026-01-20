@@ -1,5 +1,30 @@
 let chart = null;
 
+// Theme detection and colors
+function getThemeColors() {
+    const theme = document.documentElement.getAttribute('data-bs-theme');
+    const isDark = theme === 'dark';
+
+    return {
+        gridColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+        axisLineColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+        textColor: isDark ? '#e9ecef' : '#212529',
+        tooltipBackground: isDark ? 'rgba(33, 37, 41, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+        tooltipTextColor: isDark ? '#e9ecef' : '#212529'
+    };
+}
+
+// Register theme change listener with themeManager
+if (window.KafkistryTheme && window.KafkistryTheme.addThemeChangeListener) {
+    window.KafkistryTheme.addThemeChangeListener(function(theme, resolvedTheme) {
+        console.log("Chart received theme change notification:", theme, "->", resolvedTheme);
+        // Recreate chart with new theme colors
+        if (chart != null) {
+            setupChart();
+        }
+    });
+}
+
 function setupChart() {
     const ctx = document.getElementById('chart').getContext('2d');
     if (chart != null) {
@@ -9,6 +34,8 @@ function setupChart() {
     console.log(JSON.stringify(rawData, null, 4));
     let adaptedData = adaptDataset(rawData);
     console.log(JSON.stringify(adaptedData, null, 4));
+
+    const themeColors = getThemeColors();
 
     let charContainer = $("#chart-container");
     let chartComponentsToggleButton = $("button[data-bs-target='#chart-components']");
@@ -37,6 +64,11 @@ function setupChart() {
         },
         options: {
             responsive: false,
+            legend: {
+                labels: {
+                    fontColor: themeColors.textColor
+                }
+            },
             scales: {
                 xAxes: [
                     {
@@ -44,6 +76,7 @@ function setupChart() {
                         type: 'category',
                         ticks: {
                             max: 3,
+                            fontColor: themeColors.textColor,
                             callback: function (value) {
                                 let maxLength = 60;
                                 if (value.length > maxLength) {
@@ -52,9 +85,14 @@ function setupChart() {
                                 return value;
                             }
                         },
+                        gridLines: {
+                            color: themeColors.gridColor,
+                            zeroLineColor: themeColors.axisLineColor
+                        },
                         scaleLabel: {
                             display: adaptedData.xAxisLabel !== undefined,
-                            labelString: adaptedData.xAxisLabel
+                            labelString: adaptedData.xAxisLabel,
+                            fontColor: themeColors.textColor
                         }
                     },
                 ],
@@ -63,30 +101,39 @@ function setupChart() {
                         id: 'y1',
                         ticks: {
                             beginAtZero: true,
+                            fontColor: themeColors.textColor,
                             callback: function (value) {
                                 return formatLabelValue(value, adaptedData.yAxisLabel);
                             }
                         },
+                        gridLines: {
+                            color: themeColors.gridColor,
+                            zeroLineColor: themeColors.axisLineColor
+                        },
                         scaleLabel: {
                             display: adaptedData.yAxisLabel !== undefined,
-                            labelString: adaptedData.yAxisLabel
+                            labelString: adaptedData.yAxisLabel,
+                            fontColor: themeColors.textColor
                         }
                     },
                     {
                         id: 'y2',
                         display: adaptedData.yAxis2Label !== undefined,
                         gridLines: {
-                            display: false
+                            display: false,
+                            zeroLineColor: themeColors.axisLineColor
                         },
                         ticks: {
                             beginAtZero: true,
+                            fontColor: themeColors.textColor,
                             callback: function (value) {
                                 return formatLabelValue(value, adaptedData.yAxis2Label);
                             }
                         },
                         scaleLabel: {
                             display: adaptedData.yAxis2Label !== undefined,
-                            labelString: adaptedData.yAxis2Label
+                            labelString: adaptedData.yAxis2Label,
+                            fontColor: themeColors.textColor
                         },
                         position: 'right'
                     },
@@ -94,23 +141,29 @@ function setupChart() {
                         id: 'y3',
                         display: adaptedData.yAxis3Label !== undefined,
                         gridLines: {
-                            display: false
+                            display: false,
+                            zeroLineColor: themeColors.axisLineColor
                         },
                         ticks: {
                             beginAtZero: true,
+                            fontColor: themeColors.textColor,
                             callback: function (value) {
                                 return formatLabelValue(value, adaptedData.yAxis3Label);
                             }
                         },
                         scaleLabel: {
                             display: adaptedData.yAxis3Label !== undefined,
-                            labelString: adaptedData.yAxis3Label
+                            labelString: adaptedData.yAxis3Label,
+                            fontColor: themeColors.textColor
                         },
                         position: 'right'
                     }
                 ]
             },
             tooltips: {
+                backgroundColor: themeColors.tooltipBackground,
+                titleFontColor: themeColors.tooltipTextColor,
+                bodyFontColor: themeColors.tooltipTextColor,
                 callbacks: {
                     beforeTitle: function () {
                         if (adaptedData.xAxisLabel) {

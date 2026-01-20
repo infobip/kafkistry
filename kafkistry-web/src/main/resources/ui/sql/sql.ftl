@@ -142,7 +142,7 @@
             </button>
         </div>
         <div id="chart-components" class="showing collapse show">
-            <div id="chart-container" class="m-4 bg-body-tertiary" style="display: none;">
+            <div id="chart-container" class="m-4" style="display: none;">
                 <canvas id="chart" width="1000" height="350" style="margin: auto;"></canvas>
             </div>
             <#assign statusId = "chart">
