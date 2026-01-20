@@ -86,7 +86,10 @@ function adjustTopicNamesDropdown() {
     let topics = allClusterTopics[cluster] ? allClusterTopics[cluster] : [];
     $("input[name=topic]")
         .autocomplete({
-            source: topics,
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(topics, request.term);
+                response(filtered);
+            },
             minLength: 0
         })
         .focus(function () {

@@ -59,7 +59,10 @@ function initPresetConsumerGroupForm(allExistingConsumerGroups) {
     consumerGroupInput.on("change keyup", updateInitGroupButton);
     consumerGroupInput
         .autocomplete({
-            source: allExistingConsumerGroups,
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(allExistingConsumerGroups, request.term);
+                response(filtered);
+            },
             select: function () {
                 setTimeout(updateInitGroupButton, 20);
             },

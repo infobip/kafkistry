@@ -17,7 +17,10 @@ function fetchBranchNames() {
 function initBranchNamesAutocomplete(branches) {
     $("input[name=targetBranch]")
         .autocomplete({
-            source: branches,
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(branches, request.term);
+                response(filtered);
+            },
             minLength: 0
         })
         .focus(function () {

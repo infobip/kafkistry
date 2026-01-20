@@ -97,9 +97,7 @@ $(document).ready(function() {
                     return;
                 }
                 const topics = clusterTopics[cluster] || [];
-                const filtered = topics.filter(t =>
-                    t.toLowerCase().includes(request.term.toLowerCase())
-                );
+                const filtered = filterAutocompleteSuggestions(topics, request.term);
                 response(filtered);
             },
             minLength: 0,

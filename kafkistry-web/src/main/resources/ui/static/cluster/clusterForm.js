@@ -86,7 +86,10 @@ function initTagsAutocomplete() {
 
 function setupTagAutocomplete(input) {
     input.autocomplete({
-        source: existingTags,
+        source: function(request, response) {
+            const filtered = filterAutocompleteSuggestions(existingTags, request.term);
+            response(filtered);
+        },
         select: function () {
             setTimeout(refreshYaml, 20);
         },

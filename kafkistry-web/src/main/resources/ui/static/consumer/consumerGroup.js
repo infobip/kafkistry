@@ -9,7 +9,10 @@ $(document).ready(function () {
     otherConsumerGroupInput.on("change keyup", updateCloneGroupButtonUrl);
     otherConsumerGroupInput
         .autocomplete({
-            source: existingConsumerGroups,
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(existingConsumerGroups, request.term);
+                response(filtered);
+            },
             select: function () {
                 setTimeout(updateCloneGroupButtonUrl, 20);
             },

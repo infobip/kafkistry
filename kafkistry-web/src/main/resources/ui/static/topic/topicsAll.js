@@ -46,7 +46,10 @@ function setupCloneAutocomplete() {
     });
     $("#cloneInput")
         .autocomplete({
-            source: allTopics,
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(allTopics, request.term);
+                response(filtered);
+            },
             select: function () {
                 setTimeout(function () {
                     $(".clone-existing-container form").submit();

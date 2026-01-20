@@ -22,6 +22,35 @@ function existingValuesOf(sourceSelector) {
     return elements;
 }
 
+/**
+ * Filters and sorts autocomplete suggestions, prioritizing items that start with the search term.
+ * @param {Array} items - Array of strings to filter
+ * @param {string} searchTerm - The search term to filter by
+ * @returns {Array} Filtered and sorted array with startsWith matches first
+ */
+function filterAutocompleteSuggestions(items, searchTerm) {
+    if (!searchTerm) {
+        return items;
+    }
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const startsWith = [];
+    const contains = [];
+
+    items.forEach(item => {
+        const lowerItem = item.toLowerCase();
+        if (lowerItem.includes(lowerSearchTerm)) {
+            if (lowerItem.startsWith(lowerSearchTerm)) {
+                startsWith.push(item);
+            } else {
+                contains.push(item);
+            }
+        }
+    });
+
+    // Return items that start with search term first, then items that contain it
+    return startsWith.concat(contains);
+}
+
 function initAutocomplete(elements, textInput, refreshYamlOnSelect) {
     let onSelect = refreshYamlOnSelect ? refreshYaml : undefined;
     initAutocompleteInput(elements, textInput, onSelect);
@@ -34,7 +63,10 @@ function initAutocompleteInput(elements, textInput, onSelectCallback) {
     disableAutocomplete(textInput);
     textInput
         .autocomplete({
-            source: elements,
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(elements, request.term);
+                response(filtered);
+            },
             select: function () {
                 if (onSelectCallback) {
                     setTimeout(callback, 20);

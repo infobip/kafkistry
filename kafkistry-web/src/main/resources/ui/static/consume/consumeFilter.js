@@ -97,11 +97,32 @@ function setupFilterFieldsAutocomplete() {
  */
 function enableAutocomplete(inputs, fieldNames) {
     inputs.forEach(function (input) {
+            const allItems = fieldNames.map((field) => {
+                return {value: field.fullName, field: field};
+            });
             let autocomplete = input
                 .autocomplete({
-                    source: fieldNames.map((field) => {
-                        return {value: field.fullName, field: field};
-                    }),
+                    source: function(request, response) {
+                        const searchTerm = request.term;
+                        if (!searchTerm) {
+                            response(allItems);
+                            return;
+                        }
+                        const lowerSearchTerm = searchTerm.toLowerCase();
+                        const startsWith = [];
+                        const contains = [];
+                        allItems.forEach(item => {
+                            const lowerValue = item.value.toLowerCase();
+                            if (lowerValue.includes(lowerSearchTerm)) {
+                                if (lowerValue.startsWith(lowerSearchTerm)) {
+                                    startsWith.push(item);
+                                } else {
+                                    contains.push(item);
+                                }
+                            }
+                        });
+                        response(startsWith.concat(contains));
+                    },
                     minLength: 0,
                     classes: {
                         "ui-autocomplete": "font-monospace, small"

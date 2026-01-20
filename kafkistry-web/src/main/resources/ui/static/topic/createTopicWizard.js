@@ -135,7 +135,13 @@ function teamNamesAutocomplete() {
         teamNames.push($(this).text());
     });
     $("input[name='teamName']")
-        .autocomplete({source: teamNames, minLength: 0})
+        .autocomplete({
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(teamNames, request.term);
+                response(filtered);
+            },
+            minLength: 0
+        })
         .focus(function () {
             $(this).data("uiAutocomplete").search($(this).val());
         });
@@ -147,7 +153,13 @@ function producersAutocomplete() {
         producers.push($(this).text());
     });
     $("input[name='producer']")
-        .autocomplete({source: producers, minLength: 0})
+        .autocomplete({
+            source: function(request, response) {
+                const filtered = filterAutocompleteSuggestions(producers, request.term);
+                response(filtered);
+            },
+            minLength: 0
+        })
         .focus(function () {
             $(this).data("uiAutocomplete").search($(this).val());
         });
