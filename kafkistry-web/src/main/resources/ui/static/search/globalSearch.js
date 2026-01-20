@@ -5,6 +5,11 @@ $(document).ready(function () {
 let searchTimeout;
 const SEARCH_DELAY_MS = 300;
 const MIN_QUERY_LENGTH = 2;
+let previouslyActiveNavItem = null;
+
+// Double Shift detection
+let lastShiftPressTime = 0;
+const DOUBLE_SHIFT_DELAY_MS = 500;
 
 function toggleSearchDropdown() {
     const $searchContainer = $('#navbar-search-dropdown');
@@ -19,6 +24,13 @@ function openSearchDropdown() {
     const $searchContainer = $('#navbar-search-dropdown');
     const $searchInput = $('#global-search-input');
     const $searchToggle = $('#global-search-toggle');
+
+    // Remember currently active nav-item
+    const $currentActive = $('.nav-link.active').not('#global-search-toggle');
+    if ($currentActive.length > 0) {
+        previouslyActiveNavItem = $currentActive.get(0);
+        $currentActive.removeClass('active');
+    }
 
     $searchContainer.addClass('show');
     $searchToggle.attr('aria-expanded', 'true');
@@ -38,6 +50,12 @@ function closeSearchDropdown() {
     $searchToggle.attr('aria-expanded', 'false');
     $searchToggle.removeClass('active'); // Remove highlight when dropdown closes
     $resultsDropdown.hide();
+
+    // Restore previously active nav-item
+    if (previouslyActiveNavItem) {
+        $(previouslyActiveNavItem).addClass('active');
+        previouslyActiveNavItem = null;
+    }
 }
 
 function initGlobalSearch() {
@@ -74,6 +92,20 @@ function initGlobalSearch() {
 
     // Keyboard shortcut: Cmd+K (Mac) or Ctrl+K (Windows/Linux)
     $(document).on('keydown', function(e) {
+        // Double Shift to open search
+        if (e.key === 'Shift') {
+            const now = Date.now();
+            if (now - lastShiftPressTime < DOUBLE_SHIFT_DELAY_MS) {
+                // Double Shift detected
+                e.preventDefault();
+                openSearchDropdown();
+                lastShiftPressTime = 0; // Reset after opening
+            } else {
+                lastShiftPressTime = now;
+            }
+            return;
+        }
+
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
             const $searchContainer = $('#navbar-search-dropdown');

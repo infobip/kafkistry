@@ -16,15 +16,16 @@
     position: absolute;
     top: 100%;
     left: 0;
-    /*margin-top: 5px;*/
+    margin-top: 1px; /* so that navbar border is visible */
     width: 500px;
     max-height: 600px;
     overflow: hidden;
     background: var(--bs-body-bg);
     border: 1px solid var(--bs-border-color);
-    border-radius: 4px;
+    border-top: none;
+    border-radius: 0 0 20px 20px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    z-index: 1040;
+    z-index: 1029; /* one behind navbar, so that navbar border is visible */
     display: none;
 }
 
