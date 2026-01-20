@@ -234,6 +234,7 @@ class UiRenderTest {
                 "/kafkistry/kstream-apps" to "KStream" ,
                 "/kafkistry/sql" to "SQL",
                 "/kafkistry/about" to "About",
+                "" to "", //theme pick dropdown
                 "#" to "Light",
                 "#" to "Dark",
                 "#" to "Auto",
