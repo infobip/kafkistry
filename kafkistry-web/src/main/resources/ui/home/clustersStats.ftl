@@ -14,7 +14,7 @@
     </div>
 <#else>
     <table class="table table-hover table-sm m-0">
-        <thead class="thead-light">
+        <thead class="table-theme-accent">
         <tr>
             <th colspan="2">State</th>
         </tr>
@@ -32,7 +32,7 @@
         </#list>
     </table>
     <table class="table table-hover table-sm m-0">
-        <thead class="thead-light">
+        <thead class="table-theme-accent">
         <tr>
             <th colspan="2">Issues</th>
         </tr>

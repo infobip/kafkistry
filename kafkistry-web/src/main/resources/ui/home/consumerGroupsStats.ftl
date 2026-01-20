@@ -15,7 +15,7 @@
     <#macro consumerStatsTables cStats navigateSuffix="">
     <#-- @ftlvariable name="cStats"  type="com.infobip.kafkistry.service.consumers.ConsumersStats" -->
         <table class="table table-hover table-sm m-0">
-            <tr class="table-light">
+            <tr class="table-theme-accent">
                 <th colspan="2">Group status</th>
             </tr>
             <#list cStats.consumerStatusCounts as stateType, count>
@@ -32,7 +32,7 @@
             </#list>
         </table>
         <table class="table table-hover table-sm m-0">
-            <tr class="table-light">
+            <tr class="table-theme-accent">
                 <th colspan="2">Lag status</th>
             </tr>
             <#list cStats.lagStatusCounts as stateType, count>

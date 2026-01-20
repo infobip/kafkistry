@@ -13,7 +13,7 @@
 <#else>
     <div class="p-3">
         <#list tagsCounts as tag, count>
-            <a class="m-0 p-0 text-decoration-none"
+            <a class="m-0 p-0 text-decoration-none text-nowrap"
                href="${appUrl.clusters().showClusters()}#${tag}" title="Click to filter clusters...">
                 <span class="badge bg-secondary">${tag}</span><#t>
                 <span class="badge bg-info" title="number of clusters">${count}</span>
