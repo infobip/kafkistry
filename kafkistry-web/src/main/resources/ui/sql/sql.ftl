@@ -10,6 +10,7 @@
     <#include "../commonResources.ftl"/>
     <script src="static/sql-js/sql.js?ver=${lastCommit}"></script>
     <script src="static/sql-js/chart.js?ver=${lastCommit}"></script>
+    <link rel="stylesheet" href="static/css/codeMirror.css?ver=${lastCommit}"/>
     <link rel="stylesheet" href="static/css/sql.css?ver=${lastCommit}"/>
     <#include "../codeMirrorResources.ftl">
     <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js'></script>

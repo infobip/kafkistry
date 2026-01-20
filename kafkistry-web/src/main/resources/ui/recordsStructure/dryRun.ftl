@@ -6,6 +6,7 @@
 <head>
     <#include "../commonResources.ftl"/>
     <#include "../codeMirrorResources.ftl">
+    <link rel="stylesheet" href="static/css/codeMirror.css?ver=${lastCommit}"/>
     <title>Kafkistry: Records Structure</title>
     <script src="static/recordsStructure-js/recordsStructure.js?ver=${lastCommit}"></script>
     <script src="static/recordsStructure-js/dryRunExamples.js?ver=${lastCommit}"></script>

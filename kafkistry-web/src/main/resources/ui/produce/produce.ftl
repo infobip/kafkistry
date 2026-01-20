@@ -13,6 +13,7 @@
 <head>
     <#include "../commonResources.ftl"/>
     <#include "../codeMirrorResources.ftl"/>
+    <link rel="stylesheet" href="static/css/codeMirror.css?ver=${lastCommit}"/>
     <script src="static/produce/produce.js?ver=${lastCommit}"></script>
     <title>Kafkistry: Produce</title>
     <meta name="current-nav" content="nav-produce"/>
@@ -24,11 +25,6 @@
     }
     .header-row {
         margin-bottom: 10px;
-    }
-    .CodeMirror, .CodeMirror-scroll {
-        height: auto !important;
-        min-height: 50px;
-        max-height: 75vh;
     }
 </style>
 
