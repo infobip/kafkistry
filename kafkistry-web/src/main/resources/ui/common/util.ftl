@@ -301,7 +301,7 @@
         <#case "OVERFLOW">
             <#return "bg-danger text-white">
         <#default>
-            <#return "bg-secondary">
+            <#return "">
     </#switch>
     <#return "">
 </#function>

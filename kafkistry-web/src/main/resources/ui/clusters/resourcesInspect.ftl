@@ -235,7 +235,7 @@
         />
     </tr>
     <tr>
-        <td colspan="100" class="bg-light p-1"></td>
+        <td colspan="100" class="bg-body-secondary p-1"></td>
     </tr>
     <#list clusterResources.brokerUsages as brokerId, brokerUsages>
         <tr class="table-sm broker-resources-row <#if collapseEnabled>collapse-${collapseId} collapseable</#if>">
