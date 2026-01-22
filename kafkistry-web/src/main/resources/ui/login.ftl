@@ -31,7 +31,7 @@
             </div>
 
             <div class="card-body">
-                <form action="login" method="POST">
+                <form action="login" method="POST" class="d-flex flex-column gap-2">
                     <div class="form-group row">
                         <label for="username" class="col-md-4 col-form-label text-md-right">Username</label>
                         <div class="col-md-6">
@@ -48,11 +48,12 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 offset-md-4">
-                        <button type="submit" class="btn btn-primary">
-                            Login
-                        </button>
-                    </div>
+                    <div class="form-group row mt-3">
+                        <div class="col">
+                            <button type="submit" class="btn btn-primary w-100">
+                                Login
+                            </button>
+                        </div>
 
                     <#if _csrf??>
                         <input class="btn btn-primary" name="${_csrf.parameterName}" type="hidden" value="${_csrf.token}"/>
