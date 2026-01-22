@@ -91,7 +91,6 @@ class WebSecurityConfig(
                         }
                     }
                 }
-                httpBasic {}
                 exceptionHandling {
                     it
                         .defaultAuthenticationEntryPointFor(unauthorizedEntryPoint, unauthorizedEntryPoint.apiCallMatcher())
