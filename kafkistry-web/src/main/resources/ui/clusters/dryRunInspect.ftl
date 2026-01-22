@@ -367,7 +367,7 @@
 
 <div class="inspect-summary" style="display: none;">
     <#if clusterDryRunInspect.errors?size gt 0>
-        <span class="badge alert-danger">${clusterDryRunInspect.errors?size} ERROR(s)</span>
+        <span class="badge bg-danger-subtle text-body">${clusterDryRunInspect.errors?size} ERROR(s)</span>
     </#if>
     <span class="badge ${util.usageLevelToHtmlClass(clusterDryRunInspect.clusterDiskUsageAfter.worstPossibleUsageLevel)}"
           title="Possible disk usage level">
@@ -375,7 +375,7 @@
     </span>
 
     <#if topicsDiff.problems?size gt 0>
-        <span class="badge alert-danger">${topicsDiff.problems?size} Topic problem(s)</span>
+        <span class="badge bg-danger-subtle text-body">${topicsDiff.problems?size} Topic problem(s)</span>
     </#if>
 
     <#assign gearSymbol>&#9881;</#assign>

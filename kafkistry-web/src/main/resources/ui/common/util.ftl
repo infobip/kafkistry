@@ -297,11 +297,11 @@
         <#case "MEDIUM">
             <#return "bg-warning-subtle">
         <#case "HIGH">
-            <#return "alert-danger-subtle">
+            <#return "bg-danger-subtle">
         <#case "OVERFLOW">
             <#return "bg-danger text-white">
         <#default>
-            <#return "">
+            <#return "bg-secondary">
     </#switch>
     <#return "">
 </#function>
