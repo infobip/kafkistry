@@ -15,8 +15,10 @@
         <#list tagsCounts as tag, count>
             <a class="m-0 p-0 text-decoration-none text-nowrap"
                href="${appUrl.clusters().showClusters()}#${tag}" title="Click to filter clusters...">
-                <span class="badge bg-secondary">${tag}</span><#t>
-                <span class="badge bg-info" title="number of clusters">${count}</span>
+                <span class="badge bg-secondary position-relative me-4">
+                    ${tag}
+                    <span class="ms-1 badge bg-neutral position-absolute z-1" title="number of clusters">${count}</span>
+                </span>
             </a>
         </#list>
     </div>
