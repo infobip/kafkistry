@@ -369,7 +369,7 @@
     <#if clusterDryRunInspect.errors?size gt 0>
         <span class="badge bg-danger-subtle text-body">${clusterDryRunInspect.errors?size} ERROR(s)</span>
     </#if>
-    <span class="badge ${util.usageLevelToHtmlClass(clusterDryRunInspect.clusterDiskUsageAfter.worstPossibleUsageLevel)}"
+    <span class="badge text-body ${util.usageLevelToHtmlClass(clusterDryRunInspect.clusterDiskUsageAfter.worstPossibleUsageLevel)}"
           title="Possible disk usage level">
         Possible usage: ${clusterDryRunInspect.clusterDiskUsageAfter.worstPossibleUsageLevel}
     </span>
