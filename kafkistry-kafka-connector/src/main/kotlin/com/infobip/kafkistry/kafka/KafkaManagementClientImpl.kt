@@ -214,7 +214,7 @@ class KafkaManagementClientImpl(
         topicPartitionOffsets: TopicPartitionOffsets,
         samplingPosition: SamplingPosition,
         recordVisitor: RecordVisitor,
-    ): Unit = recordReadSampler.readSampleRecords(
+    ): SamplingStats = recordReadSampler.readSampleRecords(
         connectionDefinition.name, topicPartitionOffsets, samplingPosition, recordVisitor
     )
 

@@ -16,6 +16,7 @@ import com.infobip.kafkistry.kafka.ClientFactory
 import com.infobip.kafkistry.kafka.ConnectionDefinition
 import com.infobip.kafkistry.kafka.KafkaManagementClient
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
+import com.infobip.kafkistry.kafka.recordsampling.KafkaRecordSamplerProperties
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
 import com.infobip.kafkistry.service.deleteAllOnCluster
 import com.infobip.kafkistry.webapp.WebHttpProperties
@@ -119,7 +120,7 @@ class BrowserItTestSuite {
 
         val clientFactory = ClientFactory(
                 KafkaManagementClientProperties(),
-                RecordReadSamplerFactory(),
+                RecordReadSamplerFactory(KafkaRecordSamplerProperties()),
                 Optional.empty(),
                 Optional.empty(),
         )

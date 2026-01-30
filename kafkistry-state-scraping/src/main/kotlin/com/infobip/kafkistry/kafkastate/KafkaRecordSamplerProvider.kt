@@ -2,7 +2,6 @@ package com.infobip.kafkistry.kafkastate
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.kafka.*
-import com.infobip.kafkistry.kafkastate.config.PoolingProperties
 import com.infobip.kafkistry.metric.config.PrometheusMetricsProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
@@ -12,6 +11,8 @@ import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
+
+class KafkaRecordSamplingIncompleteException(msg: String) : RuntimeException(msg)
 
 @Component
 class KafkaRecordSamplerProvider(
@@ -47,23 +48,30 @@ class KafkaRecordSamplerProvider(
             return
         }
         val latestOffsets = offsetsLatestState.value()
-        handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.OLDEST)
-        handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.NEWEST)
+        val oldestStats = handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.OLDEST)
+        val newestStats = handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.NEWEST)
+        if (!oldestStats.isCompleteCovered() || !newestStats.isCompleteCovered()) {
+            throw KafkaRecordSamplingIncompleteException(
+                "Did not cover all non empty partitions, stats: OLDEST=$oldestStats, NEWEST=$newestStats"
+            )
+        }
     }
 
     private fun handleSampling(
         kafkaCluster: KafkaCluster,
         topicPartitionOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>,
         samplingPosition: SamplingPosition,
-    ) {
-        val visitor = visitorFor(kafkaCluster, topicPartitionOffsets.keys, samplingPosition) ?: return
+    ): SamplingStats {
+        val visitor = visitorFor(kafkaCluster, topicPartitionOffsets.keys, samplingPosition)
+            ?: return SamplingStats.EMPTY
         val filteredTopicsOffsets = topicPartitionOffsets
             .filterKeys { visitor.needsTopic(it) } // read only topics that sampler(s) want
         try {
-            clientProvider.doWithClient(kafkaCluster) { client ->
+            val stats = clientProvider.doWithClient(kafkaCluster) { client ->
                 client.sampleRecords(filteredTopicsOffsets, samplingPosition, visitor)
             }
             visitor.samplingRoundCompleted()
+            return stats
         } catch (ex: Throwable) {
             visitor.samplingRoundFailed(ex)
             throw ex

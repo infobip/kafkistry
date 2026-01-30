@@ -5,6 +5,7 @@ import com.infobip.kafkistry.it.cluster_ops.testsupport.KafkaClusterLifecycle
 import com.infobip.kafkistry.it.cluster_ops.testsupport.TestKafkaLifecycleExtension
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
+import com.infobip.kafkistry.kafka.recordsampling.KafkaRecordSamplerProperties
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
 import org.assertj.core.api.Assertions.assertThat
@@ -22,7 +23,7 @@ abstract class AbstractClusterOpsTestSuite {
     private val kafkaClientProvider = KafkaClientProvider(
         ClientFactory(
             KafkaManagementClientProperties(),
-            RecordReadSamplerFactory(),
+            RecordReadSamplerFactory(KafkaRecordSamplerProperties()),
             zookeeperConnectionResolver = Optional.of(object : ZookeeperConnectionResolver {
                 override fun resolveZkConnection(brokerZkConnection: String): String {
                     //replace zk host of docker-compose service name

@@ -8,6 +8,7 @@ import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.PartitionOffsets
 import com.infobip.kafkistry.kafka.RecordVisitor
 import com.infobip.kafkistry.kafka.SamplingPosition
+import com.infobip.kafkistry.kafka.SamplingStats
 import com.infobip.kafkistry.model.TopicName
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -20,14 +21,13 @@ import java.time.Duration
  */
 class RecordReadSampler(
     private val consumer: KafkaConsumer<ByteArray, ByteArray>,
-    initialPoolTimeout: Long,
-    poolTimeout: Long,
+    properties: KafkaRecordSamplerProperties,
 ) : AutoCloseable {
 
     private val log = LoggerFactory.getLogger(RecordReadSampler::class.java)
 
-    private val initialTimeout = Duration.ofMillis(initialPoolTimeout)
-    private val poolTimeout = Duration.ofMillis(poolTimeout)
+    private val initialTimeout = Duration.ofMillis(properties.initialPoolTimeoutMs)
+    private val poolTimeout = Duration.ofMillis(properties.poolTimeoutMs)
 
     override fun close() = consumer.close(initialTimeout)
 
@@ -46,22 +46,25 @@ class RecordReadSampler(
         topicPartitionOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>,
         samplingPosition: SamplingPosition,
         recordVisitor: RecordVisitor,
-    ) {
+    ): SamplingStats {
         val allNeededPartitionsOffsets = extractNeededPartitions(topicPartitionOffsets)
         log.info("[{}] Going to sample records from {} topic partitions, position: {}",
             connectionName, allNeededPartitionsOffsets.size, samplingPosition
         )
         var count = 0
         doWithOnlyErrorLogging {
-            doSampleRecords(connectionName, allNeededPartitionsOffsets, samplingPosition, recordVisitor.compose { count++ })
+            doSampleRecords(allNeededPartitionsOffsets, samplingPosition, recordVisitor.compose { count++ })
         }
         log.info("[{}] Sampled {} records from {} topic partitions, position: {}",
             connectionName, count, allNeededPartitionsOffsets.size, samplingPosition
         )
+        return SamplingStats(
+            sampledCount = count,
+            neededPartitionCount = allNeededPartitionsOffsets.size,
+        )
     }
 
     private fun doSampleRecords(
-        connectionName: String,
         allNeededPartitionsOffsets: Map<TopicPartition, PartitionOffsets>,
         samplingPosition: SamplingPosition,
         recordVisitor: RecordVisitor,
@@ -71,10 +74,12 @@ class RecordReadSampler(
         var rewindAttempt = 0
         var timeout = initialTimeout
         var poolAttemptsLeft = allNeededPartitionsOffsets.size
+        var lastTime = System.currentTimeMillis()
         while (poolAttemptsLeft > 0) {
             poolAttemptsLeft--
             val record = consumer.poll(timeout).firstOrNull()
             if (record != null) {
+                lastTime = System.currentTimeMillis()
                 timeout = poolTimeout
                 record.headers().hashCode() //force eager initialization of thread unsafe RecordHeader byteBuffer
                 doWithNoLoggingOverrides {
@@ -89,11 +94,13 @@ class RecordReadSampler(
                     consumer.assign(remainingPartitions)
                 }
                 continue
+            } else {
+                val sinceLastMs = System.currentTimeMillis() - lastTime
+                if (sinceLastMs < initialTimeout.toMillis()) {
+                    poolAttemptsLeft++
+                    continue
+                }
             }
-            log.info(
-                "[{}] Didn't get any record and still haven't received records from all partitions, position={}, rewindAttempt={}, numRemainingPartitions={}, numAllNeededPartitions={}",
-                connectionName, samplingPosition, rewindAttempt, remainingPartitions.size, allNeededPartitionsOffsets.size
-            )
             when (samplingPosition) {   //didn't get any record and still haven't received records from all partitions
                 SamplingPosition.OLDEST -> break
                 SamplingPosition.NEWEST -> {

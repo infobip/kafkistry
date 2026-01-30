@@ -39,7 +39,7 @@ interface KafkaManagementClient : AutoCloseable {
     fun createAcls(acls: List<KafkaAclRule>): CompletableFuture<Unit>
     fun deleteAcls(acls: List<KafkaAclRule>): CompletableFuture<Unit>
     fun resetConsumerGroup(groupId: ConsumerGroupId, reset: GroupOffsetsReset): CompletableFuture<GroupOffsetResetChange>
-    fun sampleRecords(topicPartitionOffsets: TopicPartitionOffsets, samplingPosition: SamplingPosition, recordVisitor: RecordVisitor)
+    fun sampleRecords(topicPartitionOffsets: TopicPartitionOffsets, samplingPosition: SamplingPosition, recordVisitor: RecordVisitor): SamplingStats
     fun listQuotas(): CompletableFuture<List<ClientQuota>>
     fun setClientQuotas(quotas: List<ClientQuota>): CompletableFuture<Unit>
     fun removeClientQuotas(quotaEntities: List<QuotaEntity>): CompletableFuture<Unit>
@@ -65,4 +65,15 @@ interface RecordVisitor {
 
 enum class SamplingPosition {
     OLDEST, NEWEST
+}
+
+data class SamplingStats(
+    val sampledCount: Int,
+    val neededPartitionCount: Int,
+) {
+    fun isCompleteCovered() = sampledCount >= neededPartitionCount
+
+    companion object {
+        val EMPTY = SamplingStats(0 , 0)
+    }
 }

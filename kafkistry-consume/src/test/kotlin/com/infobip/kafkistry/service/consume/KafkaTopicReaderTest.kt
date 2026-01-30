@@ -3,12 +3,12 @@ package com.infobip.kafkistry.service.consume
 import com.infobip.kafkistry.kafka.ClientFactory
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
+import com.infobip.kafkistry.kafka.recordsampling.KafkaRecordSamplerProperties
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.KafkaCluster
 import com.infobip.kafkistry.service.KafkistryConsumeException
 import com.infobip.kafkistry.service.consume.config.ConsumeProperties
-import com.infobip.kafkistry.service.consume.deserialize.DeserializerType
 import com.infobip.kafkistry.service.consume.filter.JsonPathParser
 import com.infobip.kafkistry.service.consume.filter.MatcherFactory
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
@@ -21,7 +21,6 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.assertj.core.groups.Tuple
-import org.awaitility.Awaitility
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.*
 import org.springframework.kafka.test.EmbeddedKafkaBroker
@@ -96,7 +95,7 @@ class KafkaTopicReaderTest {
             filterFactory = RecordFilterFactory(MatcherFactory(JsonPathParser())),
             clientFactory = ClientFactory(
                     properties = KafkaManagementClientProperties(),
-                    RecordReadSamplerFactory(),
+                    RecordReadSamplerFactory(KafkaRecordSamplerProperties()),
                     Optional.empty(),
                     Optional.empty(),
             )
