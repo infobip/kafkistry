@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 @ConfigurationProperties(prefix = "app.kafka.sampling")
 class KafkaRecordSamplerProperties {
 
-    var initialPoolTimeoutMs: Long = 10_000L
+    var initialPoolTimeoutMs: Long = 20_000L
     var poolTimeoutMs: Long = 1_000L
 }
 
