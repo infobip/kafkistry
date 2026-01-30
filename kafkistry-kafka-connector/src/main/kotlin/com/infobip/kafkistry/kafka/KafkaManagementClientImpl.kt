@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference
 //support clusters 2.0.0 or greater
 
 class KafkaManagementClientImpl(
-    connectionDefinition: ConnectionDefinition,
+    private val connectionDefinition: ConnectionDefinition,
     clientFactory: ClientFactory,
     readRequestTimeoutMs: Long,
     writeRequestTimeoutMs: Long,
@@ -214,7 +214,9 @@ class KafkaManagementClientImpl(
         topicPartitionOffsets: TopicPartitionOffsets,
         samplingPosition: SamplingPosition,
         recordVisitor: RecordVisitor,
-    ): Unit = recordReadSampler.readSampleRecords(topicPartitionOffsets, samplingPosition, recordVisitor)
+    ): Unit = recordReadSampler.readSampleRecords(
+        connectionDefinition.name, topicPartitionOffsets, samplingPosition, recordVisitor
+    )
 
     override fun listQuotas(): CompletableFuture<List<ClientQuota>> {
         return quotasOps.listQuotas()

@@ -7,13 +7,14 @@ import org.apache.kafka.clients.admin.ConfigEntry
 import java.io.Serializable
 
 data class ConnectionDefinition(
+    val name: String,
     val connectionString: String,
     val ssl: Boolean,
     val sasl: Boolean,
     val profiles: List<KafkaProfile>,
 )
 
-fun KafkaCluster.connectionDefinition() = ConnectionDefinition(connectionString, sslEnabled, saslEnabled, profiles)
+fun KafkaCluster.connectionDefinition() = ConnectionDefinition(identifier, connectionString, sslEnabled, saslEnabled, profiles)
 
 data class KafkaTopicConfiguration(
     val name: TopicName,

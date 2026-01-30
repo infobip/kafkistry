@@ -79,7 +79,7 @@ class ClustersApi(
         @RequestParam("sasl") sasl: Boolean,
         @RequestParam("profiles") profiles: List<KafkaProfile>,
     ): ClusterInfo = clustersRegistryService.testClusterConnectionReadInfo(
-        ConnectionDefinition(connectionString, ssl, sasl, profiles)
+        ConnectionDefinition("connection-test", connectionString, ssl, sasl, profiles)
     )
 
     @PostMapping("/refresh")

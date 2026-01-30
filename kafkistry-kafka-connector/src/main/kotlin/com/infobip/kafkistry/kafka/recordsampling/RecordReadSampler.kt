@@ -42,24 +42,26 @@ class RecordReadSampler(
      * avoid need to collect everything in memory at once.
      */
     fun readSampleRecords(
+        connectionName: String,
         topicPartitionOffsets: Map<TopicName, Map<Partition, PartitionOffsets>>,
         samplingPosition: SamplingPosition,
         recordVisitor: RecordVisitor,
     ) {
         val allNeededPartitionsOffsets = extractNeededPartitions(topicPartitionOffsets)
-        log.info("Going to sample records from {} topic partitions, position: {}",
-            allNeededPartitionsOffsets.size, samplingPosition
+        log.info("[{}] Going to sample records from {} topic partitions, position: {}",
+            connectionName, allNeededPartitionsOffsets.size, samplingPosition
         )
         var count = 0
         doWithOnlyErrorLogging {
-            doSampleRecords(allNeededPartitionsOffsets, samplingPosition, recordVisitor.compose { count++ })
+            doSampleRecords(connectionName, allNeededPartitionsOffsets, samplingPosition, recordVisitor.compose { count++ })
         }
-        log.info("Sampled {} records from {} topic partitions, position: {}",
-            count, allNeededPartitionsOffsets.size, samplingPosition
+        log.info("[{}] Sampled {} records from {} topic partitions, position: {}",
+            connectionName, count, allNeededPartitionsOffsets.size, samplingPosition
         )
     }
 
     private fun doSampleRecords(
+        connectionName: String,
         allNeededPartitionsOffsets: Map<TopicPartition, PartitionOffsets>,
         samplingPosition: SamplingPosition,
         recordVisitor: RecordVisitor,
@@ -88,6 +90,10 @@ class RecordReadSampler(
                 }
                 continue
             }
+            log.info(
+                "[{}] Didn't get any record and still haven't received records from all partitions, position={}, rewindAttempt={}, numRemainingPartitions={}, numAllNeededPartitions={}",
+                connectionName, samplingPosition, rewindAttempt, remainingPartitions.size, allNeededPartitionsOffsets.size
+            )
             when (samplingPosition) {   //didn't get any record and still haven't received records from all partitions
                 SamplingPosition.OLDEST -> break
                 SamplingPosition.NEWEST -> {

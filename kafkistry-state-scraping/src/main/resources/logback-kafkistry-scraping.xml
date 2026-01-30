@@ -6,4 +6,7 @@
     <logger name="com.infobip.kafkistry.kafkastate" additivity="true">
         <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
     </logger>
+    <logger name="com.infobip.kafkistry.kafka.recordsampling" additivity="true">
+        <appender-ref ref="${KAFKISTRY_APPENDER_NAME}"/>
+    </logger>
 </configuration>

@@ -137,7 +137,7 @@ class BrowserItTestSuite {
     fun setup() {
         baseUrl = "http://$localhost:$port${httpProperties.rootPath}"
         kafkaClient = clientFactory.createManagementClient(
-                ConnectionDefinition(embeddedKafka.brokersAsString, ssl = false, sasl = false, profiles = emptyList())
+                ConnectionDefinition("local-test", embeddedKafka.brokersAsString, ssl = false, sasl = false, profiles = emptyList())
         )
         deleteAll()
         browser.get("$baseUrl/home")
