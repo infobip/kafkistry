@@ -50,7 +50,7 @@ class KafkaRecordSamplerProvider(
         val latestOffsets = offsetsLatestState.value()
         val oldestStats = handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.OLDEST)
         val newestStats = handleSampling(kafkaCluster, latestOffsets.topicsOffsets, SamplingPosition.NEWEST)
-        if (!oldestStats.isCompleteCovered() || !newestStats.isCompleteCovered()) {
+        if (!oldestStats.isCompleteCovered()) {
             throw KafkaRecordSamplingIncompleteException(
                 "Did not cover all non empty partitions, stats: OLDEST=$oldestStats, NEWEST=$newestStats"
             )
