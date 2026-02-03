@@ -17,7 +17,7 @@
         <#if gitStorageEnabled>
             <label class="col-6">
                 Choose branch to write into:
-                <#assign branchPlaceholder = gitBranchRequiredJiraKey?then((gitMainBranch) + ' or branch with JIRA key (e.g., ABC-123-feature)', 'custom branch name or (empty) for default')>
+                <#assign branchPlaceholder = gitBranchRequiredJiraKey?then((gitMainBranch) + ' or branch with JIRA key (e.g., ABC-123 or feature/ABC-123)', 'custom branch name or (empty) for default')>
                 <input class="form-control" name="targetBranch"
                        placeholder="${branchPlaceholder}"
                        value="${branch!''}">
