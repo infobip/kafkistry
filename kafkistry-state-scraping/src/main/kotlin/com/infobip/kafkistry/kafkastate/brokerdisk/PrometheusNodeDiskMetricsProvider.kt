@@ -71,7 +71,6 @@ class PrometheusNodeDiskMetricsProvider(
             }
         })
         .readTimeout(Duration.ofMillis(properties.httpTimeoutMs))
-        .connectTimeout(Duration.ofMillis(properties.httpTimeoutMs))
         .build()
 
     private lateinit var brokerLabelToHostPattern: Regex
