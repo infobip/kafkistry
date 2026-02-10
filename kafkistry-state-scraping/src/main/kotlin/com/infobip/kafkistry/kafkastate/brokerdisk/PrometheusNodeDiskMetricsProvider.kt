@@ -9,14 +9,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.ClientHttpResponse
 import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestClientResponseException
+import org.springframework.web.client.getForObject
 import java.net.URI
 import java.net.http.HttpClient
+import java.time.Duration
 import java.util.function.Supplier
 
 @Component
@@ -32,6 +33,7 @@ class PrometheusBrokerDiskMetricsProperties {
     var brokerLabelHostExtractPattern = "(.*)"
     var brokerHostLabelExtractPattern = "(.*)"
     var httpHeaders = mutableMapOf<String, String>()
+    var httpTimeoutMs = 120_000L
 }
 
 @Component
@@ -43,7 +45,7 @@ class PrometheusNodeDiskMetricsProvider(
     private val promUrl = "${properties.prometheusBaseUrl}/api/v1/query?query={query}&time={time}"
 
     private val restTemplate = RestTemplateBuilder()
-        .additionalInterceptors(ClientHttpRequestInterceptor { request, body, execution ->
+        .additionalInterceptors({ request, body, execution ->
             request.headers.apply {
                 properties.httpHeaders.forEach { (name, value) ->
                     add(name, value)
@@ -68,6 +70,8 @@ class PrometheusNodeDiskMetricsProvider(
                 }
             }
         })
+        .readTimeout(Duration.ofMillis(properties.httpTimeoutMs))
+        .connectTimeout(Duration.ofMillis(properties.httpTimeoutMs))
         .build()
 
     private lateinit var brokerLabelToHostPattern: Regex
@@ -106,10 +110,10 @@ class PrometheusNodeDiskMetricsProvider(
             .replace("{nodeId}", broker.nodeId.toString())
             .replace("{brokerHost}", broker.host)
             .replace("{brokerId}", broker.nodeId.toString())
-        val promResult = restTemplate.getForObject(
-            promUrl, PrometheusResponse::class.java, mapOf("query" to promQuery, "time" to time())
+        val promResult = restTemplate.getForObject<PrometheusResponse>(
+            promUrl, mapOf("query" to promQuery, "time" to time())
         )
-        return promResult?.data?.result.orEmpty().firstNotNullOfOrNull {
+        return promResult.data.result.firstNotNullOfOrNull {
             it.value[1].toString().toLongOrNull()
         }
     }
@@ -126,10 +130,10 @@ class PrometheusNodeDiskMetricsProvider(
             .replace("{nodeIds}", brokers.joinToString(separator = "|") { it.nodeId.toString() })
             .replace("{brokerHosts}", brokers.joinToString(separator = "|") { it.host.applyBrokerHostToLabelPattern() })
             .replace("{brokerIds}", brokers.joinToString(separator = "|") { it.nodeId.toString() })
-        val promResult = restTemplate.getForObject(
-            promUrl, PrometheusResponse::class.java, mapOf("query" to promQuery, "time" to time())
+        val promResult = restTemplate.getForObject<PrometheusResponse>(
+            promUrl, mapOf("query" to promQuery, "time" to time())
         )
-        return promResult?.data?.result.orEmpty().mapNotNull { promMetric ->
+        return promResult.data.result.mapNotNull { promMetric ->
             val brokerLabel = promMetric.metric[properties.brokerLabelName] ?: return@mapNotNull null
             val brokerFromLabel = brokerLabel.applyBrokerLabelToHostPattern()
             val broker = brokers
