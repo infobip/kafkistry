@@ -266,7 +266,9 @@
             Start reading
         </button>
         <button type="button" class="consume-stop-btn btn btn-danger w-100" id="stop-btn" style="display: none;">
+            <span class="spinner-border spinner-border-sm" role="status"></span>
             Stop reading
+            <span class="spinner-border spinner-border-sm" role="status"></span>
         </button>
     </div>
 

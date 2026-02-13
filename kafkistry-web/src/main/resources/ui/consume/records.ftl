@@ -121,6 +121,23 @@
         <#include "partitionReadStats.ftl">
     </div>
 </div>
+
+<div class="consuming-records-indicator">
+    <div class="d-flex mt-2">
+        <div class="mx-auto d-flex align-items-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mx-3">
+                Reading/waiting records...
+            </div>
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <br/>
 <div class="spacing"></div>
 

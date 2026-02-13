@@ -195,6 +195,7 @@ function doConsume(formData, continuationCtx) {
             readingMessage = "Reading messages...";
     }
     showOpProgress(readingMessage);
+    consumingActiveIndicator();
     let consumeTriggerButtons = function (){
         return $(".consume-trigger-btn");
     }
@@ -254,6 +255,7 @@ function doConsume(formData, continuationCtx) {
             } else {
                 collapseAll();
             }
+            consumingInactiveIndicator();
             maybeAutoContinue(continuationCtx);
         })
         .fail(function (error) {
@@ -268,6 +270,7 @@ function doConsume(formData, continuationCtx) {
                 showOpError("Topic reading request failed:", errorMsg);
                 mayContinue = !consumeWasAborted;
             }
+            consumingInactiveIndicator();
             if (mayContinue) {
                 setTimeout(function () {
                     //don't re-continue right away
@@ -296,6 +299,14 @@ function maybeAutoContinue(continuationCtx) {
         continuationCtx.iteration++;
     }
     doStartContinueConsume(continuationCtx);
+}
+
+function consumingActiveIndicator() {
+    $(".consuming-records-indicator").show();
+}
+
+function consumingInactiveIndicator() {
+    $(".consuming-records-indicator").hide();
 }
 
 function consumeStatusData() {
