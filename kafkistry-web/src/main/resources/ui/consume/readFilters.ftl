@@ -4,7 +4,7 @@
     <div id="filters-mode" class="mt-2" style="display: none;">
         <div class="clearfix"></div>
         <label class="d-flex align-items-center gap-2" id="filters-mode">
-            <span class="mr-1">Filtering mode: </span>
+            <span class="col-auto">Filtering mode: </span>
             <select name="filtersMode" class="form-control form-control-sm">
                 <option value="ALL">All filters need to match</option>
                 <option value="ANY">Any filter can match</option>
@@ -17,7 +17,7 @@
 </div>
 
 <div id="filter-rule-template" style="display: none;">
-    <div class="filter-rule row g-2">
+    <div class="filter-rule g-0 gap-1 mb-1 row">
         <label class="m-0 p-0 col-auto">
             <select name="targetType" class="form-control form-control-sm">
                 <option value="JSON_FIELD">Json field</option>

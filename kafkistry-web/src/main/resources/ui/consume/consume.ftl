@@ -62,7 +62,7 @@
                 <#assign clusterIdentifier = allClusters?first>
             </#if>
             Cluster:
-            <select name="cluster" class="form-control mr-sm-1 selectPicker"
+            <select name="cluster" class="form-control mb-1 selectPicker"
                     data-live-search="true" data-size="6">
                 <option value="" disabled <#if !(clusterIdentifier??)>selected</#if>>Select cluster...</option>
                 <#list allClusters as cluster>
@@ -77,7 +77,7 @@
                    class="topic-input form-control mr-sm-1" value="${topicName!""}">
         </label>
         <label>
-            <a id="inspect-topic-btn" href="#" class="btn btn-outline-secondary">Inspect 🔍</a>
+            <a id="inspect-topic-btn" href="#" class="btn btn-outline-secondary mb-1">Inspect 🔍</a>
         </label>
 
         <div class="clearfix mb-3"></div>

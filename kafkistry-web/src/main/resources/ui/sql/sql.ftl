@@ -89,7 +89,7 @@
                         <#assign tableTdClass = "">
                         <#assign tableNameClass = "alert-primary">
                     <#else>
-                        <#assign tableTdClass = "pl-4">
+                        <#assign tableTdClass = "ps-4">
                         <#assign tableNameClass = "alert-info">
                     </#if>
                     <td class="${tableTdClass}">
