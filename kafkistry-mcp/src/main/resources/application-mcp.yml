@@ -18,4 +18,5 @@ spring:
           connection-timeout: ${MCP_CONNECTION_TIMEOUT:60000}
           read-timeout: ${MCP_READ_TIMEOUT:120000}
           write-timeout: ${MCP_WRITE_TIMEOUT:60000}
+          initialization-delay: ${MCP_INIT_DELAY:2000}           # 2 second delay
         protocol: streamable
