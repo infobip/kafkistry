@@ -14,4 +14,8 @@ spring:
           across multiple Kafka clusters managed by Kafkistry.
         streamable-http:
           mcp-endpoint: ${app.http.root-path}/mcp
+          session-timeout: ${MCP_SESSION_TIMEOUT:300000}
+          connection-timeout: ${MCP_CONNECTION_TIMEOUT:60000}
+          read-timeout: ${MCP_READ_TIMEOUT:120000}
+          write-timeout: ${MCP_WRITE_TIMEOUT:60000}
         protocol: streamable
