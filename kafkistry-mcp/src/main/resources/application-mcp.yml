@@ -1,0 +1,17 @@
+spring:
+  threads:
+    virtual:
+      enabled: false   # MCP server has issues with virtual threads
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: kafkistry-mcp
+        version: "0.9.9"
+        instructions: >
+          Kafkistry MCP server. Provides tools for inspecting and querying Kafka cluster
+          state, topic configurations, consumer groups, ACLs, quotas, and disk usage
+          across multiple Kafka clusters managed by Kafkistry.
+        streamable-http:
+          mcp-endpoint: ${app.http.root-path}/mcp
+        protocol: streamable
