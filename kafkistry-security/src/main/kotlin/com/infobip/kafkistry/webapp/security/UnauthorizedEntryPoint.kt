@@ -16,7 +16,10 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpMethod
 import org.springframework.security.web.access.AccessDeniedHandlerImpl
-import org.springframework.security.web.util.matcher.*
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
+import org.springframework.security.web.util.matcher.ELRequestMatcher
+import org.springframework.security.web.util.matcher.OrRequestMatcher
+import org.springframework.security.web.util.matcher.RequestMatcher
 
 @Component
 class UnauthorizedEntryPoint(
@@ -27,12 +30,13 @@ class UnauthorizedEntryPoint(
     private val errorPage: String = "${httpProperties.rootPath}/error"
     private val loginPage: String = "${httpProperties.rootPath}/login"
 
-    private val loginCallMatcher = AntPathRequestMatcher.antMatcher(HttpMethod.POST, loginPage)
-    private val errorCallMatcher = AntPathRequestMatcher.antMatcher(errorPage)
+    private val pathMatcher = PathPatternRequestMatcher.withDefaults()
+    private val loginCallMatcher = pathMatcher.matcher(HttpMethod.POST, loginPage)
+    private val errorCallMatcher = pathMatcher.matcher(errorPage)
 
     private val apiCallMatcher: RequestMatcher = OrRequestMatcher(
         //don't redirect to /login when not authenticated using rest /api/** or rendered ajax calls
-        AntPathRequestMatcher("${httpProperties.rootPath}/api/**"),
+        pathMatcher.matcher("${httpProperties.rootPath}/api/**"),
         ELRequestMatcher("hasHeader('ajax', 'true')"),
     )
 
