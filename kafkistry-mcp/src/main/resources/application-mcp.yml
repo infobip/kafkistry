@@ -12,11 +12,6 @@ spring:
           Kafkistry MCP server. Provides tools for inspecting and querying Kafka cluster
           state, topic configurations, consumer groups, ACLs, quotas, and disk usage
           across multiple Kafka clusters managed by Kafkistry.
+        protocol: STATELESS
         streamable-http:
           mcp-endpoint: ${app.http.root-path}/mcp
-          session-timeout: ${MCP_SESSION_TIMEOUT:300000}
-          connection-timeout: ${MCP_CONNECTION_TIMEOUT:60000}
-          read-timeout: ${MCP_READ_TIMEOUT:120000}
-          write-timeout: ${MCP_WRITE_TIMEOUT:60000}
-          initialization-delay: ${MCP_INIT_DELAY:2000}           # 2 second delay
-        protocol: streamable
