@@ -14,4 +14,4 @@ spring:
           across multiple Kafka clusters managed by Kafkistry.
         streamable-http:
           mcp-endpoint: ${app.http.root-path}/mcp
-        protocol: streamable
+        protocol: stateless
