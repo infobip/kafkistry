@@ -12,6 +12,6 @@ spring:
           Kafkistry MCP server. Provides tools for inspecting and querying Kafka cluster
           state, topic configurations, consumer groups, ACLs, quotas, and disk usage
           across multiple Kafka clusters managed by Kafkistry.
-        protocol: STATELESS
+        protocol: streamable
         streamable-http:
           mcp-endpoint: ${app.http.root-path}/mcp
