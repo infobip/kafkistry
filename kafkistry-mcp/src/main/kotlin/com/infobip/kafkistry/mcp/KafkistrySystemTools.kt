@@ -51,10 +51,17 @@ An empty list indicates all background jobs are operating normally."""
 Kafkistry periodically polls each cluster to refresh its in-memory state (topics, ACLs, quotas,
 consumer groups, partition assignments, disk usage, etc.). Each entry includes: cluster identifier,
 last successful scrape time, whether the last scrape attempt succeeded or failed, and any error details.
-Use to understand data freshness — if a cluster was last scraped a long time ago, inspection results may be stale."""
+Use to understand data freshness — if a cluster was last scraped a long time ago, inspection results may be stale.
+If clusterIdentifier is provided, only entries for that specific cluster are returned."""
     )
-    open fun kafkistry_get_scraping_status(): String {
+    open fun kafkistry_get_scraping_status(
+        @McpToolParam(required = false, description = "Kafka cluster identifier to filter results; if omitted, all clusters are returned") clusterIdentifier: String?,
+    ): String {
         val result = scrapingStatusService.currentScrapingStatuses()
+            .let { statuses ->
+                if (clusterIdentifier != null) statuses.filter { it.clusterIdentifier == clusterIdentifier }
+                else statuses
+            }
         return OM.writeValueAsString(result)
     }
 
