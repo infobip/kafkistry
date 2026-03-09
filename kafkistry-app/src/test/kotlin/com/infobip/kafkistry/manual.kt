@@ -597,6 +597,23 @@ class DataStateInitializer(
                     log.info("Adding principal ACLs: {}", it)
                 }
             )
+            api.createPrincipalAcls(
+                PrincipalAclRules(
+                    principal = "User:detached-demo",
+                    description = "Principal with a detached ACL rule referencing a deleted topic",
+                    owner = "test-owner",
+                    rules = listOf(
+                        "User:detached-demo * TOPIC:topic-example-1 READ ALLOW".parseAcl()
+                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
+                        "User:detached-demo * TOPIC:topic-deleted-xyz WRITE ALLOW".parseAcl()
+                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
+                        "User:detached-demo * GROUP:detached-group READ ALLOW".parseAcl()
+                            .toAclRule(Presence(PresenceType.ALL_CLUSTERS)),
+                    )
+                ).also {
+                    log.info("Adding principal ACLs: {}", it)
+                }
+            )
         } catch (ex: Exception) {
             log.error("Exception while creating principal acls, ignoring...", ex)
         }
@@ -606,6 +623,9 @@ class DataStateInitializer(
                 "User:bob * GROUP:group* READ ALLOW".parseAcl(),
                 "User:alice * TOPIC:topic-example-1 ALL ALLOW".parseAcl(),
                 "User:mark * TOPIC:topic-example-3 ALL ALLOW".parseAcl(),
+                "User:detached-demo * TOPIC:topic-example-1 READ ALLOW".parseAcl(),
+                "User:detached-demo * TOPIC:topic-deleted-xyz WRITE ALLOW".parseAcl(),
+                "User:detached-demo * GROUP:detached-group READ ALLOW".parseAcl(),
             )
             log.info("Creating ACLs on kafka: {}", acls)
             it.createAcls(acls).get()

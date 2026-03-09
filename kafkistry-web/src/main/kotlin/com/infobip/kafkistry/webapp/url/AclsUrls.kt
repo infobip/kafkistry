@@ -17,6 +17,7 @@ class AclsUrls(base: String) : BaseUrls() {
         const val ACLS_SUGGESTED_EDIT_PRINCIPAL = "/suggested-edit-principal"
         const val ACLS_IMPORT_PRINCIPAL = "/import-principal"
         const val ACLS_DELETE_PRINCIPAL = "/delete-principal"
+        const val ACLS_REMOVE_DETACHED_RULES = "/remove-detached-rules"
         const val ACLS_BULK_CREATE_PRINCIPAL_RULES = "/management/bulk-create-principal-rules"
         const val ACLS_BULK_CREATE_CLUSTER_RULES = "/management/bulk-create-cluster-rules"
         const val ACLS_CREATE_RULES = "/management/create-rules"
@@ -33,6 +34,7 @@ class AclsUrls(base: String) : BaseUrls() {
     private val showEditPrincipal = Url("$base$ACLS_EDIT_PRINCIPAL", listOf("principal"))
     private val showEditPrincipalOnBranch = Url("$base$ACLS_EDIT_PRINCIPAL_ON_BRANCH", listOf("principal", "branch"))
     private val showSuggestedEditPrincipal = Url("$base$ACLS_SUGGESTED_EDIT_PRINCIPAL", listOf("principal"))
+    private val showRemoveDetachedRules = Url("$base$ACLS_REMOVE_DETACHED_RULES", listOf("principal"))
     private val showImportPrincipal = Url("$base$ACLS_IMPORT_PRINCIPAL", listOf("principal"))
     private val showDeletePrincipal = Url("$base$ACLS_DELETE_PRINCIPAL", listOf("principal"))
     private val showBulkCreatePrincipalRules = Url("$base$ACLS_BULK_CREATE_PRINCIPAL_RULES", listOf("principal"))
@@ -72,6 +74,8 @@ class AclsUrls(base: String) : BaseUrls() {
     ) = showEditPrincipalOnBranch.render("principal" to principal, "branch" to branch)
 
     fun showSuggestedEditPrincipal(principal: PrincipalId) = showSuggestedEditPrincipal.render("principal" to principal)
+
+    fun showRemoveDetachedRules(principal: PrincipalId) = showRemoveDetachedRules.render("principal" to principal)
 
     fun showImportPrincipal(principal: PrincipalId) = showImportPrincipal.render("principal" to principal)
 

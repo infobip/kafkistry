@@ -109,6 +109,19 @@
                         Suggest edit...
                     </a>
                 </#if>
+                <#if existInRegistry>
+                    <#assign hasDetachedRules = false>
+                    <#list principalRuleClusters.status.statusCounts as statusCount>
+                        <#if statusCount.type.name == "DETACHED">
+                            <#assign hasDetachedRules = true>
+                        </#if>
+                    </#list>
+                    <#if hasDetachedRules>
+                        <a href="${appUrl.acls().showRemoveDetachedRules(principal)}" class="btn btn-outline-warning">
+                            Remove detached rules...
+                        </a>
+                    </#if>
+                </#if>
                 <#if existInRegistry && principalActions?seq_contains("CREATE_MISSING_ACLS")>
                     <a href="${appUrl.acls().showBulkCreatePrincipalRules(principal)}" class="btn btn-outline-info">
                         Create all missing ACLs...

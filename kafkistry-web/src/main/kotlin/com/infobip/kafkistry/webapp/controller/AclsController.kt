@@ -23,6 +23,7 @@ import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_EDIT_PRINCIPAL_O
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_IMPORT_PRINCIPAL
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_PRINCIPAL
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_PRINCIPAL_HISTORY
+import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_REMOVE_DETACHED_RULES
 import com.infobip.kafkistry.webapp.url.AclsUrls.Companion.ACLS_SUGGESTED_EDIT_PRINCIPAL
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
@@ -152,6 +153,19 @@ class AclsController(
         val principalAcls = suggestionApi.suggestPrincipalAclsUpdate(principal)
         return ModelAndView("acls/modify/editPrincipalAcls", mapOf(
                 "title" to "Suggested edit to match current state on clusters",
+                "existingValues" to existingValuesApi.all(),
+                "principalSourceType" to "EDIT",
+                "principalAcls" to principalAcls
+        ))
+    }
+
+    @GetMapping(ACLS_REMOVE_DETACHED_RULES)
+    fun showRemoveDetachedRules(
+            @RequestParam("principal") principal: PrincipalId
+    ): ModelAndView {
+        val principalAcls = suggestionApi.suggestPrincipalAclsWithoutDetachedRules(principal)
+        return ModelAndView("acls/modify/editPrincipalAcls", mapOf(
+                "title" to "Edit to remove detached rules",
                 "existingValues" to existingValuesApi.all(),
                 "principalSourceType" to "EDIT",
                 "principalAcls" to principalAcls
