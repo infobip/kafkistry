@@ -114,6 +114,47 @@ class AclsInspectionTest {
     }
 
     @Test
+    fun `test suggest remove detached rules - single detached rule`() {
+        val rule_ok = "User:X * TOPIC:t1 READ ALLOW".parseAcl()
+        val rule_detached = "User:X * TOPIC:t_deleted ALL ALLOW".parseAcl()
+        val principalAcls = PrincipalAclRules(
+            principal = "User:X",
+            description = "test description",
+            owner = "Team_Test",
+            rules = listOf(
+                rule_ok.toAclRule(presenceAll),
+                rule_detached.toAclRule(presenceAll),
+            )
+        )
+        acls.create(principalAcls)
+        clusters.addCluster(cluster1)
+        cluster1.mockClusterStateRules(rule_ok, rule_detached, topics = listOf("t1"))
+        val result = suggestion.suggestPrincipalAclsWithoutDetachedRules("User:X")
+        assertThat(result.principal).isEqualTo("User:X")
+        assertThat(result.description).isEqualTo("test description")
+        assertThat(result.owner).isEqualTo("Team_Test")
+        assertThat(result.rules).hasSize(1)
+        assertThat(result.rules[0].toKafkaAclRule("User:X")).isEqualTo(rule_ok)
+    }
+
+    @Test
+    fun `test suggest remove detached rules - no detached rules throws`() {
+        acls.create(listOf(rule_X_T1).toPrincipalAclRules().first())
+        clusters.addCluster(cluster1)
+        cluster1.mockClusterStateRules(rule_X_T1, topics = listOf("t1"))
+        assertThrows<KafkistryIllegalStateException> {
+            suggestion.suggestPrincipalAclsWithoutDetachedRules("User:X")
+        }
+    }
+
+    @Test
+    fun `test suggest remove detached rules - principal not in registry throws`() {
+        assertThrows<KafkistryIllegalStateException> {
+            suggestion.suggestPrincipalAclsWithoutDetachedRules("User:nonexistent")
+        }
+    }
+
+    @Test
     fun `test missing rule`() {
         acls.create(listOf(rule_X_T1).toPrincipalAclRules().first())
         clusters.addCluster(cluster1)
@@ -510,6 +551,26 @@ class AclsInspectionTest {
                 )
             )
         )
+
+        val suggested_P3_no_detached = suggestion.suggestPrincipalAclsWithoutDetachedRules("User:P3")
+        assertThat(suggested_P3_no_detached).isEqualTo(
+            PrincipalAclRules(
+                principal = "User:P3",
+                description = "for testing",
+                owner = "Team_Test",
+                rules = listOf(
+                    rule_p3_r1.toAclRule(presence("c_1", "c_2")),
+                    rule_p3_r2.toAclRule(presence("c_2", "c_3")),
+                )
+            )
+        )
+
+        assertThrows<KafkistryIllegalStateException> {
+            suggestion.suggestPrincipalAclsWithoutDetachedRules("User:P1")
+        }
+        assertThrows<KafkistryIllegalStateException> {
+            suggestion.suggestPrincipalAclsWithoutDetachedRules("User:P2")
+        }
 
         //P4
         val suggested_P4_acls = suggestion.suggestPrincipalAclsImport("User:P4")
