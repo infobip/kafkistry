@@ -8,6 +8,7 @@ import com.infobip.kafkistry.model.PrincipalId
 import com.infobip.kafkistry.service.*
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_DISABLED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.CLUSTER_UNREACHABLE
+import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.DETACHED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.MISSING
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.NOT_PRESENT_AS_EXPECTED
 import com.infobip.kafkistry.service.acl.AclInspectionResultType.Companion.OK
@@ -96,6 +97,31 @@ class AclsSuggestionService(
                 description = currentPrincipalAcls?.description ?: "",
                 owner = currentPrincipalAcls?.owner ?: "",
                 rules = rules
+        )
+    }
+
+    fun suggestPrincipalAclsWithoutDetachedRules(
+        principal: PrincipalId
+    ): PrincipalAclRules {
+        val currentPrincipalAcls = aclsRegistry.findPrincipalAcls(principal)
+            ?: throw KafkistryIllegalStateException(
+                "Can't remove detached rules of principal '$principal', it does not exist in registry"
+            )
+        val principalAclsInspection = aclsInspector.inspectPrincipalAcls(principal)
+        val detachedRules = principalAclsInspection.clusterInspections
+            .flatMap { clusterInspection ->
+                clusterInspection.statuses
+                    .filter { DETACHED in it.statusTypes }
+                    .map { it.rule }
+            }
+            .toSet()
+        if (detachedRules.isEmpty()) {
+            throw KafkistryIllegalStateException(
+                "Can't remove detached rules of principal '$principal', no detached rules found"
+            )
+        }
+        return currentPrincipalAcls.copy(
+            rules = currentPrincipalAcls.rules.filter { it.toKafkaAclRule(principal) !in detachedRules }
         )
     }
 

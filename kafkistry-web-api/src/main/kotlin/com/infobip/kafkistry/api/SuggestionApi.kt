@@ -147,6 +147,11 @@ class SuggestionApi(
         @RequestParam("principal") principal: PrincipalId
     ): PrincipalAclRules = aclsSuggestionService.suggestPrincipalAclsUpdate(principal)
 
+    @GetMapping("/remove-detached-principal-acls")
+    fun suggestPrincipalAclsWithoutDetachedRules(
+        @RequestParam("principal") principal: PrincipalId
+    ): PrincipalAclRules = aclsSuggestionService.suggestPrincipalAclsWithoutDetachedRules(principal)
+
     @PostMapping("/generate-broker-topic-partition-throttle")
     fun generateBrokerTopicsPartitionsThrottle(
         @RequestBody throttleBrokerTopicPartitions: ThrottleBrokerTopicPartitions
