@@ -2,9 +2,15 @@ package com.infobip.kafkistry.mcp
 
 import com.infobip.kafkistry.webapp.WebHttpProperties
 import com.infobip.kafkistry.webapp.security.NoSessionRequestMatcher
+import io.modelcontextprotocol.server.McpStatelessServerHandler
+import io.modelcontextprotocol.server.transport.WebMvcStatelessServerTransport
+import io.modelcontextprotocol.spec.McpStatelessServerTransport
+import org.springframework.ai.mcp.server.common.autoconfigure.properties.McpServerStreamableHttpProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
+import reactor.core.publisher.Mono
 
 @Configuration
 class KafkistryMcpSecurityConfig(private val httpProperties: WebHttpProperties) {
@@ -13,4 +19,31 @@ class KafkistryMcpSecurityConfig(private val httpProperties: WebHttpProperties) 
     fun mcpNoSessionMatcher(): NoSessionRequestMatcher = NoSessionRequestMatcher.of(
         PathPatternRequestMatcher.withDefaults().matcher("${httpProperties.rootPath}/mcp/**")
     )
+
+    /**
+     * Override the default WebMvcStatelessServerTransport to advertise support for
+     * MCP protocol version 2025-11-25, which is required by Claude Code client 2.x.
+     * The default transport only lists ["2025-03-26", "2025-06-18"].
+     */
+    @Bean
+    fun webMvcStatelessServerTransport(
+        streamableHttpProperties: McpServerStreamableHttpProperties,
+    ): WebMvcStatelessServerTransport {
+        return WebMvcStatelessServerTransport.builder()
+            .messageEndpoint(streamableHttpProperties.mcpEndpoint)
+            .build()
+    }
+
+    @Bean
+    @Primary
+    fun mcpStatelessServerTransport(
+        webMvcTransport: WebMvcStatelessServerTransport,
+    ): McpStatelessServerTransport = object : McpStatelessServerTransport {
+        override fun setMcpHandler(handler: McpStatelessServerHandler) =
+            webMvcTransport.setMcpHandler(handler)
+        override fun closeGracefully(): Mono<Void> =
+            webMvcTransport.closeGracefully()
+        override fun protocolVersions(): List<String> =
+            listOf("2025-03-26", "2025-06-18", "2025-11-25")
+    }
 }
