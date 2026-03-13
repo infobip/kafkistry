@@ -5,7 +5,7 @@ import com.infobip.kafkistry.webapp.security.NoSessionRequestMatcher
 import io.modelcontextprotocol.server.McpStatelessServerHandler
 import io.modelcontextprotocol.server.transport.WebMvcStatelessServerTransport
 import io.modelcontextprotocol.spec.McpStatelessServerTransport
-import org.springframework.ai.mcp.server.common.autoconfigure.properties.McpServerStreamableHttpProperties
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -14,6 +14,10 @@ import reactor.core.publisher.Mono
 
 @Configuration
 class KafkistryMcpSecurityConfig(private val httpProperties: WebHttpProperties) {
+
+    companion object {
+        const val MCP_ENDPOINT_PROPERTY = "\${spring.ai.mcp.server.streamable-http.mcp-endpoint:/mcp}"
+    }
 
     @Bean
     fun mcpNoSessionMatcher(): NoSessionRequestMatcher = NoSessionRequestMatcher.of(
@@ -27,10 +31,10 @@ class KafkistryMcpSecurityConfig(private val httpProperties: WebHttpProperties) 
      */
     @Bean
     fun webMvcStatelessServerTransport(
-        streamableHttpProperties: McpServerStreamableHttpProperties,
+        @Value(MCP_ENDPOINT_PROPERTY) mcpEndpoint: String,
     ): WebMvcStatelessServerTransport {
         return WebMvcStatelessServerTransport.builder()
-            .messageEndpoint(streamableHttpProperties.mcpEndpoint)
+            .messageEndpoint(mcpEndpoint)
             .build()
     }
 
