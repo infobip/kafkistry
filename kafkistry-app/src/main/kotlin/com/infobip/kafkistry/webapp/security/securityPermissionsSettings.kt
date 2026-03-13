@@ -16,7 +16,7 @@ import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.stereotype.Component
 
@@ -86,7 +86,7 @@ class ClickhouseSQLNoSessionAuthorizationConfigurer(
     private val enabled = sqlProperties.clickHouse.openSecurity
 
     private val matcher: RequestMatcher by lazy {
-        PathPatternRequestMatcher.withDefaults().matcher("$rootPath/api/sql/click-house")
+        AntPathRequestMatcher("$rootPath/api/sql/click-house")
     }
 
     override fun matches(request: HttpServletRequest) = enabled && matcher.matches(request)

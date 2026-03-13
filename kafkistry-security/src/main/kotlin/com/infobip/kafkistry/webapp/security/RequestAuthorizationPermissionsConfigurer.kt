@@ -11,7 +11,7 @@ import org.springframework.security.authorization.AuthorityAuthorizationManager
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext
-import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.stereotype.Component
 
 interface RequestAuthorizationPermissionsConfigurer {
@@ -30,10 +30,7 @@ interface RequestAuthorizationPermissionsConfigurer {
         method: HttpMethod? = null,
         vararg antPatterns: String,
     ): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl = run {
-        val builder = PathPatternRequestMatcher.withDefaults()
-        val matchers = antPatterns.map { pattern ->
-            if (method != null) builder.matcher(method, pattern) else builder.matcher(pattern)
-        }
+        val matchers = antPatterns.map { AntPathRequestMatcher(it, method?.name()) }
         requestMatchers(*matchers.toTypedArray())
     }
 
