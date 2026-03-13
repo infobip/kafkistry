@@ -99,15 +99,6 @@ class ClickhouseSQLNoSessionAuthorizationConfigurer(
 }
 
 @Component
-@Order(302)
-class ApiKeyNoSessionRequestMatcher : NoSessionRequestMatcher {
-
-    override fun matches(request: HttpServletRequest): Boolean {
-        return request.getHeader("X-API-KEY") != null
-    }
-}
-
-@Component
 @Order(400)
 class UserSessionsAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
