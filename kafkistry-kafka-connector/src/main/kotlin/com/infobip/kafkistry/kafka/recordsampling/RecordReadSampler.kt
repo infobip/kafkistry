@@ -52,15 +52,39 @@ class RecordReadSampler(
             connectionName, allNeededPartitionsOffsets.size, samplingPosition
         )
         var count = 0
-        doWithOnlyErrorLogging {
-            doSampleRecords(allNeededPartitionsOffsets, samplingPosition, recordVisitor.compose { count++ })
+        var emptyCount = 0
+        val countingVisitor = recordVisitor.compose { count++ }
+        val remainingPartitions = doWithOnlyErrorLogging {
+            doSampleRecords(allNeededPartitionsOffsets, samplingPosition, countingVisitor)
         }
         log.info("[{}] Sampled {} records from {} topic partitions, position: {}",
             connectionName, count, allNeededPartitionsOffsets.size, samplingPosition
         )
+        if (remainingPartitions.isNotEmpty()) {
+            val incompletePartitions = remainingPartitions.associateWith { allNeededPartitionsOffsets[it] }
+            log.warn("[{}] Incomplete sampling of {} records from {} topic partitions, position: {}; remainingPartitions: {}{}",
+                connectionName, remainingPartitions.size, allNeededPartitionsOffsets.size, samplingPosition,
+                incompletePartitions.entries.take(5),
+                if (incompletePartitions.size > 5) " ...and ${incompletePartitions.size - 5} more partitions" else "",
+            )
+            val incompletePartitionsOffsets = resolveOffsetsNow(remainingPartitions)
+                .filterValues { it.end > it.begin } //only partitions which have records
+            emptyCount = remainingPartitions.size - incompletePartitionsOffsets.size
+            if (incompletePartitionsOffsets.isNotEmpty()) {
+                log.info("[{}] Going to retry sample records from {} topic partitions, position: {}",
+                    connectionName, incompletePartitionsOffsets.size, samplingPosition
+                )
+                doWithOnlyErrorLogging {
+                    doSampleRecords(incompletePartitionsOffsets, samplingPosition, countingVisitor)
+                }
+                log.info("[{}] After retry sampled {} records from {} topic partitions, position: {}",
+                    connectionName, count, allNeededPartitionsOffsets.size, samplingPosition
+                )
+            }
+        }
         return SamplingStats(
             sampledCount = count,
-            neededPartitionCount = allNeededPartitionsOffsets.size,
+            neededPartitionCount = allNeededPartitionsOffsets.size - emptyCount,
         )
     }
 
@@ -68,7 +92,7 @@ class RecordReadSampler(
         allNeededPartitionsOffsets: Map<TopicPartition, PartitionOffsets>,
         samplingPosition: SamplingPosition,
         recordVisitor: RecordVisitor,
-    ) {
+    ): Set<TopicPartition> {
         val remainingPartitions = allNeededPartitionsOffsets.keys.toMutableSet()
         initializeConsumer(allNeededPartitionsOffsets, samplingPosition)
         var rewindAttempt = 0
@@ -111,6 +135,7 @@ class RecordReadSampler(
                 }
             }
         }
+        return remainingPartitions
     }
 
     private fun initializeConsumer(
@@ -156,6 +181,17 @@ class RecordReadSampler(
                     }
             }
             .associate { it }
+    }
+
+    private fun resolveOffsetsNow(partitions: Set<TopicPartition>): Map<TopicPartition, PartitionOffsets> {
+        val endOffsets = consumer.endOffsets(partitions)
+        val beginOffsets = consumer.beginningOffsets(partitions)
+        return partitions.associateWith {
+            PartitionOffsets(
+                begin = beginOffsets[it] ?: throw IllegalStateException("No begin offsets found for partition $it"),
+                end = endOffsets[it]  ?: throw IllegalStateException("No end offsets found for partition $it"),
+            )
+        }
     }
 
 }
