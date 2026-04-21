@@ -50,7 +50,7 @@ function extractAllConsumerGroups() {
         let groupId = $(this).attr("data-consumer-group-id");
         groups[groupId] = true;
     });
-    return Object.keys(groups).sort();
+    return Object.keys(groups).sort((a, b) => a.localeCompare(b));
 }
 
 function initPresetConsumerGroupForm(allExistingConsumerGroups) {
