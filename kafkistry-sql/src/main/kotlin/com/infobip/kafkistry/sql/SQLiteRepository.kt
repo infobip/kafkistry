@@ -62,8 +62,6 @@ class SQLiteRepository(
         "exist", "shouldExist", "status", "description", "configSource", "isDefault", "isReadOnly", "isSensitive"
     ).plus(sqlDataSources.flatMap { it.nonJoinColumnNames() })
 
-    override val tableNames: List<String> get() = tableColumns.map { it.name }
-
     override val tableColumns: List<TableInfo> = factory.openSession().use { session ->
         val tableNames = session.getTableNames()
         val tableColumnNames = tableNames.associateWith { session.getTableColumnNames(it).toSet() }

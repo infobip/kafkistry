@@ -25,7 +25,7 @@ IMPORTANT — before writing a query, always call:
 Table names are capitalized (e.g., "Topics", not "topics"). Join tables use compound FK columns.
 Only SELECT queries are supported; write operations are not permitted."""
     )
-    open fun kafkistry_execute_sql_query(
+    open fun executeSqlQuery(
         @McpToolParam(required = true, description = "SQL SELECT query string") sql: String,
     ): String {
         return try {
@@ -48,9 +48,9 @@ Typical workflow:
   3. kafkistry_get_sql_query_examples — find a working example query
   4. kafkistry_execute_sql_query — run the adapted query"""
     )
-    open fun kafkistry_get_sql_table_names(): String {
+    open fun getSqlTableNames(): String {
         return try {
-            val result = sqlRepository.tableNames
+            val result = sqlRepository.tableColumns.map { it.name }
             toMcpJson(result)
         } catch (ex: Exception) {
             mcpErrorJson("kafkistry_get_sql_table_names", ex)
@@ -71,7 +71,7 @@ and columns: name (case-sensitive), type, primaryKey, joinKey (use in JOIN condi
 Foreign-key naming convention: join tables reference their parent via columns named
 "{ParentTable}_{columnName}" (e.g., Topics_ActualConfigs references Topics via "Topic_cluster" + "Topic_topic")."""
     )
-    open fun kafkistry_get_sql_table_columns(
+    open fun getSqlTableColumns(
         @McpToolParam(required = false, description = "Optional comma-separated list of table names to filter the response. When omitted, all tables are returned.") tables: String?,
     ): String {
         return try {
@@ -98,7 +98,7 @@ Each QueryExample contains: title (short description) and sql (ready-to-run SELE
 Examples show correct compound FK join patterns, grouping by use case (disk usage, compression,
 consumer lag, ACL analysis, etc.), and use indexed columns in WHERE/JOIN conditions."""
     )
-    open fun kafkistry_get_sql_query_examples(): String {
+    open fun getSqlQueryExamples(): String {
         return try {
             val result = sqlRepository.queryExamples
             toMcpJson(result)
@@ -115,7 +115,7 @@ Use to: decide whether to paginate (large tables >10,000 rows should use LIMIT/O
 detect unpopulated tables (count=0 on ConsumerGroups means no consumer groups scraped yet),
 prioritize queries, and confirm data freshness. If counts look stale, check kafkistry_get_scraping_status."""
     )
-    open fun kafkistry_get_sql_table_stats(): String {
+    open fun getSqlTableStats(): String {
         return try {
             val result = sqlRepository.tableStats
             toMcpJson(result)

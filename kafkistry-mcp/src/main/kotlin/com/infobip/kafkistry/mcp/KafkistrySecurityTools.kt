@@ -20,7 +20,7 @@ ACL rules have been defined in the registry. These identifiers can be used with
 kafkistry_get_registry_principal_acls to fetch the full ACL rule set for a specific principal.
 The registry defines the desired ACL state; actual state on each cluster may differ."""
     )
-    open fun kafkistry_list_registry_acl_principals(): String {
+    open fun listRegistryAclPrincipals(): String {
         return try {
             val result = aclsRegistryService.listAllPrincipalsAcls().map { it.principal }
             toMcpJson(result)
@@ -37,7 +37,7 @@ resource type (TOPIC, GROUP, CLUSTER, etc.), resource name pattern, operation (R
 and permission type (ALLOW or DENY). The presence field on each rule determines on which clusters the ACL
 should be applied. This is the desired/expected ACL state."""
     )
-    open fun kafkistry_get_registry_principal_acls(
+    open fun getRegistryPrincipalAcls(
         @McpToolParam(required = true, description = "Principal identifier (e.g., \"User:my-service\")") principal: String,
     ): String {
         return try {
@@ -56,7 +56,7 @@ a specific user (e.g., "User:alice"), a specific client ID (e.g., "ClientId:my-p
 a combination of user and client ID, or default quotas for all users or all clients.
 Use with kafkistry_get_registry_quota to fetch the full quota configuration for a specific entity."""
     )
-    open fun kafkistry_list_registry_quota_entities(): String {
+    open fun listRegistryQuotaEntities(): String {
         return try {
             val result = quotasRegistryService.listAllQuotas().map { it.entity.asID() }
             toMcpJson(result)
@@ -73,7 +73,7 @@ presence (cluster-targeting policy: which clusters the quota should be applied o
 and properties (actual quota values: producer_byte_rate, consumer_byte_rate, request_percentage limits).
 This is the desired quota state as configured in the registry."""
     )
-    open fun kafkistry_list_registry_quotas(): String {
+    open fun listRegistryQuotas(): String {
         return try {
             val result = quotasRegistryService.listAllQuotas()
             toMcpJson(result)
@@ -89,7 +89,7 @@ Includes: entity identifier, cluster presence configuration (which clusters the 
 and quota property values (e.g., producer_byte_rate, consumer_byte_rate, request_percentage).
 Use kafkistry_list_registry_quota_entities to discover valid quota entity IDs before calling this tool."""
     )
-    open fun kafkistry_get_registry_quota(
+    open fun getRegistryQuota(
         @McpToolParam(required = true, description = "Quota entity identifier (e.g., \"User:alice\" or \"ClientId:producer-app\")") quotaEntityID: String,
     ): String {
         return try {

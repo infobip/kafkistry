@@ -24,7 +24,7 @@ artifact version, build timestamp, and Git commit hash. Use to verify which
 version of Kafkistry is running and whether all modules are consistently versioned.
 Useful for diagnostics, support requests, and verifying deployment versions."""
     )
-    open fun kafkistry_get_build_info(): String {
+    open fun getBuildInfo(): String {
         return try {
             val result = buildInfoLoader.modulesInfos()
             toMcpJson(result)
@@ -41,7 +41,7 @@ and repository synchronization. When a background job encounters an error or ent
 it registers an issue here. Each issue includes the job name, error message or description, and timestamp.
 An empty list indicates all background jobs are operating normally."""
     )
-    open fun kafkistry_get_background_issues(): String {
+    open fun getBackgroundIssues(): String {
         return try {
             val result = backgroundIssuesRegistry.currentIssues()
             toMcpJson(result)
@@ -59,7 +59,7 @@ last successful scrape time, whether the last scrape attempt succeeded or failed
 Use to understand data freshness — if a cluster was last scraped a long time ago, inspection results may be stale.
 If clusterIdentifier is provided, only entries for that specific cluster are returned."""
     )
-    open fun kafkistry_get_scraping_status(
+    open fun getScrapingStatus(
         @McpToolParam(required = false, description = "Kafka cluster identifier to filter results; if omitted, all clusters are returned") clusterIdentifier: String?,
     ): String {
         return try {
@@ -82,7 +82,7 @@ configuration updates, ACL changes, quota changes, cluster registrations, and si
 Each entry typically includes: type of change, name of the affected entity, author, commit message/description, timestamp.
 The count parameter controls how many recent entries are returned (default: 10)."""
     )
-    open fun kafkistry_get_history(
+    open fun getHistory(
         @McpToolParam(required = false, description = "Number of most recent history entries to return (default: 10)") count: Int?,
     ): String {
         return try {

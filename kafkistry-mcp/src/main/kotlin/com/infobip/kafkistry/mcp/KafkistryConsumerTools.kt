@@ -20,7 +20,7 @@ Represents live observed state from the most recent cluster state scrape (not fr
 Optional clusterIdentifier parameter restricts the result to a single cluster.
 Use to discover what consumer groups exist before fetching detailed information."""
     )
-    open fun kafkistry_inspect_consumer_group_names(
+    open fun inspectConsumerGroupNames(
         @McpToolParam(required = false, description = "Optional cluster identifier to filter results to a single cluster") clusterIdentifier: String?,
     ): String {
         return try {
@@ -47,7 +47,7 @@ lagAmount (total unconsumed messages, may be null), lagStatus (OK, WARNING, CRIT
 partitionAssignor (range, roundrobin, sticky, cooperative-sticky), topics (list of topic names consumed).
 Returns null if the group is not found on this cluster."""
     )
-    open fun kafkistry_inspect_consumer_group_summary(
+    open fun inspectConsumerGroupSummary(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
@@ -77,7 +77,7 @@ lagStatus (severity classification), topicLags (map from topic name to total lag
 Use to identify which specific topics within a consumer group are accumulating backlog.
 Returns null if the group is not found on this cluster."""
     )
-    open fun kafkistry_inspect_consumer_group_lag(
+    open fun inspectConsumerGroupLag(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
@@ -105,7 +105,7 @@ partitionMembers (per-partition: partition index, memberId, clientId, host, offs
 Most detailed consumer group endpoint - provides full visibility into per-partition assignment and offset commits.
 Can return a large response for groups consuming many topics. Returns null if the group is not found."""
     )
-    open fun kafkistry_inspect_consumer_group_topic_members(
+    open fun inspectConsumerGroupTopicMembers(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
@@ -131,7 +131,7 @@ Each rule includes: principal, resource (type GROUP with group name or pattern),
 (READ, DESCRIBE, DELETE), permission (ALLOW or DENY), host.
 Derived from live cluster inspection state. Returns null if the group is not found."""
     )
-    open fun kafkistry_inspect_consumer_group_acls(
+    open fun inspectConsumerGroupAcls(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
@@ -157,7 +157,7 @@ lagAmount, lagStatus, partitionAssignor, topics (all topics the group consumes, 
 Optional clusterIdentifier restricts to a single cluster. When omitted, all registered clusters are queried.
 Use kafkistry_inspect_consumers_by_topic_lag for a lag-focused view."""
     )
-    open fun kafkistry_inspect_consumers_by_topic(
+    open fun inspectConsumersByTopic(
         @McpToolParam(required = true, description = "Topic name to filter by") topicName: String,
         @McpToolParam(required = false, description = "Optional cluster identifier to restrict results to a single cluster") clusterIdentifier: String?,
     ): String {
@@ -195,7 +195,7 @@ lagStatus, topicLag (lag for the requested topic only, may be null).
 Optional clusterIdentifier restricts to a single cluster.
 To find the consumer with biggest lag on a topic, sort results by topicLag descending."""
     )
-    open fun kafkistry_inspect_consumers_by_topic_lag(
+    open fun inspectConsumersByTopicLag(
         @McpToolParam(required = true, description = "Topic name to filter by") topicName: String,
         @McpToolParam(required = false, description = "Optional cluster identifier to restrict results to a single cluster") clusterIdentifier: String?,
     ): String {

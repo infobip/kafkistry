@@ -23,7 +23,7 @@ Returns only bare topic names without any associated metadata, configuration, or
 Useful as a starting point to enumerate topics before fetching detailed information.
 The registry represents the desired/expected state. Supports pagination via limit and offset parameters."""
     )
-    open fun kafkistry_list_registry_topic_names(
+    open fun listRegistryTopicNames(
         @McpToolParam(required = false, description = "Maximum number of names to return") limit: Int?,
         @McpToolParam(required = false, description = "Number of names to skip for pagination (default 0)") offset: Int?,
     ): String {
@@ -45,7 +45,7 @@ Each entry includes: topic name, owner (team/service responsible), and presence 
 Preferred starting point when browsing topics by ownership or cluster targeting strategy.
 Supports pagination via limit and offset parameters."""
     )
-    open fun kafkistry_list_registry_topics_summary(
+    open fun listRegistryTopicsSummary(
         @McpToolParam(required = false, description = "Maximum number of topics to return") limit: Int?,
         @McpToolParam(required = false, description = "Number of topics to skip for pagination (default 0)") offset: Int?,
     ): String {
@@ -71,7 +71,7 @@ Supports pagination via limit and offset parameters."""
 Includes: name, owner, description, labels, producer, presence (cluster-targeting policy),
 and resourceRequirements. Use when you need business context without loading configuration or cluster state."""
     )
-    open fun kafkistry_get_registry_topic_info(
+    open fun getRegistryTopicInfo(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
         return try {
@@ -89,7 +89,7 @@ Includes: properties (partition count, replication factor), config (base Kafka c
 perClusterProperties, perClusterConfigOverrides, perTagProperties, perTagConfigOverrides.
 This is the authoritative desired configuration."""
     )
-    open fun kafkistry_get_registry_topic_config(
+    open fun getRegistryTopicConfig(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
         return try {
@@ -115,7 +115,7 @@ This is the authoritative desired configuration."""
 Presence types: ALL_CLUSTERS, INCLUDED_CLUSTERS, EXCLUDED_CLUSTERS, TAGGED_CLUSTERS.
 Useful for determining the intended cluster scope of a topic without loading full config or live state."""
     )
-    open fun kafkistry_get_registry_topic_presence(
+    open fun getRegistryTopicPresence(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
         return try {
@@ -140,7 +140,7 @@ aggStatusFlags (allOk, hasWarnings, hasErrors), and statusPerClusters with statu
 (OK, MISSING, UNEXPECTED, WRONG_CONFIG, WRONG_PARTITION_COUNT, CONFIG_RULE_VIOLATION, etc.).
 Optional clustersOnly parameter: comma-separated cluster identifiers to filter results."""
     )
-    open fun kafkistry_inspect_topic(
+    open fun inspectTopic(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to filter by") clustersOnly: String?,
     ): String {
@@ -181,7 +181,7 @@ and per-cluster: flags, types (status codes), exists, lastRefreshTime.
 Best source for understanding what is wrong with a topic and what actions are available for remediation.
 Optional clustersOnly: comma-separated cluster identifiers."""
     )
-    open fun kafkistry_inspect_topic_status(
+    open fun inspectTopicStatus(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
@@ -217,7 +217,7 @@ ruleViolations (violations of Kafkistry validation rules), currentConfigRuleViol
 Primary source for diagnosing WRONG_CONFIG status issues - shows exact config keys and values that are out of alignment.
 Optional clustersOnly: comma-separated cluster identifiers."""
     )
-    open fun kafkistry_inspect_topic_config(
+    open fun inspectTopicConfig(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
@@ -250,7 +250,7 @@ Each rule includes: principal, resource (type and name/pattern), operation (READ
 permission (ALLOW or DENY), and host. Rules are aggregated across all clusters and deduplicated.
 This is from live cluster inspection state, not the registry definition."""
     )
-    open fun kafkistry_inspect_topic_acls(
+    open fun inspectTopicAcls(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
         return try {
@@ -276,7 +276,7 @@ current Kafka config), assignmentsDisbalance (partition/leader distribution anal
 Useful for diagnosing partition distribution problems and monitoring ongoing reassignment operations.
 Optional clustersOnly: comma-separated cluster identifiers."""
     )
-    open fun kafkistry_inspect_topic_assignments(
+    open fun inspectTopicAssignments(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
@@ -309,7 +309,7 @@ Includes resourceRequirements (declared requirements from registry: throughput, 
 and per-cluster actual usage: requiredRetentionBytes, requiredProduceBytesPerSec, requiredDiskBytesPerSec,
 usageLevel (LOW, MEDIUM, HIGH, VERY_HIGH). Optional clustersOnly: comma-separated cluster identifiers."""
     )
-    open fun kafkistry_inspect_topic_resources(
+    open fun inspectTopicResources(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
@@ -338,7 +338,7 @@ retention-bounded size estimate (projected maximum storage footprint), compariso
 resource requirements, and usage level classification. Most detailed source for understanding
 a single topic's storage footprint on a given cluster."""
     )
-    open fun kafkistry_inspect_topic_disk_usage(
+    open fun inspectTopicDiskUsage(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
@@ -361,7 +361,7 @@ The suggestion includes inferred properties, configuration, presence, and placeh
 for owner/description. Returns a starting point that should be reviewed before being submitted
 to create the official registry entry. Does not automatically register the topic."""
     )
-    open fun kafkistry_suggest_topic_import(
+    open fun suggestTopicImport(
         @McpToolParam(required = true, description = "Topic name to generate an import suggestion for") topicName: String,
     ): String {
         return try {

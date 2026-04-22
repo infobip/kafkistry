@@ -18,7 +18,7 @@ open class KafkistryRecordStructureTools(
 Useful as a lightweight triage step: check whether a topic carries JSON payloads before fetching the full
 record structure. Returns a map of clusterIdentifier to PayloadType, or null if no samples exist for the topic."""
     )
-    open fun kafkistry_get_topic_payload_type(
+    open fun getTopicPayloadType(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
         return try {
@@ -35,7 +35,7 @@ record structure. Returns a map of clusterIdentifier to PayloadType, or null if 
 Includes: payloadType, size statistics (per time window), headerFields, jsonFields (hierarchical field tree
 with types, nullability, and sample values). Returns null if no samples have been collected for the topic."""
     )
-    open fun kafkistry_get_topic_record_structure(
+    open fun getTopicRecordStructure(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
         return try {
@@ -53,7 +53,7 @@ Includes: payloadType, size statistics (per time window), headerFields, jsonFiel
 with types, nullability, and sample values). Useful for comparing schemas between environments.
 Returns null if no samples have been collected for the topic on that cluster."""
     )
-    open fun kafkistry_get_topic_cluster_record_structure(
+    open fun getTopicClusterRecordStructure(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {

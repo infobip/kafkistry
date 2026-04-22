@@ -2,8 +2,6 @@ package com.infobip.kafkistry.sql
 
 interface SQLRepository : AutoCloseable {
 
-    val tableNames: List<String>
-
     val tableColumns: List<TableInfo>
 
     val queryExamples: List<QueryExample>

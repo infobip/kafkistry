@@ -22,7 +22,7 @@ These identifiers are used as path/query parameters throughout all other API end
 that operate on a per-cluster basis. Use this endpoint to discover what clusters are managed
 before querying cluster-specific data."""
     )
-    open fun kafkistry_list_cluster_identifiers(): String {
+    open fun listClusterIdentifiers(): String {
         return try {
             val result = clustersRegistryService.listClusters().map { it.identifier }
             toMcpJson(result)
@@ -38,7 +38,7 @@ Tags are string labels used by the topic presence system (TAGGED_CLUSTERS presen
 which topics should exist on which clusters. Use to understand cluster groupings and to map tag-based
 topic presence rules to concrete clusters."""
     )
-    open fun kafkistry_list_cluster_tags(): String {
+    open fun listClusterTags(): String {
         return try {
             val result = clustersRegistryService.listClusters().map { cluster ->
                 mapOf(
@@ -58,7 +58,7 @@ topic presence rules to concrete clusters."""
 Includes: identifier, connectionString (bootstrap servers), tags, sslEnabled, saslEnabled, profiles.
 This is the source of truth for cluster connectivity and security settings as configured in the registry."""
     )
-    open fun kafkistry_get_registry_cluster_config(
+    open fun getRegistryClusterConfig(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
         return try {
@@ -84,7 +84,7 @@ Per cluster: identifier, stateType (VISIBLE, UNREACHABLE, DISABLED), ok (boolean
 lastRefreshTime (epoch millis). Use to quickly check which clusters are healthy and reachable before
 querying cluster-specific inspection data."""
     )
-    open fun kafkistry_inspect_clusters_all_statuses(): String {
+    open fun inspectClustersAllStatuses(): String {
         return try {
             val result = clusterStatusService.clustersState().map { clusterState ->
                 mapOf(
@@ -107,7 +107,7 @@ Includes: identifier, stateType, clusterInfo (nodeIds, controllerId, version, se
 lastRefreshTime. The clusterInfo field will be null if the cluster is not currently reachable.
 Returns null if the cluster is not registered."""
     )
-    open fun kafkistry_inspect_cluster_state(
+    open fun inspectClusterState(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
         return try {
@@ -140,7 +140,7 @@ Includes: identifier, brokerCount (total registered brokers), onlineBrokerCount 
 A difference between brokerCount and onlineBrokerCount indicates one or more brokers are offline.
 Returns null if the cluster is not registered or cluster info is unavailable."""
     )
-    open fun kafkistry_inspect_cluster_stats(
+    open fun inspectClusterStats(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
         return try {
@@ -166,7 +166,7 @@ Includes: identifier, combined (totalCapacityBytes, usedBytes, freeBytes, possib
 worstCurrentUsageLevel (LOW/MEDIUM/HIGH/VERY_HIGH/CRITICAL), worstPossibleUsageLevel, errors.
 Use kafkistry_inspect_cluster_topic_disk_usage to drill down into a specific topic's contribution."""
     )
-    open fun kafkistry_inspect_cluster_disk_usage(
+    open fun inspectClusterDiskUsage(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
         return try {
@@ -191,7 +191,7 @@ Includes: identifier, topicName, and diskUsage containing combined (total bytes 
 perBroker (per-broker breakdown), retentionBoundedSizeBytes (estimated max size given retention config),
 configuredReplicationFactor. Returns null if the cluster is not registered."""
     )
-    open fun kafkistry_inspect_cluster_topic_disk_usage(
+    open fun inspectClusterTopicDiskUsage(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
