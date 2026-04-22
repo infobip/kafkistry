@@ -1,8 +1,5 @@
 package com.infobip.kafkistry.mcp
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.consumers.ConsumersService
 import org.springaicommunity.mcp.annotation.McpTool
@@ -26,16 +23,20 @@ Use to discover what consumer groups exist before fetching detailed information.
     open fun kafkistry_inspect_consumer_group_names(
         @McpToolParam(required = false, description = "Optional cluster identifier to filter results to a single cluster") clusterIdentifier: String?,
     ): String {
-        val consumersData = consumersService.allConsumersData()
-        val filtered = if (clusterIdentifier != null) {
-            consumersData.clustersGroups.filter { it.clusterIdentifier == clusterIdentifier }
-        } else {
-            consumersData.clustersGroups
+        return try {
+            val consumersData = consumersService.allConsumersData()
+            val filtered = if (clusterIdentifier != null) {
+                consumersData.clustersGroups.filter { it.clusterIdentifier == clusterIdentifier }
+            } else {
+                consumersData.clustersGroups
+            }
+            val result = filtered
+                .groupBy { it.clusterIdentifier }
+                .mapValues { (_, groups) -> groups.map { it.consumerGroup.groupId } }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_consumer_group_names", ex)
         }
-        val result = filtered
-            .groupBy { it.clusterIdentifier }
-            .mapValues { (_, groups) -> groups.map { it.consumerGroup.groupId } }
-        return OM.writeValueAsString(result)
     }
 
     @McpTool(
@@ -50,18 +51,22 @@ Returns null if the group is not found on this cluster."""
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
-        val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
-            ?: return "null"
-        val result = mapOf(
-            "groupId" to group.groupId,
-            "clusterIdentifier" to clusterIdentifier,
-            "status" to group.status.name,
-            "lagAmount" to group.lag.amount,
-            "lagStatus" to group.lag.status.name,
-            "partitionAssignor" to group.partitionAssignor,
-            "topics" to group.topicMembers.map { it.topicName }
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
+                ?: return toMcpJson(null)
+            val result = mapOf(
+                "groupId" to group.groupId,
+                "clusterIdentifier" to clusterIdentifier,
+                "status" to group.status.name,
+                "lagAmount" to group.lag.amount,
+                "lagStatus" to group.lag.status.name,
+                "partitionAssignor" to group.partitionAssignor,
+                "topics" to group.topicMembers.map { it.topicName }
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_consumer_group_summary", ex)
+        }
     }
 
     @McpTool(
@@ -76,16 +81,20 @@ Returns null if the group is not found on this cluster."""
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
-        val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
-            ?: return "null"
-        val result = mapOf(
-            "groupId" to group.groupId,
-            "clusterIdentifier" to clusterIdentifier,
-            "totalLag" to group.lag.amount,
-            "lagStatus" to group.lag.status.name,
-            "topicLags" to group.topicMembers.associate { it.topicName to it.lag.amount }
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
+                ?: return toMcpJson(null)
+            val result = mapOf(
+                "groupId" to group.groupId,
+                "clusterIdentifier" to clusterIdentifier,
+                "totalLag" to group.lag.amount,
+                "lagStatus" to group.lag.status.name,
+                "topicLags" to group.topicMembers.associate { it.topicName to it.lag.amount }
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_consumer_group_lag", ex)
+        }
     }
 
     @McpTool(
@@ -100,14 +109,18 @@ Can return a large response for groups consuming many topics. Returns null if th
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
-        val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
-            ?: return "null"
-        val result = mapOf(
-            "groupId" to group.groupId,
-            "clusterIdentifier" to clusterIdentifier,
-            "topicMembers" to group.topicMembers
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
+                ?: return toMcpJson(null)
+            val result = mapOf(
+                "groupId" to group.groupId,
+                "clusterIdentifier" to clusterIdentifier,
+                "topicMembers" to group.topicMembers
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_consumer_group_topic_members", ex)
+        }
     }
 
     @McpTool(
@@ -122,14 +135,18 @@ Derived from live cluster inspection state. Returns null if the group is not fou
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Consumer group ID") consumerGroupId: String,
     ): String {
-        val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
-            ?: return "null"
-        val result = mapOf(
-            "groupId" to group.groupId,
-            "clusterIdentifier" to clusterIdentifier,
-            "affectingAclRules" to group.affectingAclRules
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val group = consumersService.consumerGroup(clusterIdentifier, consumerGroupId)
+                ?: return toMcpJson(null)
+            val result = mapOf(
+                "groupId" to group.groupId,
+                "clusterIdentifier" to clusterIdentifier,
+                "affectingAclRules" to group.affectingAclRules
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_consumer_group_acls", ex)
+        }
     }
 
     @McpTool(
@@ -144,25 +161,29 @@ Use kafkistry_inspect_consumers_by_topic_lag for a lag-focused view."""
         @McpToolParam(required = true, description = "Topic name to filter by") topicName: String,
         @McpToolParam(required = false, description = "Optional cluster identifier to restrict results to a single cluster") clusterIdentifier: String?,
     ): String {
-        val clusterIds = if (clusterIdentifier != null) {
-            listOf(clusterIdentifier)
-        } else {
-            clustersRegistryService.listClusters().map { it.identifier }
-        }
-        val result = clusterIds.flatMap { clusterId ->
-            consumersService.clusterTopicConsumers(clusterId, topicName).map { group ->
-                mapOf(
-                    "groupId" to group.groupId,
-                    "clusterIdentifier" to clusterId,
-                    "status" to group.status.name,
-                    "lagAmount" to group.lag.amount,
-                    "lagStatus" to group.lag.status.name,
-                    "partitionAssignor" to group.partitionAssignor,
-                    "topics" to group.topicMembers.map { it.topicName }
-                )
+        return try {
+            val clusterIds = if (clusterIdentifier != null) {
+                listOf(clusterIdentifier)
+            } else {
+                clustersRegistryService.listClusters().map { it.identifier }
             }
+            val result = clusterIds.flatMap { clusterId ->
+                consumersService.clusterTopicConsumers(clusterId, topicName).map { group ->
+                    mapOf(
+                        "groupId" to group.groupId,
+                        "clusterIdentifier" to clusterId,
+                        "status" to group.status.name,
+                        "lagAmount" to group.lag.amount,
+                        "lagStatus" to group.lag.status.name,
+                        "partitionAssignor" to group.partitionAssignor,
+                        "topics" to group.topicMembers.map { it.topicName }
+                    )
+                }
+            }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_consumers_by_topic", ex)
         }
-        return OM.writeValueAsString(result)
     }
 
     @McpTool(
@@ -178,30 +199,27 @@ To find the consumer with biggest lag on a topic, sort results by topicLag desce
         @McpToolParam(required = true, description = "Topic name to filter by") topicName: String,
         @McpToolParam(required = false, description = "Optional cluster identifier to restrict results to a single cluster") clusterIdentifier: String?,
     ): String {
-        val clusterIds = if (clusterIdentifier != null) {
-            listOf(clusterIdentifier)
-        } else {
-            clustersRegistryService.listClusters().map { it.identifier }
-        }
-        val result = clusterIds.flatMap { clusterId ->
-            consumersService.clusterTopicConsumers(clusterId, topicName).map { group ->
-                val topicMember = group.topicMembers.find { it.topicName == topicName }
-                mapOf(
-                    "groupId" to group.groupId,
-                    "clusterIdentifier" to clusterId,
-                    "totalLag" to group.lag.amount,
-                    "lagStatus" to group.lag.status.name,
-                    "topicLag" to topicMember?.lag?.amount
-                )
+        return try {
+            val clusterIds = if (clusterIdentifier != null) {
+                listOf(clusterIdentifier)
+            } else {
+                clustersRegistryService.listClusters().map { it.identifier }
             }
-        }
-        return OM.writeValueAsString(result)
-    }
-
-    companion object {
-        private val OM = ObjectMapper().apply {
-            registerModule(KotlinModule.Builder().build())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            val result = clusterIds.flatMap { clusterId ->
+                consumersService.clusterTopicConsumers(clusterId, topicName).map { group ->
+                    val topicMember = group.topicMembers.find { it.topicName == topicName }
+                    mapOf(
+                        "groupId" to group.groupId,
+                        "clusterIdentifier" to clusterId,
+                        "totalLag" to group.lag.amount,
+                        "lagStatus" to group.lag.status.name,
+                        "topicLag" to topicMember?.lag?.amount
+                    )
+                }
+            }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_consumers_by_topic_lag", ex)
         }
     }
 }

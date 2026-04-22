@@ -1,10 +1,5 @@
 package com.infobip.kafkistry.mcp
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.infobip.kafkistry.model.TopicName
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.service.resources.TopicResourcesAnalyzer
 import com.infobip.kafkistry.service.topic.OperationSuggestionService
 import com.infobip.kafkistry.service.topic.TopicsInspectionService
@@ -32,10 +27,14 @@ The registry represents the desired/expected state. Supports pagination via limi
         @McpToolParam(required = false, description = "Maximum number of names to return") limit: Int?,
         @McpToolParam(required = false, description = "Number of names to skip for pagination (default 0)") offset: Int?,
     ): String {
-        val allTopics = topicsRegistryService.listTopics()
-        val off = offset ?: 0
-        val result = applyPagination(allTopics, limit, off).map { it.name }
-        return OM.writeValueAsString(result)
+        return try {
+            val allTopics = topicsRegistryService.listTopics()
+            val off = offset ?: 0
+            val result = applyPagination(allTopics, limit, off).map { it.name }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_list_registry_topic_names", ex)
+        }
     }
 
     @McpTool(
@@ -50,16 +49,20 @@ Supports pagination via limit and offset parameters."""
         @McpToolParam(required = false, description = "Maximum number of topics to return") limit: Int?,
         @McpToolParam(required = false, description = "Number of topics to skip for pagination (default 0)") offset: Int?,
     ): String {
-        val allTopics = topicsRegistryService.listTopics()
-        val off = offset ?: 0
-        val result = applyPagination(allTopics, limit, off).map { topic ->
-            mapOf(
-                "name" to topic.name,
-                "owner" to topic.owner,
-                "presenceType" to topic.presence.type.name
-            )
+        return try {
+            val allTopics = topicsRegistryService.listTopics()
+            val off = offset ?: 0
+            val result = applyPagination(allTopics, limit, off).map { topic ->
+                mapOf(
+                    "name" to topic.name,
+                    "owner" to topic.owner,
+                    "presenceType" to topic.presence.type.name
+                )
+            }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_list_registry_topics_summary", ex)
         }
-        return OM.writeValueAsString(result)
     }
 
     @McpTool(
@@ -71,8 +74,12 @@ and resourceRequirements. Use when you need business context without loading con
     open fun kafkistry_get_registry_topic_info(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
-        val desc = topicsRegistryService.getTopic(topicName)
-        return OM.writeValueAsString(desc)
+        return try {
+            val desc = topicsRegistryService.getTopic(topicName)
+            toMcpJson(desc)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_registry_topic_info", ex)
+        }
     }
 
     @McpTool(
@@ -85,17 +92,21 @@ This is the authoritative desired configuration."""
     open fun kafkistry_get_registry_topic_config(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
-        val desc = topicsRegistryService.getTopic(topicName)
-        val result = mapOf(
-            "name" to desc.name,
-            "properties" to desc.properties,
-            "config" to desc.config,
-            "perClusterProperties" to desc.perClusterProperties,
-            "perClusterConfigOverrides" to desc.perClusterConfigOverrides,
-            "perTagProperties" to desc.perTagProperties,
-            "perTagConfigOverrides" to desc.perTagConfigOverrides
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val desc = topicsRegistryService.getTopic(topicName)
+            val result = mapOf(
+                "name" to desc.name,
+                "properties" to desc.properties,
+                "config" to desc.config,
+                "perClusterProperties" to desc.perClusterProperties,
+                "perClusterConfigOverrides" to desc.perClusterConfigOverrides,
+                "perTagProperties" to desc.perTagProperties,
+                "perTagConfigOverrides" to desc.perTagConfigOverrides
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_registry_topic_config", ex)
+        }
     }
 
     @McpTool(
@@ -107,14 +118,18 @@ Useful for determining the intended cluster scope of a topic without loading ful
     open fun kafkistry_get_registry_topic_presence(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
-        val desc = topicsRegistryService.getTopic(topicName)
-        val result = mapOf(
-            "name" to desc.name,
-            "presenceType" to desc.presence.type.name,
-            "kafkaClusterIdentifiers" to desc.presence.kafkaClusterIdentifiers,
-            "tag" to desc.presence.tag
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val desc = topicsRegistryService.getTopic(topicName)
+            val result = mapOf(
+                "name" to desc.name,
+                "presenceType" to desc.presence.type.name,
+                "kafkaClusterIdentifiers" to desc.presence.kafkaClusterIdentifiers,
+                "tag" to desc.presence.tag
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_registry_topic_presence", ex)
+        }
     }
 
     @McpTool(
@@ -129,29 +144,33 @@ Optional clustersOnly parameter: comma-separated cluster identifiers to filter r
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to filter by") clustersOnly: String?,
     ): String {
-        val topic = topicsInspectionService.inspectAllTopics()
-            .firstOrNull { it.topicName == topicName }
-            ?: return "null"
+        return try {
+            val topic = topicsInspectionService.inspectAllTopics()
+                .firstOrNull { it.topicName == topicName }
+                ?: return toMcpJson(null)
 
-        val clusterIds = clustersOnly?.split(",")?.toSet()
-        val clusters = if (clusterIds != null) {
-            topic.statusPerClusters.filter { it.clusterIdentifier in clusterIds }
-        } else {
-            topic.statusPerClusters
-        }
-
-        val result = mapOf(
-            "topicName" to topic.topicName,
-            "topicDescription" to topic.topicDescription,
-            "aggStatusFlags" to topic.aggStatusFlags,
-            "statusPerClusters" to clusters.map { cluster ->
-                mapOf(
-                    "clusterIdentifier" to cluster.clusterIdentifier,
-                    "status" to mapOf("types" to cluster.status.types)
-                )
+            val clusterIds = clustersOnly?.split(",")?.toSet()
+            val clusters = if (clusterIds != null) {
+                topic.statusPerClusters.filter { it.clusterIdentifier in clusterIds }
+            } else {
+                topic.statusPerClusters
             }
-        )
-        return OM.writeValueAsString(result)
+
+            val result = mapOf(
+                "topicName" to topic.topicName,
+                "topicDescription" to topic.topicDescription,
+                "aggStatusFlags" to topic.aggStatusFlags,
+                "statusPerClusters" to clusters.map { cluster ->
+                    mapOf(
+                        "clusterIdentifier" to cluster.clusterIdentifier,
+                        "status" to mapOf("types" to cluster.status.types)
+                    )
+                }
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_topic", ex)
+        }
     }
 
     @McpTool(
@@ -166,24 +185,28 @@ Optional clustersOnly: comma-separated cluster identifiers."""
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
-        val topicStatus = topicsInspectionService.inspectTopic(topicName)
-        val clusterIds = clustersOnly?.split(",")?.toSet()
-        val clusters = if (clusterIds != null) topicStatus.statusPerClusters.filter { it.clusterIdentifier in clusterIds } else topicStatus.statusPerClusters
-        val result = mapOf(
-            "topicName" to topicStatus.topicName,
-            "aggStatusFlags" to topicStatus.aggStatusFlags,
-            "availableActions" to topicStatus.availableActions,
-            "clusterStatuses" to clusters.map {
-                mapOf(
-                    "clusterIdentifier" to it.clusterIdentifier,
-                    "flags" to it.status.flags,
-                    "types" to it.status.types.map { type -> type.name },
-                    "exists" to it.status.exists,
-                    "lastRefreshTime" to it.lastRefreshTime
-                )
-            }
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val topicStatus = topicsInspectionService.inspectTopic(topicName)
+            val clusterIds = clustersOnly?.split(",")?.toSet()
+            val clusters = if (clusterIds != null) topicStatus.statusPerClusters.filter { it.clusterIdentifier in clusterIds } else topicStatus.statusPerClusters
+            val result = mapOf(
+                "topicName" to topicStatus.topicName,
+                "aggStatusFlags" to topicStatus.aggStatusFlags,
+                "availableActions" to topicStatus.availableActions,
+                "clusterStatuses" to clusters.map {
+                    mapOf(
+                        "clusterIdentifier" to it.clusterIdentifier,
+                        "flags" to it.status.flags,
+                        "types" to it.status.types.map { type -> type.name },
+                        "exists" to it.status.exists,
+                        "lastRefreshTime" to it.lastRefreshTime
+                    )
+                }
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_topic_status", ex)
+        }
     }
 
     @McpTool(
@@ -198,22 +221,26 @@ Optional clustersOnly: comma-separated cluster identifiers."""
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
-        val topicStatus = topicsInspectionService.inspectTopic(topicName)
-        val clusterIds = clustersOnly?.split(",")?.toSet()
-        val clusters = if (clusterIds != null) topicStatus.statusPerClusters.filter { it.clusterIdentifier in clusterIds } else topicStatus.statusPerClusters
-        val result = mapOf(
-            "topicName" to topicStatus.topicName,
-            "clusterConfigIssues" to clusters.map {
-                mapOf(
-                    "clusterIdentifier" to it.clusterIdentifier,
-                    "wrongValues" to (it.status.wrongValues ?: emptyList<Any>()),
-                    "updateValues" to (it.status.updateValues ?: emptyList<Any>()),
-                    "ruleViolations" to (it.status.ruleViolations ?: emptyList<Any>()),
-                    "currentConfigRuleViolations" to (it.status.currentConfigRuleViolations ?: emptyList<Any>())
-                )
-            }
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val topicStatus = topicsInspectionService.inspectTopic(topicName)
+            val clusterIds = clustersOnly?.split(",")?.toSet()
+            val clusters = if (clusterIds != null) topicStatus.statusPerClusters.filter { it.clusterIdentifier in clusterIds } else topicStatus.statusPerClusters
+            val result = mapOf(
+                "topicName" to topicStatus.topicName,
+                "clusterConfigIssues" to clusters.map {
+                    mapOf(
+                        "clusterIdentifier" to it.clusterIdentifier,
+                        "wrongValues" to (it.status.wrongValues ?: emptyList<Any>()),
+                        "updateValues" to (it.status.updateValues ?: emptyList<Any>()),
+                        "ruleViolations" to (it.status.ruleViolations ?: emptyList<Any>()),
+                        "currentConfigRuleViolations" to (it.status.currentConfigRuleViolations ?: emptyList<Any>())
+                    )
+                }
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_topic_config", ex)
+        }
     }
 
     @McpTool(
@@ -226,15 +253,19 @@ This is from live cluster inspection state, not the registry definition."""
     open fun kafkistry_inspect_topic_acls(
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
-        val topicStatus = topicsInspectionService.inspectTopic(topicName)
-        val allAclRules = topicStatus.statusPerClusters
-            .flatMap { it.status.affectingAclRules }
-            .distinctBy { it.principal to it.resource to it.operation }
-        val result = mapOf(
-            "topicName" to topicStatus.topicName,
-            "affectingAclRules" to allAclRules
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val topicStatus = topicsInspectionService.inspectTopic(topicName)
+            val allAclRules = topicStatus.statusPerClusters
+                .flatMap { it.status.affectingAclRules }
+                .distinctBy { it.principal to it.resource to it.operation }
+            val result = mapOf(
+                "topicName" to topicStatus.topicName,
+                "affectingAclRules" to allAclRules
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_topic_acls", ex)
+        }
     }
 
     @McpTool(
@@ -249,22 +280,26 @@ Optional clustersOnly: comma-separated cluster identifiers."""
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
-        val topicStatus = topicsInspectionService.inspectTopic(topicName)
-        val clusterIds = clustersOnly?.split(",")?.toSet()
-        val result = mapOf(
-            "topicName" to topicStatus.topicName,
-            "clusterAssignments" to topicStatus.statusPerClusters
-                .filter { it.existingTopicInfo != null }
-                .filter { clusterIds == null || it.clusterIdentifier in clusterIds }
-                .associate { cluster ->
-                    cluster.clusterIdentifier to mapOf(
-                        "existingTopicInfo" to cluster.existingTopicInfo!!,
-                        "assignmentsDisbalance" to cluster.status.assignmentsDisbalance,
-                        "currentReAssignments" to cluster.currentReAssignments
-                    )
-                }
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val topicStatus = topicsInspectionService.inspectTopic(topicName)
+            val clusterIds = clustersOnly?.split(",")?.toSet()
+            val result = mapOf(
+                "topicName" to topicStatus.topicName,
+                "clusterAssignments" to topicStatus.statusPerClusters
+                    .filter { it.existingTopicInfo != null }
+                    .filter { clusterIds == null || it.clusterIdentifier in clusterIds }
+                    .associate { cluster ->
+                        cluster.clusterIdentifier to mapOf(
+                            "existingTopicInfo" to cluster.existingTopicInfo!!,
+                            "assignmentsDisbalance" to cluster.status.assignmentsDisbalance,
+                            "currentReAssignments" to cluster.currentReAssignments
+                        )
+                    }
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_topic_assignments", ex)
+        }
     }
 
     @McpTool(
@@ -278,17 +313,21 @@ usageLevel (LOW, MEDIUM, HIGH, VERY_HIGH). Optional clustersOnly: comma-separate
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = false, description = "Comma-separated cluster identifiers to restrict results to") clustersOnly: String?,
     ): String {
-        val topicStatus = topicsInspectionService.inspectTopic(topicName)
-        val clusterIds = clustersOnly?.split(",")?.toSet()
-        val result = mapOf(
-            "topicName" to topicStatus.topicName,
-            "resourceRequirements" to topicStatus.topicDescription?.resourceRequirements,
-            "clusterResources" to topicStatus.statusPerClusters
-                .filter { it.resourceRequiredUsages.value != null }
-                .filter { clusterIds == null || it.clusterIdentifier in clusterIds }
-                .associate { it.clusterIdentifier to it.resourceRequiredUsages.value!! }
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val topicStatus = topicsInspectionService.inspectTopic(topicName)
+            val clusterIds = clustersOnly?.split(",")?.toSet()
+            val result = mapOf(
+                "topicName" to topicStatus.topicName,
+                "resourceRequirements" to topicStatus.topicDescription?.resourceRequirements,
+                "clusterResources" to topicStatus.statusPerClusters
+                    .filter { it.resourceRequiredUsages.value != null }
+                    .filter { clusterIds == null || it.clusterIdentifier in clusterIds }
+                    .associate { it.clusterIdentifier to it.resourceRequiredUsages.value!! }
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_topic_resources", ex)
+        }
     }
 
     @McpTool(
@@ -303,11 +342,15 @@ a single topic's storage footprint on a given cluster."""
         @McpToolParam(required = true, description = "Topic name") topicName: String,
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
-        val result = topicResourcesAnalyzer.topicOnClusterDiskUsage(topicName, clusterIdentifier)
-        val filteredClusterDiskUsage = result.clusterDiskUsage.copy(
-            topicDiskUsages = result.clusterDiskUsage.topicDiskUsages.filterKeys { it == topicName }
-        )
-        return OM.writeValueAsString(result.copy(clusterDiskUsage = filteredClusterDiskUsage))
+        return try {
+            val result = topicResourcesAnalyzer.topicOnClusterDiskUsage(topicName, clusterIdentifier)
+            val filteredClusterDiskUsage = result.clusterDiskUsage.copy(
+                topicDiskUsages = result.clusterDiskUsage.topicDiskUsages.filterKeys { it == topicName }
+            )
+            toMcpJson(result.copy(clusterDiskUsage = filteredClusterDiskUsage))
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_topic_disk_usage", ex)
+        }
     }
 
     @McpTool(
@@ -321,19 +364,16 @@ to create the official registry entry. Does not automatically register the topic
     open fun kafkistry_suggest_topic_import(
         @McpToolParam(required = true, description = "Topic name to generate an import suggestion for") topicName: String,
     ): String {
-        val result = suggestionService.suggestTopicImport(topicName)
-        return OM.writeValueAsString(result)
+        return try {
+            val result = suggestionService.suggestTopicImport(topicName)
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_suggest_topic_import", ex)
+        }
     }
 
     private fun <T> applyPagination(items: List<T>, limit: Int?, offset: Int): List<T> {
         val end = if (limit != null) offset + limit else items.size
         return items.drop(offset).take(end - offset)
-    }
-
-    companion object {
-        private val OM = ObjectMapper().apply {
-            registerModule(KotlinModule.Builder().build())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        }
     }
 }

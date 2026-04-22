@@ -1,8 +1,5 @@
 package com.infobip.kafkistry.mcp
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.infobip.kafkistry.service.cluster.ClusterStatusService
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.resources.ClusterResourcesAnalyzer
@@ -26,8 +23,12 @@ that operate on a per-cluster basis. Use this endpoint to discover what clusters
 before querying cluster-specific data."""
     )
     open fun kafkistry_list_cluster_identifiers(): String {
-        val result = clustersRegistryService.listClusters().map { it.identifier }
-        return OM.writeValueAsString(result)
+        return try {
+            val result = clustersRegistryService.listClusters().map { it.identifier }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_list_cluster_identifiers", ex)
+        }
     }
 
     @McpTool(
@@ -38,13 +39,17 @@ which topics should exist on which clusters. Use to understand cluster groupings
 topic presence rules to concrete clusters."""
     )
     open fun kafkistry_list_cluster_tags(): String {
-        val result = clustersRegistryService.listClusters().map { cluster ->
-            mapOf(
-                "identifier" to cluster.identifier,
-                "tags" to cluster.tags
-            )
+        return try {
+            val result = clustersRegistryService.listClusters().map { cluster ->
+                mapOf(
+                    "identifier" to cluster.identifier,
+                    "tags" to cluster.tags
+                )
+            }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_list_cluster_tags", ex)
         }
-        return OM.writeValueAsString(result)
     }
 
     @McpTool(
@@ -56,16 +61,20 @@ This is the source of truth for cluster connectivity and security settings as co
     open fun kafkistry_get_registry_cluster_config(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
-        val cluster = clustersRegistryService.getCluster(clusterIdentifier)
-        val result = mapOf(
-            "identifier" to cluster.identifier,
-            "connectionString" to cluster.connectionString,
-            "tags" to cluster.tags,
-            "sslEnabled" to cluster.sslEnabled,
-            "saslEnabled" to cluster.saslEnabled,
-            "profiles" to cluster.profiles
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val cluster = clustersRegistryService.getCluster(clusterIdentifier)
+            val result = mapOf(
+                "identifier" to cluster.identifier,
+                "connectionString" to cluster.connectionString,
+                "tags" to cluster.tags,
+                "sslEnabled" to cluster.sslEnabled,
+                "saslEnabled" to cluster.saslEnabled,
+                "profiles" to cluster.profiles
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_registry_cluster_config", ex)
+        }
     }
 
     @McpTool(
@@ -76,15 +85,19 @@ lastRefreshTime (epoch millis). Use to quickly check which clusters are healthy 
 querying cluster-specific inspection data."""
     )
     open fun kafkistry_inspect_clusters_all_statuses(): String {
-        val result = clusterStatusService.clustersState().map { clusterState ->
-            mapOf(
-                "identifier" to clusterState.cluster.identifier,
-                "stateType" to clusterState.clusterState.name,
-                "ok" to (clusterState.clusterState.name == "VISIBLE"),
-                "lastRefreshTime" to clusterState.lastRefreshTime
-            )
+        return try {
+            val result = clusterStatusService.clustersState().map { clusterState ->
+                mapOf(
+                    "identifier" to clusterState.cluster.identifier,
+                    "stateType" to clusterState.clusterState.name,
+                    "ok" to (clusterState.clusterState.name == "VISIBLE"),
+                    "lastRefreshTime" to clusterState.lastRefreshTime
+                )
+            }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_clusters_all_statuses", ex)
         }
-        return OM.writeValueAsString(result)
     }
 
     @McpTool(
@@ -97,23 +110,27 @@ Returns null if the cluster is not registered."""
     open fun kafkistry_inspect_cluster_state(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
-        val clusterState = clusterStatusService.clustersState()
-            .firstOrNull { it.cluster.identifier == clusterIdentifier }
-            ?: return "null"
-        val result = mapOf(
-            "identifier" to clusterIdentifier,
-            "stateType" to clusterState.clusterState.name,
-            "clusterInfo" to clusterState.clusterInfo?.let { info ->
-                mapOf(
-                    "nodeIds" to info.nodeIds,
-                    "controllerId" to info.controllerId,
-                    "version" to info.clusterVersion?.toString(),
-                    "securityEnabled" to info.securityEnabled
-                )
-            },
-            "lastRefreshTime" to clusterState.lastRefreshTime
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val clusterState = clusterStatusService.clustersState()
+                .firstOrNull { it.cluster.identifier == clusterIdentifier }
+                ?: return toMcpJson(null)
+            val result = mapOf(
+                "identifier" to clusterIdentifier,
+                "stateType" to clusterState.clusterState.name,
+                "clusterInfo" to clusterState.clusterInfo?.let { info ->
+                    mapOf(
+                        "nodeIds" to info.nodeIds,
+                        "controllerId" to info.controllerId,
+                        "version" to info.clusterVersion?.toString(),
+                        "securityEnabled" to info.securityEnabled
+                    )
+                },
+                "lastRefreshTime" to clusterState.lastRefreshTime
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_cluster_state", ex)
+        }
     }
 
     @McpTool(
@@ -126,16 +143,20 @@ Returns null if the cluster is not registered or cluster info is unavailable."""
     open fun kafkistry_inspect_cluster_stats(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
-        val clusterState = clusterStatusService.clustersState()
-            .firstOrNull { it.cluster.identifier == clusterIdentifier }
-            ?: return "null"
-        val clusterInfo = clusterState.clusterInfo ?: return "null"
-        val result = mapOf(
-            "identifier" to clusterIdentifier,
-            "brokerCount" to clusterInfo.nodeIds.size,
-            "onlineBrokerCount" to clusterInfo.onlineNodeIds.size
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val clusterState = clusterStatusService.clustersState()
+                .firstOrNull { it.cluster.identifier == clusterIdentifier }
+                ?: return toMcpJson(null)
+            val clusterInfo = clusterState.clusterInfo ?: return toMcpJson(null)
+            val result = mapOf(
+                "identifier" to clusterIdentifier,
+                "brokerCount" to clusterInfo.nodeIds.size,
+                "onlineBrokerCount" to clusterInfo.onlineNodeIds.size
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_cluster_stats", ex)
+        }
     }
 
     @McpTool(
@@ -148,15 +169,19 @@ Use kafkistry_inspect_cluster_topic_disk_usage to drill down into a specific top
     open fun kafkistry_inspect_cluster_disk_usage(
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
     ): String {
-        val diskUsage = clusterResourcesAnalyzer.clusterDiskUsage(clusterIdentifier)
-        val result = mapOf(
-            "identifier" to clusterIdentifier,
-            "combined" to diskUsage.combined,
-            "worstCurrentUsageLevel" to diskUsage.worstCurrentUsageLevel,
-            "worstPossibleUsageLevel" to diskUsage.worstPossibleUsageLevel,
-            "errors" to diskUsage.errors
-        )
-        return OM.writeValueAsString(result)
+        return try {
+            val diskUsage = clusterResourcesAnalyzer.clusterDiskUsage(clusterIdentifier)
+            val result = mapOf(
+                "identifier" to clusterIdentifier,
+                "combined" to diskUsage.combined,
+                "worstCurrentUsageLevel" to diskUsage.worstCurrentUsageLevel,
+                "worstPossibleUsageLevel" to diskUsage.worstPossibleUsageLevel,
+                "errors" to diskUsage.errors
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_cluster_disk_usage", ex)
+        }
     }
 
     @McpTool(
@@ -170,20 +195,17 @@ configuredReplicationFactor. Returns null if the cluster is not registered."""
         @McpToolParam(required = true, description = "Cluster identifier") clusterIdentifier: String,
         @McpToolParam(required = true, description = "Topic name") topicName: String,
     ): String {
-        val diskUsage = clusterResourcesAnalyzer.clusterDiskUsage(clusterIdentifier)
-        val topicUsage = diskUsage.topicDiskUsages[topicName] ?: return "null"
-        val result = mapOf(
-            "identifier" to clusterIdentifier,
-            "topicName" to topicName,
-            "diskUsage" to topicUsage
-        )
-        return OM.writeValueAsString(result)
-    }
-
-    companion object {
-        private val OM = ObjectMapper().apply {
-            registerModule(KotlinModule.Builder().build())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        return try {
+            val diskUsage = clusterResourcesAnalyzer.clusterDiskUsage(clusterIdentifier)
+            val topicUsage = diskUsage.topicDiskUsages[topicName] ?: return toMcpJson(null)
+            val result = mapOf(
+                "identifier" to clusterIdentifier,
+                "topicName" to topicName,
+                "diskUsage" to topicUsage
+            )
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_inspect_cluster_topic_disk_usage", ex)
         }
     }
 }

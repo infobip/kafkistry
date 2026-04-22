@@ -1,8 +1,5 @@
 package com.infobip.kafkistry.mcp
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.infobip.kafkistry.service.acl.AclsRegistryService
 import com.infobip.kafkistry.service.quotas.QuotasRegistryService
 import org.springaicommunity.mcp.annotation.McpTool
@@ -24,8 +21,12 @@ kafkistry_get_registry_principal_acls to fetch the full ACL rule set for a speci
 The registry defines the desired ACL state; actual state on each cluster may differ."""
     )
     open fun kafkistry_list_registry_acl_principals(): String {
-        val result = aclsRegistryService.listAllPrincipalsAcls().map { it.principal }
-        return OM.writeValueAsString(result)
+        return try {
+            val result = aclsRegistryService.listAllPrincipalsAcls().map { it.principal }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_list_registry_acl_principals", ex)
+        }
     }
 
     @McpTool(
@@ -39,8 +40,12 @@ should be applied. This is the desired/expected ACL state."""
     open fun kafkistry_get_registry_principal_acls(
         @McpToolParam(required = true, description = "Principal identifier (e.g., \"User:my-service\")") principal: String,
     ): String {
-        val result = aclsRegistryService.getPrincipalAcls(principal)
-        return OM.writeValueAsString(result)
+        return try {
+            val result = aclsRegistryService.getPrincipalAcls(principal)
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_registry_principal_acls", ex)
+        }
     }
 
     @McpTool(
@@ -52,8 +57,12 @@ a combination of user and client ID, or default quotas for all users or all clie
 Use with kafkistry_get_registry_quota to fetch the full quota configuration for a specific entity."""
     )
     open fun kafkistry_list_registry_quota_entities(): String {
-        val result = quotasRegistryService.listAllQuotas().map { it.entity.asID() }
-        return OM.writeValueAsString(result)
+        return try {
+            val result = quotasRegistryService.listAllQuotas().map { it.entity.asID() }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_list_registry_quota_entities", ex)
+        }
     }
 
     @McpTool(
@@ -65,8 +74,12 @@ and properties (actual quota values: producer_byte_rate, consumer_byte_rate, req
 This is the desired quota state as configured in the registry."""
     )
     open fun kafkistry_list_registry_quotas(): String {
-        val result = quotasRegistryService.listAllQuotas()
-        return OM.writeValueAsString(result)
+        return try {
+            val result = quotasRegistryService.listAllQuotas()
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_list_registry_quotas", ex)
+        }
     }
 
     @McpTool(
@@ -79,14 +92,11 @@ Use kafkistry_list_registry_quota_entities to discover valid quota entity IDs be
     open fun kafkistry_get_registry_quota(
         @McpToolParam(required = true, description = "Quota entity identifier (e.g., \"User:alice\" or \"ClientId:producer-app\")") quotaEntityID: String,
     ): String {
-        val result = quotasRegistryService.getQuotas(quotaEntityID)
-        return OM.writeValueAsString(result)
-    }
-
-    companion object {
-        private val OM = ObjectMapper().apply {
-            registerModule(KotlinModule.Builder().build())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        return try {
+            val result = quotasRegistryService.getQuotas(quotaEntityID)
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_registry_quota", ex)
         }
     }
 }

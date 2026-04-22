@@ -1,8 +1,5 @@
 package com.infobip.kafkistry.mcp
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.infobip.kafkistry.appinfo.ModulesBuildInfoLoader
 import com.infobip.kafkistry.service.background.BackgroundJobIssuesRegistry
 import com.infobip.kafkistry.service.history.HistoryService
@@ -28,8 +25,12 @@ version of Kafkistry is running and whether all modules are consistently version
 Useful for diagnostics, support requests, and verifying deployment versions."""
     )
     open fun kafkistry_get_build_info(): String {
-        val result = buildInfoLoader.modulesInfos()
-        return OM.writeValueAsString(result)
+        return try {
+            val result = buildInfoLoader.modulesInfos()
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_build_info", ex)
+        }
     }
 
     @McpTool(
@@ -41,8 +42,12 @@ it registers an issue here. Each issue includes the job name, error message or d
 An empty list indicates all background jobs are operating normally."""
     )
     open fun kafkistry_get_background_issues(): String {
-        val result = backgroundIssuesRegistry.currentIssues()
-        return OM.writeValueAsString(result)
+        return try {
+            val result = backgroundIssuesRegistry.currentIssues()
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_background_issues", ex)
+        }
     }
 
     @McpTool(
@@ -57,12 +62,16 @@ If clusterIdentifier is provided, only entries for that specific cluster are ret
     open fun kafkistry_get_scraping_status(
         @McpToolParam(required = false, description = "Kafka cluster identifier to filter results; if omitted, all clusters are returned") clusterIdentifier: String?,
     ): String {
-        val result = scrapingStatusService.currentScrapingStatuses()
-            .let { statuses ->
-                if (clusterIdentifier != null) statuses.filter { it.clusterIdentifier == clusterIdentifier }
-                else statuses
-            }
-        return OM.writeValueAsString(result)
+        return try {
+            val result = scrapingStatusService.currentScrapingStatuses()
+                .let { statuses ->
+                    if (clusterIdentifier != null) statuses.filter { it.clusterIdentifier == clusterIdentifier }
+                    else statuses
+                }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_scraping_status", ex)
+        }
     }
 
     @McpTool(
@@ -76,14 +85,11 @@ The count parameter controls how many recent entries are returned (default: 10).
     open fun kafkistry_get_history(
         @McpToolParam(required = false, description = "Number of most recent history entries to return (default: 10)") count: Int?,
     ): String {
-        val result = historyService.getRecentHistory(count ?: 10)
-        return OM.writeValueAsString(result)
-    }
-
-    companion object {
-        private val OM = ObjectMapper().apply {
-            registerModule(KotlinModule.Builder().build())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        return try {
+            val result = historyService.getRecentHistory(count ?: 10)
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_history", ex)
         }
     }
 }

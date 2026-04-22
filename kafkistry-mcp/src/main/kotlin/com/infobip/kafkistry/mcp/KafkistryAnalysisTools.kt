@@ -1,8 +1,5 @@
 package com.infobip.kafkistry.mcp
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.infobip.kafkistry.sql.SQLRepository
 import org.springaicommunity.mcp.annotation.McpTool
 import org.springaicommunity.mcp.annotation.McpToolParam
@@ -31,8 +28,12 @@ Only SELECT queries are supported; write operations are not permitted."""
     open fun kafkistry_execute_sql_query(
         @McpToolParam(required = true, description = "SQL SELECT query string") sql: String,
     ): String {
-        val result = sqlRepository.query(sql)
-        return OM.writeValueAsString(result)
+        return try {
+            val result = sqlRepository.query(sql)
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_execute_sql_query", ex)
+        }
     }
 
     @McpTool(
@@ -48,8 +49,12 @@ Typical workflow:
   4. kafkistry_execute_sql_query — run the adapted query"""
     )
     open fun kafkistry_get_sql_table_names(): String {
-        val result = sqlRepository.tableNames
-        return OM.writeValueAsString(result)
+        return try {
+            val result = sqlRepository.tableNames
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_sql_table_names", ex)
+        }
     }
 
     @McpTool(
@@ -69,14 +74,18 @@ Foreign-key naming convention: join tables reference their parent via columns na
     open fun kafkistry_get_sql_table_columns(
         @McpToolParam(required = false, description = "Optional comma-separated list of table names to filter the response. When omitted, all tables are returned.") tables: String?,
     ): String {
-        val all = sqlRepository.tableColumns
-        val result = if (tables.isNullOrBlank()) {
-            all
-        } else {
-            val requested = tables.split(",").map { it.trim() }.toSet()
-            all.filter { it.name in requested }
+        return try {
+            val all = sqlRepository.tableColumns
+            val result = if (tables.isNullOrBlank()) {
+                all
+            } else {
+                val requested = tables.split(",").map { it.trim() }.toSet()
+                all.filter { it.name in requested }
+            }
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_sql_table_columns", ex)
         }
-        return OM.writeValueAsString(result)
     }
 
     @McpTool(
@@ -90,8 +99,12 @@ Examples show correct compound FK join patterns, grouping by use case (disk usag
 consumer lag, ACL analysis, etc.), and use indexed columns in WHERE/JOIN conditions."""
     )
     open fun kafkistry_get_sql_query_examples(): String {
-        val result = sqlRepository.queryExamples
-        return OM.writeValueAsString(result)
+        return try {
+            val result = sqlRepository.queryExamples
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_sql_query_examples", ex)
+        }
     }
 
     @McpTool(
@@ -103,14 +116,11 @@ detect unpopulated tables (count=0 on ConsumerGroups means no consumer groups sc
 prioritize queries, and confirm data freshness. If counts look stale, check kafkistry_get_scraping_status."""
     )
     open fun kafkistry_get_sql_table_stats(): String {
-        val result = sqlRepository.tableStats
-        return OM.writeValueAsString(result)
-    }
-
-    companion object {
-        private val OM = ObjectMapper().apply {
-            registerModule(KotlinModule.Builder().build())
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        return try {
+            val result = sqlRepository.tableStats
+            toMcpJson(result)
+        } catch (ex: Exception) {
+            mcpErrorJson("kafkistry_get_sql_table_stats", ex)
         }
     }
 }
