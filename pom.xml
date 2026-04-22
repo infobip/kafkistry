@@ -54,6 +54,7 @@
         <module>kafkistry-sql</module>
         <module>kafkistry-prometheus-metrics-export</module>
         <module>kafkistry-web-api</module>
+        <module>kafkistry-mcp</module>
         <module>kafkistry-autopilot</module>
         <module>kafkistry-web</module>
         <module>kafkistry-auditing</module>
@@ -111,11 +112,20 @@
         <testcontainers-gitserver.version>0.5.0</testcontainers-gitserver.version>
         <kotlintest.version>2.0.7</kotlintest.version>
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
+        <spring-ai.version>2.0.0-M2</spring-ai.version>
 
     </properties>
 
+
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>

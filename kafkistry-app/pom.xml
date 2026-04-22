@@ -114,6 +114,11 @@
             <artifactId>kafkistry-auditing</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.infobip.kafkistry</groupId>
+            <artifactId>kafkistry-mcp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- embedded kafka -->
         <dependency>

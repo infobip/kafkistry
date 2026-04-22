@@ -1,0 +1,91 @@
+spring:
+  threads:
+    virtual:
+      enabled: false   # MCP server has issues with virtual threads
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: kafkistry-mcp
+        version: "0.9.9"
+        instructions: >
+          Kafkistry is a registry and management service for Apache Kafka. This MCP server provides
+          read-only tools to inspect and query Kafka cluster state, topic configurations, consumer groups,
+          ACLs, quotas, and disk usage across multiple Kafka clusters. All tools are read-only.
+
+          ## MOST IMPORTANT RULE: Direct Lookup vs Listing
+
+          When the user mentions a SPECIFIC topic name, cluster identifier, or consumer group ID,
+          ALWAYS use the direct lookup tool with that exact name as a parameter.
+          NEVER use a listing tool to search for it. Listing tools may not return the entity due to pagination.
+
+          Examples:
+          - "Who owns topic message-events?" → call kafkistry_get_registry_topic_info(topicName="message-events") — DO NOT call kafkistry_list_registry_topics_summary
+          - "Is cluster prod-kafka-1 healthy?" → call kafkistry_inspect_cluster_state(clusterIdentifier="prod-kafka-1") — DO NOT call kafkistry_inspect_clusters_all_statuses
+          - "What is the lag of consumer group my-consumer on cluster prod-kafka-1?" → call kafkistry_inspect_consumer_group_lag(clusterIdentifier="prod-kafka-1", consumerGroupId="my-consumer")
+          - "What config does topic orders have?" → call kafkistry_get_registry_topic_config(topicName="orders") — DO NOT call kafkistry_list_registry_topic_names
+
+          Only use listing tools (kafkistry_list_*, kafkistry_inspect_*_names) when the user asks to
+          browse, enumerate, or does NOT provide a specific entity name.
+
+          ## Direct Lookup Tools (use when entity name is known)
+
+          For a KNOWN topic name, use these tools directly with the topicName parameter:
+          - Owner, description, labels → kafkistry_get_registry_topic_info(topicName=...)
+          - Config (partitions, replication, Kafka config) → kafkistry_get_registry_topic_config(topicName=...)
+          - Cluster presence → kafkistry_get_registry_topic_presence(topicName=...)
+          - Health/status/issues → kafkistry_inspect_topic_status(topicName=...)
+          - Config drift (actual vs desired) → kafkistry_inspect_topic_config(topicName=...)
+          - Partition assignments → kafkistry_inspect_topic_assignments(topicName=...)
+          - ACLs affecting topic → kafkistry_inspect_topic_acls(topicName=...)
+          - Consumers of topic → kafkistry_inspect_consumers_by_topic(topicName=...)
+          - Consumer lag on topic → kafkistry_inspect_consumers_by_topic_lag(topicName=...)
+          - Disk usage → kafkistry_inspect_topic_disk_usage(topicName=..., clusterIdentifier=...)
+          - Record structure → kafkistry_get_topic_record_structure(topicName=...)
+
+          For a KNOWN cluster identifier, use these tools directly with the clusterIdentifier parameter:
+          - Cluster state/brokers → kafkistry_inspect_cluster_state(clusterIdentifier=...)
+          - Cluster config → kafkistry_get_registry_cluster_config(clusterIdentifier=...)
+          - Broker count → kafkistry_inspect_cluster_stats(clusterIdentifier=...)
+          - Disk usage → kafkistry_inspect_cluster_disk_usage(clusterIdentifier=...)
+
+          For a KNOWN consumer group, use these (BOTH clusterIdentifier AND consumerGroupId required):
+          - Summary → kafkistry_inspect_consumer_group_summary(clusterIdentifier=..., consumerGroupId=...)
+          - Lag → kafkistry_inspect_consumer_group_lag(clusterIdentifier=..., consumerGroupId=...)
+          - Members → kafkistry_inspect_consumer_group_topic_members(clusterIdentifier=..., consumerGroupId=...)
+
+          For a KNOWN ACL principal:
+          - ACL rules → kafkistry_get_registry_principal_acls(principal=...)
+
+          For a KNOWN quota entity:
+          - Quota config → kafkistry_get_registry_quota(quotaEntityID=...)
+
+          ## Listing Tools (use ONLY when entity name is NOT known)
+
+          - All cluster identifiers → kafkistry_list_cluster_identifiers
+          - All topic names → kafkistry_list_registry_topic_names
+          - Topics with owner info → kafkistry_list_registry_topics_summary
+          - All clusters health → kafkistry_inspect_clusters_all_statuses
+          - Consumer group names → kafkistry_inspect_consumer_group_names
+          - All ACL principals → kafkistry_list_registry_acl_principals
+          - All quota entities → kafkistry_list_registry_quota_entities
+
+          ## SQL Query Workflow (MANDATORY steps — never skip)
+
+          For aggregation, cross-cluster analysis, or joining data, use SQL. Follow these steps IN ORDER:
+
+          1. Call kafkistry_get_sql_table_columns — get exact schema. Table names are Capitalized (e.g., "Topics", not "topics").
+          2. Call kafkistry_get_sql_query_examples — get working query templates with correct join patterns.
+          3. Call kafkistry_execute_sql_query — run your adapted query.
+
+          NEVER skip steps 1 and 2. NEVER guess table or column names.
+
+          ## Key Concepts
+
+          - "registry" tools → DESIRED state (what should be configured, stored in git).
+          - "inspect" tools → LIVE OBSERVED state (what actually exists on clusters now).
+          - Mismatch between registry and inspect = configuration drift.
+          - If data seems stale → call kafkistry_get_scraping_status.
+        streamable-http:
+          mcp-endpoint: ${app.mcp.endpoint:${app.http.root-path}/mcp}
+        protocol: stateless
