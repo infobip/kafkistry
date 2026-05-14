@@ -13,10 +13,14 @@ class RecordMaskerFactory(
     private val jsonPathParser: JsonPathParser,
 ) {
 
-    fun createMaskerFor(topic: TopicName, clusterRef: ClusterRef): RecordMasker {
-        val maskingSpec = maskingRulesProviders
+    fun maskingSpecFor(topic: TopicName, clusterRef: ClusterRef): TopicMaskingSpec {
+        return maskingRulesProviders
             .flatMap { it.maskingSpecFor(topic, clusterRef) }
             .fold(TopicMaskingSpec.NONE, TopicMaskingSpec::merge)
+    }
+
+    fun createMaskerFor(topic: TopicName, clusterRef: ClusterRef): RecordMasker {
+        val maskingSpec = maskingSpecFor(topic, clusterRef)
         if (maskingSpec == TopicMaskingSpec.NONE) {
             return RecordMasker.NOOP
         }

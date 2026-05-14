@@ -1,1 +1,11 @@
 app.ui.image.dir-path: "dev"
+
+app:
+  masking:
+    rules:
+      demo:
+        target:
+          topics:
+            included: topic-with-records
+        value-json-paths:
+          - masked_field

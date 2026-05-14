@@ -31,8 +31,17 @@ class RecordFactory(
         topicName: TopicName,
         clusterRef: ClusterRef,
         recordDeserialization: RecordDeserialization,
+    ): Creator = creatorFor(
+        topicName, clusterRef, recordDeserialization,
+        recordMaskerFactory.createMaskerFor(topicName, clusterRef),
+    )
+
+    fun creatorFor(
+        topicName: TopicName,
+        clusterRef: ClusterRef,
+        recordDeserialization: RecordDeserialization,
+        masker: RecordMasker,
     ): Creator {
-        val masker = recordMaskerFactory.createMaskerFor(topicName, clusterRef)
         val deserializeHolder = deserializeResolver.getDeserializersHolder(recordDeserialization, masker)
         return object : Creator {
             override fun create(consumerRecord: ConsumerRecord<ByteArray, ByteArray>): KafkaRecord {

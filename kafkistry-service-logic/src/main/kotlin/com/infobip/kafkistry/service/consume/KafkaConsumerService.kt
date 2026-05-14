@@ -9,6 +9,7 @@ import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryConsumeException
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
+import com.infobip.kafkistry.service.consume.config.ConsumeProperties
 import com.infobip.kafkistry.service.consume.serialize.KeySerializerType
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -24,7 +25,8 @@ class KafkaConsumerService(
     private val topicPartitionResolver: TopicPartitionResolver,
     private val clustersStateProvider: KafkaClustersStateProvider,
     private val userResolver: CurrentRequestUserResolver,
-    private val clusterEnabledFilter: ClusterEnabledFilter
+    private val clusterEnabledFilter: ClusterEnabledFilter,
+    private val consumeProperties: ConsumeProperties,
 ) {
 
     fun readRecords(
@@ -36,6 +38,35 @@ class KafkaConsumerService(
         cluster.ref().checkClusterEnabled()
         val user = userResolver.resolveUserOrUnknown()
         return topicReader.readTopicRecords(topicName, cluster, user.username, readConfig)
+    }
+
+    fun readSingleRecordUnmasked(
+        clusterIdentifier: KafkaClusterIdentifier,
+        topicName: TopicName,
+        partition: Partition,
+        offset: Long,
+        recordDeserialization: RecordDeserialization,
+    ): KafkaRecord {
+        val cluster = clustersRepository.getCluster(clusterIdentifier)
+        cluster.ref().checkClusterEnabled()
+        val user = userResolver.resolveUserOrUnknown()
+        val readConfig = ReadConfig(
+            numRecords = 1,
+            partitions = listOf(partition),
+            notPartitions = null,
+            maxWaitMs = consumeProperties.maxWaitMs(),
+            fromOffset = Offset(OffsetType.EXPLICIT, offset),
+            partitionFromOffset = null,
+            waitStrategy = WaitStrategy.AT_LEAST_ONE,
+            recordDeserialization = recordDeserialization,
+            readOnlyCommitted = false,
+            readFilter = ReadFilter.EMPTY,
+        )
+        val result = topicReader.readTopicRecords(topicName, cluster, user.username, readConfig, bypassMasking = true)
+        return result.records.firstOrNull()
+            ?: throw KafkistryConsumeException(
+                "No record found at partition $partition offset $offset of topic '$topicName' on cluster '$clusterIdentifier'"
+            )
     }
 
     fun readRecordsContinued(

@@ -2,6 +2,9 @@
 <#-- @ftlvariable name="overallSkipCount" type="java.lang.Long" -->
 <#-- @ftlvariable name="overallReadCount" type="java.lang.Long" -->
 <#-- @ftlvariable name="overallPartitions" type="java.util.Map<java.lang.Integer, com.infobip.kafkistry.service.consume.PartitionReadStatus>" -->
+<#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
+<#-- @ftlvariable name="topicName" type="java.lang.String" -->
+<#-- @ftlvariable name="unmaskedRevealEnabled" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
 
 <#import "../common/util.ftl" as util>
@@ -178,99 +181,9 @@
 
 <br/>
 
+<#assign recordsSize = records?size>
 <#list records as record>
-    <div class="record card">
-        <div class="card-header h6">Record ${record?index+1} of ${records?size}</div>
-        <div class="card-body">
-            <div class="row g-2 metadata-row mb-2">
-                <div class="col-1">
-                    <strong>Metadata</strong>:
-                </div>
-                <div class="col">
-                    <span>Partition</span>: <code class="partition record-metadata-value">${record.partition}</code>
-                    <span>Offset</span>: <code class="offset record-metadata-value">${record.offset?c}</code>
-                    <span>Leader epoch</span>: <code
-                            class="leader-epoch record-metadata-value">${(record.leaderEpoch?c)!'N/A'}</code>
-                    <span>Topic</span>: <code class="topic record-metadata-value">${record.topic}</code>
-                    <br/>
-                    <span>Key size</span>: <code class="topic record-metadata-value">${record.keySize}</code>
-                    <span>Headers size</span>: <code class="topic record-metadata-value">${record.headersSize}</code>
-                    <span>Value size</span>: <code class="topic record-metadata-value">${record.valueSize}</code>
-                    <br/>
-                    <span class="text-nowrap">
-                        <span>Timestamp</span>:
-                        <span class="badge bg-secondary record-timestamp-type"
-                              data-timestamp-type="${record.timestampType.name()}">${record.timestampType}</span>
-                        <code class="timestamp record-metadata-value"
-                              data-timestamp="${record.timestamp?c}">${record.timestamp?c}</code>
-                        <code class="time" data-time="${record.timestamp?c}"></code>
-                    </span>
-                </div>
-            </div>
-            <div class="row g-2 key-row mb-2">
-                <div class="col-1">
-                    <strong>Key</strong>:
-                </div>
-                <div class="col">
-                    <#assign kafkaValue = record.key>
-                    <#include "kafkaValue.ftl">
-                </div>
-            </div>
-            <div class="row g-2 headers-row mb-2">
-                <div class="col-1">
-                    <strong>Headers</strong>:
-                </div>
-                <div class="col p-0">
-                    <#if record.headers?size == 0>
-                        <span><i>(none)</i></span>
-                    <#else>
-                        <div class="record-value headers-collapsed mx-1">
-                            <pre class="renderjson"><#t>
-                                <span class="disclosure">⊕</span><#t>
-                                {<#t>
-                                <a href="#" class="headers-expand" onclick="return false;"><#t>
-                                    ${record.headers?size} item<#if record.headers?size gt 1>s</#if><#t>
-                                </a><#t>
-                                }<#t>
-                            </pre>
-                        </div>
-                        <div class="headers-expanded" style="display: none;">
-                            <pre class="renderjson px-1"><#t>
-                                <a href="#" class="headers-collapse" onclick="return false;"><#t>
-                                    <span class="disclosure">⊖</span><#t>
-                                </a><#t>
-                            </pre>
-                            <table class="table table-sm table-borderless m-0">
-                                <#list record.headers as header>
-                                    <tr class="record-header">
-                                        <td class="row ps-0">
-                                            <div class="col">
-                                                <div class="record-value header-name renderjson" data-type="key">
-                                                    <span class="key">${header.key}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="pe-0">
-                                            <#assign kafkaValue = header.value>
-                                            <#include "kafkaValue.ftl">
-                                        </td>
-                                    </tr>
-                                </#list>
-                            </table>
-                        </div>
-                    </#if>
-                </div>
-            </div>
-            <div class="row g-2 value-row mb-2">
-                <div class="col-1">
-                    <strong>Value</strong>:
-                </div>
-                <div class="col">
-                    <#assign kafkaValue = record.value>
-                    <#include "kafkaValue.ftl">
-                </div>
-            </div>
-        </div>
-    </div>
+    <#assign recordIndex = record?index>
+    <#include "record.ftl">
     <hr/>
 </#list>

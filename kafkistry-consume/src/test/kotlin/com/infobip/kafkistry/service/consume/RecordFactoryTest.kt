@@ -10,6 +10,7 @@ import com.infobip.kafkistry.service.consume.interntopics.InternalTopicsValueRea
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryPermissionException
 import com.infobip.kafkistry.service.consume.filter.JsonPathParser
+import com.infobip.kafkistry.service.consume.masking.RecordMasker
 import com.infobip.kafkistry.service.consume.masking.RecordMaskerFactory
 import com.infobip.kafkistry.service.consume.masking.RecordMaskingRuleProvider
 import com.infobip.kafkistry.service.consume.masking.TopicMaskingSpec
@@ -170,6 +171,22 @@ class RecordFactoryTest {
             assertThrows<KafkistryPermissionException> {
                 maskingCreator(stringDsr).create(record(value = "this is not a json"))
             }
+        }
+
+        @Test
+        fun `explicit NOOP masker bypasses masking even when provider would mask`() {
+            whenever(maskingProvider.maskingSpecFor("t", ClusterRef("c"))).thenReturn(
+                listOf(
+                    TopicMaskingSpec(
+                        valuePathDefs = setOf("secret"), keyPathDefs = emptySet(), headerPathDefs = emptyMap(),
+                    )
+                )
+            )
+            val noopCreator = factory.creatorFor("t", ClusterRef("c"), RecordDeserialization.ANY, RecordMasker.NOOP)
+            val record = noopCreator.create(record(value = """{"id":1122,"secret":"plaintext"}"""))
+            assertThat(record.value.isMasked).isFalse
+            assertThat(record.value.deserializations["JSON"]?.asJson).isEqualTo("""{"id":1122,"secret":"plaintext"}""")
+            assertThat(record.value.rawBase64Bytes).isNotNull
         }
 
     }

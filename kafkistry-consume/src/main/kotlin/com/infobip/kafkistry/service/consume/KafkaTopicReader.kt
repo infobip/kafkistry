@@ -8,6 +8,7 @@ import org.apache.kafka.common.TopicPartition
 import com.infobip.kafkistry.service.consume.OffsetType.*
 import com.infobip.kafkistry.service.consume.config.ConsumeProperties
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
+import com.infobip.kafkistry.service.consume.masking.RecordMasker
 import com.infobip.kafkistry.kafka.ClientFactory
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.connectionDefinition
@@ -32,11 +33,12 @@ class KafkaTopicReader(
         topicName: TopicName,
         cluster: KafkaCluster,
         username: String,
-        readConfig: ReadConfig
+        readConfig: ReadConfig,
+        bypassMasking: Boolean = false,
     ): KafkaRecordsResult {
         readConfig.checkLimitations()
         return createConsumer(cluster, username, readConfig).use {
-            with(ConsumerCtx(it, topicName, cluster.ref(), readConfig)) {
+            with(ConsumerCtx(it, topicName, cluster.ref(), readConfig, bypassMasking)) {
                 setup()
                 try {
                     readMessages()
@@ -85,6 +87,7 @@ class KafkaTopicReader(
         val topicName: TopicName,
         val clusterRef: ClusterRef,
         val readConfig: ReadConfig,
+        val bypassMasking: Boolean,
     ) {
         lateinit var allTopicPartitions: List<Int>
         lateinit var partitions: List<TopicPartition>
@@ -152,7 +155,11 @@ class KafkaTopicReader(
      * Function reads at most `readConfig.numRecords` records starting from already assigned offsets for consumer group.
      */
     private fun ConsumerCtx.readMessages(): KafkaRecordsResult {
-        val recordCreator = recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization)
+        val recordCreator = if (bypassMasking) {
+            recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization, RecordMasker.NOOP)
+        } else {
+            recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization)
+        }
         val readMonitor = ReadMonitor.ofConfig(readConfig)
         val poolDuration = Duration.ofMillis(consumeProperties.poolInterval())
         val initialPositions = consumer.assignment()

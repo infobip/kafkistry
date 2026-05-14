@@ -229,4 +229,36 @@ class RecordMaskerTest {
         assertThat(masked).isEqualTo("not-secret")
     }
 
+    @Test
+    fun `maskingSpecFor returns NONE when no providers contribute`() {
+        val factory = RecordMaskerFactory(
+            maskingRulesProviders = emptyList(),
+            jsonPathParser = JsonPathParser(),
+        )
+        val spec = factory.maskingSpecFor("t", ClusterRef("c"))
+        assertThat(spec).isEqualTo(TopicMaskingSpec.NONE)
+    }
+
+    @Test
+    fun `maskingSpecFor merges specs from multiple providers`() {
+        val provider1 = object : RecordMaskingRuleProvider {
+            override fun maskingSpecFor(topic: TopicName, clusterRef: ClusterRef) = listOf(
+                TopicMaskingSpec(keyPathDefs = setOf("k1"), valuePathDefs = setOf("v1"), headerPathDefs = emptyMap())
+            )
+        }
+        val provider2 = object : RecordMaskingRuleProvider {
+            override fun maskingSpecFor(topic: TopicName, clusterRef: ClusterRef) = listOf(
+                TopicMaskingSpec(keyPathDefs = setOf("k2"), valuePathDefs = setOf("v2"), headerPathDefs = mapOf("H" to setOf("hp")))
+            )
+        }
+        val factory = RecordMaskerFactory(
+            maskingRulesProviders = listOf(provider1, provider2),
+            jsonPathParser = JsonPathParser(),
+        )
+        val spec = factory.maskingSpecFor("t", ClusterRef("c"))
+        assertThat(spec.keyPathDefs).containsExactlyInAnyOrder("k1", "k2")
+        assertThat(spec.valuePathDefs).containsExactlyInAnyOrder("v1", "v2")
+        assertThat(spec.headerPathDefs).isEqualTo(mapOf("H" to setOf("hp")))
+    }
+
 }
