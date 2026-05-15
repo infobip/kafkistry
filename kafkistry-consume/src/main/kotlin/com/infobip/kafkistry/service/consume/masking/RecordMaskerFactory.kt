@@ -13,6 +13,11 @@ class RecordMaskerFactory(
     private val jsonPathParser: JsonPathParser,
 ) {
 
+    /**
+     * Exposed for the sensitive-data-access audit aspect so the audit event can record which key/value/header
+     * paths would have been masked at the time of an unmasked read. Not intended as a general extension point —
+     * production code paths should normally go through [createMaskerFor].
+     */
     fun maskingSpecFor(topic: TopicName, clusterRef: ClusterRef): TopicMaskingSpec {
         return maskingRulesProviders
             .flatMap { it.maskingSpecFor(topic, clusterRef) }

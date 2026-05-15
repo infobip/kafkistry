@@ -112,6 +112,7 @@ data class KafkaRecord(
     val keySize: Int,
     val valueSize: Int,
     val headersSize: Int,
+    val unmasked: Boolean = false,
 )
 
 data class KafkaRecordsResult(

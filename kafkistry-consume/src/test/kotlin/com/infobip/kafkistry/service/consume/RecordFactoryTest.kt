@@ -31,6 +31,7 @@ class RecordFactoryTest {
         val maskingProvider = mock<RecordMaskingRuleProvider>().also {
             whenever(it.maskingSpecFor(any(), any())).thenReturn(emptyList())
         }
+        val recordMaskerFactory = RecordMaskerFactory(listOf(maskingProvider), JsonPathParser())
         val factory = RecordFactory(
             DeserializeResolver(
                 availableDeserializers = listOf(
@@ -47,9 +48,10 @@ class RecordFactoryTest {
                 ),
                 selectors = listOf(),
             ),
-            recordMaskerFactory = RecordMaskerFactory(listOf(maskingProvider), JsonPathParser()),
         )
-        val creator = factory.creatorFor("", ClusterRef(""), RecordDeserialization.ANY)
+        val creator = factory.creatorFor(
+            "", ClusterRef(""), RecordDeserialization.ANY, recordMaskerFactory.createMaskerFor("", ClusterRef("")),
+        )
     }
 
     @Test
@@ -135,7 +137,9 @@ class RecordFactoryTest {
                     )
                 )
             )
-            return factory.creatorFor("t", ClusterRef("c"), deserialization)
+            return factory.creatorFor(
+                "t", ClusterRef("c"), deserialization, recordMaskerFactory.createMaskerFor("t", ClusterRef("c")),
+            )
         }
 
         @Test

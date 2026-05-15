@@ -17,10 +17,7 @@ import org.springframework.stereotype.Component
 
 @Aspect
 @Component
-@ConditionalOnProperty(
-    name = ["app.consume.enabled", "app.consume.unmaskedRevealEnabled"],
-    matchIfMissing = true,
-)
+@ConditionalOnProperty("app.consume.enabled", matchIfMissing = true)
 class TopicSensitiveDataAccessAuditAspect(
     eventsListener: ManagementEventsListener,
     userResolver: CurrentRequestUserResolver,
@@ -28,7 +25,7 @@ class TopicSensitiveDataAccessAuditAspect(
     private val clustersRegistryService: ClustersRegistryService,
 ) : AbstractManagementAuditAspect(eventsListener, userResolver) {
 
-    @Around("execution(* com.infobip.kafkistry.api.SensitiveDataConsumeApi.readRecordUnmasked(..))")
+    @Around("execution(* com.infobip.kafkistry.api.ConsumeApi.readRecordUnmasked(..))")
     fun auditSensitiveDataAccess(joinPoint: ProceedingJoinPoint): Any? {
         return joinPoint.executionCapture(TopicSensitiveDataAccessAuditEvent())
             .argumentCaptor(KafkaClusterIdentifier::class.java, 0) { clusterIdentifier = it }

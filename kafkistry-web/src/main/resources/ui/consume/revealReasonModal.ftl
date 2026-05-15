@@ -2,7 +2,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reveal-reason-modal-title">Show sensitive data</h5>
+                <h5 class="modal-title" id="reveal-reason-modal-title">Show masked data</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -20,12 +20,14 @@
                           maxlength="500"
                           placeholder="e.g. Investigating customer support ticket KFK-1234..."
                           required></textarea>
-                <div id="reveal-reason-error" class="text-danger small mt-1" style="display: none;"></div>
+                <#assign statusId = "reveal-reason-op-status">
+                <#assign noAutoBack = true>
+                <#include "../common/serverOpStatus.ftl">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-warning" id="reveal-reason-confirm-btn">
-                    🔓 Show sensitive data
+                    🔓 Show masked data
                 </button>
             </div>
         </div>

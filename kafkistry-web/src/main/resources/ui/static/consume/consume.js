@@ -535,8 +535,8 @@ function showRevealReasonModal(event) {
         " · Offset: " + revealContext.offset
     );
     $("#reveal-reason-input").val("");
-    $("#reveal-reason-error").hide().text("");
     let modal = $("#reveal-reason-modal");
+    hideOpStatusIn(modal);
     modal.modal("show");
     setTimeout(function () { $("#reveal-reason-input").focus(); }, 100);
 }
@@ -545,17 +545,17 @@ function submitRevealReason() {
     if (!revealContext) {
         return;
     }
+    let modal = $("#reveal-reason-modal");
     let reason = ($("#reveal-reason-input").val() || "").trim();
-    let errorEl = $("#reveal-reason-error");
     if (reason.length < 5 || reason.length > 500) {
-        errorEl.text("Reason must be between 5 and 500 characters.").show();
+        showOpErrorOnIdIn("reveal-reason-op-status", "Invalid reason", "Reason must be between 5 and 500 characters.", modal);
         return;
     }
-    errorEl.hide().text("");
     let formData = readFormData();
     let ctx = revealContext;
     let confirmBtn = $("#reveal-reason-confirm-btn");
     confirmBtn.prop("disabled", true);
+    showOpProgressOnIdIn("reveal-reason-op-status", "Reading unmasked...", undefined, modal);
     $.ajax(
         "consume/read-record-unmasked" +
         "?clusterIdentifier=" + encodeURI(ctx.clusterIdentifier) +
@@ -576,13 +576,17 @@ function submitRevealReason() {
             let newCard = $(response);
             ctx.card.replaceWith(newCard);
             renderValues(newCard);
+            if (preferExpandAll) {
+                expandAllIn(newCard);
+            }
             formatTimestampIn(newCard);
-            $("#reveal-reason-modal").modal("hide");
+            hideOpStatusIn(modal);
+            modal.modal("hide");
             revealContext = null;
         })
         .fail(function (error) {
             let errMsg = extractErrMsg(error);
-            errorEl.text("Failed to fetch unmasked record: " + errMsg).show();
+            showOpErrorOnIdIn("reveal-reason-op-status", "Failed to fetch unmasked record", errMsg, modal);
         })
         .always(function () {
             confirmBtn.prop("disabled", false);

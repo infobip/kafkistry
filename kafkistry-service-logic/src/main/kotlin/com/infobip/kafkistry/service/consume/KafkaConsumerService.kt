@@ -8,6 +8,7 @@ import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkistryConsumeException
 import com.infobip.kafkistry.service.KafkistryIllegalStateException
+import com.infobip.kafkistry.service.KafkistryUnmaskedRevealDisabledException
 import com.infobip.kafkistry.service.cluster.ClustersRegistryService
 import com.infobip.kafkistry.service.consume.config.ConsumeProperties
 import com.infobip.kafkistry.service.consume.serialize.KeySerializerType
@@ -47,6 +48,11 @@ class KafkaConsumerService(
         offset: Long,
         recordDeserialization: RecordDeserialization,
     ): KafkaRecord {
+        if (!consumeProperties.unmaskedRevealEnabled) {
+            throw KafkistryUnmaskedRevealDisabledException(
+                "Reading unmasked records is disabled (app.consume.unmaskedRevealEnabled=false)"
+            )
+        }
         val cluster = clustersRepository.getCluster(clusterIdentifier)
         cluster.ref().checkClusterEnabled()
         val user = userResolver.resolveUserOrUnknown()
@@ -63,10 +69,11 @@ class KafkaConsumerService(
             readFilter = ReadFilter.EMPTY,
         )
         val result = topicReader.readTopicRecords(topicName, cluster, user.username, readConfig, bypassMasking = true)
-        return result.records.firstOrNull()
+        val record = result.records.firstOrNull()
             ?: throw KafkistryConsumeException(
                 "No record found at partition $partition offset $offset of topic '$topicName' on cluster '$clusterIdentifier'"
             )
+        return record.copy(unmasked = true)
     }
 
     fun readRecordsContinued(

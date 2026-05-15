@@ -16,6 +16,12 @@
      data-offset="${record.offset?c}">
     <div class="card-header h6 d-flex align-items-center">
         <span class="flex-grow-1">Record ${recordIndex + 1} of ${recordsSize}</span>
+        <#if record.unmasked>
+            <span class="badge bg-warning text-dark me-2"
+                  title="This record was re-read with masking bypassed; the access has been audited.">
+                🔓 Unmasked record
+            </span>
+        </#if>
         <#if (unmaskedRevealEnabled!false) && recordHasMasked>
             <button type="button"
                     class="show-sensitive-data-btn btn btn-sm btn-outline-warning"
@@ -26,7 +32,7 @@
                     data-record-index="${recordIndex?c}"
                     data-records-size="${recordsSize?c}"
                     title="Re-read record from Kafka with masking bypassed; the access will be audited.">
-                🔓 Show sensitive data...
+                🔓 Show masked data...
             </button>
         </#if>
     </div>

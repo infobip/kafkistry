@@ -9,6 +9,7 @@ import com.infobip.kafkistry.service.consume.OffsetType.*
 import com.infobip.kafkistry.service.consume.config.ConsumeProperties
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
 import com.infobip.kafkistry.service.consume.masking.RecordMasker
+import com.infobip.kafkistry.service.consume.masking.RecordMaskerFactory
 import com.infobip.kafkistry.kafka.ClientFactory
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.connectionDefinition
@@ -25,6 +26,7 @@ import java.time.Duration
 class KafkaTopicReader(
     private val consumeProperties: ConsumeProperties,
     private val recordFactory: RecordFactory,
+    private val recordMaskerFactory: RecordMaskerFactory,
     private val filterFactory: RecordFilterFactory,
     private val clientFactory: ClientFactory
 ) {
@@ -155,11 +157,12 @@ class KafkaTopicReader(
      * Function reads at most `readConfig.numRecords` records starting from already assigned offsets for consumer group.
      */
     private fun ConsumerCtx.readMessages(): KafkaRecordsResult {
-        val recordCreator = if (bypassMasking) {
-            recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization, RecordMasker.NOOP)
+        val masker = if (bypassMasking) {
+            RecordMasker.NOOP
         } else {
-            recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization)
+            recordMaskerFactory.createMaskerFor(topicName, clusterRef)
         }
+        val recordCreator = recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization, masker)
         val readMonitor = ReadMonitor.ofConfig(readConfig)
         val poolDuration = Duration.ofMillis(consumeProperties.poolInterval())
         val initialPositions = consumer.assignment()

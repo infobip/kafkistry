@@ -92,6 +92,7 @@ class KafkaTopicReaderTest {
                 poolBatchSize = 100
             },
             recordFactory = RecordFactoryTest.factory,
+            recordMaskerFactory = RecordFactoryTest.recordMaskerFactory,
             filterFactory = RecordFilterFactory(MatcherFactory(JsonPathParser())),
             clientFactory = ClientFactory(
                     properties = KafkaManagementClientProperties(),
@@ -336,7 +337,8 @@ private fun String.asValue(): KafkaValue {
         "---", 0,0, ByteArray(0), this.encodeToByteArray()
     )
     val record = RecordFactoryTest.factory.creatorFor(
-        "", ClusterRef(""), RecordDeserialization.ANY
+        "", ClusterRef(""), RecordDeserialization.ANY,
+        RecordFactoryTest.recordMaskerFactory.createMaskerFor("", ClusterRef("")),
     ).create(consumerRecord)
     return record.value
 }
