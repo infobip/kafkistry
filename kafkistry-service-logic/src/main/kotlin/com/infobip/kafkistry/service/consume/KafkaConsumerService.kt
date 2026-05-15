@@ -50,7 +50,7 @@ class KafkaConsumerService(
     ): KafkaRecord {
         if (!consumeProperties.unmaskedRevealEnabled) {
             throw KafkistryUnmaskedRevealDisabledException(
-                "Reading unmasked records is disabled (app.consume.unmaskedRevealEnabled=false)"
+                "Reading unmasked records is disabled (app.consume.unmasked-reveal-enabled=false)"
             )
         }
         val cluster = clustersRepository.getCluster(clusterIdentifier)
