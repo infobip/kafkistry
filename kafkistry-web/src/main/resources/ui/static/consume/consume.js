@@ -523,10 +523,10 @@ function showRevealReasonModal(event) {
         card: card,
         clusterIdentifier: btn.attr("data-cluster-identifier"),
         topicName: btn.attr("data-topic-name"),
-        partition: parseInt(btn.attr("data-partition")),
-        offset: parseInt(btn.attr("data-offset")),
-        recordIndex: parseInt(btn.attr("data-record-index")),
-        recordsSize: parseInt(btn.attr("data-records-size")),
+        partition: Number.parseInt(btn.attr("data-partition")),
+        offset: Number.parseInt(btn.attr("data-offset")),
+        recordIndex: Number.parseInt(btn.attr("data-record-index")),
+        recordsSize: Number.parseInt(btn.attr("data-records-size")),
     };
     $("#reveal-reason-target").text(
         "Cluster: " + revealContext.clusterIdentifier +

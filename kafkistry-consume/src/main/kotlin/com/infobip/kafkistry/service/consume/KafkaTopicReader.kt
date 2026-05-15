@@ -100,21 +100,21 @@ class KafkaTopicReader(
     private fun ConsumerCtx.setup() {
         allTopicPartitions = consumer.partitionsFor(topicName)?.map { it.partition() }
             ?: throw KafkistryConsumeException("Topic '$topicName' does not exist on cluster")
-        partitions = with(readConfig) {
-            val unknownPartitions = (partitions.orEmpty() + notPartitions.orEmpty())
-                .filter { it !in allTopicPartitions }
-            if (unknownPartitions.isNotEmpty()) {
-                throw KafkistryConsumeException(
-                    "Partition(s) %s do not exist for topic '%s', existing partitions are [%d..%d]".format(
-                        unknownPartitions, topicName, allTopicPartitions.minOrNull(), allTopicPartitions.maxOrNull()
-                    )
+        val includePartitions = readConfig.partitions
+        val excludePartitions = readConfig.notPartitions
+        val unknownPartitions = (includePartitions.orEmpty() + excludePartitions.orEmpty())
+            .filter { it !in allTopicPartitions }
+        if (unknownPartitions.isNotEmpty()) {
+            throw KafkistryConsumeException(
+                "Partition(s) %s do not exist for topic '%s', existing partitions are [%d..%d]".format(
+                    unknownPartitions, topicName, allTopicPartitions.minOrNull(), allTopicPartitions.maxOrNull()
                 )
-            }
-            allTopicPartitions
-                .filter { partitions == null || it in partitions }
-                .filter { notPartitions == null || it !in notPartitions }
-                .map { TopicPartition(topicName, it) }
+            )
         }
+        partitions = allTopicPartitions
+            .filter { includePartitions == null || it in includePartitions }
+            .filter { excludePartitions == null || it !in excludePartitions }
+            .map { TopicPartition(topicName, it) }
         consumer.assign(partitions)
         beginOffsets = consumer.beginningOffsets(partitions)
         endOffsets = consumer.endOffsets(partitions)
