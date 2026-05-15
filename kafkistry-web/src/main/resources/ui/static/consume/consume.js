@@ -580,6 +580,7 @@ function submitRevealReason() {
                 expandAllIn(newCard);
             }
             formatTimestampIn(newCard);
+            adjustFlagsVisibility();
             hideServerOpOnIdIn("reveal-reason-op-status", modal);
             modal.modal("hide");
             revealContext = null;
