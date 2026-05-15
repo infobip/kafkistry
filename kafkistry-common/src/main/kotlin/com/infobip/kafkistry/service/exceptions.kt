@@ -52,6 +52,10 @@ open class KafkistryConsumeException : KafkistryException {
     constructor(msg: String, cause: Throwable) : super(msg, cause)
 }
 
+class KafkistryUnmaskedRevealDisabledException(msg: String) : KafkistryConsumeException(msg) {
+    override val httpStatus: Int = HttpStatus.FORBIDDEN.value()
+}
+
 open class KafkistryClusterReadException : KafkistryException {
     constructor(msg: String) : super(msg)
     constructor(msg: String, cause: Throwable) : super(msg, cause)

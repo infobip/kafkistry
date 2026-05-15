@@ -12,6 +12,7 @@ class ConsumeConfig
 class ConsumeProperties {
 
     var enabled = true
+    var unmaskedRevealEnabled = true
     var maxRecords: Int? = null
     var maxWaitMs: Long? = null
     var poolBatchSize: Int? = null

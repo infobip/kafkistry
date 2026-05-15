@@ -18,6 +18,7 @@
 <#-- @ftlvariable name="readOnlyCommitted" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="autoContinuation" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="autoContinuationAfterEnd" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="unmaskedRevealEnabled" type="java.lang.Boolean" -->
 
 <html lang="en">
 
@@ -277,6 +278,10 @@
     <div id="error-container"></div>
     <div id="messages-container"></div>
 </div>
+
+<#if (unmaskedRevealEnabled!false)>
+    <#include "revealReasonModal.ftl">
+</#if>
 
 <div style="display: none;">
     <#list clusterTopics as clusterIdentifier,topics>

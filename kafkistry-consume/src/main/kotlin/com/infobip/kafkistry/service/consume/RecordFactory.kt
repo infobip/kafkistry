@@ -9,7 +9,6 @@ import com.infobip.kafkistry.service.consume.deserialize.DeserializerType
 import com.infobip.kafkistry.service.consume.deserialize.Deserializers
 import com.infobip.kafkistry.service.consume.deserialize.KafkaDeserializer
 import com.infobip.kafkistry.service.consume.masking.RecordMasker
-import com.infobip.kafkistry.service.consume.masking.RecordMaskerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import java.util.*
@@ -18,7 +17,6 @@ import java.util.*
 @ConditionalOnProperty("app.consume.enabled", matchIfMissing = true)
 class RecordFactory(
     private val deserializeResolver: DeserializeResolver,
-    private val recordMaskerFactory: RecordMaskerFactory,
 ) {
 
     private val jsonSerializer = jacksonObjectMapper()
@@ -31,8 +29,8 @@ class RecordFactory(
         topicName: TopicName,
         clusterRef: ClusterRef,
         recordDeserialization: RecordDeserialization,
+        masker: RecordMasker,
     ): Creator {
-        val masker = recordMaskerFactory.createMaskerFor(topicName, clusterRef)
         val deserializeHolder = deserializeResolver.getDeserializersHolder(recordDeserialization, masker)
         return object : Creator {
             override fun create(consumerRecord: ConsumerRecord<ByteArray, ByteArray>): KafkaRecord {

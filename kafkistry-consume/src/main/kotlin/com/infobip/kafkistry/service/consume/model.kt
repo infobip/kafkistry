@@ -112,6 +112,7 @@ data class KafkaRecord(
     val keySize: Int,
     val valueSize: Int,
     val headersSize: Int,
+    val unmasked: Boolean = false,
 )
 
 data class KafkaRecordsResult(
@@ -149,3 +150,22 @@ data class ContinuedKafkaRecordsResult(
     val overallSkipCount: Long,
     val overallPartitions: Map<Partition, PartitionReadStatus>,
 )
+
+data class UnmaskedRecordReadRequest(
+    val partition: Partition,
+    val offset: Long,
+    val reason: String,
+    val recordDeserialization: RecordDeserialization,
+) {
+    init {
+        val trimmed = reason.trim()
+        require(trimmed.length in REASON_MIN_LENGTH..REASON_MAX_LENGTH) {
+            "Reason must be between $REASON_MIN_LENGTH and $REASON_MAX_LENGTH characters after trimming"
+        }
+    }
+
+    companion object {
+        const val REASON_MIN_LENGTH = 5
+        const val REASON_MAX_LENGTH = 500
+    }
+}

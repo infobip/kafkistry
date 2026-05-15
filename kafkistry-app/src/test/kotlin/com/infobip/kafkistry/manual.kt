@@ -511,6 +511,7 @@ class DataStateInitializer(
                                     "id":$it,
                                     "time":${System.currentTimeMillis()},
                                     "msg":"Dummy message <strong>$it &rarr;</strong> html",
+                                    "masked_field":"sensitive-value-$it",
                                     "map":{"$it":$it}
                                 }
                             """.trimIndent(),

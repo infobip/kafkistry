@@ -29,6 +29,19 @@ class ConsumeApi(
         @RequestBody continuedReadConfig: ContinuedReadConfig,
     ): ContinuedKafkaRecordsResult = topicConsumer.readRecordsContinued(clusterIdentifier, topicName, continuedReadConfig)
 
+    @PostMapping("/read-record-unmasked")
+    fun readRecordUnmasked(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+        @RequestParam("topicName") topicName: TopicName,
+        @RequestBody request: UnmaskedRecordReadRequest,
+    ): KafkaRecord = topicConsumer.readSingleRecordUnmasked(
+        clusterIdentifier = clusterIdentifier,
+        topicName = topicName,
+        partition = request.partition,
+        offset = request.offset,
+        recordDeserialization = request.recordDeserialization,
+    )
+
     @GetMapping("/partition-of-key")
     fun partitionForKey(
         @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,

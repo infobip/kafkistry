@@ -8,6 +8,8 @@ import org.apache.kafka.common.TopicPartition
 import com.infobip.kafkistry.service.consume.OffsetType.*
 import com.infobip.kafkistry.service.consume.config.ConsumeProperties
 import com.infobip.kafkistry.service.consume.filter.RecordFilterFactory
+import com.infobip.kafkistry.service.consume.masking.RecordMasker
+import com.infobip.kafkistry.service.consume.masking.RecordMaskerFactory
 import com.infobip.kafkistry.kafka.ClientFactory
 import com.infobip.kafkistry.kafka.Partition
 import com.infobip.kafkistry.kafka.connectionDefinition
@@ -24,6 +26,7 @@ import java.time.Duration
 class KafkaTopicReader(
     private val consumeProperties: ConsumeProperties,
     private val recordFactory: RecordFactory,
+    private val recordMaskerFactory: RecordMaskerFactory,
     private val filterFactory: RecordFilterFactory,
     private val clientFactory: ClientFactory
 ) {
@@ -32,11 +35,12 @@ class KafkaTopicReader(
         topicName: TopicName,
         cluster: KafkaCluster,
         username: String,
-        readConfig: ReadConfig
+        readConfig: ReadConfig,
+        bypassMasking: Boolean = false,
     ): KafkaRecordsResult {
         readConfig.checkLimitations()
         return createConsumer(cluster, username, readConfig).use {
-            with(ConsumerCtx(it, topicName, cluster.ref(), readConfig)) {
+            with(ConsumerCtx(it, topicName, cluster.ref(), readConfig, bypassMasking)) {
                 setup()
                 try {
                     readMessages()
@@ -85,6 +89,7 @@ class KafkaTopicReader(
         val topicName: TopicName,
         val clusterRef: ClusterRef,
         val readConfig: ReadConfig,
+        val bypassMasking: Boolean,
     ) {
         lateinit var allTopicPartitions: List<Int>
         lateinit var partitions: List<TopicPartition>
@@ -95,21 +100,21 @@ class KafkaTopicReader(
     private fun ConsumerCtx.setup() {
         allTopicPartitions = consumer.partitionsFor(topicName)?.map { it.partition() }
             ?: throw KafkistryConsumeException("Topic '$topicName' does not exist on cluster")
-        partitions = with(readConfig) {
-            val unknownPartitions = (partitions.orEmpty() + notPartitions.orEmpty())
-                .filter { it !in allTopicPartitions }
-            if (unknownPartitions.isNotEmpty()) {
-                throw KafkistryConsumeException(
-                    "Partition(s) %s do not exist for topic '%s', existing partitions are [%d..%d]".format(
-                        unknownPartitions, topicName, allTopicPartitions.minOrNull(), allTopicPartitions.maxOrNull()
-                    )
+        val includePartitions = readConfig.partitions
+        val excludePartitions = readConfig.notPartitions
+        val unknownPartitions = (includePartitions.orEmpty() + excludePartitions.orEmpty())
+            .filter { it !in allTopicPartitions }
+        if (unknownPartitions.isNotEmpty()) {
+            throw KafkistryConsumeException(
+                "Partition(s) %s do not exist for topic '%s', existing partitions are [%d..%d]".format(
+                    unknownPartitions, topicName, allTopicPartitions.minOrNull(), allTopicPartitions.maxOrNull()
                 )
-            }
-            allTopicPartitions
-                .filter { partitions == null || it in partitions }
-                .filter { notPartitions == null || it !in notPartitions }
-                .map { TopicPartition(topicName, it) }
+            )
         }
+        partitions = allTopicPartitions
+            .filter { includePartitions == null || it in includePartitions }
+            .filter { excludePartitions == null || it !in excludePartitions }
+            .map { TopicPartition(topicName, it) }
         consumer.assign(partitions)
         beginOffsets = consumer.beginningOffsets(partitions)
         endOffsets = consumer.endOffsets(partitions)
@@ -152,7 +157,12 @@ class KafkaTopicReader(
      * Function reads at most `readConfig.numRecords` records starting from already assigned offsets for consumer group.
      */
     private fun ConsumerCtx.readMessages(): KafkaRecordsResult {
-        val recordCreator = recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization)
+        val masker = if (bypassMasking) {
+            RecordMasker.NOOP
+        } else {
+            recordMaskerFactory.createMaskerFor(topicName, clusterRef)
+        }
+        val recordCreator = recordFactory.creatorFor(topicName, clusterRef, readConfig.recordDeserialization, masker)
         val readMonitor = ReadMonitor.ofConfig(readConfig)
         val poolDuration = Duration.ofMillis(consumeProperties.poolInterval())
         val initialPositions = consumer.assignment()

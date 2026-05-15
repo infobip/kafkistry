@@ -23,6 +23,8 @@ $(document).ready(function () {
     messagesContainer.on("click", "input[name=showKey]", null, adjustFlagsVisibility);
     messagesContainer.on("click", "input[name=showHeaders]", null, adjustFlagsVisibility);
     messagesContainer.on("click", "input[name=showValue]", null, adjustFlagsVisibility);
+    messagesContainer.on("click", ".show-sensitive-data-btn", null, showRevealReasonModal);
+    $("#reveal-reason-confirm-btn").click(submitRevealReason);
     messagesContainer.on("click", "#export-btn", null, function () {
         let content = generateExportContent();
         let fileName = exportFileName();
@@ -478,8 +480,9 @@ function htmlDecode(input) {
     return doc.documentElement.textContent;
 }
 
-function renderValues() {
-    $("div.value-json[data-json]").each(function () {
+function renderValues(scope) {
+    let $scope = scope ? $(scope) : $(document);
+    $scope.find("div.value-json[data-json]").each(function () {
         let div = $(this);
         let dataJsonAttr = div.attr("data-json");
         let json = decodeURIComponent(dataJsonAttr);
@@ -498,17 +501,96 @@ function renderValues() {
         div.show();
     });
 
-    $("div.value-string[data-string]").each(function () {
+    $scope.find("div.value-string[data-string]").each(function () {
         let div = $(this);
         let dataStringAttr = div.attr("data-string");
         let string = decodeURIComponent(dataStringAttr);
         div.append(pre(string));
     });
-    $("div.value-base64[data-base64]").each(function () {
+    $scope.find("div.value-base64[data-base64]").each(function () {
         let div = $(this);
         let base64 = htmlDecode(div.attr("data-base64"));
         div.append(pre(base64));
     });
+}
+
+let revealContext = null;
+
+function showRevealReasonModal(event) {
+    let btn = $(event.currentTarget);
+    let card = btn.closest(".record.card");
+    revealContext = {
+        card: card,
+        clusterIdentifier: btn.attr("data-cluster-identifier"),
+        topicName: btn.attr("data-topic-name"),
+        partition: Number.parseInt(btn.attr("data-partition")),
+        offset: Number.parseInt(btn.attr("data-offset")),
+        recordIndex: Number.parseInt(btn.attr("data-record-index")),
+        recordsSize: Number.parseInt(btn.attr("data-records-size")),
+    };
+    $("#reveal-reason-target").text(
+        "Cluster: " + revealContext.clusterIdentifier +
+        " · Topic: " + revealContext.topicName +
+        " · Partition: " + revealContext.partition +
+        " · Offset: " + revealContext.offset
+    );
+    $("#reveal-reason-input").val("");
+    let modal = $("#reveal-reason-modal");
+    hideOpStatusIn(modal);
+    modal.modal("show");
+    setTimeout(function () { $("#reveal-reason-input").focus(); }, 100);
+}
+
+function submitRevealReason() {
+    if (!revealContext) {
+        return;
+    }
+    let modal = $("#reveal-reason-modal");
+    let reason = ($("#reveal-reason-input").val() || "").trim();
+    if (reason.length < 5 || reason.length > 500) {
+        showOpErrorOnIdIn("reveal-reason-op-status", "Invalid reason", "Reason must be between 5 and 500 characters.", modal);
+        return;
+    }
+    let formData = readFormData();
+    let ctx = revealContext;
+    let confirmBtn = $("#reveal-reason-confirm-btn");
+    confirmBtn.prop("disabled", true);
+    showOpProgressOnIdIn("reveal-reason-op-status", "Reading unmasked...", undefined, modal);
+    $.ajax(
+        "consume/read-record-unmasked" +
+        "?clusterIdentifier=" + encodeURI(ctx.clusterIdentifier) +
+        "&topicName=" + encodeURI(ctx.topicName) +
+        "&recordIndex=" + ctx.recordIndex +
+        "&recordsSize=" + ctx.recordsSize, {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            headers: {ajax: 'true'},
+            data: JSON.stringify({
+                partition: ctx.partition,
+                offset: ctx.offset,
+                reason: reason,
+                recordDeserialization: formData.readConfig.recordDeserialization,
+            }),
+        })
+        .done(function (response) {
+            let newCard = $(response);
+            ctx.card.replaceWith(newCard);
+            renderValues(newCard);
+            if (preferExpandAll) {
+                expandAllIn(newCard);
+            }
+            formatTimestampIn(newCard);
+            hideOpStatusIn(modal);
+            modal.modal("hide");
+            revealContext = null;
+        })
+        .fail(function (error) {
+            let errMsg = extractErrMsg(error);
+            showOpErrorOnIdIn("reveal-reason-op-status", "Failed to fetch unmasked record", errMsg, modal);
+        })
+        .always(function () {
+            confirmBtn.prop("disabled", false);
+        });
 }
 
 function deserializeJson(json) {

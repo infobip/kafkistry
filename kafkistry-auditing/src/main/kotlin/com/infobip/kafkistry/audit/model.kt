@@ -173,3 +173,14 @@ data class ProduceHeaderInfo(
     val valueSerializerType: String?,  // null if header value is null
     val valueContent: String?,         // null if header value is null
 )
+
+
+class TopicSensitiveDataAccessAuditEvent : ManagementAuditEvent() {
+    lateinit var topicName: TopicName
+    var partition: Int? = null
+    var offset: Long? = null
+    var reason: String? = null
+    var maskedKeyPaths: Set<String> = emptySet()
+    var maskedValuePaths: Set<String> = emptySet()
+    var maskedHeaderPaths: Map<String, Set<String>> = emptyMap()
+}

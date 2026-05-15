@@ -4,6 +4,7 @@ import com.infobip.kafkistry.api.ConsumeApi
 import com.infobip.kafkistry.api.ExistingValuesApi
 import com.infobip.kafkistry.api.InspectApi
 import com.infobip.kafkistry.service.consume.*
+import com.infobip.kafkistry.service.consume.config.ConsumeProperties
 import com.infobip.kafkistry.service.consume.deserialize.DeserializerType
 import com.infobip.kafkistry.service.consume.deserialize.JsonKafkaDeserializer
 import com.infobip.kafkistry.service.consume.deserialize.KafkaDeserializer
@@ -11,6 +12,7 @@ import com.infobip.kafkistry.kafkastate.ClusterEnabledFilter
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME
+import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME_READ_RECORD_UNMASKED
 import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME_READ_TOPIC
 import com.infobip.kafkistry.webapp.url.ConsumeRecordsUrls.Companion.CONSUME_READ_TOPIC_CONTINUE
 import org.springframework.stereotype.Controller
@@ -26,6 +28,7 @@ class ConsumeRecordsController(
     private val existingValuesApi: ExistingValuesApi,
     private val clusterEnabledFilter: ClusterEnabledFilter,
     private val kafkaDeserializers: List<KafkaDeserializer>,
+    private val consumeProperties: ConsumeProperties,
 ) : BaseController() {
 
     private fun consumeApi(): ConsumeApi? = consumeApiOpt.orElse(null)
@@ -91,6 +94,7 @@ class ConsumeRecordsController(
                 "readOnlyCommitted" to readOnlyCommitted,
                 "autoContinuation" to autoContinuation,
                 "autoContinuationAfterEnd" to autoContinuationAfterEnd,
+                "unmaskedRevealEnabled" to consumeProperties.unmaskedRevealEnabled,
             )
         )
     }
@@ -105,7 +109,10 @@ class ConsumeRecordsController(
         val recordsResult = consumeApi.readTopic(clusterIdentifier, topicName, readConfig)
         return ModelAndView(
             "consume/records", mapOf(
-                "recordsResult" to recordsResult
+                "recordsResult" to recordsResult,
+                "clusterIdentifier" to clusterIdentifier,
+                "topicName" to topicName,
+                "unmaskedRevealEnabled" to consumeProperties.unmaskedRevealEnabled,
             )
         )
     }
@@ -124,9 +131,33 @@ class ConsumeRecordsController(
                 "overallReadCount" to continuedRecordsResult.overallReadCount,
                 "overallSkipCount" to continuedRecordsResult.overallSkipCount,
                 "overallPartitions" to continuedRecordsResult.overallPartitions,
+                "clusterIdentifier" to clusterIdentifier,
+                "topicName" to topicName,
+                "unmaskedRevealEnabled" to consumeProperties.unmaskedRevealEnabled,
             )
         )
     }
 
+    @PostMapping(CONSUME_READ_RECORD_UNMASKED)
+    fun showReadRecordUnmasked(
+        @RequestParam("clusterIdentifier") clusterIdentifier: KafkaClusterIdentifier,
+        @RequestParam("topicName") topicName: TopicName,
+        @RequestParam("recordIndex") recordIndex: Int,
+        @RequestParam("recordsSize") recordsSize: Int,
+        @RequestBody request: UnmaskedRecordReadRequest,
+    ): ModelAndView {
+        val consumeApi = consumeApi() ?: return disabled()
+        val record = consumeApi.readRecordUnmasked(clusterIdentifier, topicName, request)
+        return ModelAndView(
+            "consume/record", mapOf(
+                "record" to record,
+                "recordIndex" to recordIndex,
+                "recordsSize" to recordsSize,
+                "clusterIdentifier" to clusterIdentifier,
+                "topicName" to topicName,
+                "unmaskedRevealEnabled" to false,
+            )
+        )
+    }
 
 }

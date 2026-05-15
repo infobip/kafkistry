@@ -11,6 +11,7 @@ class ConsumeRecordsUrls(base: String) : BaseUrls() {
         const val CONSUME = "/consume"
         const val CONSUME_READ_TOPIC = "/read-topic"
         const val CONSUME_READ_TOPIC_CONTINUE = "/read-topic/continue"
+        const val CONSUME_READ_RECORD_UNMASKED = "/read-record-unmasked"
     }
 
     private val showConsume = Url(base, listOf(
@@ -20,6 +21,10 @@ class ConsumeRecordsUrls(base: String) : BaseUrls() {
     ))
     private val showReadRecords = Url("$base$CONSUME_READ_TOPIC", listOf("clusterIdentifier", "topicName"))
     private val showReadRecordsContinue = Url("$base$CONSUME_READ_TOPIC_CONTINUE", listOf("clusterIdentifier", "topicName"))
+    private val showReadRecordUnmasked = Url(
+        "$base$CONSUME_READ_RECORD_UNMASKED",
+        listOf("clusterIdentifier", "topicName", "recordIndex", "recordsSize"),
+    )
 
     fun showConsumePage() = showConsume.render()
 
@@ -89,5 +94,17 @@ class ConsumeRecordsUrls(base: String) : BaseUrls() {
     ) = showReadRecordsContinue.render(
         "clusterIdentifier" to clusterIdentifier,
         "topicName" to topicName
+    )
+
+    fun showReadRecordUnmasked(
+        clusterIdentifier: KafkaClusterIdentifier,
+        topicName: TopicName,
+        recordIndex: Int,
+        recordsSize: Int,
+    ) = showReadRecordUnmasked.render(
+        "clusterIdentifier" to clusterIdentifier,
+        "topicName" to topicName,
+        "recordIndex" to recordIndex.toString(),
+        "recordsSize" to recordsSize.toString(),
     )
 }
