@@ -56,7 +56,7 @@ function yamlToJson(yamlString, onResult, onFailure) {
 }
 
 const JIRA_REGEX = /(^|[\/:\s,()[\]])([A-Z]+-[0-9]+)(?=$|[\s,()[\]?\/])/g;
-const BRANCH_JIRA_KEY_REGEX = /[A-Z]+-\d+/;
+const BRANCH_JIRA_KEY_REGEX = /[A-Z]{1,10}-\d{1,7}/;
 const URL_REGEX = /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))/g;
 const GIT_COMMIT_REGEX = /([0-9a-f]{20,})/g;
 
