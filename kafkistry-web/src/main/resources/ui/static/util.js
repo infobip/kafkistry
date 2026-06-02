@@ -55,8 +55,7 @@ function yamlToJson(yamlString, onResult, onFailure) {
         .fail(failureCallback);
 }
 
-const JIRA_REGEX = /(^|[\/:\s,()[\]])([A-Z]+-[0-9]+)(?=$|[\s,()[\]?\/])/g;
-const BRANCH_JIRA_KEY_REGEX = /[A-Z]{1,10}-\d{1,7}/;
+const JIRA_REGEX = /(^|[\/:\s,()\-_[\]])([A-Z]+-[0-9]+)(?=$|[\s,()[\]?\/:-])/g;
 const URL_REGEX = /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))/g;
 const GIT_COMMIT_REGEX = /([0-9a-f]{20,})/g;
 
@@ -180,7 +179,7 @@ function validateTargetBranch() {
 
     if (branchRequiredJiraKey) {
         // Check if branch name contains a valid JIRA key (e.g. ABC-123, feature/ABC-123-desc)
-        if (BRANCH_JIRA_KEY_REGEX.test(targetBranch)) {
+        if (textContainsJIRA(targetBranch)) {
             return null;  // Contains a JIRA key, valid
         }
         return "Target branch must be '" + mainBranch + "' or contain a valid JIRA key (e.g., ABC-123)";
@@ -190,4 +189,8 @@ function validateTargetBranch() {
     return null;
 }
 
+
+function textContainsJIRA(text) {
+    return JIRA_REGEX.test(text);
+}
 
