@@ -18,9 +18,11 @@ import com.infobip.kafkistry.kafka.KafkaManagementClient
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
 import com.infobip.kafkistry.kafka.recordsampling.KafkaRecordSamplerProperties
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
+import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
 import com.infobip.kafkistry.service.deleteAllOnCluster
 import com.infobip.kafkistry.webapp.WebHttpProperties
-import jakarta.annotation.Resource
+import org.apache.kafka.common.security.auth.SecurityProtocol
+import org.apache.kafka.metadata.authorizer.StandardAuthorizer
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.junit.jupiter.api.extension.ExtendWith
@@ -32,19 +34,17 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.ApplicationContext
-import org.springframework.kafka.test.EmbeddedKafkaBroker
-import org.springframework.kafka.test.context.EmbeddedKafka
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.testcontainers.containers.BrowserWebDriverContainer
+//import org.testcontainers.containers.BrowserWebDriverContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.selenium.BrowserWebDriverContainer
+import org.testcontainers.utility.DockerImageName
 import java.net.InetAddress
 import java.util.*
 import java.util.concurrent.TimeUnit
-
-class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverContainer>()
 
 @ExtendWith(
     SpringExtension::class,
@@ -53,15 +53,6 @@ class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverCo
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Testcontainers
-@EmbeddedKafka(
-        count = 3,
-        brokerProperties = [
-            "authorizer.class.name=kafka.security.authorizer.AclAuthorizer",
-            "super.users=User:ANONYMOUS",
-            "auto.leader.rebalance.enable=false",
-        ],
-        kraft = false,
-)
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = [
@@ -77,6 +68,7 @@ class KBrowserWebDriverContainer : BrowserWebDriverContainer<KBrowserWebDriverCo
     disabledReason = "These tests are too slow to run each time",
 )
 class BrowserItTestSuite {
+
 
     @LocalServerPort
     var port = 0
@@ -94,8 +86,6 @@ class BrowserItTestSuite {
     @Autowired
     lateinit var inspectApi: InspectApi
 
-    @Resource
-    lateinit var embeddedKafka: EmbeddedKafkaBroker
 
     //needed for browser running in docker to be able to access KR app running on host
     private val localhost = run {
@@ -112,23 +102,40 @@ class BrowserItTestSuite {
 
     companion object {
 
+        private val kafka = KafkaKRaftEmbeddedCluster(count = 3, partitions = 2).apply {
+            allBrokersProperty("authorizer.class.name", StandardAuthorizer::class.java.name)
+            allBrokersProperty("super.users", "User:ANONYMOUS")
+            allBrokersProperty("auto.leader.rebalance.enable", "false")
+        }
+
+        @BeforeAll
+        @JvmStatic
+        fun startKafka() = kafka.start()
+
+        @AfterAll
+        @JvmStatic
+        fun stopKafka() = kafka.stop()
+
         @Container
         @JvmField
-        val chrome: KBrowserWebDriverContainer = KBrowserWebDriverContainer()
-
-                .withCapabilities(ChromeOptions())
+        val chrome = BrowserWebDriverContainer(DockerImageName.parse("selenium/standalone-chrome"))
 
         val clientFactory = ClientFactory(
-                KafkaManagementClientProperties(),
-                RecordReadSamplerFactory(KafkaRecordSamplerProperties()),
-                Optional.empty(),
-                Optional.empty(),
+            KafkaManagementClientProperties(),
+            RecordReadSamplerFactory(KafkaRecordSamplerProperties()),
+            Optional.empty(),
+            Optional.empty(),
         )
 
         val browser: RemoteWebDriver by lazy {
             Unreliables.retryUntilSuccess(30, TimeUnit.SECONDS) {
                 Timeouts.getWithTimeout(10, TimeUnit.SECONDS) {
-                    RemoteWebDriver(chrome.seleniumAddress, ChromeOptions())
+                    RemoteWebDriver(
+                        chrome.seleniumAddress,
+                        ChromeOptions()
+                            .setAcceptInsecureCerts(true)
+                            .addArguments("--ignore-certificate-errors", "--allow-running-insecure-content")
+                    )
                 }
             }
         }
@@ -138,7 +145,7 @@ class BrowserItTestSuite {
     fun setup() {
         baseUrl = "http://$localhost:$port${httpProperties.rootPath}"
         kafkaClient = clientFactory.createManagementClient(
-                ConnectionDefinition("local-test", embeddedKafka.brokersAsString, ssl = false, sasl = false, profiles = emptyList())
+                ConnectionDefinition("local-test", kafka.embeddedKafka.brokersAsString, ssl = false, sasl = false, profiles = emptyList())
         )
         deleteAll()
         browser.get("$baseUrl/home")

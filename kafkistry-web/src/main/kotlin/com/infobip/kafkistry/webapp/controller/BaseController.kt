@@ -16,7 +16,7 @@ import org.springframework.web.servlet.ModelAndView
 import jakarta.servlet.RequestDispatcher
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.boot.web.servlet.error.DefaultErrorAttributes
+import org.springframework.boot.webmvc.error.DefaultErrorAttributes
 import org.springframework.web.servlet.DispatcherServlet
 
 @Controller

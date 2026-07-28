@@ -16,7 +16,7 @@ class ManagementEventLoggingSubscriber : ManagementEventSubscriber {
     private val objectMapper = ObjectMapper().apply {
         registerKotlinModule()
         enable(SerializationFeature.INDENT_OUTPUT)
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
     }
 
     private fun String.log() = loggers.computeIfAbsent(this, LoggerFactory::getLogger)

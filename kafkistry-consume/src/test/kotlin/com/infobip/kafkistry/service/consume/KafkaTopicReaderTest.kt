@@ -25,7 +25,7 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.*
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
-import org.springframework.kafka.test.EmbeddedKafkaZKBroker
+//import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -45,10 +45,13 @@ class KafkaTopicReaderTest {
         const val topic8 = "test-consume8"
         const val topic9 = "test-consume9"
 
-        private val kafka = EmbeddedKafkaKraftBroker(
-            3, 2,
+        private val kafka = object : EmbeddedKafkaKraftBroker(
+            1, 2,
             topic1, topic2, topic3, topic4, topic5, topic6, topic7, topic8, topic9,
-        )
+        ) {
+            //NOTE: remove override once spring kafka test gets compatible with kafka 4.3
+            override fun getBrokersAsString(): String = cluster?.bootstrapServers() ?: error("Not started yet")
+        }
 
         @BeforeAll
         @JvmStatic
@@ -106,8 +109,8 @@ class KafkaTopicReaderTest {
 
     private fun EmbeddedKafkaBroker.clusterId(): String {
         return when (this) {
-            is EmbeddedKafkaZKBroker -> this.kafkaServers[0].clusterId()
-            is EmbeddedKafkaKraftBroker -> this.cluster.nodes().clusterId().toString()
+            //is EmbeddedKafkaZKBroker -> this.kafkaServers[0].clusterId()
+            is EmbeddedKafkaKraftBroker -> this.cluster?.nodes()?.clusterId().toString()
             else -> throw UnsupportedOperationException("Can't extract cluster id of $this, unknown implementation")
         }
     }

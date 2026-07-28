@@ -21,6 +21,7 @@ import com.infobip.kafkistry.model.QuotaProperties
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
 import com.infobip.kafkistry.utils.rootCause
+import org.apache.kafka.clients.consumer.CloseOptions
 import org.apache.kafka.common.config.TopicConfig
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException
 import org.assertj.core.api.SoftAssertions
@@ -33,6 +34,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import kotlin.collections.MutableMap.MutableEntry
+import com.infobip.kafkistry.shaded.org.apache.kafka.common.config.TopicConfig as LegacyTopicConfig
 
 abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
 
@@ -590,7 +592,7 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             .isEqualTo(groupAfterCommit.assignments)
 
         //check empty after
-        consumer.close(Duration.ofSeconds(2))
+        consumer.close(CloseOptions.timeout(Duration.ofSeconds(2)))
         Awaitility.await("empty after unsubscribe")
             .atMost(Duration.ofSeconds(5))
             .untilAsserted {
@@ -1234,11 +1236,11 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             assertDefaultConfig(TopicConfig.CLEANUP_POLICY_CONFIG).isEqualTo("delete")
             assertDefaultConfig(TopicConfig.COMPRESSION_TYPE_CONFIG).isEqualTo("producer")
             assertDefaultConfig(TopicConfig.DELETE_RETENTION_MS_CONFIG).isEqualToStringOf(24 * 3600 * 1000L)
-            if (this@ClusterOperationsTestSuite is ClusterOpsKafkaZkEmbeddedTest) {
-                assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
-            } else {
+            //if (this@ClusterOperationsTestSuite is ClusterOpsKafkaZkEmbeddedTest) {
+            //    assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
+            //} else {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(60 * 1000L)
-            }
+            //}
             assertDefaultConfig(TopicConfig.FLUSH_MESSAGES_INTERVAL_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             assertDefaultConfig(TopicConfig.FLUSH_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             assertDefaultConfig(TopicConfig.INDEX_INTERVAL_BYTES_CONFIG).isEqualToStringOf(4096)
@@ -1262,15 +1264,16 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
                 assertDefaultConfig(TopicConfig.MAX_MESSAGE_BYTES_CONFIG).isEqualToStringOf(1_000_000 + 12)
             }
             if (expectedClusterVersion < Version.of("4.0")) {
-                assertDefaultConfig(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isEqualTo("true")
+                assertDefaultConfig(LegacyTopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isEqualTo("true")
                 assertDefaultConfig("message.format.version").startsWith("" + expectedClusterVersion.major() + ".")
                 @Suppress("DEPRECATION")
-                assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
+                assertDefaultConfig(LegacyTopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             } else {
+                @Suppress("DEPRECATION")
                 assertDefaultConfig(TopicConfig.MESSAGE_DOWNCONVERSION_ENABLE_CONFIG).isNull()
                 assertDefaultConfig("message.format.version").isNull()
                 @Suppress("DEPRECATION")
-                assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isNull()
+                assertDefaultConfig(LegacyTopicConfig.MESSAGE_TIMESTAMP_DIFFERENCE_MAX_MS_CONFIG).isNull()
             }
             assertDefaultConfig(TopicConfig.MESSAGE_TIMESTAMP_TYPE_CONFIG).isEqualTo("CreateTime")
             assertDefaultConfig(TopicConfig.MIN_CLEANABLE_DIRTY_RATIO_CONFIG).isEqualToStringOf(0.5)

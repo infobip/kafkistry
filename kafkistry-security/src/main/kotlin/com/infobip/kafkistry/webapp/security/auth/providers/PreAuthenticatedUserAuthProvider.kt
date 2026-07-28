@@ -12,9 +12,9 @@ class PreAuthenticatedUserAuthProvider : KafkistryAuthProvider {
         setPreAuthenticatedUserDetailsService { token -> token.principal as User }
     }
 
-    override fun authenticate(authentication: Authentication?): Authentication = delegate.authenticate(authentication)
+    override fun authenticate(authentication: Authentication): Authentication? = delegate.authenticate(authentication)
 
-    override fun supports(authentication: Class<*>?): Boolean = delegate.supports(authentication)
+    override fun supports(authentication: Class<*>): Boolean = delegate.supports(authentication)
 
     override fun getOrder(): Int = 0
 }

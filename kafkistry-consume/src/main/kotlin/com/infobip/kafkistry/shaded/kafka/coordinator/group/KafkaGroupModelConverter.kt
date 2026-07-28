@@ -1,18 +1,18 @@
-package kafka.coordinator.group
+package com.infobip.kafkistry.shaded.kafka.coordinator.group
 
 import com.infobip.kafkistry.kafka.toJavaList
-import com.infobip.kafkistry.service.consume.interntopics.ConsumerOffsetMetadata.*
-import kafka.common.OffsetAndMetadata
-import kafka.coordinator.tryParseOrNull
-import org.apache.kafka.common.utils.Time
+import com.infobip.kafkistry.service.consume.interntopics.ConsumerOffsetMetadata
+import com.infobip.kafkistry.shaded.kafka.common.OffsetAndMetadata
+import com.infobip.kafkistry.shaded.kafka.coordinator.tryParseOrNull
+import com.infobip.kafkistry.shaded.org.apache.kafka.common.utils.Time
 import java.nio.ByteBuffer
 
 object KafkaGroupModelConverter {
 
     private val time = Time.SYSTEM
 
-    fun convert(key: OffsetKey): ConsumerGroupRecordKey {
-        return ConsumerGroupRecordKey(
+    fun convert(key: OffsetKey): ConsumerOffsetMetadata.ConsumerGroupRecordKey {
+        return ConsumerOffsetMetadata.ConsumerGroupRecordKey(
             version = key.version(),
             groupId = key.key().group(),
             topic = key.key().topicPartition().topic(),
@@ -20,8 +20,8 @@ object KafkaGroupModelConverter {
         )
     }
 
-    fun convert(key: GroupMetadataKey): ConsumerGroupRecordKey {
-        return ConsumerGroupRecordKey(
+    fun convert(key: GroupMetadataKey): ConsumerOffsetMetadata.ConsumerGroupRecordKey {
+        return ConsumerOffsetMetadata.ConsumerGroupRecordKey(
             version = key.version(),
             groupId = key.key(),
             topic = null,
@@ -29,8 +29,8 @@ object KafkaGroupModelConverter {
         )
     }
 
-    fun convert(metadata: OffsetAndMetadata): ConsumerGroupOffsetCommit {
-        return ConsumerGroupOffsetCommit(
+    fun convert(metadata: OffsetAndMetadata): ConsumerOffsetMetadata.ConsumerGroupOffsetCommit {
+        return ConsumerOffsetMetadata.ConsumerGroupOffsetCommit(
             offset = metadata.offset(),
             commitTimestamp = metadata.commitTimestamp(),
             leaderEpoch = metadata.leaderEpoch().orElse(null),
@@ -39,14 +39,14 @@ object KafkaGroupModelConverter {
         )
     }
 
-    fun tryParseGroupMetadata(groupId: String?, value: ByteBuffer): ConsumerGroupMetadata? {
+    fun tryParseGroupMetadata(groupId: String?, value: ByteBuffer): ConsumerOffsetMetadata.ConsumerGroupMetadata? {
         return tryParseOrNull {
             GroupMetadataManager.readGroupMessageValue(groupId, value, time)
         }?.let { convert(it) }
     }
 
-    private fun convert(metadata: GroupMetadata): ConsumerGroupMetadata {
-        return ConsumerGroupMetadata(
+    private fun convert(metadata: GroupMetadata): ConsumerOffsetMetadata.ConsumerGroupMetadata {
+        return ConsumerOffsetMetadata.ConsumerGroupMetadata(
             groupId = metadata.groupId(),
             generationId = metadata.generationId(),
             protocolType = metadata.protocolType().getOrElse<String?> { null },
@@ -55,8 +55,8 @@ object KafkaGroupModelConverter {
         )
     }
 
-    private fun convert(member: MemberMetadata): ConsumerGroupMetadataMember {
-        return ConsumerGroupMetadataMember(
+    private fun convert(member: MemberMetadata): ConsumerOffsetMetadata.ConsumerGroupMetadataMember {
+        return ConsumerOffsetMetadata.ConsumerGroupMetadataMember(
             memberId = member.memberId(),
             groupInstanceId = member.groupInstanceId().getOrElse<String?> { null },
             clientId = member.clientId(),

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.infobip.kafkistry</groupId>
         <artifactId>kafkistry-parent</artifactId>
@@ -71,5 +72,139 @@
             <artifactId>jackson-dataformat-properties</artifactId>
         </dependency>
 
+        <!--To include zookeeper and kafka client to be able to work with older ZK based clusters kafka ver 2.x -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.13</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-server</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-server-common</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-storage</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-group-coordinator-api</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-group-coordinator</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-raft</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-transaction-coordinator</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-metadata</artifactId>
+            <version>3.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>3.3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
+            <version>3.3.4</version>
+<!--            It should have been test scope, but could not achieve proper class visibility in connector module-->
+<!--            <scope>test</scope>-->
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+                    <createDependencyReducedPom>true</createDependencyReducedPom>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>main-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.apache.kafka:kafka_2.13</include>
+                                    <include>org.apache.kafka:kafka-clients</include>
+                                    <include>org.apache.kafka:kafka-server</include>
+                                    <include>org.apache.kafka:kafka-server-common</include>
+                                    <include>org.apache.kafka:kafka-storage</include>
+                                    <include>org.apache.kafka:kafka-group-coordinator-api</include>
+                                    <include>org.apache.kafka:kafka-group-coordinator</include>
+                                    <include>org.apache.kafka:kafka-transaction-coordinator</include>
+                                    <include>org.apache.kafka:kafka-raft</include>
+                                    <include>org.apache.kafka:kafka-metadata</include>
+                                    <include>org.apache.zookeeper:zookeeper</include>
+                                    <include>org.apache.zookeeper:zookeeper-jute</include>
+                                    <include>org.springframework.kafka:spring-kafka</include>
+                                    <include>org.springframework.kafka:spring-kafka-test</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <relocations>
+                                <relocation>
+                                    <pattern>kafka</pattern>
+                                    <shadedPattern>com.infobip.kafkistry.shaded.kafka</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.kafka</pattern>
+                                    <shadedPattern>com.infobip.kafkistry.shaded.org.apache.kafka</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.zookeeper</pattern>
+                                    <shadedPattern>com.infobip.kafkistry.shaded.org.apache.zookeeper</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.springframework.kafka</pattern>
+                                    <shadedPattern>com.infobip.kafkistry.shaded.org.springframework.kafka</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

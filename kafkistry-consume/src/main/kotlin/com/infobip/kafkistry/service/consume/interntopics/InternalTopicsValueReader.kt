@@ -1,13 +1,13 @@
 package com.infobip.kafkistry.service.consume.interntopics
 
-import kafka.coordinator.group.GroupMetadataKey
-import kafka.coordinator.group.GroupMetadataManager
-import kafka.coordinator.group.KafkaGroupModelConverter
-import kafka.coordinator.group.OffsetKey
-import kafka.coordinator.transaction.KafkaTransactionModelConverter
-import kafka.coordinator.transaction.TransactionLog
-import kafka.coordinator.transaction.TxnKey
-import kafka.coordinator.tryParseOrNull
+import com.infobip.kafkistry.shaded.kafka.coordinator.group.GroupMetadataKey
+import com.infobip.kafkistry.shaded.kafka.coordinator.group.GroupMetadataManager
+import com.infobip.kafkistry.shaded.kafka.coordinator.group.KafkaGroupModelConverter
+import com.infobip.kafkistry.shaded.kafka.coordinator.group.OffsetKey
+import com.infobip.kafkistry.shaded.kafka.coordinator.transaction.KafkaTransactionModelConverter
+import com.infobip.kafkistry.shaded.kafka.coordinator.transaction.TransactionLog
+import com.infobip.kafkistry.shaded.kafka.coordinator.transaction.TxnKey
+import com.infobip.kafkistry.shaded.kafka.coordinator.tryParseOrNull
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.stereotype.Component
 import java.nio.ByteBuffer

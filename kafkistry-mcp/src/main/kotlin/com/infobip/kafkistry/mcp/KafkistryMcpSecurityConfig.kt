@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 import reactor.core.publisher.Mono
 
 @Configuration
@@ -21,7 +21,7 @@ class KafkistryMcpSecurityConfig(private val httpProperties: WebHttpProperties) 
 
     @Bean
     fun mcpNoSessionMatcher(): NoSessionRequestMatcher = NoSessionRequestMatcher.of(
-        AntPathRequestMatcher("${httpProperties.rootPath}/mcp/**")
+        PathPatternRequestMatcher.pathPattern("${httpProperties.rootPath}/mcp/**")
     )
 
     /**

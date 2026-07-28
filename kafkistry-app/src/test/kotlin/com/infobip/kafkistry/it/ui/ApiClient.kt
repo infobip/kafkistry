@@ -18,6 +18,8 @@ import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.getForObject
+import org.springframework.web.client.postForObject
 import java.net.HttpURLConnection
 
 class ApiClient(
@@ -27,7 +29,7 @@ class ApiClient(
         private vararg val cookies: String
 ) {
 
-    private val rest = RestTemplate(object : SimpleClientHttpRequestFactory() {
+    val rest = RestTemplate(object : SimpleClientHttpRequestFactory() {
         override fun prepareConnection(connection: HttpURLConnection, httpMethod: String) {
             super.prepareConnection(connection, httpMethod)
             connection.instanceFollowRedirects = false
@@ -78,29 +80,29 @@ class ApiClient(
 
     fun getPageOrNull(path: String): Document? {
         val url = url(path)
-        return rest.getForObject(url, String::class.java)?.let { html ->
+        return rest.getForObject<String>(url)?.let { html ->
             Jsoup.parse(html, url)
         }
     }
 
     fun postPageOrNull(path: String, body: Any?): Document? {
         val url = url(path)
-        return rest.postForObject(url, body, String::class.java)?.let { html ->
+        return rest.postForObject<String>(url, body)?.let { html ->
             Jsoup.parse(html, url)
         }
     }
 
     fun getContent(path: String): String? {
         val url = url(path)
-        return rest.getForObject(url, String::class.java)
+        return rest.getForObject<String>(url)
     }
 
-    fun <R> apiGet(path: String, response: Class<R>):R? {
-        return rest.getForObject(url(path), response)
+    inline fun <reified R : Any> apiGet(path: String): R? {
+        return rest.getForObject<R>(url(path))
     }
 
-    fun <R> apiPost(path: String, body: Any?, response: Class<R>): R? {
-        return rest.postForObject(url(path), body, response)
+    inline fun <reified R : Any> apiPost(path: String, body: Any?): R? {
+        return rest.postForObject<R>(url(path), body)
     }
 
     fun apiDelete(path: String) {
@@ -108,31 +110,31 @@ class ApiClient(
     }
 
     fun addTopic(topic: TopicDescription) {
-        rest.postForObject(url("/api/topics?message=test-msg"), topic, String::class.java)
+        rest.postForObject<String>(url("/api/topics?message=test-msg"), topic)
     }
 
     fun addCluster(cluster: KafkaCluster) {
-        rest.postForObject(url("/api/clusters?message=test-msg"), cluster, String::class.java)
+        rest.postForObject<String>(url("/api/clusters?message=test-msg"), cluster)
     }
 
     fun getTopic(topicName: TopicName): TopicDescription {
-        return rest.getForObject(url("/api/topics/single?topicName={name}"), TopicDescription::class.java, topicName)!!
+        return rest.getForObject<TopicDescription>(url("/api/topics/single?topicName={name}"), topicName)!!
     }
 
     fun listAllTopics(): List<TopicDescription> {
-        return rest.getForObject(url("/api/topics"), TopicDescriptions::class.java)!!
+        return rest.getForObject<TopicDescriptions>(url("/api/topics"))!!
     }
 
     fun listAllClusters(): List<KafkaCluster> {
-        return rest.getForObject(url("/api/clusters"), KafkaClusters::class.java)!!
+        return rest.getForObject<KafkaClusters>(url("/api/clusters"))!!
     }
 
     fun inspectAllTopics(): List<TopicStatuses> {
-        return rest.getForObject(url("/api/inspect/topics"), TopicStatusesList::class.java)!!
+        return rest.getForObject<TopicStatusesList>(url("/api/inspect/topics"))!!
     }
 
     fun inspectTopicUpdateDryRun(topic: TopicDescription): TopicStatuses {
-        return rest.postForObject(url("/api/inspect/topic-inspect-dry-run"), topic, TopicStatuses::class.java)!!
+        return rest.postForObject<TopicStatuses>(url("/api/inspect/topic-inspect-dry-run"), topic)!!
     }
 
     fun deleteTopic(name: TopicName) {
@@ -144,7 +146,7 @@ class ApiClient(
     }
 
     fun listClusterConsumerGroups(clusterIdentifier: KafkaClusterIdentifier): ClusterConsumerGroups {
-        return rest.getForObject(url("/api/consumers/clusters/{cluster}"), ClusterConsumerGroups::class.java, clusterIdentifier)!!
+        return rest.getForObject<ClusterConsumerGroups>(url("/api/consumers/clusters/{cluster}"), clusterIdentifier)!!
     }
 
     fun deleteClusterConsumerGroup(clusterIdentifier: KafkaClusterIdentifier, consumerGroupId: ConsumerGroupId) {
@@ -152,7 +154,7 @@ class ApiClient(
     }
 
     fun refreshClusters() {
-        rest.postForObject(url("/api/clusters/refresh"), null, String::class.java)
+        rest.postForObject<String>(url("/api/clusters/refresh"), null)
     }
 
     fun testClusterConnection(
@@ -160,7 +162,7 @@ class ApiClient(
         ssl: Boolean = false, sasl: Boolean = false,
         profiles: List<KafkaProfile> = emptyList()
     ): ClusterInfo {
-        return rest.getForObject(url("/api/clusters/test-connection?connectionString=${connectionString}&ssl=$ssl&sasl=$sasl&profiles=${profiles.joinToString(",")}"), ClusterInfo::class.java)!!
+        return rest.getForObject<ClusterInfo>(url("/api/clusters/test-connection?connectionString=${connectionString}&ssl=$ssl&sasl=$sasl&profiles=${profiles.joinToString(",")}"))!!
     }
 
     fun createMissingTopic(topicName: TopicName, clusterIdentifier: KafkaClusterIdentifier) {
@@ -168,7 +170,7 @@ class ApiClient(
             it.add("topicName", topicName)
             it.add("clusterIdentifier", clusterIdentifier)
         }
-        rest.postForObject(url("/api/management/create-missing-topic"), params, String::class.java)
+        rest.postForObject<String>(url("/api/management/create-missing-topic"), params)
     }
 
     fun electPreferredLeaders(topicName: TopicName, clusterIdentifier: KafkaClusterIdentifier) {
@@ -176,50 +178,49 @@ class ApiClient(
             it.add("topicName", topicName)
             it.add("clusterIdentifier", clusterIdentifier)
         }
-        rest.postForObject(url("/api/management/run-preferred-replica-elections"), params, String::class.java)
+        rest.postForObject<String>(url("/api/management/run-preferred-replica-elections"), params)
     }
 
     fun suggestDefaultTopicDescription(): TopicDescription {
-        return rest.getForObject(url("/api/suggestion/create-default-topic"), TopicDescription::class.java)!!
+        return rest.getForObject<TopicDescription>(url("/api/suggestion/create-default-topic"))!!
     }
 
     fun suggestObjectToYaml(obj: Any): String {
-        return rest.postForObject(url("/api/suggestion/json-to-yaml"), obj, String::class.java)!!
+        return rest.postForObject<String>(url("/api/suggestion/json-to-yaml"), obj)!!
     }
 
     fun verifyTopicReAssignment(topicName: TopicName, clusterIdentifier: KafkaClusterIdentifier): String {
-        return rest.getForObject(
-                url("/api/management/verify-topic-partitions-reassignment?clusterIdentifier=$clusterIdentifier&topicName=$topicName"),
-                String::class.java
+        return rest.getForObject<String>(
+                url("/api/management/verify-topic-partitions-reassignment?clusterIdentifier=$clusterIdentifier&topicName=$topicName")
         )!!
     }
 
     fun submitWizardAnswers(answers: TopicCreationWizardAnswers) {
-        rest.postForObject(url("/api/topic-wizard/submit-answers"), answers, String::class.java)
+        rest.postForObject<String>(url("/api/topic-wizard/submit-answers"), answers)
     }
 
     fun createPrincipalAcls(principalAcls: PrincipalAclRules) {
-        rest.postForObject(url("/api/acls?message=test-msg"), principalAcls, String::class.java)
+        rest.postForObject<String>(url("/api/acls?message=test-msg"), principalAcls)
     }
 
     fun getPrincipalAcls(principal: PrincipalId): PrincipalAclRules {
-        return rest.getForObject(url("/api/acls/single?principal={principal}"), PrincipalAclRules::class.java, principal)!!
+        return rest.getForObject<PrincipalAclRules>(url("/api/acls/single?principal={principal}"), principal)!!
     }
 
     fun listPrincipalsAcls(): PrincipalsAclsList {
-        return rest.getForObject(url("/api/acls"), PrincipalsAclsList::class.java)!!
+        return rest.getForObject<PrincipalsAclsList>(url("/api/acls"))!!
     }
 
     fun createEntityQuotas(quotaDescription: QuotaDescription) {
-        rest.postForObject(url("/api/quotas?message=test-msg"), quotaDescription, String::class.java)
+        rest.postForObject<String>(url("/api/quotas?message=test-msg"), quotaDescription)
     }
 
     fun getEntityQuotas(entityID: QuotaEntityID): QuotaDescription {
-        return rest.getForObject(url("/api/quotas/single?quotaEntityID={entityID}"), QuotaDescription::class.java, entityID)!!
+        return rest.getForObject<QuotaDescription>(url("/api/quotas/single?quotaEntityID={entityID}"), entityID)!!
     }
 
     fun listQuotaEntities(): EntityQuotasList {
-        return rest.getForObject(url("/api/quotas"), EntityQuotasList::class.java)!!
+        return rest.getForObject<EntityQuotasList>(url("/api/quotas"))!!
     }
 
     fun createMissingEntityQuotas(entityID: QuotaEntityID, clusterIdentifier: KafkaClusterIdentifier) {
@@ -227,7 +228,7 @@ class ApiClient(
             it.add("quotaEntityID", entityID)
             it.add("clusterIdentifier", clusterIdentifier)
         }
-        rest.postForObject(url("/api/quotas-management/create-quotas"), params, String::class.java)
+        rest.postForObject<String>(url("/api/quotas-management/create-quotas"), params)
     }
 
 

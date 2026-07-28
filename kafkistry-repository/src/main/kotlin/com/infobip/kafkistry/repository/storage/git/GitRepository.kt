@@ -79,7 +79,7 @@ class GitRepository(
     private val execLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "exec")
     private val totalLatenciesRefreshing = gitExclusiveLockLatencies.labels("true", "total")
 
-    private val lock = Object()
+    private val lock = Any()
     private val noRemote = gitRemoteUri == null
     private val dir = File(dirPath)
     private val repository: Repository

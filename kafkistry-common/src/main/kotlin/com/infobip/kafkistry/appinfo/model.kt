@@ -57,7 +57,7 @@ data class ModuleBuildInfo(
             )
             data class Browse(
                 val url: String,
-                @JsonProperty("commit-prefix-url")
+                @param:JsonProperty("commit-prefix-url")
                 val commitPrefixUrl: String,
             )
         }

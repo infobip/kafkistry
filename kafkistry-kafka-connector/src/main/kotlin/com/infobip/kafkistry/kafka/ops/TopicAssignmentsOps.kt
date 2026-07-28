@@ -3,6 +3,7 @@ package com.infobip.kafkistry.kafka.ops
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
+import com.infobip.kafkistry.shaded.org.apache.kafka.common.TopicPartition as LegacyTopicPartition
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.ElectionType
 import org.apache.kafka.common.TopicPartition
@@ -16,6 +17,11 @@ class TopicAssignmentsOps (
     private val topicOps: TopicOps,
     private val clusterOps: ClusterOps,
 ): BaseOps(clientCtx) {
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> Any.cast(): T = this as T
+
+    private fun TopicPartition.toLegacyTopicPartition() = LegacyTopicPartition(topic(), partition())
 
     fun reAssignPartitions(
         topicPartitionsAssignments: Map<TopicName, Map<Partition, List<BrokerId>>>, throttleBytesPerSec: Int
@@ -82,6 +88,7 @@ class TopicAssignmentsOps (
                     setupThrottle(currentReassignments = emptyMap())
                 }
                 val newAssignmentsScala = partitionsAssignments
+                    .mapKeys { it.key.toLegacyTopicPartition() }
                     .mapValues { it.value.toScalaList().toSeq() }
                     .toScalaMap()
                 zkClient.createPartitionReassignment(newAssignmentsScala.cast())
@@ -234,7 +241,7 @@ class TopicAssignmentsOps (
         val topicPartitions = partitions.map { TopicPartition(topicName, it) }.toSet()
         when {
             clusterVersion < VERSION_2_2 -> runOperation("preferred replica election") {
-                zkClient.createPreferredReplicaElection(topicPartitions.toScalaList().toSet())
+                zkClient.createPreferredReplicaElection(topicPartitions.map { it.toLegacyTopicPartition() }.toScalaList().toSet())
             }
             else -> {
                 adminClient

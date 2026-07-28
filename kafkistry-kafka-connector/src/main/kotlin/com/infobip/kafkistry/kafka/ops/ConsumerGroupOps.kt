@@ -3,22 +3,47 @@ package com.infobip.kafkistry.kafka.ops
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.KafkaClusterManagementException
 import org.apache.kafka.clients.admin.*
+import org.apache.kafka.common.GroupState
+import org.apache.kafka.common.GroupType
+import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.ListConsumerGroupsOptions as LegacyConsumerGroupsOptions
+import com.infobip.kafkistry.shaded.org.apache.kafka.common.GroupType as LegacyGroupType
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.errors.GroupIdNotFoundException
+import java.util.Optional
 import java.util.concurrent.CompletableFuture
+import kotlin.jvm.optionals.getOrNull
 
 class ConsumerGroupOps(
     clientCtx: ClientCtx,
 ): BaseOps(clientCtx) {
 
     fun consumerGroups(): CompletableFuture<List<ConsumerGroupId>> {
-        return adminClient
-            .listConsumerGroups(ListConsumerGroupsOptions().withReadTimeout())
-            .valid()
-            .asCompletableFuture("list consumer groups")
-            .thenApply { groups ->
-                groups.map { it.groupId() }.sorted()
-            }
+        return if (clusterVersion < VERSION_4_0) {
+            @Suppress("DEPRECATION")
+            legacyAdminClient
+                .listConsumerGroups(LegacyConsumerGroupsOptions().withReadTimeout())
+                .valid()
+                .asCompletableFutureLegacy("list consumer groups legacy")
+                .thenApply { groups ->
+                    groups
+                        .map {
+                            val type = it.type().getOrNull() ?: LegacyGroupType.UNKNOWN
+                            KafkaGroup(it.groupId(), type.convert()) }
+                        .sortedBy { it.groupId }
+                }
+        } else {
+            adminClient.listGroups(ListGroupsOptions().withReadTimeout())
+                .valid()
+                .asCompletableFuture("list groups")
+                .thenApply { groups ->
+                    groups
+                        .map { KafkaGroup(it.groupId(), it.type().getOrNull() ?: GroupType.UNKNOWN) }
+                        .filter { it.type == GroupType.CONSUMER || it.type == GroupType.CLASSIC }
+                        .sortedBy { it.groupId }
+                }
+        }.thenApply { groups -> groups.map { it.groupId } }
     }
 
     fun consumerGroup(groupId: ConsumerGroupId): CompletableFuture<ConsumerGroup> {
@@ -26,6 +51,18 @@ class ConsumerGroupOps(
             .describeConsumerGroups(listOf(groupId), DescribeConsumerGroupsOptions().withReadTimeout())
             .describedGroups()[groupId]!!
             .asCompletableFuture("describe consumer group")
+            .exceptionally { ex: Throwable ->
+                if (ex is KafkaClusterManagementException && ex.cause is GroupIdNotFoundException) {
+                    //TODO rethink - previous versions did not throw GroupIdNotFoundException, and had simply returned semantically empty description
+                    ConsumerGroupDescription(
+                        groupId, true, emptyList(), "",
+                        GroupType.UNKNOWN, GroupState.UNKNOWN, null,
+                        emptySet(), Optional.empty(), Optional.empty(),
+                    )
+                } else {
+                    throw ex
+                }
+            }
         val topicPartitionOffsetsFuture = adminClient
             .listConsumerGroupOffsets(groupId, ListConsumerGroupOffsetsOptions().withReadTimeout())
             .partitionsToOffsetAndMetadata()
@@ -95,7 +132,7 @@ class ConsumerGroupOps(
             .sortedBy { it.topic + it.partition }
         return ConsumerGroup(
             id = groupId,
-            status = groupDescription.state().convert(),
+            status = groupDescription.groupState().convert(),
             partitionAssignor = groupDescription.partitionAssignor(),
             members = members,
             offsets = offsets,

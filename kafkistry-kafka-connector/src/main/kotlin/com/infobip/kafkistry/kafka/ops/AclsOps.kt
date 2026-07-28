@@ -20,7 +20,7 @@ class AclsOps(
         return adminClient
             .describeAcls(AclBindingFilter.ANY, DescribeAclsOptions().withReadTimeout())
             .values()
-            .asCompletableFuture("list acls")
+            .asCompletableFuture("list ACLs")
             .thenApply { aclBindings -> aclBindings.map { it.toAclRule() } }
     }
 
@@ -28,7 +28,7 @@ class AclsOps(
         val aclBindings = acls.map { it.toAclBinding() }
         return adminClient.createAcls(aclBindings, CreateAclsOptions().withWriteTimeout())
             .all()
-            .asCompletableFuture("create acls")
+            .asCompletableFuture("create ACLs")
             .thenApply { }
     }
 
@@ -36,7 +36,7 @@ class AclsOps(
         val aclFilters = acls.map { it.toAclBinding().toFilter() }
         return adminClient.deleteAcls(aclFilters, DeleteAclsOptions().withWriteTimeout())
             .all()
-            .asCompletableFuture("delete acls")
+            .asCompletableFuture("delete ACLs")
             .thenApply { }
     }
 

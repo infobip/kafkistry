@@ -2,7 +2,6 @@ package com.infobip.kafkistry.kafka.ops
 
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import kafka.server.DynamicConfig
 import org.apache.kafka.clients.ApiVersions
 import org.apache.kafka.clients.NetworkClient
 import org.apache.kafka.clients.NodeApiVersions
@@ -12,7 +11,10 @@ import org.apache.kafka.common.errors.UnsupportedVersionException
 import org.apache.kafka.common.message.ApiVersionsResponseData
 import org.apache.kafka.common.protocol.ApiKeys
 import org.apache.kafka.server.common.MetadataVersion
-import org.apache.kafka.server.config.QuotaConfigs
+import org.apache.kafka.server.config.DynamicConfig
+import org.apache.kafka.server.config.QuotaConfig.FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG
+import org.apache.kafka.server.config.QuotaConfig.LEADER_REPLICATION_THROTTLED_RATE_CONFIG
+import org.apache.kafka.server.config.QuotaConfig.REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
@@ -234,7 +236,7 @@ class ClusterOps(
         return config.entries()
             .map {
                 if (it.source() == ConfigEntry.ConfigSource.DYNAMIC_BROKER_CONFIG && it.value() == null) {
-                    val zkValue = zkBrokerConfig?.getProperty(it.name())?.toString()
+                    val zkValue = zkBrokerConfig?.getProperty(it.name())
                     ConfigEntry(it.name(), zkValue)
                 } else {
                     it
@@ -242,7 +244,7 @@ class ClusterOps(
             }
             .associate { it.name() to it.toTopicConfigValue() }
             .let { existingConfigs ->
-                val dynamicConfigs = DynamicConfig.`Broker$`.`MODULE$`.names().associateWith {
+                val dynamicConfigs = DynamicConfig.Broker.names().associateWith {
                     ConfigValue(
                         null,
                         default = true,
@@ -258,9 +260,9 @@ class ClusterOps(
 
     private fun ExistingConfig.extractThrottleRate(): ThrottleRate {
         return ThrottleRate(
-            leaderRate = get(QuotaConfigs.LEADER_REPLICATION_THROTTLED_RATE_CONFIG)?.value?.toLongOrNull(),
-            followerRate = get(QuotaConfigs.FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG)?.value?.toLongOrNull(),
-            alterDirIoRate = get(QuotaConfigs.REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG)?.value?.toLongOrNull(),
+            leaderRate = get(LEADER_REPLICATION_THROTTLED_RATE_CONFIG)?.value?.toLongOrNull(),
+            followerRate = get(FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG)?.value?.toLongOrNull(),
+            alterDirIoRate = get(REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG)?.value?.toLongOrNull(),
         )
     }
 
@@ -292,7 +294,6 @@ class ClusterOps(
             name = name,
             isClusterAction = clusterAction,
             isForwardable = forwardable,
-            minRequiredInterBrokerMagic = minRequiredInterBrokerMagic.toInt(),
             requiresDelayedAllocation = requiresDelayedAllocation,
         )
         val supported = allSupportedApiVersions().map { (apiKey, versions) ->
@@ -333,7 +334,7 @@ class ClusterOps(
             )
         }
         return ClusterApiKeys(
-            zkMigrationEnabled = this.zkMigrationEnabled(),
+            zkMigrationEnabled = false, //TODO this.zkMigrationEnabled(),
             apiKeys = (supported + unknown + unsupported).sortedBy { it.id },
         )
     }

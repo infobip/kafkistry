@@ -2,7 +2,7 @@ package com.infobip.kafkistry.slack
 
 import com.infobip.kafkistry.webapp.url.AppUrl
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.web.context.WebServerInitializedEvent
+import org.springframework.boot.web.server.context.WebServerInitializedEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.stereotype.Component
 

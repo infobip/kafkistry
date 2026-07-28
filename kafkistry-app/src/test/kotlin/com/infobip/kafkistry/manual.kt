@@ -1,9 +1,9 @@
 package com.infobip.kafkistry
 
-import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_BROKER_ID
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_COMBINED_ID
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_CONTROLLER_ID
+import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
@@ -21,7 +21,7 @@ import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole
 import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
 import jakarta.servlet.http.HttpServletRequest
-import kafka.security.authorizer.AclAuthorizer
+import com.infobip.kafkistry.shaded.kafka.security.authorizer.AclAuthorizer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -30,6 +30,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.config.TopicConfig
 import org.apache.kafka.common.header.internals.RecordHeader
 import org.apache.kafka.common.header.internals.RecordHeaders
+import org.apache.kafka.common.security.auth.SecurityProtocol
 import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
@@ -49,7 +50,7 @@ import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.core.env.get
 import org.springframework.kafka.test.EmbeddedKafkaBroker
-import org.springframework.kafka.test.EmbeddedKafkaZKBroker
+//import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 import org.springframework.stereotype.Component
 import java.io.File
 import java.net.Inet4Address
@@ -134,41 +135,37 @@ class DataStateInitializer(
     private val kraft = true
 
     private val kafka: EmbeddedKafkaBroker = if (kraft) {
-        EmbeddedKafkaKraftCustomBroker(2, 4, 1).apply {
-            brokerProperty("log.retention.bytes", "123456789")
-            brokerProperty("log.segment.bytes", "12345678")
-            brokerProperty("authorizer.class.name", StandardAuthorizer::class.java.name)
-            brokerProperty("super.users", "User:ANONYMOUS")
-            val brokerRack = mapOf(
-                START_BROKER_ID to "rck-A",
-                START_BROKER_ID + 1 to "rck-A",
-                START_BROKER_ID + 2 to "rck-B",
-                START_BROKER_ID + 3 to "rck-B",
-                START_COMBINED_ID to "rck-C",
-                START_COMBINED_ID + 1 to "rck-C",
-                START_CONTROLLER_ID to "rck-X",
-            )
-            brokerPropertyOverride { brokerId ->
-                brokerRack[brokerId]?.let { mapOf("broker.rack" to it) }.orEmpty()
-            }
+        KafkaKRaftEmbeddedCluster(
+            combinedBrokerControllers = 2, justBrokers = 4, justControllers = 1
+        ).apply {
+            allBrokersProperty("log.retention.bytes", "123456789")
+            allBrokersProperty("log.segment.bytes", "12345678")
+            allBrokersProperty("authorizer.class.name", StandardAuthorizer::class.java.name)
+            allBrokersProperty("super.users", "User:ANONYMOUS")
+            brokerProperty(START_BROKER_ID, "broker.rack", "rck-A")
+            brokerProperty(START_BROKER_ID + 1, "broker.rack", "rck-A")
+            brokerProperty(START_BROKER_ID + 2, "broker.rack", "rck-B")
+            brokerProperty(START_BROKER_ID + 3, "broker.rack", "rck-B")
+            brokerProperty(START_COMBINED_ID, "broker.rack", "rck-C")
+            brokerProperty(START_COMBINED_ID + 1, "broker.rack", "rck-C")
+            brokerProperty(START_CONTROLLER_ID, "broker.rack", "rck-X")
         }
     } else {
-        EmbeddedKafkaZKBroker(6).apply {
-            brokerProperty("log.retention.bytes", "123456789")
-            brokerProperty("log.segment.bytes", "12345678")
-            brokerProperty("authorizer.class.name", AclAuthorizer::class.java.name)
-            brokerProperty("super.users", "User:ANONYMOUS")
-        }
+        TODO()
+//        EmbeddedKafkaZKBroker(6).apply {
+//            brokerProperty("log.retention.bytes", "123456789")
+//            brokerProperty("log.segment.bytes", "12345678")
+//            brokerProperty("authorizer.class.name", AclAuthorizer::class.java.name)
+//            brokerProperty("super.users", "User:ANONYMOUS")
+//        }
     }.apply {
         log.info("EmbeddedKafka starting...")
-        afterPropertiesSet()
-        log.info("EmbeddedKafka started: {}", brokersAsString)
-        if (this is EmbeddedKafkaKraftCustomBroker) {
-            StaticMockedControllerConnectionResolver.kraftControllers.set(controllersAsString())
-            StaticMockedControllerConnectionResolver.forQuorumControllers.set(
-                "${START_CONTROLLER_ID}@0.0.0.0:0,${START_COMBINED_ID}@0.0.0.0:0,${START_COMBINED_ID + 1}@0.0.0.0:0"
-            )
-        }
+        start()
+        log.info("EmbeddedKafka started: {}", embeddedKafka.brokersAsString)
+        StaticMockedControllerConnectionResolver.kraftControllers.set(embeddedKafka.controllersAsString())
+        StaticMockedControllerConnectionResolver.forQuorumControllers.set(
+            "${START_CONTROLLER_ID}@0.0.0.0:0,${START_COMBINED_ID}@0.0.0.0:0,${START_COMBINED_ID + 1}@0.0.0.0:0"
+        )
     }
 
     private fun <T> doRetrying(retries: Int = 5, operation: () -> T): T? {
@@ -268,7 +265,7 @@ class DataStateInitializer(
         }
     }
 
-    override fun run(args: ApplicationArguments?) {
+    override fun run(args: ApplicationArguments) {
         api = ctx.createAdminApiClient()
         val serverPort = ctx.localServerPort()
         val rootPath = ctx.httpRootPath()

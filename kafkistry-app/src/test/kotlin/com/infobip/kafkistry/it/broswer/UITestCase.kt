@@ -116,7 +116,39 @@ abstract class UITestCase(
         }
     }
 
-    private fun generateXPATH(childElement: WebElement, current: String = ""): String? {
+    fun WebElement.selectByValue(vararg values: String) = selectByValues(values.toList())
+
+    fun WebElement.selectByVisibleText(vararg texts: String) = selectByValues(
+            texts.map { text ->
+                findElements(By.tagName("option")).firstOrNull { it.text == text }
+                        ?.getAttribute("value")
+                        ?: throw IllegalArgumentException("Can't find select option with visible text: '$text'")
+            }
+    )
+
+    private fun WebElement.selectByValues(values: List<String>) {
+        val js = browser as JavascriptExecutor
+        js.executeScript(
+                """
+                const select = arguments[0];
+                const values = arguments[1];
+                const ${'$'}select = window.jQuery ? window.jQuery(select) : null;
+                if (${'$'}select && ${'$'}select.data('selectpicker')) {
+                    ${'$'}select.selectpicker('val', values.length === 1 ? values[0] : values);
+                    ${'$'}select.selectpicker('refresh');
+                } else {
+                    Array.from(select.options).forEach(option => {
+                        option.selected = values.includes(option.value);
+                    });
+                }
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                """.trimIndent(),
+                this,
+                values,
+        )
+    }
+
+    private fun generateXPATH(childElement: WebElement, current: String = ""): String {
         val childTag = childElement.tagName
         if (childTag == "html") {
             return "/html[1]$current"
@@ -134,7 +166,7 @@ abstract class UITestCase(
                 return generateXPATH(parentElement, "/$childTag[$count]$current")
             }
         }
-        return null
+        throw IllegalStateException("Could not find child element with tag: $childTag")
     }
 
     fun addKafkaClusterToRegistry() {

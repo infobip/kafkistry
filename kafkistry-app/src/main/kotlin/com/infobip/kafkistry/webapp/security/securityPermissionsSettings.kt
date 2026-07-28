@@ -16,7 +16,7 @@ import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.stereotype.Component
 
@@ -27,8 +27,9 @@ class StaticResourcesAuthorizationConfigurer(
 ) : AbstractRequestAuthorizationPermissionsConfigurer() {
 
     override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
-        antMatchers(
+        pathMatchers(
             "$rootPath/login",
+            "$rootPath/error",
             "$rootPath/static/**",
             "$rootPath${metricsProperties.httpPath}",
             "$rootPath/api/static/**"
@@ -41,9 +42,9 @@ class StaticResourcesAuthorizationConfigurer(
 class ApiGetResourcesAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
     override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
-        antMatchers(HttpMethod.GET, "$rootPath/api/clusters/**").hasAuthority(VIEW_DATA)
-        antMatchers(HttpMethod.GET, "$rootPath/api/topics/**").hasAuthority(VIEW_DATA)
-        antMatchers(HttpMethod.GET, "$rootPath/api/acls/**").hasAuthority(VIEW_DATA)
+        pathMatchers(HttpMethod.GET, "$rootPath/api/clusters/**").hasAuthority(VIEW_DATA)
+        pathMatchers(HttpMethod.GET, "$rootPath/api/topics/**").hasAuthority(VIEW_DATA)
+        pathMatchers(HttpMethod.GET, "$rootPath/api/acls/**").hasAuthority(VIEW_DATA)
     }
 }
 
@@ -67,13 +68,13 @@ class ApiNonGetResourcesAuthorizationConfigurer : AbstractRequestAuthorizationPe
 class ApiAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
     override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
-        antMatchers("$rootPath/api/inspect/**").hasAuthority(VIEW_DATA)
-        antMatchers("$rootPath/api/management/**").hasAuthority(MANAGE_KAFKA)
-        antMatchers("$rootPath/api/acls-management/**").hasAuthority(MANAGE_KAFKA)
-        antMatchers("$rootPath/api/quotas-management/**").hasAuthority(MANAGE_KAFKA)
-        antMatchers("$rootPath/api/clusters-management/**").hasAuthority(MANAGE_KAFKA)
-        antMatchers("$rootPath/api/consume/**").hasAuthority(READ_TOPIC)
-        antMatchers("$rootPath/consume/**").hasAuthority(READ_TOPIC)
+        pathMatchers("$rootPath/api/inspect/**").hasAuthority(VIEW_DATA)
+        pathMatchers("$rootPath/api/management/**").hasAuthority(MANAGE_KAFKA)
+        pathMatchers("$rootPath/api/acls-management/**").hasAuthority(MANAGE_KAFKA)
+        pathMatchers("$rootPath/api/quotas-management/**").hasAuthority(MANAGE_KAFKA)
+        pathMatchers("$rootPath/api/clusters-management/**").hasAuthority(MANAGE_KAFKA)
+        pathMatchers("$rootPath/api/consume/**").hasAuthority(READ_TOPIC)
+        pathMatchers("$rootPath/consume/**").hasAuthority(READ_TOPIC)
     }
 }
 
@@ -86,7 +87,7 @@ class ClickhouseSQLNoSessionAuthorizationConfigurer(
     private val enabled = sqlProperties.clickHouse.openSecurity
 
     private val matcher: RequestMatcher by lazy {
-        AntPathRequestMatcher("$rootPath/api/sql/click-house")
+        PathPatternRequestMatcher.pathPattern("$rootPath/api/sql/click-house")
     }
 
     override fun matches(request: HttpServletRequest) = enabled && matcher.matches(request)
@@ -103,8 +104,8 @@ class ClickhouseSQLNoSessionAuthorizationConfigurer(
 class UserSessionsAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
     override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
-        antMatchers("$rootPath/api/web-sessions/**").hasRole(UserRole.ADMIN.name)
-        antMatchers("$rootPath/about/users-sessions").hasRole(UserRole.ADMIN.name)
+        pathMatchers("$rootPath/api/web-sessions/**").hasRole(UserRole.ADMIN.name)
+        pathMatchers("$rootPath/about/users-sessions").hasRole(UserRole.ADMIN.name)
     }
 }
 
@@ -113,7 +114,7 @@ class UserSessionsAuthorizationConfigurer : AbstractRequestAuthorizationPermissi
 class EnvironmentDisplayAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
     override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
-        antMatchers("$rootPath/api/environment-properties/**").hasRole(UserRole.ADMIN.name)
-        antMatchers("$rootPath/about/environment").hasRole(UserRole.ADMIN.name)
+        pathMatchers("$rootPath/api/environment-properties/**").hasRole(UserRole.ADMIN.name)
+        pathMatchers("$rootPath/about/environment").hasRole(UserRole.ADMIN.name)
     }
 }

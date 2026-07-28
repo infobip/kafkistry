@@ -1,12 +1,13 @@
 package com.infobip.kafkistry.it.cluster_ops.testsupport
 
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker
+import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
 import com.infobip.kafkistry.kafka.NodeId
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
-import org.springframework.kafka.test.EmbeddedKafkaZKBroker
+import com.infobip.kafkistry.shaded.org.springframework.kafka.test.EmbeddedKafkaZKBroker as LegacyEmbeddedKafkaZKBroker
 
 interface KafkaClusterLifecycle<T> {
     val kafkaCluster: T
@@ -31,7 +32,7 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
 
     override fun supportsNodeStartStop(): Boolean {
         return kafkaCluster is EmbeddedKafkaKraftCustomBroker ||
-            kafkaCluster is EmbeddedKafkaZKBroker ||
+            //kafkaCluster is EmbeddedKafkaZKBroker ||
             kafkaCluster is EmbeddedKafkaKraftBroker
     }
 
@@ -43,12 +44,8 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
             }
 
             is EmbeddedKafkaKraftBroker -> {
-                kafkaCluster.cluster.brokers()[id]?.startup()
-                kafkaCluster.cluster.controllers()[id]?.startup()
-            }
-
-            is EmbeddedKafkaZKBroker -> {
-                kafkaCluster.getKafkaServer(id).startup()
+                kafkaCluster.cluster?.brokers()[id]?.startup()
+                kafkaCluster.cluster?.controllers()[id]?.startup()
             }
 
             else -> {
@@ -65,18 +62,11 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
             }
 
             is EmbeddedKafkaKraftBroker -> {
-                kafkaCluster.cluster.brokers()[id]?.run {
+                kafkaCluster.cluster?.brokers()[id]?.run {
                     shutdown()
                     awaitShutdown()
                 }
-                kafkaCluster.cluster.controllers()[id]?.run {
-                    shutdown()
-                    awaitShutdown()
-                }
-            }
-
-            is EmbeddedKafkaZKBroker -> {
-                kafkaCluster.getKafkaServer(id).run {
+                kafkaCluster.cluster?.controllers()[id]?.run {
                     shutdown()
                     awaitShutdown()
                 }
@@ -89,9 +79,38 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
     }
 }
 
+class LegacyEmbeddedKafkaZKClusterLifecycle(
+    override val kafkaCluster: LegacyEmbeddedKafkaZKBroker,
+): KafkaClusterLifecycle<LegacyEmbeddedKafkaZKBroker> {
+
+    override fun start() = kafkaCluster.afterPropertiesSet()
+    override fun stop() = kafkaCluster.destroy()
+    override fun supportsNodeStartStop(): Boolean = true
+
+    override fun startNode(id: NodeId) {
+        kafkaCluster.getKafkaServer(id).startup()
+    }
+
+    override fun stopNode(id: NodeId) {
+        kafkaCluster.getKafkaServer(id).run {
+            shutdown()
+            awaitShutdown()
+        }
+    }
+}
+
+
+
 class TestContainerKafkaClusterLifecycle(
     override val kafkaCluster: KafkaClusterContainer
 ) : KafkaClusterLifecycle<KafkaClusterContainer> {
+    override fun start() = kafkaCluster.start()
+    override fun stop() = kafkaCluster.stop()
+}
+
+class EmbeddedCombinedKraftKafkaClusterLifecycle(
+    override val kafkaCluster: KafkaKRaftEmbeddedCluster,
+): KafkaClusterLifecycle<KafkaKRaftEmbeddedCluster> {
     override fun start() = kafkaCluster.start()
     override fun stop() = kafkaCluster.stop()
 }
@@ -132,5 +151,11 @@ fun <T : EmbeddedKafkaBroker> T.asTestKafkaLifecycle() = LoggingKafkaClusterLife
 )
 fun KafkaClusterContainer.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
     TestContainerKafkaClusterLifecycle(this)
+)
+fun KafkaKRaftEmbeddedCluster.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
+    EmbeddedCombinedKraftKafkaClusterLifecycle(this)
+)
+fun LegacyEmbeddedKafkaZKBroker.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
+    LegacyEmbeddedKafkaZKClusterLifecycle(this)
 )
 

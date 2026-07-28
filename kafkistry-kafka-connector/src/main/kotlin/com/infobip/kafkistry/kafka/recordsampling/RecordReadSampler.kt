@@ -10,6 +10,7 @@ import com.infobip.kafkistry.kafka.RecordVisitor
 import com.infobip.kafkistry.kafka.SamplingPosition
 import com.infobip.kafkistry.kafka.SamplingStats
 import com.infobip.kafkistry.model.TopicName
+import org.apache.kafka.clients.consumer.CloseOptions
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
@@ -29,7 +30,7 @@ class RecordReadSampler(
     private val initialTimeout = Duration.ofMillis(properties.initialPoolTimeoutMs)
     private val poolTimeout = Duration.ofMillis(properties.poolTimeoutMs)
 
-    override fun close() = consumer.close(initialTimeout)
+    override fun close() = consumer.close(CloseOptions.timeout(initialTimeout))
 
     fun test() = Unit
 

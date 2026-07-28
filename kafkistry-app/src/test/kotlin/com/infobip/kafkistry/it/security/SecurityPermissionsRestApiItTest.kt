@@ -2,6 +2,7 @@ package com.infobip.kafkistry.it.security
 
 import com.infobip.kafkistry.Kafkistry
 import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.parseAcl
 import com.infobip.kafkistry.model.*
@@ -19,6 +20,7 @@ import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.security.auth.SecurityProtocol
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -28,7 +30,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpStatus
-import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.web.client.RestClientResponseException
@@ -61,16 +62,18 @@ class SecurityPermissionsRestApiItTest {
 
     companion object {
 
-        private val kafka = EmbeddedKafkaKraftBroker(3, 2, "consumers-topic")
+        private val kafka = KafkaKRaftEmbeddedCluster(count = 3, partitions = 2, topics = listOf("consumers-topic"))
         private var clusterInitialized = false
 
         @BeforeAll
         @JvmStatic
-        fun startKafka() = kafka.afterPropertiesSet()
+        fun startKafka(){
+            kafka.start()
+        }
 
         @AfterAll
         @JvmStatic
-        fun stopKafka() = kafka.destroy()
+        fun stopKafka() = kafka.stop()
     }
 
     class MockSecurityConfig {
@@ -103,7 +106,7 @@ class SecurityPermissionsRestApiItTest {
             //this initialization needs to run only once after context is started
             //but junit tests create new instance of "this" class for each test
             clusterInitialized = true
-            val clusterInfo = apiAdmin.testClusterConnection(kafka.brokersAsString)
+            val clusterInfo = apiAdmin.testClusterConnection(kafka.embeddedKafka.brokersAsString)
             val cluster = clusterInfo.toKafkaCluster().copy(identifier = "test-cluster")
             apiAdmin.addCluster(cluster)
             apiAdmin.refreshClusters()
@@ -112,7 +115,7 @@ class SecurityPermissionsRestApiItTest {
             aclsRegistry.create(principalAcls("owner-empty", "consumer-empty"), UpdateContext("test"))
             aclsRegistry.create(principalAcls("owner-unauthenticated", "consumer-unauthenticated"), UpdateContext("test"))
             AdminClient.create(mapOf(
-                AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.brokersAsString
+                AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG to kafka.embeddedKafka.brokersAsString
             )).use {
                 val offsets = mapOf(TopicPartition("consumers-topic", 0) to OffsetAndMetadata(10L))
                 val adminFuture = it.alterConsumerGroupOffsets("consumer-admin", offsets).all()

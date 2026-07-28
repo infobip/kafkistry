@@ -23,23 +23,27 @@ class KafkaClusterContainer private constructor(
         val log: Logger = LoggerFactory.getLogger(KafkaClusterContainer::class.java)
     }
 
+    enum class ConsensusType {
+        ZOOKEEPER, KRAFT
+    }
+
     constructor(
         kafkaImage: String,
         zkImage: String = "zookeeper:3.8.3",
         clusterSize: Int = 3,
         customBrokersConfig: Map<String, String> = emptyMap(),
         startupTimeout: Duration = Duration.ofSeconds(40),
-        kraft: Boolean = false,
+        consensus: ConsensusType = ConsensusType.KRAFT,
         logContainersOutput: Boolean = false,
     ) : this(
-        createBrokersConfigs(kraft, kafkaImage, zkImage, customBrokersConfig, clusterSize),
+        createBrokersConfigs(consensus, kafkaImage, zkImage, customBrokersConfig, clusterSize),
         startupTimeout,
         logContainersOutput,
     )
 
     init {
         val startupWait = Wait.forListeningPort().withStartupTimeout(startupTimeout)
-        if (!brokersConfigs.kraft) {
+        if (brokersConfigs.isZookeeper()) {
             withExposedService("zookeeper", brokersConfigs.zkHostPort.port, startupWait)
             if (logContainersOutput) {
                 withLogConsumer("zookeeper") {
@@ -48,10 +52,13 @@ class KafkaClusterContainer private constructor(
             }
         }
         //withLocalCompose(false)
+        val localComposeField = ComposeContainer::class.java.getDeclaredField("localCompose");
+        localComposeField.setAccessible(true);
+        localComposeField.setBoolean(this, false)
         brokersConfigs.hostsPorts.forEachIndexed { index, hostPort ->
             val serviceName = "kafka_${index}-1"
             withExposedService(serviceName, hostPort.port, startupWait)
-            if (brokersConfigs.kraft) {
+            if (brokersConfigs.isKRaft()) {
                 withExposedService(serviceName, brokersConfigs.controllerHostsPorts[index].port, startupWait)
             }
             if (logContainersOutput) {
@@ -85,7 +92,7 @@ private fun createDockerComposeFileContent(configs: BrokersConfigs) = """
 version: '2'
 services:
 """ +
-    (if (configs.kraft) "" else createZKFileContent(configs.zkImage, configs.zkHostPort)) +
+    (if (configs.isKRaft()) "" else createZKFileContent(configs.zkImage, configs.zkHostPort)) +
     configs.hostsPorts.indices.joinToString("\n") { brokerIndex ->
         createBrokerFileContent(brokerIndex, configs)
     }
@@ -115,7 +122,7 @@ private fun createBrokerFileContent(
     ports:
       - "${hostPort.port}:${hostPort.port}"   # kafka port
 """ +
-    (if (brokersConfigs.kraft) """
+    (if (brokersConfigs.isKRaft()) """
       - "${controllerHostPort.port}:${controllerHostPort.port}"   # controller port 
     """ else """
     depends_on:
@@ -125,12 +132,12 @@ private fun createBrokerFileContent(
     extra_hosts:
       - "${hostPort.host}:${hostPort.ip}"
     environment:
-      - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9094,OUTSIDE://${hostPort.host}:${hostPort.port}${if(brokersConfigs.kraft) ",CONTROLLER://${controllerHostPort.host}:${controllerHostPort.port}" else ""}
+      - KAFKA_ADVERTISED_LISTENERS=INSIDE://:9094,OUTSIDE://${hostPort.host}:${hostPort.port}${if(brokersConfigs.isKRaft()) ",CONTROLLER://${controllerHostPort.host}:${controllerHostPort.port}" else ""}
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT,CONTROLLER:PLAINTEXT
       - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
       - ALLOW_PLAINTEXT_LISTENER=true
 ${brokersConfigs.toYamlEnvironment()}
-""" + if (brokersConfigs.kraft)
+""" + if (brokersConfigs.isKRaft())
     """
       - KAFKA_LISTENERS=INSIDE://:9094,OUTSIDE://:${hostPort.port},CONTROLLER://:${controllerHostPort.port}
       - KAFKA_KRAFT_CLUSTER_ID=${Uuid(123456L, 123456L)}
@@ -148,14 +155,14 @@ else
     """
 
 private fun createBrokersConfigs(
-    kraft: Boolean,
+    consensus: KafkaClusterContainer.ConsensusType,
     kafkaImage: String,
     zkImage: String,
     customConfig: Map<String, String>,
     numHosts: Int
 ): BrokersConfigs {
     return BrokersConfigs(
-        kraft = kraft,
+        consensus = consensus,
         kafkaImage = kafkaImage,
         zkImage = zkImage,
         zkHostPort = HostPort.newLocalAvailable(),
@@ -166,7 +173,7 @@ private fun createBrokersConfigs(
 }
 
 class BrokersConfigs(
-    val kraft: Boolean,
+    val consensus: KafkaClusterContainer.ConsensusType,
     val kafkaImage: String,
     val zkImage: String,
     val zkHostPort: HostPort,
@@ -181,6 +188,9 @@ class BrokersConfigs(
         .mapKeys { "      - KAFKA_${it.key}" }
         .map { "${it.key}=${it.value}" }
         .joinToString("\n")
+
+    fun isKRaft() = consensus == KafkaClusterContainer.ConsensusType.KRAFT
+    fun isZookeeper() = consensus == KafkaClusterContainer.ConsensusType.ZOOKEEPER
 
 }
 

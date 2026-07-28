@@ -103,7 +103,6 @@ class ClustersDataSource(
                                 clusterAction = apiKey.metadata?.isClusterAction
                                 forwardable = apiKey.metadata?.isForwardable
                                 requiresDelayedAllocation = apiKey.metadata?.requiresDelayedAllocation
-                                minRequiredInterBrokerMagic = apiKey.metadata?.minRequiredInterBrokerMagic
                                 minVersion = apiKey.minVersion
                                 maxVersion = apiKey.maxVersion
                                 latestUsableVersion = apiKey.latestUsableVersion
@@ -337,7 +336,6 @@ class ClusterNodeApiKeyInfo {
     var clusterAction: Boolean? = null
     var forwardable: Boolean? = null
     var requiresDelayedAllocation: Boolean? = null
-    var minRequiredInterBrokerMagic: Int? = null
 
     var minVersion: Int? = null
     var maxVersion: Int? = null

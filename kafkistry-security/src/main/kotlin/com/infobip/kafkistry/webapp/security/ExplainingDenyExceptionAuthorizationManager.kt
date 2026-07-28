@@ -15,9 +15,9 @@ class ExplainingDenyExceptionAuthorizationManager(
 ) : AuthorizationManager<HttpServletRequest> {
 
     override fun authorize(
-        authentication: Supplier<Authentication?>,
+        authentication: Supplier<out Authentication?>,
         `object`: HttpServletRequest,
-    ): AuthorizationDecision? {
+    ): AuthorizationResult? {
         val decision: AuthorizationResult = delegate.authorize(authentication, `object`)
             ?: return null
         if (!decision.isGranted) {
@@ -41,7 +41,7 @@ class ExplainingDenyExceptionAuthorizationManager(
                 add("User: unauthenticated/anonymous")
             }
             add("Access request: ${request.method} ${request.requestURI}")
-            add("Cause: " + cause(decision, user?.authorities?.toList().orEmpty().map { it.authority }))
+            add("Cause: " + cause(decision, user?.authorities?.toList().orEmpty().mapNotNull { it.authority }))
             if (!helpMessage.isNullOrBlank()) {
                 add("")
                 add(helpMessage)
@@ -58,9 +58,4 @@ class ExplainingDenyExceptionAuthorizationManager(
         }
     }
 
-    @Deprecated("Deprecated in Java", ReplaceWith("authorize(authentication, `object`)"))
-    override fun check(
-        authentication: Supplier<Authentication?>,
-        `object`: HttpServletRequest,
-    ): AuthorizationDecision? = authorize(authentication, `object`)
 }

@@ -52,7 +52,7 @@ class EventPublishingAutopilotReporter(
 @Component
 @ConditionalOnProperty("app.autopilot.enabled", matchIfMissing = true)
 class ActionOutcomeEventListener(
-    @Lazy private val actionsRepository: ActionsRepository,
+    @param:Lazy private val actionsRepository: ActionsRepository,
 ) : EventListener<AutopilotActionOutcomeEvent> {
 
     override val log: Logger = LoggerFactory.getLogger(ActionOutcomeEventListener::class.java)

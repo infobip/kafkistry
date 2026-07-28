@@ -34,8 +34,8 @@
 
     <parent>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.4.4</version>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
         <relativePath />
     </parent>
 
@@ -69,7 +69,7 @@
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <kotlin.version>2.1.20</kotlin.version>
+        <kotlin.version>2.3.21</kotlin.version>
         <kotlin.jvm.target>21</kotlin.jvm.target>
         <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
 
@@ -96,14 +96,13 @@
         <maven-central.skip-publish>true</maven-central.skip-publish>
 
         <!-- DEPENDENCIES -->
-        <kafka.version>3.9.0</kafka.version>
+        <kafka.version>4.3.1</kafka.version>
         <org.eclipse.jgit.version>6.10.0.202406032230-r</org.eclipse.jgit.version>
         <sshd-git.version>2.13.2</sshd-git.version> <!-- Apache MINA -->
         <jsoup.version>1.15.4</jsoup.version>
         <jslack-api-client.version>3.4.2</jslack-api-client.version>
         <zookeeper.version>3.8.3</zookeeper.version>
         <hibernate-validator.version>8.0.0.Final</hibernate-validator.version>
-        <hibernate-orm.version>6.1.5.Final</hibernate-orm.version>
         <commons-pool2.version>2.8.0</commons-pool2.version>
         <guava.version>32.0.0-jre</guava.version>
         <commons-io.version>2.16.1</commons-io.version>
@@ -114,7 +113,8 @@
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
         <spring-ai.version>2.0.0-M2</spring-ai.version>
         <graalvm.version>23.0.4</graalvm.version>
-
+        <jackson-module-kotlin-3.version>3.1.5</jackson-module-kotlin-3.version>
+        <spring-session-hazelcast.version>3.4.2</spring-session-hazelcast.version>
     </properties>
 
 
@@ -137,6 +137,38 @@
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
                 <!-- override synk vulnerability in 2.11.0: CWE-300 | CVE-2024-47553 | CVSS 6.9 | SNYK-JAVA-COMMONSIO-8161190 -->
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-test-common-runtime</artifactId>
+                <version>${kafka.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-group-coordinator-api</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-group-coordinator</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-metadata</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-transaction-coordinator</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-raft</artifactId>
+                <version>${kafka.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -183,7 +215,7 @@
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -261,6 +293,7 @@
                     <jvmTarget>${kotlin.jvm.target}</jvmTarget>
                     <args>
                         <arg>-Werror</arg>
+                        <arg>-Xannotation-default-target=param-property</arg>
                     </args>
                 </configuration>
                 <dependencies>
@@ -328,6 +361,9 @@
                 <groupId>org.jetbrains.dokka</groupId>
                 <artifactId>dokka-maven-plugin</artifactId>
                 <version>${dokka-maven-plugin.version}</version>
+                <configuration>
+                    <skip>${dokka.skip}</skip>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>

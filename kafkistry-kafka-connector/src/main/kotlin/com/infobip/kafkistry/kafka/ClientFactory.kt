@@ -10,6 +10,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer
 import com.infobip.kafkistry.kafka.config.KafkaManagementClientProperties
 import com.infobip.kafkistry.model.KafkaProfile
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSamplerFactory
+import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.AdminClient as LegacyAdminClient
 import org.springframework.stereotype.Component
 import java.util.*
 
@@ -26,6 +27,13 @@ class ClientFactory(
             configurer: (Properties) -> Unit = {}
     ): AdminClient {
         return AdminClient.create(createProperties(connectionDefinition, configurer))
+    }
+
+    fun createLegacyAdmin(
+        connectionDefinition: ConnectionDefinition,
+        configurer: (Properties) -> Unit = {}
+    ): LegacyAdminClient {
+        return LegacyAdminClient.create(createProperties(connectionDefinition, configurer))
     }
 
     fun createConsumer(

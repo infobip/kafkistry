@@ -18,9 +18,9 @@ class DescribedAuthorizationManager(
 ) : AuthorizationManager<RequestAuthorizationContext> {
 
     override fun authorize(
-        authentication: Supplier<Authentication?>,
+        authentication: Supplier<out Authentication?>,
         `object`: RequestAuthorizationContext,
-    ): AuthorizationDecision? {
+    ): AuthorizationResult? {
         val decision = delegate.authorize(authentication, `object`)
         return if (decision == null) {
             null
@@ -28,11 +28,5 @@ class DescribedAuthorizationManager(
             DescribedAuthorizationDecision(description, decision)
         }
     }
-
-    @Deprecated("Deprecated in Java", ReplaceWith("authorize(authentication, `object`)"))
-    override fun check(
-        authentication: Supplier<Authentication?>,
-        `object`: RequestAuthorizationContext,
-    ): AuthorizationDecision? = authorize(authentication, `object`)
 
 }

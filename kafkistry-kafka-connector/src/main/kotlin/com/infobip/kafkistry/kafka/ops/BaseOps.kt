@@ -5,10 +5,13 @@ import com.infobip.kafkistry.kafka.PartitionAssignments
 import com.infobip.kafkistry.kafka.ReplicaAssignment
 import com.infobip.kafkistry.kafka.Version
 import com.infobip.kafkistry.service.KafkaClusterManagementException
-import kafka.zk.AdminZkClient
-import kafka.zk.KafkaZkClient
+import com.infobip.kafkistry.shaded.kafka.zk.AdminZkClient
+import com.infobip.kafkistry.shaded.kafka.zk.KafkaZkClient
 import org.apache.kafka.clients.admin.AbstractOptions
 import org.apache.kafka.clients.admin.AdminClient
+import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.AbstractOptions as LegacyAbstractOptions
+import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.AdminClient as LegacyAdminClient
+import com.infobip.kafkistry.shaded.org.apache.kafka.common.KafkaFuture as LegacyKafkaFuture
 import org.apache.kafka.clients.admin.ConfigEntry
 import org.apache.kafka.common.KafkaFuture
 import org.apache.kafka.common.TopicPartitionInfo
@@ -30,6 +33,7 @@ abstract class BaseOps(
         val VERSION_2_4 = Version.of("2.4")
         val VERSION_2_6 = Version.of("2.6")
         val VERSION_3_0 = Version.of("3.0")
+        val VERSION_4_0 = Version.of("4.0")
     }
 
     data class ClientCtx(
@@ -39,23 +43,28 @@ abstract class BaseOps(
         val currentClusterVersionRef: AtomicReference<Version?>,
         val zkConnectionRef: AtomicReference<String?>,
         val zkClientLazy: Lazy<KafkaZkClient>,
+        val legacyAdminClientLazy: Lazy<LegacyAdminClient>,
         val controllerConnectionRef: AtomicReference<String?>,
         val controllerClientLazy: Lazy<AdminClient>,
     )
 
     protected val adminClient: AdminClient = ctx.adminClient
+    protected val legacyAdminClient: LegacyAdminClient by ctx.legacyAdminClientLazy
     protected val controllersAdminClient: AdminClient by ctx.controllerClientLazy
     protected val zkClient: KafkaZkClient by ctx.zkClientLazy
     protected val clusterVersion: Version get() = ctx.currentClusterVersionRef.get() ?: VERSION_0
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T> Any.cast(): T = this as T
-
     fun <T : AbstractOptions<T>> T.withReadTimeout(): T = also {
         timeoutMs(ctx.readRequestTimeoutMs.toInt())
     }
-
     fun <T : AbstractOptions<T>> T.withWriteTimeout(): T = also {
+        timeoutMs(ctx.writeRequestTimeoutMs.toInt())
+    }
+
+    fun <T : LegacyAbstractOptions<T>> T.withReadTimeout(): T = also {
+        timeoutMs(ctx.readRequestTimeoutMs.toInt())
+    }
+    fun <T : LegacyAbstractOptions<T>> T.withWriteTimeout(): T = also {
         timeoutMs(ctx.writeRequestTimeoutMs.toInt())
     }
 
@@ -63,6 +72,19 @@ abstract class BaseOps(
     fun writeTimeoutDuration(): Duration = Duration.ofMillis(ctx.writeRequestTimeoutMs)
 
     fun <T> KafkaFuture<T>.asCompletableFuture(ofWhat: String): CompletableFuture<T> {
+        return CompletableFuture<T>().also {
+            whenComplete { result, ex ->
+                when (ex) {
+                    null -> it.complete(result)
+                    else -> it.completeExceptionally(
+                        KafkaClusterManagementException("Execution exception for: $ofWhat", ex)
+                    )
+                }
+            }
+        }
+    }
+
+    fun <T> LegacyKafkaFuture<T>.asCompletableFutureLegacy(ofWhat: String): CompletableFuture<T> {
         return CompletableFuture<T>().also {
             whenComplete { result, ex ->
                 when (ex) {

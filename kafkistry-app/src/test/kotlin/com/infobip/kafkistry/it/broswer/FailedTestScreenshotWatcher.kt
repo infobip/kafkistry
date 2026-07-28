@@ -4,14 +4,14 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestWatcher
 import org.openqa.selenium.OutputType
 import org.slf4j.LoggerFactory
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils
+import org.apache.commons.io.FileUtils
 import java.io.File
 
 class FailedTestScreenshotWatcher : TestWatcher {
 
     private val log = LoggerFactory.getLogger(FailedTestScreenshotWatcher::class.java)
 
-    override fun testFailed(context: ExtensionContext, cause: Throwable) {
+    override fun testFailed(context: ExtensionContext, cause: Throwable?) {
         log.info("Test '{}' failed, going to take screenshot (failure cause: {})", context.displayName, cause.toString())
         try {
             val screenshotBytes = BrowserItTestSuite.browser.getScreenshotAs(OutputType.BYTES)

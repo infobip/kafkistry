@@ -28,7 +28,7 @@ import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils
+import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.function.Function

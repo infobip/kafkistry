@@ -449,7 +449,6 @@
                                         <th>Cluster action</th>
                                         <th>Forwardable</th>
                                         <th>Delayed allocation</th>
-                                        <th>Min broker magic</th>
                                         <th>Min version</th>
                                         <th>Max version</th>
                                         <th>Latest usable version / unusable reason</th>
@@ -482,7 +481,6 @@
                                                         <span class="badge bg-secondary">NOT REQUIRED</span>
                                                     </#if>
                                                 </td>
-                                                <td><code>${apiKey.metadata.minRequiredInterBrokerMagic}</code></td>
                                             <#else>
                                                 <td><span class="badge bg-warning">UNKNOWN</span></td>
                                                 <td colspan="4">---</td>

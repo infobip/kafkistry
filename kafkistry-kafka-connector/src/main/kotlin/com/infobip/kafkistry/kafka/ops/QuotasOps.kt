@@ -4,7 +4,7 @@ import com.infobip.kafkistry.kafka.ClientQuota
 import com.infobip.kafkistry.kafka.toJavaMap
 import com.infobip.kafkistry.model.QuotaEntity
 import com.infobip.kafkistry.model.QuotaProperties
-import kafka.zk.AdminZkClient
+import com.infobip.kafkistry.shaded.kafka.zk.AdminZkClient
 import org.apache.kafka.clients.admin.AlterClientQuotasOptions
 import org.apache.kafka.clients.admin.DescribeClientQuotasOptions
 import org.apache.kafka.common.quota.ClientQuotaAlteration
@@ -13,7 +13,10 @@ import org.apache.kafka.common.quota.ClientQuotaEntity
 import org.apache.kafka.common.quota.ClientQuotaFilter
 import org.apache.kafka.common.utils.Sanitizer
 import org.apache.kafka.server.config.ConfigType
-import org.apache.kafka.server.config.QuotaConfigs.*
+import org.apache.kafka.server.config.QuotaConfig.CONSUMER_BYTE_RATE_OVERRIDE_CONFIG
+import org.apache.kafka.server.config.QuotaConfig.PRODUCER_BYTE_RATE_OVERRIDE_CONFIG
+import org.apache.kafka.server.config.QuotaConfig.REQUEST_PERCENTAGE_OVERRIDE_CONFIG
+import org.apache.kafka.server.config.QuotaConfig.isClientOrUserQuotaConfig
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -53,12 +56,12 @@ class QuotasOps(
             else -> Sanitizer.desanitize(this)
         }
 
-        val userConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.USER).toJavaMap()
+        val userConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.USER.value()).toJavaMap()
             .mapKeys { QuotaEntity(user = it.key.deSanitize()) }
-        val clientConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.CLIENT).toJavaMap()
+        val clientConfig = adminZkClient.fetchAllEntityConfigs(ConfigType.CLIENT.value()).toJavaMap()
             .mapKeys { QuotaEntity(clientId = it.key.deSanitize()) }
         val userClientConfig = adminZkClient
-            .fetchAllChildEntityConfigs(ConfigType.USER, ConfigType.CLIENT).toJavaMap()
+            .fetchAllChildEntityConfigs(ConfigType.USER.value(), ConfigType.CLIENT.value()).toJavaMap()
             .mapKeys {
                 val (user, _, client) = it.key.split("/")
                 QuotaEntity(user = user.deSanitize(), clientId = client.deSanitize())
@@ -112,7 +115,7 @@ class QuotasOps(
             user == null && clientId != null -> clientId to ConfigType.CLIENT
             else -> throw IllegalArgumentException("Both user and clientId are null")
         }
-        val props = adminZkClient.fetchEntityConfig(configType, path)
+        val props = adminZkClient.fetchEntityConfig(configType.value(), path)
         alteration.ops().forEach { op ->
             when (op.value()) {
                 null -> props.remove(op.key())
@@ -127,7 +130,7 @@ class QuotasOps(
                 }
             }
         }
-        adminZkClient.changeConfigs(configType, path, props, false)
+        adminZkClient.changeConfigs(configType.value(), path, props, false)
     }
 
     private fun ClientQuotaEntity.toQuotaEntity(): QuotaEntity {

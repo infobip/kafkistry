@@ -7,7 +7,7 @@ import com.infobip.kafkistry.utils.deepToString
 
 internal val MCP_OM: ObjectMapper = ObjectMapper().apply {
     registerModule(KotlinModule.Builder().build())
-    setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
 }
 
 internal fun toMcpJson(value: Any?): String = MCP_OM.writeValueAsString(value)
