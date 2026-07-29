@@ -80,6 +80,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.13</artifactId>
+            <version>${legacy.kafka.version}</version>
+            <classifier>test</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>${legacy.kafka.version}</version>
         </dependency>
@@ -126,12 +132,12 @@
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
-            <version>3.3.4</version>
+            <version>${legacy-spring-kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
-            <version>3.3.4</version>
+            <version>${legacy-spring-kafka.version}</version>
 <!--            It should have been test scope, but could not achieve proper class visibility in connector module-->
 <!--            <scope>test</scope>-->
         </dependency>
@@ -191,6 +197,13 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- avoid auto registering stuff (kafka streams gets picked up by spring boot)-->
+                                        <exclude>org/springframework/kafka/annotation/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

@@ -1236,11 +1236,11 @@ abstract class ClusterOperationsTestSuite : AbstractClusterOpsTestSuite() {
             assertDefaultConfig(TopicConfig.CLEANUP_POLICY_CONFIG).isEqualTo("delete")
             assertDefaultConfig(TopicConfig.COMPRESSION_TYPE_CONFIG).isEqualTo("producer")
             assertDefaultConfig(TopicConfig.DELETE_RETENTION_MS_CONFIG).isEqualToStringOf(24 * 3600 * 1000L)
-            //if (this@ClusterOperationsTestSuite is ClusterOpsKafkaZkEmbeddedTest) {
-            //    assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
-            //} else {
+            if (this@ClusterOperationsTestSuite is ClusterOpsKafkaZkEmbeddedTest) {
+                assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(1000L)
+            } else {
                 assertDefaultConfig(TopicConfig.FILE_DELETE_DELAY_MS_CONFIG).isEqualToStringOf(60 * 1000L)
-            //}
+            }
             assertDefaultConfig(TopicConfig.FLUSH_MESSAGES_INTERVAL_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             assertDefaultConfig(TopicConfig.FLUSH_MS_CONFIG).isEqualToStringOf(Long.MAX_VALUE)
             assertDefaultConfig(TopicConfig.INDEX_INTERVAL_BYTES_CONFIG).isEqualToStringOf(4096)

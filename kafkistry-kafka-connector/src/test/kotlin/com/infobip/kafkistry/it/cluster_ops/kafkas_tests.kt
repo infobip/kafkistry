@@ -7,6 +7,7 @@ import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer.ConsensusType.KRAFT
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer.ConsensusType.ZOOKEEPER
 import com.infobip.kafkistry.it.cluster_ops.testsupport.KafkaClusterLifecycle
+import com.infobip.kafkistry.it.cluster_ops.testsupport.asEmbeddedKafkaBroker
 import com.infobip.kafkistry.it.cluster_ops.testsupport.asTestKafkaLifecycle
 import com.infobip.kafkistry.kafka.Version
 import com.infobip.kafkistry.utils.getFieldReflective
@@ -23,7 +24,7 @@ class ClusterOpsKafkaZkEmbeddedTest : ClusterNoAclOperationsTestSuite() {
         @JvmField
         val kafka = EmbeddedKafkaZKBroker(3).apply {
             brokerProperty("auto.leader.rebalance.enable", "false")
-        }.asTestKafkaLifecycle()
+        }.asEmbeddedKafkaBroker().asTestKafkaLifecycle()
     }
 
     override val clusterConnection: String get() = kafka.kafkaCluster.brokersAsString

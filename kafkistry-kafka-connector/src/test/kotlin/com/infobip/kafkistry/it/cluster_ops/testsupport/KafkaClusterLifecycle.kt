@@ -4,9 +4,12 @@ import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroke
 import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
 import com.infobip.kafkistry.kafka.NodeId
+import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.consumer.Consumer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
+import java.lang.Exception
 import com.infobip.kafkistry.shaded.org.springframework.kafka.test.EmbeddedKafkaZKBroker as LegacyEmbeddedKafkaZKBroker
 
 interface KafkaClusterLifecycle<T> {
@@ -79,27 +82,6 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
     }
 }
 
-class LegacyEmbeddedKafkaZKClusterLifecycle(
-    override val kafkaCluster: LegacyEmbeddedKafkaZKBroker,
-): KafkaClusterLifecycle<LegacyEmbeddedKafkaZKBroker> {
-
-    override fun start() = kafkaCluster.afterPropertiesSet()
-    override fun stop() = kafkaCluster.destroy()
-    override fun supportsNodeStartStop(): Boolean = true
-
-    override fun startNode(id: NodeId) {
-        kafkaCluster.getKafkaServer(id).startup()
-    }
-
-    override fun stopNode(id: NodeId) {
-        kafkaCluster.getKafkaServer(id).run {
-            shutdown()
-            awaitShutdown()
-        }
-    }
-}
-
-
 
 class TestContainerKafkaClusterLifecycle(
     override val kafkaCluster: KafkaClusterContainer
@@ -156,6 +138,41 @@ fun KafkaKRaftEmbeddedCluster.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCy
     EmbeddedCombinedKraftKafkaClusterLifecycle(this)
 )
 fun LegacyEmbeddedKafkaZKBroker.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
-    LegacyEmbeddedKafkaZKClusterLifecycle(this)
+    this.asEmbeddedKafkaBroker().asTestKafkaLifecycle()
 )
+
+fun LegacyEmbeddedKafkaZKBroker.asEmbeddedKafkaBroker(): EmbeddedKafkaBroker = object : EmbeddedKafkaBroker {
+    override fun kafkaPorts(vararg ports: Int): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.kafkaPorts(*ports)
+    }
+
+    override fun getTopics(): Set<String> = this@asEmbeddedKafkaBroker.topics
+
+    override fun brokerProperties(properties: Map<String, String>): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.brokerProperties(properties)
+    }
+
+    override fun brokerListProperty(brokerListProperty: String): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.brokerListProperty(brokerListProperty)
+    }
+
+    override fun adminTimeout(adminTimeout: Int): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.adminTimeout(adminTimeout)
+    }
+
+    override fun getBrokersAsString(): String = this@asEmbeddedKafkaBroker.brokersAsString
+
+    override fun addTopics(vararg topicsToAdd: String) = error("Unsupported for legacy ZK cluster")
+    override fun addTopics(vararg topicsToAdd: NewTopic) = error("Unsupported for legacy ZK cluster")
+    override fun addTopicsWithResults(vararg topicsToAdd: NewTopic): Map<String, Exception> = error("Unsupported for legacy ZK cluster")
+    override fun addTopicsWithResults(vararg topicsToAdd: String): Map<String, Exception> = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>, seekToEnd: Boolean, vararg topicsToConsume: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>, vararg topicsToConsume: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAnEmbeddedTopic(consumer: Consumer<*, *>, seekToEnd: Boolean, topic: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAnEmbeddedTopic(consumer: Consumer<*, *>, topic: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAllEmbeddedTopics(consumer: Consumer<*, *>, seekToEnd: Boolean) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAllEmbeddedTopics(consumer: Consumer<*, *>) = error("Unsupported for legacy ZK cluster")
+    override fun getPartitionsPerTopic(): Int = this@asEmbeddedKafkaBroker.partitionsPerTopic
+
+}
 
