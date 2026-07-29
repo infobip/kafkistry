@@ -54,6 +54,7 @@ class ConsumerGroupOps(
             .exceptionally { ex: Throwable ->
                 if (ex is KafkaClusterManagementException && ex.cause is GroupIdNotFoundException) {
                     //TODO rethink - previous versions did not throw GroupIdNotFoundException, and had simply returned semantically empty description
+                    // do proper support for varous group types (consumer/classic/shared/streams)
                     ConsumerGroupDescription(
                         groupId, true, emptyList(), "",
                         GroupType.UNKNOWN, GroupState.UNKNOWN, null,

@@ -333,7 +333,6 @@ data class QuorumReplicaState(
 
 data class ClusterApiKeys(
     val apiKeys: List<ClusterApiKey>,
-    val zkMigrationEnabled: Boolean,
 )
 
 data class ClusterApiKey(

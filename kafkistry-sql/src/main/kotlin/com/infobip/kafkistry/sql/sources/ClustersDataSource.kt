@@ -39,7 +39,7 @@ class ClustersDataSource(
             val clusterIssues = if (clusterState?.stateType == StateType.VISIBLE) {
                 try {
                     clusterIssuesInspectorService.inspectClusterIssues(cluster.identifier)
-                } catch (ex: Exception) {
+                } catch (_: Exception) {
                     emptyList()
                 }
             } else {
@@ -86,12 +86,6 @@ class ClustersDataSource(
                                 brokerId = broker
                                 existingEntry = it.toExistingKafkaConfigEntry()
                             }
-                        }
-                    }
-                    nodeApiKeysZkMigration = it.apiKeys.map { (nodeId, apiKeys) ->
-                        ClusterNodeApiZkMigration().apply {
-                            this.nodeId = nodeId
-                            zkMigrationEnabled = apiKeys.zkMigrationEnabled
                         }
                     }
                     nodeApiKeys = it.apiKeys.flatMap { (nodeId, apiKeys) ->
@@ -232,10 +226,6 @@ class ClusterMetadata {
     @JoinTable(name = "Clusters_NodeApiKeys")
     lateinit var nodeApiKeys: List<ClusterNodeApiKeyInfo>
 
-    @ElementCollection
-    @JoinTable(name = "Clusters_NodeApiKeysZkMigration")
-    lateinit var nodeApiKeysZkMigration: List<ClusterNodeApiZkMigration>
-
 }
 
 @Embeddable
@@ -312,15 +302,6 @@ class ClusterQuorumReplicaState {
     var logEndOffset: Long = 0
     var lastFetchTimestamp: Instant? = null
     var lastCaughtUpTimestamp: Instant? = null
-}
-
-@Embeddable
-class ClusterNodeApiZkMigration {
-
-    @Column(nullable = false)
-    var nodeId: NodeId? = null
-
-    var zkMigrationEnabled: Boolean? = null
 }
 
 @Embeddable

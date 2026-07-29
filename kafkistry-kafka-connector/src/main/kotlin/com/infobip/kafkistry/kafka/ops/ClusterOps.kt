@@ -334,7 +334,6 @@ class ClusterOps(
             )
         }
         return ClusterApiKeys(
-            zkMigrationEnabled = false, //TODO this.zkMigrationEnabled(),
             apiKeys = (supported + unknown + unsupported).sortedBy { it.id },
         )
     }

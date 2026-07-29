@@ -433,14 +433,6 @@
                         <div id="node-${nodeId?c}-config" class="tab-pane ${active}">
                             <#if clusterInfo.apiKeys?api.containsKey(nodeId)>
                                 <#assign nodeApiKeys = clusterInfo.apiKeys?api.get(nodeId)>
-                                <p>
-                                    ZK migration:
-                                    <#if nodeApiKeys.zkMigrationEnabled>
-                                        <span class="badge bg-success">ENABLED</span>
-                                    <#else>
-                                        <span class="badge bg-secondary">NOT ENABLED</span>
-                                    </#if>
-                                </p>
                                 <table class="table table-hover table-sm">
                                     <thead class="table-theme-dark">
                                     <tr>
