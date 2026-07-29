@@ -136,7 +136,7 @@ class DataStateInitializer(
 
     private val log = LoggerFactory.getLogger("manual-init")
     private lateinit var api: ApiClient
-    private val consensusType: ConsensusType = ConsensusType.KRAFT
+    private val consensusType: ConsensusType = ConsensusType.ZOOKEEPER
 
     private val kafka: EmbeddedKafkaBroker = when (consensusType) {
         ConsensusType.KRAFT -> KafkaKRaftEmbeddedCluster(
@@ -154,13 +154,12 @@ class DataStateInitializer(
             brokerProperty(START_COMBINED_ID + 1, "broker.rack", "rck-C")
             brokerProperty(START_CONTROLLER_ID, "broker.rack", "rck-X")
         }
-        ConsensusType.ZOOKEEPER -> error("Unsupported consensus type: $consensusType") as EmbeddedKafkaBroker
-//            LegacyEmbeddedKafkaZKBroker(6).apply {
-//            brokerProperty("log.retention.bytes", "123456789")
-//            brokerProperty("log.segment.bytes", "12345678")
-//            brokerProperty("authorizer.class.name", AclAuthorizer::class.java.name)
-//            brokerProperty("super.users", "User:ANONYMOUS")
-//        }.asEmbeddedKafkaBroker()
+        ConsensusType.ZOOKEEPER -> LegacyEmbeddedKafkaZKBroker(6).apply {
+            brokerProperty("log.retention.bytes", "123456789")
+            brokerProperty("log.segment.bytes", "12345678")
+            brokerProperty("authorizer.class.name", AclAuthorizer::class.java.name)
+            brokerProperty("super.users", "User:ANONYMOUS")
+        }.asEmbeddedKafkaBroker()
     }.apply {
         log.info("EmbeddedKafka starting...")
         afterPropertiesSet()

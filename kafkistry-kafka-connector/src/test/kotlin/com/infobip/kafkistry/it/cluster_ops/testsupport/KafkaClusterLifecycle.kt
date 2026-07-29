@@ -142,6 +142,10 @@ fun LegacyEmbeddedKafkaZKBroker.asTestKafkaLifecycle() = LoggingKafkaClusterLife
 )
 
 fun LegacyEmbeddedKafkaZKBroker.asEmbeddedKafkaBroker(): EmbeddedKafkaBroker = object : EmbeddedKafkaBroker {
+    override fun afterPropertiesSet() = this@asEmbeddedKafkaBroker.afterPropertiesSet()
+
+    override fun destroy() = this@asEmbeddedKafkaBroker.destroy()
+
     override fun kafkaPorts(vararg ports: Int): EmbeddedKafkaBroker = apply {
         this@asEmbeddedKafkaBroker.kafkaPorts(*ports)
     }
