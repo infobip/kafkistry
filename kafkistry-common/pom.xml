@@ -76,52 +76,52 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.13</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-server</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-server-common</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-storage</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-group-coordinator-api</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-group-coordinator</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-raft</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-transaction-coordinator</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-metadata</artifactId>
-            <version>3.9.0</version>
+            <version>${legacy.kafka.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
@@ -175,7 +175,19 @@
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
+                                    <includes>
+                                        <include>kafka/**</include>
+                                        <include>org/apache/kafka/**</include>
+                                        <include>org/apache/zookeeper/**</include>
+                                        <include>org/springframework/kafka/**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
                                     <excludes>
+                                        <exclude>META-INF/*LICENCE*</exclude>
+                                        <exclude>META-INF/*NOTICE*</exclude>
+                                        <exclude>META-INF/*DEPENDENCIES*</exclude>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>

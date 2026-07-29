@@ -97,6 +97,7 @@
 
         <!-- DEPENDENCIES -->
         <kafka.version>4.3.1</kafka.version>
+        <legacy.kafka.version>3.9.0</legacy.kafka.version>
         <org.eclipse.jgit.version>6.10.0.202406032230-r</org.eclipse.jgit.version>
         <sshd-git.version>2.13.2</sshd-git.version> <!-- Apache MINA -->
         <jsoup.version>1.15.4</jsoup.version>
