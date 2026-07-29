@@ -182,6 +182,10 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <includes>
+                                        <!-- keep our module stuff -->
+                                        <include>com/infobip/kafkistry/**</include>
+                                        <include>META-INF/*.kotlin_module</include>
+
                                         <include>kafka/**</include>
                                         <include>org/apache/kafka/**</include>
                                         <include>org/apache/zookeeper/**</include>

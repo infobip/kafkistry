@@ -13,6 +13,11 @@
     <dependencies>
         <dependency>
             <groupId>com.infobip.kafkistry</groupId>
+            <artifactId>kafkistry-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.infobip.kafkistry</groupId>
             <artifactId>kafkistry-service-logic</artifactId>
             <version>${project.version}</version>
         </dependency>
