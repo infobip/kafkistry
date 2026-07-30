@@ -220,7 +220,7 @@
                                     <pattern>org.apache.kafka</pattern>
                                     <shadedPattern>com.infobip.kafkistry.shaded.org.apache.kafka</shadedPattern>
                                     <excludes>
-                                        <exclude>org.apache.kafka.common.security.auth.*</exclude>
+                                        <exclude>org.apache.kafka.common.security.auth.AuthenticateCallbackHandler</exclude>
                                         <exclude>org.apache.kafka.common.security.oauthbearer.OAuthBearerTokenCallback</exclude>
                                         <exclude>org.apache.kafka.common.security.oauthbearer.OAuthBearerToken</exclude>
                                     </excludes>
