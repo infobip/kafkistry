@@ -7,43 +7,29 @@ import com.infobip.kafkistry.service.KafkaClusterManagementException
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.GroupState
 import org.apache.kafka.common.GroupType
-import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.ListConsumerGroupsOptions as LegacyConsumerGroupsOptions
-import com.infobip.kafkistry.shaded.org.apache.kafka.common.GroupType as LegacyGroupType
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.GroupIdNotFoundException
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
-import kotlin.jvm.optionals.getOrNull
+import kotlin.jvm.optionals.getOrDefault
 
 class ConsumerGroupOps(
     clientCtx: ClientCtx,
 ): BaseOps(clientCtx) {
 
     fun consumerGroups(): CompletableFuture<List<ConsumerGroupId>> {
-        return if (clusterVersion < VERSION_4_0) {
-            @Suppress("DEPRECATION")
-            legacyAdminClient
-                .listConsumerGroups(LegacyConsumerGroupsOptions().withReadTimeout())
-                .valid()
-                .asCompletableFutureLegacy("list consumer groups legacy")
-                .thenApply { groups ->
-                    groups
-                        .map {
-                            val type = it.type().getOrNull() ?: LegacyGroupType.UNKNOWN
-                            KafkaGroup(it.groupId(), type.convert()) }
-                        .sortedBy { it.groupId }
-                }
-        } else {
-            adminClient.listGroups(ListGroupsOptions().withReadTimeout())
-                .valid()
-                .asCompletableFuture("list groups")
-                .thenApply { groups ->
-                    groups
-                        .map { KafkaGroup(it.groupId(), it.type().getOrNull() ?: GroupType.UNKNOWN) }
-                        .filter { it.type == GroupType.CONSUMER || it.type == GroupType.CLASSIC }
-                        .sortedBy { it.groupId }
-                }
-        }.thenApply { groups -> groups.map { it.groupId } }
+        return adminClient.listGroups(ListGroupsOptions.forConsumerGroups().withReadTimeout())
+            .valid()
+            .asCompletableFuture("list groups")
+            .thenApply { groups ->
+                groups
+                    // Older brokers (< 2.6) don't expose group type.
+                    // In practice these are legacy consumer groups, so default to CONSUMER.
+                    .map { KafkaGroup(it.groupId(), it.type().getOrDefault(GroupType.CONSUMER)) }
+                    .filter { it.type == GroupType.CONSUMER || it.type == GroupType.CLASSIC }
+                    .sortedBy { it.groupId }
+            }
+            .thenApply { groups -> groups.map { it.groupId } }
     }
 
     fun consumerGroup(groupId: ConsumerGroupId): CompletableFuture<ConsumerGroup> {
