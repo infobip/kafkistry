@@ -128,6 +128,12 @@
 
         <!-- embedded kafka -->
         <dependency>
+            <groupId>com.infobip.kafkistry</groupId>
+            <artifactId>kafkistry-legacy-kafka</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>

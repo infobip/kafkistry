@@ -24,6 +24,11 @@
         </dependency>
         <dependency>
             <groupId>com.infobip.kafkistry</groupId>
+            <artifactId>kafkistry-legacy-kafka</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.infobip.kafkistry</groupId>
             <artifactId>kafkistry-common</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>

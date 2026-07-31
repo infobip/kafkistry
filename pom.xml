@@ -42,6 +42,7 @@
     <modules>
         <module>kafkistry-model</module>
         <module>kafkistry-common</module>
+        <module>kafkistry-legacy-kafka</module>
         <module>kafkistry-kafka-connector</module>
         <module>kafkistry-repository</module>
         <module>kafkistry-consume</module>
