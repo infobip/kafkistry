@@ -35,7 +35,7 @@ class ConsumerGroupOps(
     fun consumerGroup(groupId: ConsumerGroupId): CompletableFuture<ConsumerGroup> {
         val groupDescriptionFuture = adminClient
             .describeConsumerGroups(listOf(groupId), DescribeConsumerGroupsOptions().withReadTimeout())
-            .describedGroups()[groupId]!!
+            .describedGroups().getValue(groupId)
             .asCompletableFuture("describe consumer group")
             .exceptionally { ex: Throwable ->
                 if (ex is KafkaClusterManagementException && ex.cause is GroupIdNotFoundException) {

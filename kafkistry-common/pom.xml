@@ -138,8 +138,7 @@
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
             <version>${legacy-spring-kafka.version}</version>
-<!--            It should have been test scope, but could not achieve proper class visibility in connector module-->
-<!--            <scope>test</scope>-->
+            <!-- It should have been test scope, but could not achieve proper class visibility in connector module -->
         </dependency>
 
     </dependencies>

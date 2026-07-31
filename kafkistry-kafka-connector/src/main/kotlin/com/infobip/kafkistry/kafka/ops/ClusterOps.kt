@@ -80,8 +80,8 @@ class ClusterOps(
             .thenCompose {
                 val clusterId = clusterIdFuture.get()
                 val controllerNode = controllerNodeFuture.get()
-                val brokerNodes = brokerNodesFuture.get()
-                val controllerNodes = controllerNodesFuture.get()
+                val brokerNodes = brokerNodesFuture.get().toList()
+                val controllerNodes = controllerNodesFuture.get().toList()
                 val brokerNodeConfigResources = brokerNodes.map { node ->
                     ConfigResource(ConfigResource.Type.BROKER, node.id().toString())
                 }

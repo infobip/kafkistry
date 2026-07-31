@@ -34,6 +34,7 @@ class ConfigOps(
                     .all()
                     .asCompletableFuture("partial topic update config read current")
                     .get()
+                    .toMap()
                 val currentConfig = resourceConfigs[configResource]
                     ?: throw KafkaClusterManagementException("Did not get response for config of topic $topicName")
                 val fullConfig = currentConfig.entries().associate { it.name() to it.value() }.plus(config)
@@ -86,7 +87,7 @@ class ConfigOps(
             }
             if (nonBrokersResult != null && brokerUpdates.isEmpty()) {
                 nonBrokersResult.all()
-                    .asCompletableFutureLegacy("alter configs")
+                    .asCompletableFutureLegacy("alter configs - legacy")
                     .thenApply { }
             } else {
                 //have broker update, need to have blocking implementation
@@ -105,7 +106,7 @@ class ConfigOps(
                     }
                 }
                 nonBrokersResult?.all()
-                    ?.asCompletableFutureLegacy("alter configs")
+                    ?.asCompletableFutureLegacy("alter configs - ZK")
                     ?.thenApply { }
                     ?: CompletableFuture.completedFuture(Unit)
             }
@@ -115,7 +116,7 @@ class ConfigOps(
                     resourceUpdates.mapValues { it.value.alterConfigOps() }, AlterConfigsOptions().withWriteTimeout()
                 )
                 .all()
-                .asCompletableFuture("alter configs")
+                .asCompletableFuture("alter configs incremental")
                 .thenApply { }
         }
     }
