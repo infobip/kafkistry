@@ -115,7 +115,6 @@
         <mockito-kotlin.version>2.2.0</mockito-kotlin.version>
         <spring-ai.version>2.0.0-M2</spring-ai.version>
         <graalvm.version>23.0.4</graalvm.version>
-        <jackson-module-kotlin-3.version>3.1.5</jackson-module-kotlin-3.version>
         <spring-session-hazelcast.version>3.4.2</spring-session-hazelcast.version>
     </properties>
 

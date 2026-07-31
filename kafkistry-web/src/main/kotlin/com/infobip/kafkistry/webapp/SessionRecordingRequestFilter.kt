@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.webapp
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest

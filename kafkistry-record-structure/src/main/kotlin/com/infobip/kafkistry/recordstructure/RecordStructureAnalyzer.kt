@@ -1,14 +1,11 @@
 package com.infobip.kafkistry.recordstructure
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.model.*
-import com.infobip.kafkistry.model.KafkaClusterIdentifier
-import com.infobip.kafkistry.model.PayloadType
-import com.infobip.kafkistry.model.RecordsStructure
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @Component
 @ConditionalOnProperty("app.record-analyzer.enabled", matchIfMissing = true)
@@ -19,7 +16,7 @@ class RecordStructureAnalyzer(
 ) : AutoCloseable {
 
     private val log = LoggerFactory.getLogger(RecordStructureAnalyzer::class.java)
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = jacksonObjectMapper()
 
     private val clusterRecordsStructures: ClusterRecordsStructuresMap = load()
 

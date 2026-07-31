@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
+<#-- @ftlvariable name="json" type="tools.jackson.databind.json.JsonMapper" -->
 <#-- @ftlvariable name="existingValues" type="com.infobip.kafkistry.service.ExistingValues" -->
 <#-- @ftlvariable name="cluster" type="com.infobip.kafkistry.model.KafkaCluster" -->
 <#-- @ftlvariable name="showDryRunInspect" type="java.lang.Boolean" -->

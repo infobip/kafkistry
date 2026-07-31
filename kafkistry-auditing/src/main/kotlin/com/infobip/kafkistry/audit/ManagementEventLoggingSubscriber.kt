@@ -1,23 +1,21 @@
 package com.infobip.kafkistry.audit
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import tools.jackson.databind.SerializationFeature
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class ManagementEventLoggingSubscriber : ManagementEventSubscriber {
 
     private val loggers = ConcurrentHashMap<String, Logger>()
-    private val objectMapper = ObjectMapper().apply {
-        registerKotlinModule()
-        enable(SerializationFeature.INDENT_OUTPUT)
-        setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
-    }
+    private val objectMapper = jacksonMapperBuilder()
+        .enable(SerializationFeature.INDENT_OUTPUT)
+        .changeDefaultPropertyInclusion { it.withValueInclusion(JsonInclude.Include.NON_NULL) }
+        .build()
 
     private fun String.log() = loggers.computeIfAbsent(this, LoggerFactory::getLogger)
 

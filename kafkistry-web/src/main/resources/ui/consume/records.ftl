@@ -5,7 +5,7 @@
 <#-- @ftlvariable name="clusterIdentifier" type="java.lang.String" -->
 <#-- @ftlvariable name="topicName" type="java.lang.String" -->
 <#-- @ftlvariable name="unmaskedRevealEnabled" type="java.lang.Boolean" -->
-<#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
+<#-- @ftlvariable name="json" type="tools.jackson.databind.json.JsonMapper" -->
 
 <#import "../common/util.ftl" as util>
 <#import "progressBar.ftl" as pb>

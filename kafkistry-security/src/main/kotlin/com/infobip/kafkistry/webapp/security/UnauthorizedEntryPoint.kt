@@ -1,6 +1,5 @@
 package com.infobip.kafkistry.webapp.security
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.infobip.kafkistry.api.exception.ApiError
 import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.WebHttpProperties

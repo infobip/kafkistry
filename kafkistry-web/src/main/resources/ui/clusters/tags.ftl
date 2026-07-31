@@ -1,6 +1,6 @@
 <#-- @ftlvariable name="lastCommit"  type="java.lang.String" -->
 <#-- @ftlvariable name="appUrl" type="com.infobip.kafkistry.webapp.url.AppUrl" -->
-<#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
+<#-- @ftlvariable name="json" type="tools.jackson.databind.json.JsonMapper" -->
 <#-- @ftlvariable name="gitStorageEnabled"  type="java.lang.Boolean" -->
 <#-- @ftlvariable name="gitBranchBaseUrl"  type="java.lang.String" -->
 <#-- @ftlvariable name="gitCommitBaseUrl"  type="java.lang.String" -->

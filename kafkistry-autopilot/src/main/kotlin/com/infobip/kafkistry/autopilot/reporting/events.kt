@@ -1,6 +1,5 @@
 package com.infobip.kafkistry.autopilot.reporting
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.autopilot.binding.renderMessage
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcomeMapper.toOutcome
 import com.infobip.kafkistry.autopilot.repository.ActionsRepository
@@ -12,6 +11,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
+import tools.jackson.module.kotlin.jacksonObjectMapper
 
 data class AutopilotActionOutcomeEvent(
     val actionOutcomeJson: String

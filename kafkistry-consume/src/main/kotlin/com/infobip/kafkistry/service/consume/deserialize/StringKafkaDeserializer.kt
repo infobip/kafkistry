@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.consume.deserialize
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.service.consume.DeserializedValue
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets

@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.ownership
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.model.AclOperation
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.PrincipalId

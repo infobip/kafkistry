@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.produce.serialize
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.model.TopicName
 import org.apache.kafka.common.serialization.*
 import org.springframework.stereotype.Component

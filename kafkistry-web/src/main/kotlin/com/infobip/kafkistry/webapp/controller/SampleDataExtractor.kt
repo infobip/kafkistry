@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.webapp.controller
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.api.RecordsStructureApi
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import com.infobip.kafkistry.model.PayloadType

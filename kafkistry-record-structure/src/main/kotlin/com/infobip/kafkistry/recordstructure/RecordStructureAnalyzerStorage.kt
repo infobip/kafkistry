@@ -1,15 +1,14 @@
 package com.infobip.kafkistry.recordstructure
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.infobip.kafkistry.utils.deepToString
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.SerializationFeature
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
@@ -42,11 +41,10 @@ class DirectoryRecordStructureAnalyzerStorage(
     private val log = LoggerFactory.getLogger(DirectoryRecordStructureAnalyzerStorage::class.java)
     private val storage = File(properties.storageDir)
 
-    private val objectMapper = ObjectMapper().apply {
-        registerKotlinModule()
-        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        enable(SerializationFeature.INDENT_OUTPUT)
-    }
+    private val objectMapper = jacksonMapperBuilder()
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .enable(SerializationFeature.INDENT_OUTPUT)
+        .build()
 
     /**
      *  Loads the collected statistic
