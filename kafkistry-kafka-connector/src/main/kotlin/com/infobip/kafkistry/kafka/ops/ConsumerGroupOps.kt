@@ -3,29 +3,53 @@ package com.infobip.kafkistry.kafka.ops
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.model.ConsumerGroupId
 import com.infobip.kafkistry.model.TopicName
+import com.infobip.kafkistry.service.KafkaClusterManagementException
 import org.apache.kafka.clients.admin.*
+import org.apache.kafka.common.GroupState
+import org.apache.kafka.common.GroupType
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.errors.GroupIdNotFoundException
+import java.util.Optional
 import java.util.concurrent.CompletableFuture
+import kotlin.jvm.optionals.getOrDefault
 
 class ConsumerGroupOps(
     clientCtx: ClientCtx,
 ): BaseOps(clientCtx) {
 
     fun consumerGroups(): CompletableFuture<List<ConsumerGroupId>> {
-        return adminClient
-            .listConsumerGroups(ListConsumerGroupsOptions().withReadTimeout())
+        return adminClient.listGroups(ListGroupsOptions.forConsumerGroups().withReadTimeout())
             .valid()
-            .asCompletableFuture("list consumer groups")
+            .asCompletableFuture("list groups")
             .thenApply { groups ->
-                groups.map { it.groupId() }.sorted()
+                groups
+                    // Older brokers (< 2.6) don't expose group type.
+                    // In practice these are legacy consumer groups, so default to CONSUMER.
+                    .map { KafkaGroup(it.groupId(), it.type().getOrDefault(GroupType.CONSUMER)) }
+                    .filter { it.type == GroupType.CONSUMER || it.type == GroupType.CLASSIC }
+                    .sortedBy { it.groupId }
             }
+            .thenApply { groups -> groups.map { it.groupId } }
     }
 
     fun consumerGroup(groupId: ConsumerGroupId): CompletableFuture<ConsumerGroup> {
         val groupDescriptionFuture = adminClient
             .describeConsumerGroups(listOf(groupId), DescribeConsumerGroupsOptions().withReadTimeout())
-            .describedGroups()[groupId]!!
+            .describedGroups().getValue(groupId)
             .asCompletableFuture("describe consumer group")
+            .exceptionally { ex: Throwable ->
+                if (ex is KafkaClusterManagementException && ex.cause is GroupIdNotFoundException) {
+                    //TODO rethink - previous versions did not throw GroupIdNotFoundException, and had simply returned semantically empty description
+                    // do proper support for varous group types (consumer/classic/shared/streams)
+                    ConsumerGroupDescription(
+                        groupId, true, emptyList(), "",
+                        GroupType.UNKNOWN, GroupState.UNKNOWN, null,
+                        emptySet(), Optional.empty(), Optional.empty(),
+                    )
+                } else {
+                    throw ex
+                }
+            }
         val topicPartitionOffsetsFuture = adminClient
             .listConsumerGroupOffsets(groupId, ListConsumerGroupOffsetsOptions().withReadTimeout())
             .partitionsToOffsetAndMetadata()
@@ -95,7 +119,7 @@ class ConsumerGroupOps(
             .sortedBy { it.topic + it.partition }
         return ConsumerGroup(
             id = groupId,
-            status = groupDescription.state().convert(),
+            status = groupDescription.groupState().convert(),
             partitionAssignor = groupDescription.partitionAssignor(),
             members = members,
             offsets = offsets,

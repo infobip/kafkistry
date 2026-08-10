@@ -1,12 +1,12 @@
 package com.infobip.kafkistry.appinfo
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.dataformat.javaprop.JavaPropsMapper
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.core.io.support.ResourcePatternResolver
 import org.springframework.stereotype.Component
+import tools.jackson.module.kotlin.KotlinModule
 
 private const val RESOURCES_PATTERN = "classpath*:*.git.properties"
 
@@ -20,9 +20,10 @@ class ModulesBuildInfoLoader {
     fun modulesInfos(): List<ModuleBuildInfo> = modulesInfos
 
     private fun loadAll(): List<ModuleBuildInfo> {
-        val mapper = JavaPropsMapper().registerKotlinModule().apply {
+        val mapper = JavaPropsMapper.builder().apply {
+            addModule(KotlinModule.Builder().build())
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        }
+        }.build()
         val patternResolver: ResourcePatternResolver = PathMatchingResourcePatternResolver()
         log.info("Finding modules build infos with pattern: '{}'", RESOURCES_PATTERN)
         val propertiesResources = patternResolver.getResources(RESOURCES_PATTERN)

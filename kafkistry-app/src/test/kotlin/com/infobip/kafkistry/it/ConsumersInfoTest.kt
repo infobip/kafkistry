@@ -47,7 +47,10 @@ class ConsumersInfoTest {
 
     companion object {
 
-        private val kafka = EmbeddedKafkaKraftBroker(1, 2, "test-topic")
+        private val kafka = object : EmbeddedKafkaKraftBroker(1, 2, "test-topic") {
+            //overriding because of spring-kafka-test 4.1.0 depends on kafka test kit that uses cluster.getClientProperties() which was deleted
+            override fun getBrokersAsString(): String = this.cluster?.bootstrapServers() ?: error("no bootstrap servers")
+        }
 
         val log: Logger = LoggerFactory.getLogger(ConsumersInfoTest::class.java)
 

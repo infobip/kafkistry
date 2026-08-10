@@ -1,12 +1,12 @@
 package com.infobip.kafkistry.autopilot.repository
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.SerializationFeature
 import com.infobip.kafkistry.autopilot.binding.ActionMetadata
 import com.infobip.kafkistry.autopilot.binding.AutopilotActionIdentifier
 import com.infobip.kafkistry.autopilot.reporting.ActionOutcome
 import org.slf4j.LoggerFactory
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import java.io.File
 
 class DiskPersistedActionsRepository(
@@ -15,9 +15,9 @@ class DiskPersistedActionsRepository(
 ) : ActionsRepository {
 
     private val log = LoggerFactory.getLogger(DiskPersistedActionsRepository::class.java)
-    private val mapper = jacksonObjectMapper().apply {
-        enable(SerializationFeature.INDENT_OUTPUT)
-    }
+    private val mapper = jacksonMapperBuilder()
+        .enable(SerializationFeature.INDENT_OUTPUT)
+        .build()
 
     private val dir = File(storageDir)
     private val storageFile = File(dir.absolutePath, "autopilotActions.json")

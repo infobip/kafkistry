@@ -39,7 +39,7 @@ class ClustersDataSource(
             val clusterIssues = if (clusterState?.stateType == StateType.VISIBLE) {
                 try {
                     clusterIssuesInspectorService.inspectClusterIssues(cluster.identifier)
-                } catch (ex: Exception) {
+                } catch (_: Exception) {
                     emptyList()
                 }
             } else {
@@ -88,12 +88,6 @@ class ClustersDataSource(
                             }
                         }
                     }
-                    nodeApiKeysZkMigration = it.apiKeys.map { (nodeId, apiKeys) ->
-                        ClusterNodeApiZkMigration().apply {
-                            this.nodeId = nodeId
-                            zkMigrationEnabled = apiKeys.zkMigrationEnabled
-                        }
-                    }
                     nodeApiKeys = it.apiKeys.flatMap { (nodeId, apiKeys) ->
                         apiKeys.apiKeys.map { apiKey ->
                             ClusterNodeApiKeyInfo().apply {
@@ -103,7 +97,6 @@ class ClustersDataSource(
                                 clusterAction = apiKey.metadata?.isClusterAction
                                 forwardable = apiKey.metadata?.isForwardable
                                 requiresDelayedAllocation = apiKey.metadata?.requiresDelayedAllocation
-                                minRequiredInterBrokerMagic = apiKey.metadata?.minRequiredInterBrokerMagic
                                 minVersion = apiKey.minVersion
                                 maxVersion = apiKey.maxVersion
                                 latestUsableVersion = apiKey.latestUsableVersion
@@ -233,10 +226,6 @@ class ClusterMetadata {
     @JoinTable(name = "Clusters_NodeApiKeys")
     lateinit var nodeApiKeys: List<ClusterNodeApiKeyInfo>
 
-    @ElementCollection
-    @JoinTable(name = "Clusters_NodeApiKeysZkMigration")
-    lateinit var nodeApiKeysZkMigration: List<ClusterNodeApiZkMigration>
-
 }
 
 @Embeddable
@@ -316,15 +305,6 @@ class ClusterQuorumReplicaState {
 }
 
 @Embeddable
-class ClusterNodeApiZkMigration {
-
-    @Column(nullable = false)
-    var nodeId: NodeId? = null
-
-    var zkMigrationEnabled: Boolean? = null
-}
-
-@Embeddable
 class ClusterNodeApiKeyInfo {
 
     @Column(nullable = false)
@@ -337,7 +317,6 @@ class ClusterNodeApiKeyInfo {
     var clusterAction: Boolean? = null
     var forwardable: Boolean? = null
     var requiresDelayedAllocation: Boolean? = null
-    var minRequiredInterBrokerMagic: Int? = null
 
     var minVersion: Int? = null
     var maxVersion: Int? = null

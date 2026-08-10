@@ -8,7 +8,6 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.yaml.YamlMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.openqa.selenium.support.ui.Select
 import java.util.concurrent.TimeUnit
 
 abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(contextSupplier) {
@@ -76,8 +75,8 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
         browser.findElementByCssSelector("input[name=owner]").clearAndSendKeys("new owner")
         browser.findElementByCssSelector("textarea[name=description]").clearAndSendKeys("new description")
         browser.findElementByCssSelector("input[name=producer]").clearAndSendKeys("new producer")
-        browser.findElementByCssSelector("select[name=allowManualProduce]").run { Select(this) }
-            .selectByValue("true")
+        browser.findElementByCssSelector("select[name=allowManualProduce]").selectByValue("true")
+
         browser.findElementWithText("Add label").scrollIntoView().click()
         browser.findElementWithText("CREATE NEW").scrollIntoView().click()
         browser.findElementByCssSelector(".labels input[name=label-category]").clearAndSendKeys("my-label-category")
@@ -85,34 +84,34 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
 
         //presence
         browser.findElementByCssSelector("input[value=INCLUDED_CLUSTERS]").scrollIntoView().click()
-        browser.findElementByCssSelector("select[name=selectedClusters]").run { Select(this) }
-            .selectByValue(CLUSTER_IDENTIFIER)
+        browser.findElementByCssSelector("select[name=selectedClusters]").selectByValue(CLUSTER_IDENTIFIER)
+
 
         //resource requirements
         browser.findElementByCssSelector("input[name=resourceRequirementsDefined]").scrollIntoView().click()
         //rate
         browser.findElementByCssSelector("input[name=messagesRateAmount]").sendKeys("100")
-        browser.findElementByCssSelector("select[name=messagesRateFactor]").run { Select(this) }
-                .selectByVisibleText("1M msg")
-        browser.findElementByCssSelector("select[name=messagesRateUnit]").run { Select(this) }
-                .selectByVisibleText("/ hour")
+        browser.findElementByCssSelector("select[name=messagesRateFactor]").selectByVisibleText("1M msg")
+
+        browser.findElementByCssSelector("select[name=messagesRateUnit]").selectByVisibleText("/ hour")
+
         //rate override
         browser.findElementWithText("Add override").scrollIntoView().click()
-        browser.findElementByCssSelector("select[name=overrideWhere]").run { Select(this) }
-                .selectByVisibleText(CLUSTER_IDENTIFIER)
+        browser.findElementByCssSelector("select[name=overrideWhere]").selectByVisibleText(CLUSTER_IDENTIFIER)
+
         browser.findElementByCssSelector(".messages-rate-override input[name=messagesRateAmount]").sendKeys("200")
-        browser.findElementByCssSelector(".messages-rate-override select[name=messagesRateFactor]").run { Select(this) }
-                .selectByVisibleText("1K msg")
-        browser.findElementByCssSelector(".messages-rate-override select[name=messagesRateUnit]").run { Select(this) }
-                .selectByVisibleText("/ minute")
+        browser.findElementByCssSelector(".messages-rate-override select[name=messagesRateFactor]").selectByVisibleText("1K msg")
+
+        browser.findElementByCssSelector(".messages-rate-override select[name=messagesRateUnit]").selectByVisibleText("/ minute")
+
         //msg size
         browser.findElementByCssSelector("input[name=avgMessageSize]").sendKeys("5")
-        browser.findElementByCssSelector("select[name=avgMessageSizeUnit]").run { Select(this) }
-                .selectByVisibleText("kB")
+        browser.findElementByCssSelector("select[name=avgMessageSizeUnit]").selectByVisibleText("kB")
+
         //retention
         browser.findElementByCssSelector("input[name=retentionAmount]").sendKeys("12")
-        browser.findElementByCssSelector("select[name=retentionUnit]").run { Select(this) }
-                .selectByVisibleText("hour(s)")
+        browser.findElementByCssSelector("select[name=retentionUnit]").selectByVisibleText("hour(s)")
+
 
         //apply resource requirements
         browser.findElementWithText("Apply requirements to config").scrollIntoView().click()
@@ -126,24 +125,24 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
         browser.findElementByCssSelector(".globalConfig input[name=partitionCount]").clearAndSendKeys("36")
         browser.findElementByCssSelector(".globalConfig input[name=replicationFactor]").clearAndSendKeys("4")
         //config
-        browser.findElementByCssSelector(".globalConfig select.config-key-select").run { Select(this) }
-                .selectByVisibleText("max.message.bytes")
+        browser.findElementByCssSelector(".globalConfig select.config-key-select").selectByVisibleText("max.message.bytes")
+
         browser.findElementByCssSelector(".globalConfig input.conf-value-in[name='max.message.bytes']").clearAndSendKeys("10k")
-        browser.findElementByCssSelector(".globalConfig select.config-key-select").run { Select(this) }
-                .selectByVisibleText("segment.ms")
+        browser.findElementByCssSelector(".globalConfig select.config-key-select").selectByVisibleText("segment.ms")
+
         browser.findElementByCssSelector(".globalConfig input.conf-value-in[name='segment.ms']").clearAndSendKeys("1h")
 
         //cluster override config
-        browser.findElementWithText("Add per-cluster/per-tag override").scrollIntoView().click()
-        browser.findElementByCssSelector(".cluster-override select[name=overrideWhere]").run { Select(this) }
-                .selectByValue(CLUSTER_IDENTIFIER)
+        browser.findElementWithText("Add per-cluster/per-tag override").ensureClick()
+        browser.findElementByCssSelector(".cluster-override select[name=overrideWhere]").selectByValue(CLUSTER_IDENTIFIER)
+
         //topic-properties
         browser.findElementByCssSelector(".cluster-override input[name=propertiesOverridden]").scrollIntoView().click()
         browser.findElementByCssSelector(".cluster-override input[name=partitionCount]").clearAndSendKeys("24")
         browser.findElementByCssSelector(".cluster-override input[name=replicationFactor]").clearAndSendKeys("3")
         //config
-        browser.findElementByCssSelector(".cluster-override  select.config-key-select").run { Select(this) }
-                .selectByVisibleText("min.insync.replicas")
+        browser.findElementByCssSelector(".cluster-override  select.config-key-select").selectByVisibleText("min.insync.replicas")
+
         browser.findElementByCssSelector(".cluster-override input.conf-value-in[name='min.insync.replicas']").clearAndSendKeys("2")
 
         browser.findElementByCssSelector("input#update-message").sendKeys("try update all")
@@ -153,11 +152,8 @@ abstract class EditTopicInRegistry(contextSupplier: () -> Context) : UITestCase(
         browser.findElementByCssSelector(".freeze-directives input[name=freezeReason]").clearAndSendKeys("just to have it")
         browser.findElementByCssSelector(".freeze-directives input[name=freezePartitionCount]").click()
         browser.findElementByCssSelector(".freeze-directives select.freezeConfigProperties")
-            .run { Select(this) }
-            .run {
-                selectByVisibleText("retention.bytes")
-                selectByVisibleText("retention.ms")
-            }
+            .selectByVisibleText("retention.bytes", "retention.ms")
+
 
         //field descriptions
         browser.findElementWithText("Add field description").ensureClick()

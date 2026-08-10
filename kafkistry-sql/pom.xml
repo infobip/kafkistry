@@ -39,7 +39,6 @@
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-community-dialects</artifactId>
-            <version>${hibernate-orm.version}</version>
         </dependency>
     </dependencies>
 

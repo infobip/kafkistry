@@ -11,7 +11,7 @@ import org.springframework.security.authorization.AuthorityAuthorizationManager
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 import org.springframework.stereotype.Component
 
 interface RequestAuthorizationPermissionsConfigurer {
@@ -22,15 +22,21 @@ interface RequestAuthorizationPermissionsConfigurer {
 
     fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() = Unit
 
-    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.antMatchers(
-        vararg antPatterns: String,
-    ): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl = antMatchers(method = null, *antPatterns)
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.pathMatchers(
+        vararg patterns: String,
+    ): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl = pathMatchers(method = null, *patterns)
 
-    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.antMatchers(
+    fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.pathMatchers(
         method: HttpMethod? = null,
-        vararg antPatterns: String,
+        vararg patterns: String,
     ): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl = run {
-        val matchers = antPatterns.map { AntPathRequestMatcher(it, method?.name()) }
+        val matchers = patterns.map { pattern ->
+            if (method != null) {
+                PathPatternRequestMatcher.pathPattern(method, pattern)
+            } else {
+                PathPatternRequestMatcher.pathPattern(pattern)
+            }
+        }
         requestMatchers(*matchers.toTypedArray())
     }
 
@@ -39,7 +45,7 @@ interface RequestAuthorizationPermissionsConfigurer {
         antPattern: String,
         configurer: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl.() -> Unit
     ) {
-        HttpMethod.values().filter { it != httpMethod }.forEach { configurer(antMatchers(it, antPattern)) }
+        HttpMethod.values().filter { it != httpMethod }.forEach { configurer(pathMatchers(it, antPattern)) }
     }
 
     fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl.hasAuthority(
@@ -73,7 +79,7 @@ abstract class AbstractRequestAuthorizationPermissionsConfigurer : RequestAuthor
 class DefaultsAuthorizationConfigurer : AbstractRequestAuthorizationPermissionsConfigurer() {
 
     override fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.configureWith() {
-        antMatchers("$rootPath/**").hasAuthority(VIEW_DATA)
+        pathMatchers("$rootPath/**").hasAuthority(VIEW_DATA)
         anyRequest().fullyAuthenticated()
     }
 }

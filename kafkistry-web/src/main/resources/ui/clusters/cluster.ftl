@@ -433,14 +433,6 @@
                         <div id="node-${nodeId?c}-config" class="tab-pane ${active}">
                             <#if clusterInfo.apiKeys?api.containsKey(nodeId)>
                                 <#assign nodeApiKeys = clusterInfo.apiKeys?api.get(nodeId)>
-                                <p>
-                                    ZK migration:
-                                    <#if nodeApiKeys.zkMigrationEnabled>
-                                        <span class="badge bg-success">ENABLED</span>
-                                    <#else>
-                                        <span class="badge bg-secondary">NOT ENABLED</span>
-                                    </#if>
-                                </p>
                                 <table class="table table-hover table-sm">
                                     <thead class="table-theme-dark">
                                     <tr>
@@ -449,7 +441,6 @@
                                         <th>Cluster action</th>
                                         <th>Forwardable</th>
                                         <th>Delayed allocation</th>
-                                        <th>Min broker magic</th>
                                         <th>Min version</th>
                                         <th>Max version</th>
                                         <th>Latest usable version / unusable reason</th>
@@ -482,7 +473,6 @@
                                                         <span class="badge bg-secondary">NOT REQUIRED</span>
                                                     </#if>
                                                 </td>
-                                                <td><code>${apiKey.metadata.minRequiredInterBrokerMagic}</code></td>
                                             <#else>
                                                 <td><span class="badge bg-warning">UNKNOWN</span></td>
                                                 <td colspan="4">---</td>

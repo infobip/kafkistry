@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.autopilot.repository
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.events.EventListener
 import com.infobip.kafkistry.events.EventPublisher
 import com.infobip.kafkistry.events.KafkistryEvent

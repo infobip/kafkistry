@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.servlet.ModelAndView
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.boot.web.servlet.error.ErrorController as SpringErrorController
+import org.springframework.boot.webmvc.error.ErrorController as SpringErrorController
 
 @Controller
 @RequestMapping("\${app.http.root-path}")

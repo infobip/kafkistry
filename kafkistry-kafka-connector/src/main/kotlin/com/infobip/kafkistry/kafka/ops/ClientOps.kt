@@ -19,7 +19,7 @@ class ClientOps(
 
     fun bootstrapClusterVersionAndZkConnection() {
         fun <T> CompletableFuture<T>.closeWhenExceptionallyCompleted(): CompletableFuture<T> {
-            return this.whenComplete { _, ex ->
+            return this.whenComplete { _: Any?, ex: Throwable? ->
                 // need to close everything before exception propagates out of KafkaManagementClientImpl-s constructor
                 if (ex != null) close()
             }

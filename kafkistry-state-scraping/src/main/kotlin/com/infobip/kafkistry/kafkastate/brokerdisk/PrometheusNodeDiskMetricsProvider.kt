@@ -6,7 +6,6 @@ import com.infobip.kafkistry.kafka.NodeId
 import com.infobip.kafkistry.model.KafkaClusterIdentifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.client.ClientHttpResponse
@@ -14,11 +13,11 @@ import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestClientResponseException
+import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForObject
 import java.net.URI
 import java.net.http.HttpClient
 import java.time.Duration
-import java.util.function.Supplier
 
 @Component
 @ConfigurationProperties("app.kafka.metrics.prometheus")
@@ -44,19 +43,22 @@ class PrometheusNodeDiskMetricsProvider(
 
     private val promUrl = "${properties.prometheusBaseUrl}/api/v1/query?query={query}&time={time}"
 
-    private val restTemplate = RestTemplateBuilder()
-        .additionalInterceptors({ request, body, execution ->
+    private val restTemplate = RestTemplate(
+        JdkClientHttpRequestFactory(
+            HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build()
+        ).apply {
+            setReadTimeout(Duration.ofMillis(properties.httpTimeoutMs))
+        }
+    ).apply {
+        interceptors.add { request, body, execution ->
             request.headers.apply {
                 properties.httpHeaders.forEach { (name, value) ->
                     add(name, value)
                 }
             }
             execution.execute(request, body)
-        })
-        .requestFactory(Supplier {
-            JdkClientHttpRequestFactory(HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build())
-        })
-        .errorHandler(object : ResponseErrorHandler {
+        }
+        errorHandler = object : ResponseErrorHandler {
             override fun hasError(response: ClientHttpResponse): Boolean = response.statusCode != HttpStatus.OK
 
             override fun handleError(url: URI, method: HttpMethod, response: ClientHttpResponse) {
@@ -69,9 +71,8 @@ class PrometheusNodeDiskMetricsProvider(
                     )
                 }
             }
-        })
-        .readTimeout(Duration.ofMillis(properties.httpTimeoutMs))
-        .build()
+        }
+    }
 
     private lateinit var brokerLabelToHostPattern: Regex
     private lateinit var brokerHostToLabelPattern: Regex
@@ -111,7 +112,7 @@ class PrometheusNodeDiskMetricsProvider(
             .replace("{brokerId}", broker.nodeId.toString())
         val promResult = restTemplate.getForObject<PrometheusResponse>(
             promUrl, mapOf("query" to promQuery, "time" to time())
-        )
+        )!!
         return promResult.data.result.firstNotNullOfOrNull {
             it.value[1].toString().toLongOrNull()
         }
@@ -131,7 +132,7 @@ class PrometheusNodeDiskMetricsProvider(
             .replace("{brokerIds}", brokers.joinToString(separator = "|") { it.nodeId.toString() })
         val promResult = restTemplate.getForObject<PrometheusResponse>(
             promUrl, mapOf("query" to promQuery, "time" to time())
-        )
+        )!!
         return promResult.data.result.mapNotNull { promMetric ->
             val brokerLabel = promMetric.metric[properties.brokerLabelName] ?: return@mapNotNull null
             val brokerFromLabel = brokerLabel.applyBrokerLabelToHostPattern()

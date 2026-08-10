@@ -1,7 +1,5 @@
 package com.infobip.kafkistry.service.topic.wizard
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.apache.kafka.common.config.TopicConfig.*
 import com.infobip.kafkistry.kafkastate.KafkaClusterState
 import com.infobip.kafkistry.kafkastate.StateData
@@ -19,6 +17,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Component
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.util.*
 import kotlin.math.min
 
@@ -203,9 +202,8 @@ private class PartitionCountAssignor(
     wizardPartitionThresholdsJson: String
 ) {
 
-    private val thresholdsConfig: ThresholdsConfig = ObjectMapper()
-            .registerKotlinModule()
-            .readValue(wizardPartitionThresholdsJson, ThresholdsConfig::class.java)
+    private val thresholdsConfig: ThresholdsConfig = jacksonObjectMapper()
+        .readValue(wizardPartitionThresholdsJson, ThresholdsConfig::class.java)
 
     fun assignPartitionCount(msgPerSec: Double, clusterRef: ClusterRef): Int {
         val thresholds = thresholdsConfig.overrides[clusterRef.identifier]

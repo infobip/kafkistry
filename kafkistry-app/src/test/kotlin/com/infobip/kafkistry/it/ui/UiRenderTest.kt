@@ -1,6 +1,7 @@
 package com.infobip.kafkistry.it.ui
 
 import com.infobip.kafkistry.TestDirsPathInitializer
+import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
 import com.infobip.kafkistry.kafka.KafkaClientProvider
 import com.infobip.kafkistry.kafka.KafkaTopicConfiguration
 import com.infobip.kafkistry.model.KafkaCluster
@@ -26,6 +27,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import jakarta.annotation.PostConstruct
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException
+import org.apache.kafka.common.security.auth.SecurityProtocol
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.AbstractListAssert
@@ -40,7 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
-import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
@@ -68,33 +69,33 @@ class UiRenderTest {
 
     companion object {
 
-        private val kafka1 = EmbeddedKafkaKraftBroker(1, 2).apply {
-            brokerProperty("log.retention.bytes", "102400")
-            brokerProperty("log.segment.bytes", "10240")
-            brokerProperty("message.max.bytes", "1024")
+        private val kafka1 = KafkaKRaftEmbeddedCluster(count = 1, partitions = 2).apply {
+            allBrokersProperty("log.retention.bytes", "10485760")
+            allBrokersProperty("log.segment.bytes", "1048576")
+            allBrokersProperty("message.max.bytes", "1024")
         }
 
-        private val kafka2 = EmbeddedKafkaKraftBroker(3, 2).apply {
-            brokerProperty("log.retention.bytes", "102400")
-            brokerProperty("log.segment.bytes", "10240")
-            brokerProperty("message.max.bytes", "1024")
+        private val kafka2 = KafkaKRaftEmbeddedCluster(count = 3, partitions = 2).apply {
+            allBrokersProperty("log.retention.bytes", "10485760")
+            allBrokersProperty("log.segment.bytes", "1048576")
+            allBrokersProperty("message.max.bytes", "1024")
         }
 
         @BeforeAll
         @JvmStatic
-        fun startKafka1() = kafka1.afterPropertiesSet()
+        fun startKafka1() = kafka1.start()
 
         @BeforeAll
         @JvmStatic
-        fun startKafka2() = kafka2.afterPropertiesSet()
+        fun startKafka2() = kafka2.start()
 
         @AfterAll
         @JvmStatic
-        fun stopKafka1() = kafka1.destroy()
+        fun stopKafka1() = kafka1.stop()
 
         @AfterAll
         @JvmStatic
-        fun stopKafka2() = kafka2.destroy()
+        fun stopKafka2() = kafka2.stop()
 
         val topic1 = newTopic(
                 name = "topic_ok"
@@ -108,7 +109,7 @@ class UiRenderTest {
         )
         val topic4 = newTopic(
                 name = "topic_wrong_config",
-                config = mapOf("retention.bytes" to "123456")
+                config = mapOf("retention.bytes" to "12345678")
         )
         var topicsCreated = false
 
@@ -139,8 +140,8 @@ class UiRenderTest {
     @PostConstruct
     fun initialize() {
         api = ApiClient("localhost", port, "/kafkistry")
-        val clusterInfo1 = api.testClusterConnection(kafka1.brokersAsString)
-        val clusterInfo2 = api.testClusterConnection(kafka2.brokersAsString)
+        val clusterInfo1 = api.testClusterConnection(kafka1.embeddedKafka.brokersAsString)
+        val clusterInfo2 = api.testClusterConnection(kafka2.embeddedKafka.brokersAsString)
         cluster1 = clusterInfo1.toKafkaCluster().copy(identifier = "c_1", sslEnabled = false, saslEnabled = false)
         cluster2 = clusterInfo2.toKafkaCluster().copy(identifier = "c_2", sslEnabled = false, saslEnabled = false)
         ensureTopicsCreated()

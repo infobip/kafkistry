@@ -4,6 +4,8 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.service.NamedType
 import com.infobip.kafkistry.service.StatusLevel
 import org.apache.kafka.clients.admin.ConfigEntry
+import org.apache.kafka.common.GroupType
+import org.apache.kafka.server.config.DynamicConfig
 import java.io.Serializable
 
 data class ConnectionDefinition(
@@ -147,6 +149,8 @@ data class Version(
 
 typealias ConsumerMemberId = String
 
+data class KafkaGroup(val groupId: String, val type: GroupType)
+
 data class PartitionOffsets(
     val begin: Long,
     val end: Long,
@@ -163,6 +167,9 @@ enum class ConsumerGroupStatus(
     STABLE(StatusLevel.SUCCESS, true, "Members in the consumer group are active and can consume messages normally."),
     DEAD(StatusLevel.ERROR, false, "The consumer group has no members and no metadata. The group is going to be removed from Kafka node soon. It might be due to the inactivity, or the group is being migrated to different group coordinator."),
     EMPTY(StatusLevel.WARNING, false, "The consumer group has metadata but has no joined members. All consumer members are down. If this group won't be used anymore consider deleting it."),
+    ASSIGNING(StatusLevel.INFO, true, "The consumer group coordinator is assigning partitions to members. This is a normal transitional state during group formation or rebalance. Consumption may not yet be fully active until assignment is completed."),
+    RECONCILING(StatusLevel.INFO, true, "The consumer group members are reconciling a new assignment with their current state. This is a normal transitional state after assignment changes, where members update their subscriptions and partition ownership before returning to stable consumption."),
+    NOT_READY(StatusLevel.WARNING, false, "The consumer group is not ready yet for normal operation. This usually indicates the group coordinator or members are still initializing, waiting for required metadata, or have not completed the steps needed to begin stable consumption. This can be a normal temporary state, but if it persists it may indicate a problem.")
 }
 
 data class ConsumerGroup(
@@ -326,7 +333,6 @@ data class QuorumReplicaState(
 
 data class ClusterApiKeys(
     val apiKeys: List<ClusterApiKey>,
-    val zkMigrationEnabled: Boolean,
 )
 
 data class ClusterApiKey(
@@ -344,6 +350,5 @@ data class ClusterApiKeyMetadata(
     val isClusterAction: Boolean,
     val isForwardable: Boolean,
     val requiresDelayedAllocation: Boolean,
-    val minRequiredInterBrokerMagic: Int,
 )
 

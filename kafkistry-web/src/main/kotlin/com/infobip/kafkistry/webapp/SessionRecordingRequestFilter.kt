@@ -1,14 +1,14 @@
 package com.infobip.kafkistry.webapp
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import com.infobip.kafkistry.webapp.security.CurrentRequestUserResolver
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
-import org.eclipse.jetty.ee10.servlet.SessionHandler
+import org.eclipse.jetty.ee11.servlet.SessionHandler
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
@@ -43,7 +43,7 @@ private val mapper = jacksonMapperBuilder()
     .build()
 
 fun SessionRecordedRequests.toJson(): String = mapper.writeValueAsString(this)
-fun Session.readSessionRecordedRequests(): SessionRecordedRequests? = getAttribute<String?>(LAST_REQUESTED_URLS_JSON)
+fun Session.readSessionRecordedRequests(): SessionRecordedRequests? = getAttribute<String>(LAST_REQUESTED_URLS_JSON)
     ?.let { mapper.readValue(it, SessionRecordedRequests::class.java) }
 
 const val LAST_REQUESTED_URLS_JSON = "RECORDED_REQUESTS_JSON"
@@ -136,16 +136,16 @@ class SessionRecordingRequestFilter(
     private interface AttributeSession {
 
         fun getAttribute(key: String): Any?
-        fun setAttribute(key: String, value: Any?)
+        fun setAttribute(key: String, value: Any)
 
         class HttpAttrSession(val s: HttpSession) : AttributeSession {
             override fun getAttribute(key: String): Any? = s.getAttribute(key)
-            override fun setAttribute(key: String, value: Any?) = s.setAttribute(key, value)
+            override fun setAttribute(key: String, value: Any) = s.setAttribute(key, value)
         }
 
         class SessionAttrSession(val s: Session) : AttributeSession {
             override fun getAttribute(key: String): Any? = s.getAttribute(key)
-            override fun setAttribute(key: String, value: Any?) = s.setAttribute(key, value)
+            override fun setAttribute(key: String, value: Any) = s.setAttribute(key, value)
         }
     }
 

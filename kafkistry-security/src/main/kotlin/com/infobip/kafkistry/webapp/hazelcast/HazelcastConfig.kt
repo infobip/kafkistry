@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
-import org.springframework.boot.web.servlet.server.AbstractServletWebServerFactory
+import org.springframework.boot.web.server.autoconfigure.ServerProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.session.FlushMode
@@ -63,10 +63,10 @@ class HazelcastConfig(
 
     @Bean
     fun hazelcastSessionRepositoryCustomizer(
-        serverFactory: AbstractServletWebServerFactory,
+        serverProperties: ServerProperties,
     ): SessionRepositoryCustomizer<HazelcastIndexedSessionRepository> {
         return SessionRepositoryCustomizer<HazelcastIndexedSessionRepository> {
-            it.setDefaultMaxInactiveInterval(serverFactory.session.timeout)
+            it.setDefaultMaxInactiveInterval(serverProperties.servlet.session.timeout)
         }
     }
 

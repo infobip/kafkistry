@@ -120,7 +120,7 @@ abstract class CreateMissingTopic(contextSupplier: () -> Context) : UITestCase(c
         await {
             browser.assertPageText().contains("Status per topic")
         }
-        browser.findElementWithText("Status per topic").scrollIntoView().click()
+        browser.findElementWithText("Status per topic").ensureClick()
         await {
             assertThat(browser.findElementById("topics").text).contains(
                     "my-missing-1", "OK",

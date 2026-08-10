@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="json" type="com.fasterxml.jackson.databind.ObjectMapper" -->
+<#-- @ftlvariable name="json" type="tools.jackson.databind.json.JsonMapper" -->
 
 <#import "../common/infoIcon.ftl" as info>
 

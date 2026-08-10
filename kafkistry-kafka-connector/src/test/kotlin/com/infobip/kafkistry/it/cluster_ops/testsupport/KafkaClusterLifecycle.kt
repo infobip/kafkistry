@@ -1,12 +1,16 @@
 package com.infobip.kafkistry.it.cluster_ops.testsupport
 
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker
+import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
 import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
 import com.infobip.kafkistry.kafka.NodeId
+import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.consumer.Consumer
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.test.EmbeddedKafkaBroker
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker
-import org.springframework.kafka.test.EmbeddedKafkaZKBroker
+import java.lang.Exception
+import com.infobip.kafkistry.shaded.org.springframework.kafka.test.EmbeddedKafkaZKBroker as LegacyEmbeddedKafkaZKBroker
 
 interface KafkaClusterLifecycle<T> {
     val kafkaCluster: T
@@ -31,7 +35,7 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
 
     override fun supportsNodeStartStop(): Boolean {
         return kafkaCluster is EmbeddedKafkaKraftCustomBroker ||
-            kafkaCluster is EmbeddedKafkaZKBroker ||
+            //kafkaCluster is EmbeddedKafkaZKBroker ||
             kafkaCluster is EmbeddedKafkaKraftBroker
     }
 
@@ -43,12 +47,8 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
             }
 
             is EmbeddedKafkaKraftBroker -> {
-                kafkaCluster.cluster.brokers()[id]?.startup()
-                kafkaCluster.cluster.controllers()[id]?.startup()
-            }
-
-            is EmbeddedKafkaZKBroker -> {
-                kafkaCluster.getKafkaServer(id).startup()
+                kafkaCluster.cluster?.brokers()[id]?.startup()
+                kafkaCluster.cluster?.controllers()[id]?.startup()
             }
 
             else -> {
@@ -65,18 +65,11 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
             }
 
             is EmbeddedKafkaKraftBroker -> {
-                kafkaCluster.cluster.brokers()[id]?.run {
+                kafkaCluster.cluster?.brokers()[id]?.run {
                     shutdown()
                     awaitShutdown()
                 }
-                kafkaCluster.cluster.controllers()[id]?.run {
-                    shutdown()
-                    awaitShutdown()
-                }
-            }
-
-            is EmbeddedKafkaZKBroker -> {
-                kafkaCluster.getKafkaServer(id).run {
+                kafkaCluster.cluster?.controllers()[id]?.run {
                     shutdown()
                     awaitShutdown()
                 }
@@ -89,9 +82,17 @@ class EmbeddedKafkaClusterLifecycle<T : EmbeddedKafkaBroker>(
     }
 }
 
+
 class TestContainerKafkaClusterLifecycle(
     override val kafkaCluster: KafkaClusterContainer
 ) : KafkaClusterLifecycle<KafkaClusterContainer> {
+    override fun start() = kafkaCluster.start()
+    override fun stop() = kafkaCluster.stop()
+}
+
+class EmbeddedCombinedKraftKafkaClusterLifecycle(
+    override val kafkaCluster: KafkaKRaftEmbeddedCluster,
+): KafkaClusterLifecycle<KafkaKRaftEmbeddedCluster> {
     override fun start() = kafkaCluster.start()
     override fun stop() = kafkaCluster.stop()
 }
@@ -133,4 +134,49 @@ fun <T : EmbeddedKafkaBroker> T.asTestKafkaLifecycle() = LoggingKafkaClusterLife
 fun KafkaClusterContainer.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
     TestContainerKafkaClusterLifecycle(this)
 )
+fun KafkaKRaftEmbeddedCluster.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
+    EmbeddedCombinedKraftKafkaClusterLifecycle(this)
+)
+fun LegacyEmbeddedKafkaZKBroker.asTestKafkaLifecycle() = LoggingKafkaClusterLifeCycle(
+    this.asEmbeddedKafkaBroker().asTestKafkaLifecycle()
+)
+
+fun LegacyEmbeddedKafkaZKBroker.asEmbeddedKafkaBroker(): EmbeddedKafkaBroker = object : EmbeddedKafkaBroker {
+    override fun afterPropertiesSet() = this@asEmbeddedKafkaBroker.afterPropertiesSet()
+
+    override fun destroy() = this@asEmbeddedKafkaBroker.destroy()
+
+    override fun kafkaPorts(vararg ports: Int): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.kafkaPorts(*ports)
+    }
+
+    override fun getTopics(): Set<String> = this@asEmbeddedKafkaBroker.topics
+
+    override fun brokerProperties(properties: Map<String, String>): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.brokerProperties(properties)
+    }
+
+    override fun brokerListProperty(brokerListProperty: String): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.brokerListProperty(brokerListProperty)
+    }
+
+    override fun adminTimeout(adminTimeout: Int): EmbeddedKafkaBroker = apply {
+        this@asEmbeddedKafkaBroker.adminTimeout(adminTimeout)
+    }
+
+    override fun getBrokersAsString(): String = this@asEmbeddedKafkaBroker.brokersAsString
+
+    override fun addTopics(vararg topicsToAdd: String) = error("Unsupported for legacy ZK cluster")
+    override fun addTopics(vararg topicsToAdd: NewTopic) = error("Unsupported for legacy ZK cluster")
+    override fun addTopicsWithResults(vararg topicsToAdd: NewTopic): Map<String, Exception> = error("Unsupported for legacy ZK cluster")
+    override fun addTopicsWithResults(vararg topicsToAdd: String): Map<String, Exception> = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>, seekToEnd: Boolean, vararg topicsToConsume: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromEmbeddedTopics(consumer: Consumer<*, *>, vararg topicsToConsume: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAnEmbeddedTopic(consumer: Consumer<*, *>, seekToEnd: Boolean, topic: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAnEmbeddedTopic(consumer: Consumer<*, *>, topic: String) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAllEmbeddedTopics(consumer: Consumer<*, *>, seekToEnd: Boolean) = error("Unsupported for legacy ZK cluster")
+    override fun consumeFromAllEmbeddedTopics(consumer: Consumer<*, *>) = error("Unsupported for legacy ZK cluster")
+    override fun getPartitionsPerTopic(): Int = this@asEmbeddedKafkaBroker.partitionsPerTopic
+
+}
 

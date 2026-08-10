@@ -13,6 +13,11 @@
     <dependencies>
         <dependency>
             <groupId>com.infobip.kafkistry</groupId>
+            <artifactId>kafkistry-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.infobip.kafkistry</groupId>
             <artifactId>kafkistry-service-logic</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -35,7 +40,7 @@
             <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
+            <groupId>tools.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
     </dependencies>

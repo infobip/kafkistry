@@ -24,7 +24,7 @@ class LoggingTestWatcher : TestWatcher {
         logBrowserConsoleLog()
     }
 
-    override fun testAborted(context: ExtensionContext, cause: Throwable) {
+    override fun testAborted(context: ExtensionContext, cause: Throwable?) {
         log.error("Test: ABORTED '{}' - {} abort reason:",
             context.displayName, context.testClass.map { it.name }.orElse("[null]"),
             cause
@@ -32,7 +32,7 @@ class LoggingTestWatcher : TestWatcher {
         logBrowserConsoleLog()
     }
 
-    override fun testFailed(context: ExtensionContext, cause: Throwable) {
+    override fun testFailed(context: ExtensionContext, cause: Throwable?) {
         log.error("Test: FAILED '{}' - {} fail cause:",
             context.displayName, context.testClass.map { it.name }.orElse("[null]"),
             cause

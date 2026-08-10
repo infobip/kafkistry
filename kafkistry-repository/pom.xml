@@ -37,7 +37,7 @@
             <version>${sshd-git.version}</version>  <!-- needed for username+password git ssh auth -->
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <groupId>tools.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
         <dependency>

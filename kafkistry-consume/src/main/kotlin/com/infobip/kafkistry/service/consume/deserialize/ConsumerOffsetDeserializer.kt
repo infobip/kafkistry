@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.consume.deserialize
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import com.infobip.kafkistry.service.consume.DeserializedValue
 import com.infobip.kafkistry.service.consume.interntopics.InternalTopicsValueReader

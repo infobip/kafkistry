@@ -9,6 +9,7 @@ import java.util.*
 /**
  * Mapping of builtin Java types to their matching RecordField primitive type
  */
+@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 enum class TypeMappings(
     private val clazz: Class<*>?,
     private val fieldType: RecordFieldType

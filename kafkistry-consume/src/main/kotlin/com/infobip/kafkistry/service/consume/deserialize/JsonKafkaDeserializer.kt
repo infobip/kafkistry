@@ -1,7 +1,7 @@
 package com.infobip.kafkistry.service.consume.deserialize
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 import com.infobip.kafkistry.service.consume.DeserializedValue
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
@@ -20,7 +20,7 @@ class JsonKafkaDeserializer : GenericKafkaDeserializer() {
             val json = String(rawValue, charset = StandardCharsets.UTF_8)
             val value = mapper.readValue(json, Any::class.java)
             DeserializedValue(typeName(), value, value, json)
-        } catch (ex: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

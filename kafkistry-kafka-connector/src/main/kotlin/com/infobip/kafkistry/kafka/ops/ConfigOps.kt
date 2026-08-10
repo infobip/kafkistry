@@ -6,9 +6,15 @@ import com.infobip.kafkistry.kafka.ThrottleRate
 import com.infobip.kafkistry.model.TopicConfigMap
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.KafkaClusterManagementException
+import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.AlterConfigsOptions as LegacyAlterConfigOptions
+import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.Config as LegacyConfig
+import com.infobip.kafkistry.shaded.org.apache.kafka.clients.admin.ConfigEntry as LegacyConfigEntry
+import com.infobip.kafkistry.shaded.org.apache.kafka.common.config.ConfigResource as LegacyConfigResource
 import org.apache.kafka.clients.admin.*
 import org.apache.kafka.common.config.ConfigResource
-import org.apache.kafka.server.config.QuotaConfigs
+import org.apache.kafka.server.config.QuotaConfig.FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG
+import org.apache.kafka.server.config.QuotaConfig.LEADER_REPLICATION_THROTTLED_RATE_CONFIG
+import org.apache.kafka.server.config.QuotaConfig.REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG
 import java.util.concurrent.CompletableFuture
 
 class ConfigOps(
@@ -28,6 +34,7 @@ class ConfigOps(
                     .all()
                     .asCompletableFuture("partial topic update config read current")
                     .get()
+                    .toMap()
                 val currentConfig = resourceConfigs[configResource]
                     ?: throw KafkaClusterManagementException("Did not get response for config of topic $topicName")
                 val fullConfig = currentConfig.entries().associate { it.name() to it.value() }.plus(config)
@@ -55,7 +62,7 @@ class ConfigOps(
     private fun updateConfigs(
         resourceUpdates: Map<ConfigResource, AlterConfigsSupplier>
     ): CompletableFuture<Unit> {
-        val alterConfigsResult = if (clusterVersion < VERSION_2_3) {
+        return if (clusterVersion < VERSION_2_3) {
             val brokerUpdates = resourceUpdates.filterKeys {
                 it.type() == ConfigResource.Type.BROKER
             }
@@ -63,14 +70,25 @@ class ConfigOps(
                 it.type() != ConfigResource.Type.BROKER
             }
             val nonBrokersResult = nonBrokerUpdates.takeIf { it.isNotEmpty() }?.let { updates ->
+                //conversion from AdminClient data model to legacy shaded corresponding classes
+                val legacyUpdates = updates
+                    .mapKeys { (k, _) -> LegacyConfigResource(k.type().convert(), k.name()) }
+                    .mapValues { (_, v) ->
+                        LegacyConfig(v.alterConfigs().entries().map {
+                            LegacyConfigEntry(it.name(), it.value())
+                        })
+                    }
                 //suppressing since it's deprecated for version 2.3.0 but, it's the only way for older broker versions
                 @Suppress("DEPRECATION")
-                adminClient.alterConfigs(
-                    updates.mapValues { it.value.alterConfigs() }, AlterConfigsOptions().withWriteTimeout()
+                legacyAdminClient.alterConfigs(
+                    legacyUpdates,
+                    LegacyAlterConfigOptions().withWriteTimeout()
                 )
             }
             if (nonBrokersResult != null && brokerUpdates.isEmpty()) {
-                nonBrokersResult
+                nonBrokersResult.all()
+                    .asCompletableFutureLegacy("alter configs - legacy")
+                    .thenApply { }
             } else {
                 //have broker update, need to have blocking implementation
                 runOperation("alter broker config") {
@@ -87,20 +105,20 @@ class ConfigOps(
                         adminZkClient.changeConfigs("brokers", configResource.name(), brokerConfigs, true)
                     }
                 }
-                return nonBrokersResult?.all()
-                    ?.asCompletableFuture("alter configs")
+                nonBrokersResult?.all()
+                    ?.asCompletableFutureLegacy("alter configs - ZK")
                     ?.thenApply { }
                     ?: CompletableFuture.completedFuture(Unit)
             }
         } else {
-            adminClient.incrementalAlterConfigs(
-                resourceUpdates.mapValues { it.value.alterConfigOps() }, AlterConfigsOptions().withWriteTimeout()
-            )
+            adminClient
+                .incrementalAlterConfigs(
+                    resourceUpdates.mapValues { it.value.alterConfigOps() }, AlterConfigsOptions().withWriteTimeout()
+                )
+                .all()
+                .asCompletableFuture("alter configs incremental")
+                .thenApply { }
         }
-        return alterConfigsResult
-            .all()
-            .asCompletableFuture("alter configs")
-            .thenApply { }
     }
 
     fun updateTopicConfig(topicName: TopicName, updatingConfig: TopicConfigMap): CompletableFuture<Unit> {
@@ -136,9 +154,9 @@ class ConfigOps(
 
     fun updateThrottleRate(brokerId: BrokerId, throttleRate: ThrottleRate): CompletableFuture<Unit> {
         val configs = mapOf(
-            QuotaConfigs.LEADER_REPLICATION_THROTTLED_RATE_CONFIG to throttleRate.leaderRate?.takeIf { it > 0 }?.toString(),
-            QuotaConfigs.FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG to throttleRate.followerRate?.takeIf { it > 0 }?.toString(),
-            QuotaConfigs.REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG to throttleRate.alterDirIoRate?.takeIf { it > 0 }?.toString(),
+            LEADER_REPLICATION_THROTTLED_RATE_CONFIG to throttleRate.leaderRate?.takeIf { it > 0 }?.toString(),
+            FOLLOWER_REPLICATION_THROTTLED_RATE_CONFIG to throttleRate.followerRate?.takeIf { it > 0 }?.toString(),
+            REPLICA_ALTER_LOG_DIRS_IO_MAX_BYTES_PER_SECOND_CONFIG to throttleRate.alterDirIoRate?.takeIf { it > 0 }?.toString(),
         )
         return updateConfig(ConfigResource(ConfigResource.Type.BROKER, brokerId.toString()),
             alterConfigs = { Config(configs.map { ConfigEntry(it.key, it.value) }) },

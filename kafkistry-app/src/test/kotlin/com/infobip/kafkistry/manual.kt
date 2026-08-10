@@ -4,6 +4,10 @@ import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroke
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_BROKER_ID
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_COMBINED_ID
 import com.infobip.kafkistry.it.cluster_ops.custom.EmbeddedKafkaKraftCustomBroker.Companion.START_CONTROLLER_ID
+import com.infobip.kafkistry.it.cluster_ops.custom.KafkaKRaftEmbeddedCluster
+import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer
+import com.infobip.kafkistry.it.cluster_ops.testcontainer.KafkaClusterContainer.ConsensusType
+import com.infobip.kafkistry.it.cluster_ops.testsupport.asEmbeddedKafkaBroker
 import com.infobip.kafkistry.it.ui.ApiClient
 import com.infobip.kafkistry.kafka.*
 import com.infobip.kafkistry.kafkastate.KafkaConsumerGroupsProvider
@@ -17,11 +21,12 @@ import com.infobip.kafkistry.service.generator.PartitionsReplicasAssignor
 import com.infobip.kafkistry.service.newQuota
 import com.infobip.kafkistry.service.newTopic
 import com.infobip.kafkistry.service.toKafkaCluster
+import com.infobip.kafkistry.shaded.kafka.security.authorizer.AclAuthorizer
+import com.infobip.kafkistry.shaded.org.springframework.kafka.test.EmbeddedKafkaZKBroker as LegacyEmbeddedKafkaZKBroker
 import com.infobip.kafkistry.webapp.security.User
 import com.infobip.kafkistry.webapp.security.UserRole
 import com.infobip.kafkistry.webapp.security.auth.preauth.PreAuthUserResolver
 import jakarta.servlet.http.HttpServletRequest
-import kafka.security.authorizer.AclAuthorizer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -49,7 +54,6 @@ import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.core.env.get
 import org.springframework.kafka.test.EmbeddedKafkaBroker
-import org.springframework.kafka.test.EmbeddedKafkaZKBroker
 import org.springframework.stereotype.Component
 import java.io.File
 import java.net.Inet4Address
@@ -57,6 +61,7 @@ import java.net.NetworkInterface
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.jvm.java
 import kotlin.random.Random
 
 /**
@@ -131,34 +136,30 @@ class DataStateInitializer(
 
     private val log = LoggerFactory.getLogger("manual-init")
     private lateinit var api: ApiClient
-    private val kraft = true
+    private val consensusType: ConsensusType = ConsensusType.ZOOKEEPER
 
-    private val kafka: EmbeddedKafkaBroker = if (kraft) {
-        EmbeddedKafkaKraftCustomBroker(2, 4, 1).apply {
-            brokerProperty("log.retention.bytes", "123456789")
-            brokerProperty("log.segment.bytes", "12345678")
-            brokerProperty("authorizer.class.name", StandardAuthorizer::class.java.name)
-            brokerProperty("super.users", "User:ANONYMOUS")
-            val brokerRack = mapOf(
-                START_BROKER_ID to "rck-A",
-                START_BROKER_ID + 1 to "rck-A",
-                START_BROKER_ID + 2 to "rck-B",
-                START_BROKER_ID + 3 to "rck-B",
-                START_COMBINED_ID to "rck-C",
-                START_COMBINED_ID + 1 to "rck-C",
-                START_CONTROLLER_ID to "rck-X",
-            )
-            brokerPropertyOverride { brokerId ->
-                brokerRack[brokerId]?.let { mapOf("broker.rack" to it) }.orEmpty()
-            }
+    private val kafka: EmbeddedKafkaBroker = when (consensusType) {
+        ConsensusType.KRAFT -> KafkaKRaftEmbeddedCluster(
+            combinedBrokerControllers = 2, justBrokers = 4, justControllers = 1
+        ).apply {
+            allBrokersProperty("log.retention.bytes", "123456789")
+            allBrokersProperty("log.segment.bytes", "12345678")
+            allBrokersProperty("authorizer.class.name", StandardAuthorizer::class.java.name)
+            allBrokersProperty("super.users", "User:ANONYMOUS")
+            brokerProperty(START_BROKER_ID, "broker.rack", "rck-A")
+            brokerProperty(START_BROKER_ID + 1, "broker.rack", "rck-A")
+            brokerProperty(START_BROKER_ID + 2, "broker.rack", "rck-B")
+            brokerProperty(START_BROKER_ID + 3, "broker.rack", "rck-B")
+            brokerProperty(START_COMBINED_ID, "broker.rack", "rck-C")
+            brokerProperty(START_COMBINED_ID + 1, "broker.rack", "rck-C")
+            brokerProperty(START_CONTROLLER_ID, "broker.rack", "rck-X")
         }
-    } else {
-        EmbeddedKafkaZKBroker(6).apply {
+        ConsensusType.ZOOKEEPER -> LegacyEmbeddedKafkaZKBroker(6).apply {
             brokerProperty("log.retention.bytes", "123456789")
             brokerProperty("log.segment.bytes", "12345678")
             brokerProperty("authorizer.class.name", AclAuthorizer::class.java.name)
             brokerProperty("super.users", "User:ANONYMOUS")
-        }
+        }.asEmbeddedKafkaBroker()
     }.apply {
         log.info("EmbeddedKafka starting...")
         afterPropertiesSet()
@@ -268,7 +269,7 @@ class DataStateInitializer(
         }
     }
 
-    override fun run(args: ApplicationArguments?) {
+    override fun run(args: ApplicationArguments) {
         api = ctx.createAdminApiClient()
         val serverPort = ctx.localServerPort()
         val rootPath = ctx.httpRootPath()

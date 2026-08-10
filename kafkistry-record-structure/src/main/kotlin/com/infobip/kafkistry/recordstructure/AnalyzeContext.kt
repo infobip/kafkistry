@@ -1,8 +1,8 @@
 package com.infobip.kafkistry.recordstructure
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.core.exc.StreamReadException
+import tools.jackson.core.JacksonException
+import tools.jackson.databind.ObjectMapper
 import com.google.common.base.Utf8
 import com.infobip.kafkistry.model.*
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -66,7 +66,7 @@ open class AnalyzeContext(
             )
         } catch (e: Exception) {
             when (e) {
-                is JsonParseException, is JsonProcessingException, is CharConversionException -> {
+                is StreamReadException, is JacksonException, is CharConversionException -> {
                     timestampWrappedUnknownRecordsStructure(listOf(headersValue), false, recordSize)
                 }
                 else -> throw e

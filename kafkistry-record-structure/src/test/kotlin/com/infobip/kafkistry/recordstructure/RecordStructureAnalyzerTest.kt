@@ -1,7 +1,6 @@
 package com.infobip.kafkistry.recordstructure
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.header.internals.RecordHeader
 import org.apache.kafka.common.header.internals.RecordHeaders
@@ -11,6 +10,8 @@ import com.infobip.kafkistry.model.*
 import com.infobip.kafkistry.utils.test.newTestFolder
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import tools.jackson.core.util.DefaultPrettyPrinter
+import tools.jackson.databind.json.JsonMapper
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
@@ -94,7 +95,7 @@ class RecordStructureAnalyzerTest {
     private fun RecordsStructure?.assertEqualsTo(
         expectedStructure: RecordsStructure?
     ) {
-        val mapper = ObjectMapper().writerWithDefaultPrettyPrinter()
+        val mapper = JsonMapper.builder().defaultPrettyPrinter(DefaultPrettyPrinter()).build()
         assertThat(mapper.writeValueAsString(this)).isEqualTo(mapper.writeValueAsString(expectedStructure))
         assertThat(this).isEqualTo(expectedStructure)
     }

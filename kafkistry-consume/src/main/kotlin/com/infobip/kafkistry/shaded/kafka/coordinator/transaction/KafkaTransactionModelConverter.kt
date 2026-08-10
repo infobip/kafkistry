@@ -1,11 +1,10 @@
-package kafka.coordinator.transaction
+package com.infobip.kafkistry.shaded.kafka.coordinator.transaction
 
 import com.infobip.kafkistry.kafka.toJavaList
 import com.infobip.kafkistry.model.TransactionalId
 import com.infobip.kafkistry.service.consume.interntopics.TransactionState
 import com.infobip.kafkistry.service.consume.interntopics.TransactionState.TxnTopicPartition
-import kafka.coordinator.group.KafkaGroupModelConverter
-import kafka.coordinator.tryParseOrNull
+import com.infobip.kafkistry.shaded.kafka.coordinator.tryParseOrNull
 import java.nio.ByteBuffer
 
 object KafkaTransactionModelConverter {

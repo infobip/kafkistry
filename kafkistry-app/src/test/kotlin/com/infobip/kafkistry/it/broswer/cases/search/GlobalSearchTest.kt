@@ -46,6 +46,11 @@ abstract class GlobalSearchTest(contextSupplier: () -> Context) : UITestCase(con
         }
     }
 
+    fun openSearch() {
+        //click on search in menu to open search dropdown
+        browser.findElementById("global-search-toggle").ensureClick()
+    }
+
     @Test
     fun `test global search from navbar and navigate to first result`() {
         // Verify we're on home page
@@ -54,8 +59,9 @@ abstract class GlobalSearchTest(contextSupplier: () -> Context) : UITestCase(con
         }
 
         // Find and click on the global search input in navbar
+        openSearch()
         val searchInput = browser.findElementById("global-search-input")
-        searchInput.click()
+        searchInput.ensureClick()
 
         // Type search query
         searchInput.sendKeys("payment")
@@ -99,8 +105,9 @@ abstract class GlobalSearchTest(contextSupplier: () -> Context) : UITestCase(con
         }
 
         // Search for "events" which should match multiple topics
+        openSearch()
         val searchInput = browser.findElementById("global-search-input")
-        searchInput.click()
+        searchInput.ensureClick()
         searchInput.clearAndSendKeys("events")
 
         // Wait for results
@@ -121,8 +128,9 @@ abstract class GlobalSearchTest(contextSupplier: () -> Context) : UITestCase(con
         }
 
         // Search for something that doesn't exist
+        openSearch()
         val searchInput = browser.findElementById("global-search-input")
-        searchInput.click()
+        searchInput.ensureClick()
         searchInput.clearAndSendKeys("nonexistent-topic-xyz")
 
         // Wait for empty results message
@@ -141,8 +149,9 @@ abstract class GlobalSearchTest(contextSupplier: () -> Context) : UITestCase(con
         }
 
         // Open search dropdown
+        openSearch()
         val searchInput = browser.findElementById("global-search-input")
-        searchInput.click()
+        searchInput.ensureClick()
         searchInput.sendKeys("payment")
 
         // Wait for dropdown to appear
@@ -169,8 +178,9 @@ abstract class GlobalSearchTest(contextSupplier: () -> Context) : UITestCase(con
         }
 
         // Search for something
+        openSearch()
         val searchInput = browser.findElementById("global-search-input")
-        searchInput.click()
+        searchInput.ensureClick()
         searchInput.sendKeys("events")
 
         // Wait for results

@@ -172,11 +172,11 @@ logging.level:
   org.apache.kafka.clients.Metadata: WARN
 
 spring.autoconfigure.exclude:
-  - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-  - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-  - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-  - org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration
-  - org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration
+  - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+  - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+  - org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration
+  - org.springframework.boot.data.autoconfigure.web.DataWebAutoConfiguration
+  - org.springframework.boot.jdbc.autoconfigure.DataSourceInitializationAutoConfiguration
 
 server:
   servlet.session:
@@ -189,4 +189,7 @@ server:
     # not worth the CPU cycles at some point, probably
     min-response-size: 10240
   port: ${HTTP_PORT:8080}
-  error.path: ${app.http.root-path}/error
+
+spring:
+  # error path moved from server.error.path to spring.web.error.path in Spring Boot 4 (WebProperties)
+  web.error.path: ${app.http.root-path}/error

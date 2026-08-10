@@ -73,7 +73,7 @@ class SpringSessionHazelcastBackedSessionRegistry private constructor(
                 .also { principalSessions.set(it) }
         }
 
-        override fun findByPrincipalName(principalName: String?): Map<String, Session> {
+        override fun findByPrincipalName(principalName: String): MutableMap<String, Session> {
             if (principalSessions.get() == null) {
                 refreshCaches()
             }
@@ -85,8 +85,8 @@ class SpringSessionHazelcastBackedSessionRegistry private constructor(
             return getByPrincipalName(principalName)
         }
 
-        private fun getByPrincipalName(principalName: String?): Map<String, Session> =
-            principalSessions.get().orEmpty()[principalName]?.sessions.orEmpty()
+        private fun getByPrincipalName(principalName: String): MutableMap<String, Session> =
+            principalSessions.get().orEmpty()[principalName]?.sessions.orEmpty().toMutableMap()
 
         fun getAllPrincipals(): List<Any> {
             refreshCaches()

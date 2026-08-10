@@ -10,6 +10,7 @@ import com.infobip.kafkistry.webapp.security.auth.preauth.ACCESS_TOKEN
 import com.infobip.kafkistry.webapp.security.auth.preauth.StaticAuthTokenAuthenticatedProcessingFilter
 import com.infobip.kafkistry.webapp.security.auth.providers.StaticUsersAuthProvider
 import org.junit.jupiter.api.Test
+import org.springframework.mock.web.MockServletContext
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import java.io.File
@@ -31,7 +32,7 @@ internal class StaticUsersTest {
         return StaticAuthTokenAuthenticatedProcessingFilter(this).getPreAuthenticatedPrincipal(
             MockMvcRequestBuilders.get("http://localhost")
                 .header(ACCESS_TOKEN, token)
-                .buildRequest(null)
+                .buildRequest(MockServletContext())
         )
     }
 

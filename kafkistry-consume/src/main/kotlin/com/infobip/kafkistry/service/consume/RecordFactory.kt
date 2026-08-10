@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.consume
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.model.ClusterRef
 import com.infobip.kafkistry.model.TopicName
 import com.infobip.kafkistry.service.consume.deserialize.DeserializeResolver

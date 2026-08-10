@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.webapp
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import freemarker.ext.beans.BeansWrapper
 import freemarker.template.Configuration
 import com.infobip.kafkistry.api.BackgroundIssuesApi

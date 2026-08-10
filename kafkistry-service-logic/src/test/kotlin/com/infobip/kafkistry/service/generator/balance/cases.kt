@@ -1,6 +1,6 @@
 package com.infobip.kafkistry.service.generator.balance
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import com.infobip.kafkistry.service.asBrokers
 import com.infobip.kafkistry.service.generator.Broker
 import com.infobip.kafkistry.service.generator.BrokerLoad

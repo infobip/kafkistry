@@ -3,11 +3,11 @@ package com.infobip.kafkistry.kafka
 import com.infobip.kafkistry.kafka.ops.*
 import com.infobip.kafkistry.kafka.recordsampling.RecordReadSampler
 import com.infobip.kafkistry.model.*
-import kafka.zk.KafkaZkClient
+import com.infobip.kafkistry.shaded.kafka.zk.KafkaZkClient
+import com.infobip.kafkistry.shaded.org.apache.kafka.common.utils.Time
+import com.infobip.kafkistry.shaded.org.apache.zookeeper.client.ZKClientConfig
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.*
-import org.apache.kafka.common.utils.Time
-import org.apache.zookeeper.client.ZKClientConfig
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 
@@ -46,6 +46,9 @@ class KafkaManagementClientImpl(
                 false,
                 true,
             )
+        },
+        legacyAdminClientLazy = lazy {
+            clientFactory.createLegacyAdmin(connectionDefinition)
         },
         controllerConnectionRef,
         controllerClientLazy = lazy {

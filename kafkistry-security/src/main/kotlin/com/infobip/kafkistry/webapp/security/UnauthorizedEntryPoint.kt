@@ -1,6 +1,5 @@
 package com.infobip.kafkistry.webapp.security
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.infobip.kafkistry.api.exception.ApiError
 import com.infobip.kafkistry.utils.deepToString
 import com.infobip.kafkistry.webapp.WebHttpProperties
@@ -16,23 +15,25 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpMethod
 import org.springframework.security.web.access.AccessDeniedHandlerImpl
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 import org.springframework.security.web.util.matcher.*
+import tools.jackson.databind.json.JsonMapper
 
 @Component
 class UnauthorizedEntryPoint(
     httpProperties: WebHttpProperties,
-    private val objectMapper: ObjectMapper,
+    private val jsonMapper: JsonMapper,
 ) : AuthenticationEntryPoint, AccessDeniedHandler {
 
     private val errorPage: String = "${httpProperties.rootPath}/error"
     private val loginPage: String = "${httpProperties.rootPath}/login"
 
-    private val loginCallMatcher = AntPathRequestMatcher.antMatcher(HttpMethod.POST, loginPage)
-    private val errorCallMatcher = AntPathRequestMatcher.antMatcher(errorPage)
+    private val loginCallMatcher = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, loginPage)
+    private val errorCallMatcher = PathPatternRequestMatcher.pathPattern(errorPage)
 
     private val apiCallMatcher: RequestMatcher = OrRequestMatcher(
         //don't redirect to /login when not authenticated using rest /api/** or rendered ajax calls
-        AntPathRequestMatcher("${httpProperties.rootPath}/api/**"),
+        PathPatternRequestMatcher.pathPattern("${httpProperties.rootPath}/api/**"),
         ELRequestMatcher("hasHeader('ajax', 'true')"),
     )
 
@@ -76,7 +77,7 @@ class UnauthorizedEntryPoint(
             message = "${status.name}\nCause: $causeMsg"
         )
         response.contentType = "application/json"
-        objectMapper.writeValue(response.outputStream, apiError)
+        jsonMapper.writeValue(response.outputStream, apiError)
     }
 }
 
